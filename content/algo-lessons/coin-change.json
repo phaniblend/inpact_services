@@ -1,0 +1,923 @@
+{
+  "id": "coin-change",
+  "title": "Coin change",
+  "pattern": "dynamic-programming",
+  "difficulty": "medium",
+  "language": "javascript",
+  "status": "draft",
+  "flow": [
+    {
+      "stepId": "title",
+      "mentorSays": "At the end of this lesson, you will be able to:\n\n1. Understand what the Coin Change lesson asks for\n2. Use dynamic programming to find the minimum coins needed\n3. Build the solution by considering each coin denomination\n4. Implement the solution step by step in your chosen language",
+      "action": "continue",
+      "next": "lesson-illustration"
+    },
+    {
+      "stepId": "lesson-illustration",
+      "mentorSays": "The Coin Change lesson is a classic DP optimization lesson.\n\nPROBLEM:\nGiven coins = [1, 2, 5] and amount = 11\nWhat's the MINIMUM number of coins to make 11?\n\nGREEDY APPROACH (DOESN'T WORK):\nStart with largest coin:\n11 = 5 + 5 + 1 → 3 coins\n\nIs this optimal? Let's verify with DP.\n\nDP TABLE CONSTRUCTION:\nWe build dp[i] = minimum coins needed to make amount i\n\nInitialize:\ndp[0] = 0 (0 coins for amount 0)\ndp[1..11] = Infinity (unknown initially)\n\nFor each amount from 1 to 11:\n  For each coin:\n    If coin <= amount:\n      dp[amount] = min(dp[amount], dp[amount-coin] + 1)\n\nStep by step:\ndp[1]: coins=[1] → dp[1] = dp[0] + 1 = 1\ndp[2]: coins=[1,2] → dp[2] = min(dp[1]+1, dp[0]+1) = min(2, 1) = 1\ndp[3]: coins=[1,2] → dp[3] = min(dp[2]+1, dp[1]+1) = min(2, 2) = 2\ndp[4]: coins=[1,2] → dp[4] = min(dp[3]+1, dp[2]+1) = min(3, 2) = 2\ndp[5]: coins=[1,2,5] → dp[5] = min(dp[4]+1, dp[3]+1, dp[0]+1) = min(3, 3, 1) = 1\ndp[6]: coins=[1,2,5] → dp[6] = min(dp[5]+1, dp[4]+1, dp[1]+1) = min(2, 3, 2) = 2\n...\ndp[11]: coins=[1,2,5] → dp[11] = min(dp[10]+1, dp[9]+1, dp[6]+1)\n                                = min(3, 3, 3) = 3\n\nFINAL DP TABLE:\nAmount:  0  1  2  3  4  5  6  7  8  9 10 11\nCoins:   0  1  1  2  2  1  2  2  3  3  2  3\n\nAnswer: 3 coins (5 + 5 + 1)\n\nWHY GREEDY DOESN'T ALWAYS WORK:\nExample: coins = [1, 3, 4], amount = 6\nGreedy: 6 = 4 + 1 + 1 → 3 coins\nDP: 6 = 3 + 3 → 2 coins ✓ (optimal!)\n\nThis shows why we need DP, not greedy.\n\nTIME: O(amount × coins.length)\nSPACE: O(amount)",
+      "example": "coins = [1, 3, 4]\namount = 6\n\nFind minimum coins:\n- 2 coins of 3 (sum = 6) ✓\n\nAnswer: 2\n\nAnother example:\ncoins = [1, 2, 5]\namount = 11\n\nAnswer: 3 (5 + 5 + 1)\n\nAnother example:\ncoins = [2]\namount = 3\n\nAnswer: -1 (impossible to make 3 with only 2s)",
+      "action": "continue",
+      "next": "thinking-challenge"
+    },
+    {
+      "stepId": "thinking-challenge",
+      "mentorSays": "Now that you understand what the lesson wants, here's the real question:\n\nHow would YOU find the minimum number of coins?\n\nThink about it for a moment. What approach feels natural to you?",
+      "choices": [
+        {
+          "label": "Use dynamic programming to track minimum coins for each amount",
+          "next": "explore-dp"
+        },
+        {
+          "label": "Try all possible combinations of coins",
+          "next": "explore-brute-force"
+        },
+        {
+          "label": "Use a greedy approach - always use the largest coin",
+          "next": "explore-greedy"
+        }
+      ]
+    },
+    {
+      "stepId": "explore-brute-force",
+      "mentorSays": "That's a straightforward approach! You're thinking: \"I'll try all possible combinations of coins and find which one uses the minimum number.\"\n\nThis works! However, it's exponential time complexity.\n\nWould you like to learn the dynamic programming approach which is O(amount × coins) time?",
+      "action": "continue",
+      "next": "explore-dp"
+    },
+    {
+      "stepId": "explore-greedy",
+      "mentorSays": "Great thinking! Greedy approach works for some coin systems (like US coins), but it doesn't work for all coin systems.\n\nFor example, with coins=[1, 3, 4] and amount=6:\n- Greedy: use 4, then 1, then 1 → 3 coins\n- Optimal: use 3, then 3 → 2 coins ✓\n\nLet's learn the dynamic programming approach which always works!",
+      "action": "continue",
+      "next": "explore-dp"
+    },
+    {
+      "stepId": "explore-dp",
+      "mentorSays": "Excellent choice! Dynamic programming is efficient and always finds the optimal solution. Here's the core idea:\n\n1. **DP Array**: dp[i] = minimum coins needed to make amount i\n2. **Base Case**: dp[0] = 0 (0 coins needed for amount 0)\n3. **Initialize**: dp[i] = Infinity for all i > 0 (we'll update these)\n4. **Recurrence**: For each amount from 1 to target:\n   - For each coin denomination:\n     - If coin <= amount: dp[amount] = min(dp[amount], dp[amount - coin] + 1)\n5. **Result**: dp[amount] (or -1 if it's still Infinity)\n\nLet's trace with coins=[1, 3, 4], amount=6:\n\n- **dp[0] = 0** (base case)\n- **dp[1] = 1** (use coin 1: dp[0] + 1 = 1)\n- **dp[2] = 2** (use coin 1: dp[1] + 1 = 2)\n- **dp[3] = 1** (use coin 3: dp[0] + 1 = 1, better than dp[2] + 1 = 3)\n- **dp[4] = 1** (use coin 4: dp[0] + 1 = 1)\n- **dp[5] = 2** (use coin 4: dp[1] + 1 = 2, or coin 1: dp[4] + 1 = 2)\n- **dp[6] = 2** (use coin 3: dp[3] + 1 = 2, better than coin 4: dp[2] + 1 = 3)\n\nAnswer: 2\n\nThis is O(amount × coins) time and O(amount) space! Now let's code it step by step.",
+      "action": "continue",
+      "next": "language-selection"
+    },
+    {
+      "stepId": "language-selection",
+      "mentorSays": "Great! Now let's code this solution. Which programming language would you like to use?",
+      "choices": [
+        {
+          "label": "JavaScript",
+          "next": "variable-check-js"
+        },
+        {
+          "label": "Python",
+          "next": "variable-check-python"
+        },
+        {
+          "label": "Java",
+          "next": "variable-check-java"
+        },
+        {
+          "label": "C++",
+          "next": "variable-check-cpp"
+        },
+        {
+          "label": "TypeScript",
+          "next": "variable-check-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-check-js",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-js"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-js",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'dp' or 'minCoins') and put data inside it.\n\nFor example, 'let dp = [];' creates a variable that stores an empty array.",
+      "example": "let dp = [];\n\nNow the variable refers to an empty array",
+      "action": "continue",
+      "next": "function-check-js"
+    },
+    {
+      "stepId": "function-check-js",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "array-check-js"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-js",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "function add(a, b) {\n  return a + b;\n}\n\nadd(3, 5) returns 8",
+      "action": "continue",
+      "next": "array-check-js"
+    },
+    {
+      "stepId": "array-check-js",
+      "mentorSays": "Before we start coding, let me ask: Do you know what an array is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know arrays",
+          "next": "base-cases-check-js"
+        },
+        {
+          "label": "No, explain arrays",
+          "next": "array-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "base-cases-check-js",
+      "mentorSays": "Do you understand what base cases are in dynamic programming?",
+      "choices": [
+        {
+          "label": "Yes, I know base-cases",
+          "next": "dp-table-check-js"
+        },
+        {
+          "label": "No, explain base-cases",
+          "next": "base-cases-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "dp-table-check-js",
+      "mentorSays": "Do you understand how to initialize and fill a DP table?",
+      "choices": [
+        {
+          "label": "Yes, I know dp-table",
+          "next": "coding-start-js"
+        },
+        {
+          "label": "No, explain dp-table",
+          "next": "dp-table-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "dp-table-explanation-js",
+      "mentorSays": "A DP table stores solutions to subproblems. For coin change, dp[i] stores the minimum coins for amount i. We initialize dp[0] = 0, then fill bottom-up by trying each coin.\n\n// DP table for coin change:\n// dp[i] = minimum coins for amount i\n\nlet dp = Array(amount + 1).fill(Infinity);\ndp[0] = 0;  // 0 coins for amount 0\n\n// Fill table bottom-up\nfor (let i = 1; i <= amount; i++) {\n  for (let coin of coins) {\n    if (coin <= i) {\n      dp[i] = Math.min(dp[i], dp[i - coin] + 1);\n    }\n  }\n}\n\nGot it?",
+      "example": "// DP table for coin change:\n// dp[i] = minimum coins for amount i\n\nlet dp = Array(amount + 1).fill(Infinity);\ndp[0] = 0;  // 0 coins for amount 0\n\n// Fill table bottom-up\nfor (let i = 1; i <= amount; i++) {\n  for (let coin of coins) {\n    if (coin <= i) {\n      dp[i] = Math.min(dp[i], dp[i - coin] + 1);\n    }\n  }\n}",
+      "action": "continue",
+      "next": "coding-start-js"
+    },
+    {
+      "stepId": "base-cases-explanation-js",
+      "mentorSays": "Base cases are the simplest inputs. For coin change: dp[0] = 0 (0 coins needed for amount 0). All other amounts start as Infinity (impossible) until we find a way to make them.\n\n// Base cases for climbing stairs:\n// dp[0] = 1  (one way to be at start)\n// dp[1] = 1  (one way: climb 1 step)\n\nlet dp = [1, 1];\n// These are the simplest cases where answer is obvious!\n\nGot it?",
+      "example": "// Base cases for climbing stairs:\n// dp[0] = 1  (one way to be at start)\n// dp[1] = 1  (one way: climb 1 step)\n\nlet dp = [1, 1];\n// These are the simplest cases where answer is obvious!",
+      "action": "continue",
+      "next": "coding-start-js"
+    },
+    {
+      "stepId": "array-explanation-js",
+      "mentorSays": "An array is like a list of items that keeps them in order. Each item has a position number called an 'index'. Array indices start counting from 0.",
+      "example": "arr = [1, 2, 3]\n\narr[0] = 1\narr[1] = 2\narr[2] = 3",
+      "action": "continue",
+      "next": "coding-start-js"
+    },
+    {
+      "stepId": "coding-start-js",
+      "mentorSays": "Perfect! Let's implement coin change in JavaScript. We'll use dynamic programming.",
+      "example": "function coinChange(coins, amount) {\n  // Your code here\n}",
+      "action": "continue",
+      "next": "coding-init-js"
+    },
+    {
+      "stepId": "coding-init-js",
+      "mentorSays": "First, create a DP array. Initialize dp[0] = 0 (base case: 0 coins for amount 0), and all other values to Infinity (we'll update these).",
+      "example": "function coinChange(coins, amount) {\n  // dp[i] = minimum coins needed for amount i\n  const dp = new Array(amount + 1).fill(Infinity);\n  dp[0] = 0;  // Base case: 0 coins for amount 0",
+      "action": "continue",
+      "next": "coding-loop-js"
+    },
+    {
+      "stepId": "coding-loop-js",
+      "mentorSays": "Now, iterate through each amount from 1 to amount. For each amount, we'll try each coin.",
+      "example": "function coinChange(coins, amount) {\n  const dp = new Array(amount + 1).fill(Infinity);\n  dp[0] = 0;\n  \n  // For each amount from 1 to amount\n  for (let i = 1; i <= amount; i++) {\n    // Try each coin\n  }",
+      "action": "continue",
+      "next": "coding-coin-loop-js"
+    },
+    {
+      "stepId": "coding-coin-loop-js",
+      "mentorSays": "For each amount, iterate through all coins. If the coin value is less than or equal to the current amount, update dp[i].",
+      "example": "function coinChange(coins, amount) {\n  const dp = new Array(amount + 1).fill(Infinity);\n  dp[0] = 0;\n  \n  for (let i = 1; i <= amount; i++) {\n    for (let coin of coins) {\n      // If coin can be used\n      if (coin <= i) {\n        // Update dp[i]\n      }\n    }\n  }",
+      "action": "continue",
+      "next": "coding-recurrence-js"
+    },
+    {
+      "stepId": "coding-recurrence-js",
+      "mentorSays": "Let's define the recurrence relation.\n\nFor each amount i, we try each coin:\n- If coin <= i, we can use it\n- dp[i] = min(dp[i], dp[i-coin] + 1)\n\nThis means: 'The minimum coins for amount i is either what we already found, OR 1 coin plus the minimum for amount (i-coin)'.\n\nWe use min() because we want the MINIMUM number of coins!",
+      "example": "for (let i = 1; i <= amount; i++) {\n  for (let coin of coins) {\n    if (coin <= i) {\n      dp[i] = Math.min(dp[i], dp[i - coin] + 1);\n    }\n  }\n}",
+      "action": "continue",
+      "next": "coding-impossible-case-js"
+    },
+    {
+      "stepId": "coding-impossible-case-js",
+      "mentorSays": "Let's handle the case when the amount can't be made.\n\nIf dp[amount] is still Infinity after filling the table, it means we couldn't make that amount with the given coins.\n\nIn this case, we return -1 as specified in the lesson.",
+      "example": "// Check if amount is impossible\nif (dp[amount] === Infinity) {\n  return -1;\n}\nreturn dp[amount];",
+      "action": "continue",
+      "next": "coding-return-js"
+    },
+    {
+      "stepId": "coding-return-js",
+      "mentorSays": "Finally, return dp[amount]. If it's still Infinity, return -1 (impossible to make the amount).",
+      "example": "function coinChange(coins, amount) {\n  const dp = new Array(amount + 1).fill(Infinity);\n  dp[0] = 0;\n  \n  for (let i = 1; i <= amount; i++) {\n    for (let coin of coins) {\n      if (coin <= i) {\n        dp[i] = Math.min(dp[i], dp[i - coin] + 1);\n      }\n    }\n  }\n  \n  return dp[amount] === Infinity ? -1 : dp[amount];\n}",
+      "action": "continue",
+      "next": "test-code-js"
+    },
+    {
+      "stepId": "test-code-js",
+      "mentorSays": "Perfect! Now test your code with the example we used earlier:\n\ncoins = [1, 3, 4]\namount = 6\n\nAfter calling coinChange(coins, amount), it should return:\n2\n\nTry it in your IDE or code editor!",
+      "example": "Test input:\ncoins = [1, 3, 4]\namount = 6\n\nAfter coinChange(coins, amount):\n2",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-python",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-python"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-python",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'dp' or 'min_coins') and put data inside it.\n\nFor example, 'dp = []' creates a variable that stores an empty list.",
+      "example": "dp = []\n\nNow the variable refers to an empty list",
+      "action": "continue",
+      "next": "function-check-python"
+    },
+    {
+      "stepId": "function-check-python",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "array-check-python"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-python",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "def add(a, b):\n    return a + b\n\nadd(3, 5) returns 8",
+      "action": "continue",
+      "next": "array-check-python"
+    },
+    {
+      "stepId": "array-check-python",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a list is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know lists",
+          "next": "base-cases-check-python"
+        },
+        {
+          "label": "No, explain lists",
+          "next": "array-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "base-cases-check-python",
+      "mentorSays": "Do you understand what base cases are in dynamic programming?",
+      "choices": [
+        {
+          "label": "Yes, I know base-cases",
+          "next": "dp-table-check-python"
+        },
+        {
+          "label": "No, explain base-cases",
+          "next": "base-cases-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "dp-table-check-python",
+      "mentorSays": "Do you understand how to initialize and fill a DP table?",
+      "choices": [
+        {
+          "label": "Yes, I know dp-table",
+          "next": "coding-start-python"
+        },
+        {
+          "label": "No, explain dp-table",
+          "next": "dp-table-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "dp-table-explanation-python",
+      "mentorSays": "A DP table stores solutions to subproblems. For coin change, dp[i] stores the minimum coins for amount i. We initialize dp[0] = 0, then fill bottom-up by trying each coin.\n\n# DP table for coin change:\n# dp[i] = minimum coins for amount i\n\ndp = [float('inf')] * (amount + 1)\ndp[0] = 0  # 0 coins for amount 0\n\n# Fill table bottom-up\nfor i in range(1, amount + 1):\n    for coin in coins:\n        if coin <= i:\n            dp[i] = min(dp[i], dp[i - coin] + 1)\n\nGot it?",
+      "example": "# DP table for coin change:\n# dp[i] = minimum coins for amount i\n\ndp = [float('inf')] * (amount + 1)\ndp[0] = 0  # 0 coins for amount 0\n\n# Fill table bottom-up\nfor i in range(1, amount + 1):\n    for coin in coins:\n        if coin <= i:\n            dp[i] = min(dp[i], dp[i - coin] + 1)",
+      "action": "continue",
+      "next": "coding-start-python"
+    },
+    {
+      "stepId": "base-cases-explanation-python",
+      "mentorSays": "Base cases are the simplest inputs. For coin change: dp[0] = 0 (0 coins needed for amount 0). All other amounts start as Infinity (impossible) until we find a way to make them.\n\n# Base cases for climbing stairs:\n# dp[0] = 1  (one way to be at start)\n# dp[1] = 1  (one way: climb 1 step)\n\ndp = [1, 1]\n# These are the simplest cases where answer is obvious!\n\nGot it?",
+      "example": "# Base cases for climbing stairs:\n# dp[0] = 1  (one way to be at start)\n# dp[1] = 1  (one way: climb 1 step)\n\ndp = [1, 1]\n# These are the simplest cases where answer is obvious!",
+      "action": "continue",
+      "next": "coding-start-python"
+    },
+    {
+      "stepId": "array-explanation-python",
+      "mentorSays": "A list is like an array - a collection of items that keeps them in order. Each item has a position number called an 'index'. List indices start counting from 0.",
+      "example": "arr = [1, 2, 3]\n\narr[0] = 1\narr[1] = 2\narr[2] = 3",
+      "action": "continue",
+      "next": "coding-start-python"
+    },
+    {
+      "stepId": "coding-start-python",
+      "mentorSays": "Perfect! Let's implement coin change in Python. We'll use dynamic programming.",
+      "example": "def coin_change(coins, amount):\n    # Your code here\n    pass",
+      "action": "continue",
+      "next": "coding-init-python"
+    },
+    {
+      "stepId": "coding-init-python",
+      "mentorSays": "First, create a DP list. Initialize dp[0] = 0 (base case: 0 coins for amount 0), and all other values to float('inf') (we'll update these).",
+      "example": "def coin_change(coins, amount):\n    # dp[i] = minimum coins needed for amount i\n    dp = [float('inf')] * (amount + 1)\n    dp[0] = 0  # Base case: 0 coins for amount 0",
+      "action": "continue",
+      "next": "coding-loop-python"
+    },
+    {
+      "stepId": "coding-loop-python",
+      "mentorSays": "Now, iterate through each amount from 1 to amount. For each amount, we'll try each coin.",
+      "example": "def coin_change(coins, amount):\n    dp = [float('inf')] * (amount + 1)\n    dp[0] = 0\n    \n    # For each amount from 1 to amount\n    for i in range(1, amount + 1):\n        # Try each coin\n        pass",
+      "action": "continue",
+      "next": "coding-coin-loop-python"
+    },
+    {
+      "stepId": "coding-coin-loop-python",
+      "mentorSays": "For each amount, iterate through all coins. If the coin value is less than or equal to the current amount, update dp[i].",
+      "example": "def coin_change(coins, amount):\n    dp = [float('inf')] * (amount + 1)\n    dp[0] = 0\n    \n    for i in range(1, amount + 1):\n        for coin in coins:\n            # If coin can be used\n            if coin <= i:\n                # Update dp[i]\n                pass",
+      "action": "continue",
+      "next": "coding-update-python"
+    },
+    {
+      "stepId": "coding-update-python",
+      "mentorSays": "Update dp[i] to be the minimum of its current value and dp[i - coin] + 1. This means: \"Can we make amount i using this coin plus the minimum coins for amount (i - coin)?\"",
+      "example": "def coin_change(coins, amount):\n    dp = [float('inf')] * (amount + 1)\n    dp[0] = 0\n    \n    for i in range(1, amount + 1):\n        for coin in coins:\n            if coin <= i:\n                # Use this coin: dp[i - coin] + 1\n                dp[i] = min(dp[i], dp[i - coin] + 1)",
+      "action": "continue",
+      "next": "coding-recurrence-python"
+    },
+    {
+      "stepId": "coding-recurrence-python",
+      "mentorSays": "Let's define the recurrence relation.\n\nFor each amount i, we try each coin:\n- If coin <= i, we can use it\n- dp[i] = min(dp[i], dp[i-coin] + 1)\n\nThis means: 'The minimum coins for amount i is either what we already found, OR 1 coin plus the minimum for amount (i-coin)'.\n\nWe use min() because we want the MINIMUM number of coins!",
+      "example": "for (let i = 1; i <= amount; i++) {\n  for (let coin of coins) {\n    if (coin <= i) {\n      dp[i] = Math.min(dp[i], dp[i - coin] + 1);\n    }\n  }\n}",
+      "action": "continue",
+      "next": "coding-impossible-case-python"
+    },
+    {
+      "stepId": "coding-impossible-case-python",
+      "mentorSays": "Let's handle the case when the amount can't be made.\n\nIf dp[amount] is still Infinity after filling the table, it means we couldn't make that amount with the given coins.\n\nIn this case, we return -1 as specified in the lesson.",
+      "example": "// Check if amount is impossible\nif (dp[amount] === Infinity) {\n  return -1;\n}\nreturn dp[amount];",
+      "action": "continue",
+      "next": "coding-return-python"
+    },
+    {
+      "stepId": "coding-return-python",
+      "mentorSays": "Finally, return dp[amount]. If it's still float('inf'), return -1 (impossible to make the amount).",
+      "example": "def coin_change(coins, amount):\n    dp = [float('inf')] * (amount + 1)\n    dp[0] = 0\n    \n    for i in range(1, amount + 1):\n        for coin in coins:\n            if coin <= i:\n                dp[i] = min(dp[i], dp[i - coin] + 1)\n    \n    return -1 if dp[amount] == float('inf') else dp[amount]",
+      "action": "continue",
+      "next": "test-code-python"
+    },
+    {
+      "stepId": "test-code-python",
+      "mentorSays": "Perfect! Now test your code with the example we used earlier:\n\ncoins = [1, 3, 4]\namount = 6\n\nAfter calling coin_change(coins, amount), it should return:\n2\n\nTry it in your IDE or code editor!",
+      "example": "Test input:\ncoins = [1, 3, 4]\namount = 6\n\nAfter coin_change(coins, amount):\n2",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-java",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-java"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-java",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'dp' or 'minCoins') and put data inside it.\n\nFor example, 'int[] dp = new int[n];' creates a variable that stores an array.",
+      "example": "int[] dp = new int[n];\n\nNow the variable refers to an array",
+      "action": "continue",
+      "next": "function-check-java"
+    },
+    {
+      "stepId": "function-check-java",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a method is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know methods",
+          "next": "array-check-java"
+        },
+        {
+          "label": "No, explain methods",
+          "next": "function-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-java",
+      "mentorSays": "A method is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "public int add(int a, int b) {\n    return a + b;\n}\n\nadd(3, 5) returns 8",
+      "action": "continue",
+      "next": "array-check-java"
+    },
+    {
+      "stepId": "array-check-java",
+      "mentorSays": "Before we start coding, let me ask: Do you know what an array is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know arrays",
+          "next": "base-cases-check-java"
+        },
+        {
+          "label": "No, explain arrays",
+          "next": "array-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "base-cases-check-java",
+      "mentorSays": "Do you understand what base cases are in dynamic programming?",
+      "choices": [
+        {
+          "label": "Yes, I know base-cases",
+          "next": "dp-table-check-java"
+        },
+        {
+          "label": "No, explain base-cases",
+          "next": "base-cases-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "dp-table-check-java",
+      "mentorSays": "Do you understand how to initialize and fill a DP table?",
+      "choices": [
+        {
+          "label": "Yes, I know dp-table",
+          "next": "coding-start-java"
+        },
+        {
+          "label": "No, explain dp-table",
+          "next": "dp-table-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "dp-table-explanation-java",
+      "mentorSays": "A DP table stores solutions to subproblems. For coin change, dp[i] stores the minimum coins for amount i. We initialize dp[0] = 0, then fill bottom-up by trying each coin.\n\n// DP table for coin change:\n// dp[i] = minimum coins for amount i\n\nint[] dp = new int[amount + 1];\nArrays.fill(dp, Integer.MAX_VALUE);\ndp[0] = 0;  // 0 coins for amount 0\n\n// Fill table bottom-up\nfor (int i = 1; i <= amount; i++) {\n    for (int coin : coins) {\n        if (coin <= i) {\n            dp[i] = Math.min(dp[i], dp[i - coin] + 1);\n        }\n    }\n}\n\nGot it?",
+      "example": "// DP table for coin change:\n// dp[i] = minimum coins for amount i\n\nint[] dp = new int[amount + 1];\nArrays.fill(dp, Integer.MAX_VALUE);\ndp[0] = 0;  // 0 coins for amount 0\n\n// Fill table bottom-up\nfor (int i = 1; i <= amount; i++) {\n    for (int coin : coins) {\n        if (coin <= i) {\n            dp[i] = Math.min(dp[i], dp[i - coin] + 1);\n        }\n    }\n}",
+      "action": "continue",
+      "next": "coding-start-java"
+    },
+    {
+      "stepId": "base-cases-explanation-java",
+      "mentorSays": "Base cases are the simplest inputs. For coin change: dp[0] = 0 (0 coins needed for amount 0). All other amounts start as Infinity (impossible) until we find a way to make them.\n\n// Base cases for climbing stairs:\n// dp[0] = 1  (one way to be at start)\n// dp[1] = 1  (one way: climb 1 step)\n\nint[] dp = {1, 1};\n// These are the simplest cases where answer is obvious!\n\nGot it?",
+      "example": "// Base cases for climbing stairs:\n// dp[0] = 1  (one way to be at start)\n// dp[1] = 1  (one way: climb 1 step)\n\nint[] dp = {1, 1};\n// These are the simplest cases where answer is obvious!",
+      "action": "continue",
+      "next": "coding-start-java"
+    },
+    {
+      "stepId": "array-explanation-java",
+      "mentorSays": "An array is like a list of items that keeps them in order. Each item has a position number called an 'index'. Array indices start counting from 0.",
+      "example": "int[] arr = {1, 2, 3};\n\narr[0] = 1\narr[1] = 2\narr[2] = 3",
+      "action": "continue",
+      "next": "coding-start-java"
+    },
+    {
+      "stepId": "coding-start-java",
+      "mentorSays": "Perfect! Let's implement coin change in Java. We'll use dynamic programming.",
+      "example": "public int coinChange(int[] coins, int amount) {\n    // Your code here\n}",
+      "action": "continue",
+      "next": "coding-init-java"
+    },
+    {
+      "stepId": "coding-init-java",
+      "mentorSays": "First, create a DP array. Initialize dp[0] = 0 (base case: 0 coins for amount 0), and all other values to Integer.MAX_VALUE (we'll update these).",
+      "example": "public int coinChange(int[] coins, int amount) {\n    // dp[i] = minimum coins needed for amount i\n    int[] dp = new int[amount + 1];\n    Arrays.fill(dp, Integer.MAX_VALUE);\n    dp[0] = 0;  // Base case: 0 coins for amount 0",
+      "action": "continue",
+      "next": "coding-loop-java"
+    },
+    {
+      "stepId": "coding-loop-java",
+      "mentorSays": "Now, iterate through each amount from 1 to amount. For each amount, we'll try each coin.",
+      "example": "public int coinChange(int[] coins, int amount) {\n    int[] dp = new int[amount + 1];\n    Arrays.fill(dp, Integer.MAX_VALUE);\n    dp[0] = 0;\n    \n    // For each amount from 1 to amount\n    for (int i = 1; i <= amount; i++) {\n        // Try each coin\n    }",
+      "action": "continue",
+      "next": "coding-coin-loop-java"
+    },
+    {
+      "stepId": "coding-coin-loop-java",
+      "mentorSays": "For each amount, iterate through all coins. If the coin value is less than or equal to the current amount, update dp[i].",
+      "example": "public int coinChange(int[] coins, int amount) {\n    int[] dp = new int[amount + 1];\n    Arrays.fill(dp, Integer.MAX_VALUE);\n    dp[0] = 0;\n    \n    for (int i = 1; i <= amount; i++) {\n        for (int coin : coins) {\n            // If coin can be used\n            if (coin <= i) {\n                // Update dp[i]\n            }\n        }\n    }",
+      "action": "continue",
+      "next": "coding-update-java"
+    },
+    {
+      "stepId": "coding-update-java",
+      "mentorSays": "Update dp[i] to be the minimum of its current value and dp[i - coin] + 1. But first check if dp[i - coin] is not MAX_VALUE (otherwise we'd overflow).",
+      "example": "public int coinChange(int[] coins, int amount) {\n    int[] dp = new int[amount + 1];\n    Arrays.fill(dp, Integer.MAX_VALUE);\n    dp[0] = 0;\n    \n    for (int i = 1; i <= amount; i++) {\n        for (int coin : coins) {\n            if (coin <= i && dp[i - coin] != Integer.MAX_VALUE) {\n                // Use this coin: dp[i - coin] + 1\n                dp[i] = Math.min(dp[i], dp[i - coin] + 1);\n            }\n        }\n    }",
+      "action": "continue",
+      "next": "coding-recurrence-java"
+    },
+    {
+      "stepId": "coding-recurrence-java",
+      "mentorSays": "Let's define the recurrence relation.\n\nFor each amount i, we try each coin:\n- If coin <= i, we can use it\n- dp[i] = min(dp[i], dp[i-coin] + 1)\n\nThis means: 'The minimum coins for amount i is either what we already found, OR 1 coin plus the minimum for amount (i-coin)'.\n\nWe use min() because we want the MINIMUM number of coins!",
+      "example": "for (let i = 1; i <= amount; i++) {\n  for (let coin of coins) {\n    if (coin <= i) {\n      dp[i] = Math.min(dp[i], dp[i - coin] + 1);\n    }\n  }\n}",
+      "action": "continue",
+      "next": "coding-impossible-case-java"
+    },
+    {
+      "stepId": "coding-impossible-case-java",
+      "mentorSays": "Let's handle the case when the amount can't be made.\n\nIf dp[amount] is still Infinity after filling the table, it means we couldn't make that amount with the given coins.\n\nIn this case, we return -1 as specified in the lesson.",
+      "example": "// Check if amount is impossible\nif (dp[amount] === Infinity) {\n  return -1;\n}\nreturn dp[amount];",
+      "action": "continue",
+      "next": "coding-return-java"
+    },
+    {
+      "stepId": "coding-return-java",
+      "mentorSays": "Finally, return dp[amount]. If it's still Integer.MAX_VALUE, return -1 (impossible to make the amount).",
+      "example": "public int coinChange(int[] coins, int amount) {\n    int[] dp = new int[amount + 1];\n    Arrays.fill(dp, Integer.MAX_VALUE);\n    dp[0] = 0;\n    \n    for (int i = 1; i <= amount; i++) {\n        for (int coin : coins) {\n            if (coin <= i && dp[i - coin] != Integer.MAX_VALUE) {\n                dp[i] = Math.min(dp[i], dp[i - coin] + 1);\n            }\n        }\n    }\n    \n    return dp[amount] == Integer.MAX_VALUE ? -1 : dp[amount];\n}",
+      "action": "continue",
+      "next": "test-code-java"
+    },
+    {
+      "stepId": "test-code-java",
+      "mentorSays": "Perfect! Now test your code with the example we used earlier:\n\ncoins = [1, 3, 4]\namount = 6\n\nAfter calling coinChange(coins, amount), it should return:\n2\n\nTry it in your IDE or code editor!",
+      "example": "Test input:\ncoins = [1, 3, 4]\namount = 6\n\nAfter coinChange(coins, amount):\n2",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-cpp",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-cpp"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-cpp",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'dp' or 'minCoins') and put data inside it.\n\nFor example, 'vector<int> dp(n);' creates a variable that stores a vector.",
+      "example": "vector<int> dp(n);\n\nNow the variable refers to a vector",
+      "action": "continue",
+      "next": "function-check-cpp"
+    },
+    {
+      "stepId": "function-check-cpp",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "array-check-cpp"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-cpp",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "int add(int a, int b) {\n    return a + b;\n}\n\nadd(3, 5) returns 8",
+      "action": "continue",
+      "next": "array-check-cpp"
+    },
+    {
+      "stepId": "array-check-cpp",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a vector is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know vectors",
+          "next": "base-cases-check-cpp"
+        },
+        {
+          "label": "No, explain vectors",
+          "next": "array-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "base-cases-check-cpp",
+      "mentorSays": "Do you understand what base cases are in dynamic programming?",
+      "choices": [
+        {
+          "label": "Yes, I know base-cases",
+          "next": "dp-table-check-cpp"
+        },
+        {
+          "label": "No, explain base-cases",
+          "next": "base-cases-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "dp-table-check-cpp",
+      "mentorSays": "Do you understand how to initialize and fill a DP table?",
+      "choices": [
+        {
+          "label": "Yes, I know dp-table",
+          "next": "coding-start-cpp"
+        },
+        {
+          "label": "No, explain dp-table",
+          "next": "dp-table-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "dp-table-explanation-cpp",
+      "mentorSays": "A DP table stores solutions to subproblems. For coin change, dp[i] stores the minimum coins for amount i. We initialize dp[0] = 0, then fill bottom-up by trying each coin.\n\n// DP table for coin change:\n// dp[i] = minimum coins for amount i\n\nvector<int> dp(amount + 1, INT_MAX);\ndp[0] = 0;  // 0 coins for amount 0\n\n// Fill table bottom-up\nfor (int i = 1; i <= amount; i++) {\n    for (int coin : coins) {\n        if (coin <= i) {\n            dp[i] = min(dp[i], dp[i - coin] + 1);\n        }\n    }\n}\n\nGot it?",
+      "example": "// DP table for coin change:\n// dp[i] = minimum coins for amount i\n\nvector<int> dp(amount + 1, INT_MAX);\ndp[0] = 0;  // 0 coins for amount 0\n\n// Fill table bottom-up\nfor (int i = 1; i <= amount; i++) {\n    for (int coin : coins) {\n        if (coin <= i) {\n            dp[i] = min(dp[i], dp[i - coin] + 1);\n        }\n    }\n}",
+      "action": "continue",
+      "next": "coding-start-cpp"
+    },
+    {
+      "stepId": "base-cases-explanation-cpp",
+      "mentorSays": "Base cases are the simplest inputs. For coin change: dp[0] = 0 (0 coins needed for amount 0). All other amounts start as Infinity (impossible) until we find a way to make them.\n\n// Base cases for climbing stairs:\n// dp[0] = 1  (one way to be at start)\n// dp[1] = 1  (one way: climb 1 step)\n\nvector<int> dp = {1, 1};\n// These are the simplest cases where answer is obvious!\n\nGot it?",
+      "example": "// Base cases for climbing stairs:\n// dp[0] = 1  (one way to be at start)\n// dp[1] = 1  (one way: climb 1 step)\n\nvector<int> dp = {1, 1};\n// These are the simplest cases where answer is obvious!",
+      "action": "continue",
+      "next": "coding-start-cpp"
+    },
+    {
+      "stepId": "array-explanation-cpp",
+      "mentorSays": "A vector is like an array - a collection of items that keeps them in order. Each item has a position number called an 'index'. Vector indices start counting from 0.",
+      "example": "vector<int> arr = {1, 2, 3};\n\narr[0] = 1\narr[1] = 2\narr[2] = 3",
+      "action": "continue",
+      "next": "coding-start-cpp"
+    },
+    {
+      "stepId": "coding-start-cpp",
+      "mentorSays": "Perfect! Let's implement coin change in C++. We'll use dynamic programming.",
+      "example": "int coinChange(vector<int>& coins, int amount) {\n    // Your code here\n}",
+      "action": "continue",
+      "next": "coding-init-cpp"
+    },
+    {
+      "stepId": "coding-init-cpp",
+      "mentorSays": "First, create a DP vector. Initialize dp[0] = 0 (base case: 0 coins for amount 0), and all other values to INT_MAX (we'll update these).",
+      "example": "int coinChange(vector<int>& coins, int amount) {\n    // dp[i] = minimum coins needed for amount i\n    vector<int> dp(amount + 1, INT_MAX);\n    dp[0] = 0;  // Base case: 0 coins for amount 0",
+      "action": "continue",
+      "next": "coding-loop-cpp"
+    },
+    {
+      "stepId": "coding-loop-cpp",
+      "mentorSays": "Now, iterate through each amount from 1 to amount. For each amount, we'll try each coin.",
+      "example": "int coinChange(vector<int>& coins, int amount) {\n    vector<int> dp(amount + 1, INT_MAX);\n    dp[0] = 0;\n    \n    // For each amount from 1 to amount\n    for (int i = 1; i <= amount; i++) {\n        // Try each coin\n    }",
+      "action": "continue",
+      "next": "coding-coin-loop-cpp"
+    },
+    {
+      "stepId": "coding-coin-loop-cpp",
+      "mentorSays": "For each amount, iterate through all coins. If the coin value is less than or equal to the current amount, update dp[i].",
+      "example": "int coinChange(vector<int>& coins, int amount) {\n    vector<int> dp(amount + 1, INT_MAX);\n    dp[0] = 0;\n    \n    for (int i = 1; i <= amount; i++) {\n        for (int coin : coins) {\n            // If coin can be used\n            if (coin <= i) {\n                // Update dp[i]\n            }\n        }\n    }",
+      "action": "continue",
+      "next": "coding-update-cpp"
+    },
+    {
+      "stepId": "coding-update-cpp",
+      "mentorSays": "Update dp[i] to be the minimum of its current value and dp[i - coin] + 1. But first check if dp[i - coin] is not INT_MAX (otherwise we'd overflow).",
+      "example": "int coinChange(vector<int>& coins, int amount) {\n    vector<int> dp(amount + 1, INT_MAX);\n    dp[0] = 0;\n    \n    for (int i = 1; i <= amount; i++) {\n        for (int coin : coins) {\n            if (coin <= i && dp[i - coin] != INT_MAX) {\n                // Use this coin: dp[i - coin] + 1\n                dp[i] = min(dp[i], dp[i - coin] + 1);\n            }\n        }\n    }",
+      "action": "continue",
+      "next": "coding-recurrence-cpp"
+    },
+    {
+      "stepId": "coding-recurrence-cpp",
+      "mentorSays": "Let's define the recurrence relation.\n\nFor each amount i, we try each coin:\n- If coin <= i, we can use it\n- dp[i] = min(dp[i], dp[i-coin] + 1)\n\nThis means: 'The minimum coins for amount i is either what we already found, OR 1 coin plus the minimum for amount (i-coin)'.\n\nWe use min() because we want the MINIMUM number of coins!",
+      "example": "for (let i = 1; i <= amount; i++) {\n  for (let coin of coins) {\n    if (coin <= i) {\n      dp[i] = Math.min(dp[i], dp[i - coin] + 1);\n    }\n  }\n}",
+      "action": "continue",
+      "next": "coding-impossible-case-cpp"
+    },
+    {
+      "stepId": "coding-impossible-case-cpp",
+      "mentorSays": "Let's handle the case when the amount can't be made.\n\nIf dp[amount] is still Infinity after filling the table, it means we couldn't make that amount with the given coins.\n\nIn this case, we return -1 as specified in the lesson.",
+      "example": "// Check if amount is impossible\nif (dp[amount] === Infinity) {\n  return -1;\n}\nreturn dp[amount];",
+      "action": "continue",
+      "next": "coding-return-cpp"
+    },
+    {
+      "stepId": "coding-return-cpp",
+      "mentorSays": "Finally, return dp[amount]. If it's still INT_MAX, return -1 (impossible to make the amount).",
+      "example": "int coinChange(vector<int>& coins, int amount) {\n    vector<int> dp(amount + 1, INT_MAX);\n    dp[0] = 0;\n    \n    for (int i = 1; i <= amount; i++) {\n        for (int coin : coins) {\n            if (coin <= i && dp[i - coin] != INT_MAX) {\n                dp[i] = min(dp[i], dp[i - coin] + 1);\n            }\n        }\n    }\n    \n    return dp[amount] == INT_MAX ? -1 : dp[amount];\n}",
+      "action": "continue",
+      "next": "test-code-cpp"
+    },
+    {
+      "stepId": "test-code-cpp",
+      "mentorSays": "Perfect! Now test your code with the example we used earlier:\n\ncoins = [1, 3, 4]\namount = 6\n\nAfter calling coinChange(coins, amount), it should return:\n2\n\nTry it in your IDE or code editor!",
+      "example": "Test input:\ncoins = [1, 3, 4]\namount = 6\n\nAfter coinChange(coins, amount):\n2",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-ts",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-ts"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-ts",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'dp' or 'minCoins') and put data inside it.\n\nFor example, 'let dp: number[] = [];' creates a variable that stores an empty array.",
+      "example": "let dp: number[] = [];\n\nNow the variable refers to an empty array",
+      "action": "continue",
+      "next": "function-check-ts"
+    },
+    {
+      "stepId": "function-check-ts",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "array-check-ts"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-ts",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "function add(a: number, b: number): number {\n  return a + b;\n}\n\nadd(3, 5) returns 8",
+      "action": "continue",
+      "next": "array-check-ts"
+    },
+    {
+      "stepId": "array-check-ts",
+      "mentorSays": "Before we start coding, let me ask: Do you know what an array is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know arrays",
+          "next": "base-cases-check-ts"
+        },
+        {
+          "label": "No, explain arrays",
+          "next": "array-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "base-cases-check-ts",
+      "mentorSays": "Do you understand what base cases are in dynamic programming?",
+      "choices": [
+        {
+          "label": "Yes, I know base-cases",
+          "next": "dp-table-check-ts"
+        },
+        {
+          "label": "No, explain base-cases",
+          "next": "base-cases-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "dp-table-check-ts",
+      "mentorSays": "Do you understand how to initialize and fill a DP table?",
+      "choices": [
+        {
+          "label": "Yes, I know dp-table",
+          "next": "coding-start-ts"
+        },
+        {
+          "label": "No, explain dp-table",
+          "next": "dp-table-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "dp-table-explanation-ts",
+      "mentorSays": "A DP table stores solutions to subproblems. For coin change, dp[i] stores the minimum coins for amount i. We initialize dp[0] = 0, then fill bottom-up by trying each coin.\n\n// DP table for coin change:\n// dp[i] = minimum coins for amount i\n\nlet dp: number[] = Array(amount + 1).fill(Infinity);\ndp[0] = 0;  // 0 coins for amount 0\n\n// Fill table bottom-up\nfor (let i = 1; i <= amount; i++) {\n  for (let coin of coins) {\n    if (coin <= i) {\n      dp[i] = Math.min(dp[i], dp[i - coin] + 1);\n    }\n  }\n}\n\nGot it?",
+      "example": "// DP table for coin change:\n// dp[i] = minimum coins for amount i\n\nlet dp: number[] = Array(amount + 1).fill(Infinity);\ndp[0] = 0;  // 0 coins for amount 0\n\n// Fill table bottom-up\nfor (let i = 1; i <= amount; i++) {\n  for (let coin of coins) {\n    if (coin <= i) {\n      dp[i] = Math.min(dp[i], dp[i - coin] + 1);\n    }\n  }\n}",
+      "action": "continue",
+      "next": "coding-start-ts"
+    },
+    {
+      "stepId": "base-cases-explanation-ts",
+      "mentorSays": "Base cases are the simplest inputs. For coin change: dp[0] = 0 (0 coins needed for amount 0). All other amounts start as Infinity (impossible) until we find a way to make them.\n\n// Base cases for climbing stairs:\n// dp[0] = 1  (one way to be at start)\n// dp[1] = 1  (one way: climb 1 step)\n\nlet dp: number[] = [1, 1];\n// These are the simplest cases where answer is obvious!\n\nGot it?",
+      "example": "// Base cases for climbing stairs:\n// dp[0] = 1  (one way to be at start)\n// dp[1] = 1  (one way: climb 1 step)\n\nlet dp: number[] = [1, 1];\n// These are the simplest cases where answer is obvious!",
+      "action": "continue",
+      "next": "coding-start-ts"
+    },
+    {
+      "stepId": "array-explanation-ts",
+      "mentorSays": "An array is like a list of items that keeps them in order. Each item has a position number called an 'index'. Array indices start counting from 0.",
+      "example": "arr: number[] = [1, 2, 3]\n\narr[0] = 1\narr[1] = 2\narr[2] = 3",
+      "action": "continue",
+      "next": "coding-start-ts"
+    },
+    {
+      "stepId": "coding-start-ts",
+      "mentorSays": "Perfect! Let's implement coin change in TypeScript. We'll use dynamic programming.",
+      "example": "function coinChange(coins: number[], amount: number): number {\n  // Your code here\n}",
+      "action": "continue",
+      "next": "coding-init-ts"
+    },
+    {
+      "stepId": "coding-init-ts",
+      "mentorSays": "First, create a DP array. Initialize dp[0] = 0 (base case: 0 coins for amount 0), and all other values to Infinity (we'll update these).",
+      "example": "function coinChange(coins: number[], amount: number): number {\n  // dp[i] = minimum coins needed for amount i\n  const dp: number[] = new Array(amount + 1).fill(Infinity);\n  dp[0] = 0;  // Base case: 0 coins for amount 0",
+      "action": "continue",
+      "next": "coding-loop-ts"
+    },
+    {
+      "stepId": "coding-loop-ts",
+      "mentorSays": "Now, iterate through each amount from 1 to amount. For each amount, we'll try each coin.",
+      "example": "function coinChange(coins: number[], amount: number): number {\n  const dp: number[] = new Array(amount + 1).fill(Infinity);\n  dp[0] = 0;\n  \n  // For each amount from 1 to amount\n  for (let i = 1; i <= amount; i++) {\n    // Try each coin\n  }",
+      "action": "continue",
+      "next": "coding-coin-loop-ts"
+    },
+    {
+      "stepId": "coding-coin-loop-ts",
+      "mentorSays": "For each amount, iterate through all coins. If the coin value is less than or equal to the current amount, update dp[i].",
+      "example": "function coinChange(coins: number[], amount: number): number {\n  const dp: number[] = new Array(amount + 1).fill(Infinity);\n  dp[0] = 0;\n  \n  for (let i = 1; i <= amount; i++) {\n    for (let coin of coins) {\n      // If coin can be used\n      if (coin <= i) {\n        // Update dp[i]\n      }\n    }\n  }",
+      "action": "continue",
+      "next": "coding-update-ts"
+    },
+    {
+      "stepId": "coding-update-ts",
+      "mentorSays": "Update dp[i] to be the minimum of its current value and dp[i - coin] + 1. This means: \"Can we make amount i using this coin plus the minimum coins for amount (i - coin)?\"",
+      "example": "function coinChange(coins: number[], amount: number): number {\n  const dp: number[] = new Array(amount + 1).fill(Infinity);\n  dp[0] = 0;\n  \n  for (let i = 1; i <= amount; i++) {\n    for (let coin of coins) {\n      if (coin <= i) {\n        // Use this coin: dp[i - coin] + 1\n        dp[i] = Math.min(dp[i], dp[i - coin] + 1);\n      }\n    }\n  }",
+      "action": "continue",
+      "next": "coding-recurrence-ts"
+    },
+    {
+      "stepId": "coding-recurrence-ts",
+      "mentorSays": "Let's define the recurrence relation.\n\nFor each amount i, we try each coin:\n- If coin <= i, we can use it\n- dp[i] = min(dp[i], dp[i-coin] + 1)\n\nThis means: 'The minimum coins for amount i is either what we already found, OR 1 coin plus the minimum for amount (i-coin)'.\n\nWe use min() because we want the MINIMUM number of coins!",
+      "example": "for (let i = 1; i <= amount; i++) {\n  for (let coin of coins) {\n    if (coin <= i) {\n      dp[i] = Math.min(dp[i], dp[i - coin] + 1);\n    }\n  }\n}",
+      "action": "continue",
+      "next": "coding-impossible-case-ts"
+    },
+    {
+      "stepId": "coding-impossible-case-ts",
+      "mentorSays": "Let's handle the case when the amount can't be made.\n\nIf dp[amount] is still Infinity after filling the table, it means we couldn't make that amount with the given coins.\n\nIn this case, we return -1 as specified in the lesson.",
+      "example": "// Check if amount is impossible\nif (dp[amount] === Infinity) {\n  return -1;\n}\nreturn dp[amount];",
+      "action": "continue",
+      "next": "coding-return-ts"
+    },
+    {
+      "stepId": "coding-return-ts",
+      "mentorSays": "Finally, return dp[amount]. If it's still Infinity, return -1 (impossible to make the amount).",
+      "example": "function coinChange(coins: number[], amount: number): number {\n  const dp: number[] = new Array(amount + 1).fill(Infinity);\n  dp[0] = 0;\n  \n  for (let i = 1; i <= amount; i++) {\n    for (let coin of coins) {\n      if (coin <= i) {\n        dp[i] = Math.min(dp[i], dp[i - coin] + 1);\n      }\n    }\n  }\n  \n  return dp[amount] === Infinity ? -1 : dp[amount];\n}",
+      "action": "continue",
+      "next": "test-code-ts"
+    },
+    {
+      "stepId": "test-code-ts",
+      "mentorSays": "Perfect! Now test your code with the example we used earlier:\n\ncoins = [1, 3, 4]\namount = 6\n\nAfter calling coinChange(coins, amount), it should return:\n2\n\nTry it in your IDE or code editor!",
+      "example": "Test input:\ncoins = [1, 3, 4]\namount = 6\n\nAfter coinChange(coins, amount):\n2",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "final",
+      "mentorSays": "🎉 Well done! You've learned coin change. You understand how to use dynamic programming to find the minimum coins needed to make an amount!\n\nThis is O(amount × coins) time and O(amount) space - excellent for optimization lessons! Keep practicing!",
+      "action": "continue"
+    }
+  ]
+}

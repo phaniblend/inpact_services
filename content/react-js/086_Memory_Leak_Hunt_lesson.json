@@ -1,0 +1,322 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-react-js-86",
+    "track": "react-js",
+    "lessonNum": 86,
+    "title": "Memory Leak Hunt",
+    "shortName": "P86",
+    "intro": {
+      "tag": "LESSON #86",
+      "title": "Memory Leak Hunt",
+      "body": "In this lesson, you will build a simple React app that demonstrates and fixes a common memory leak caused by an uncleaned-up interval timer. You'll learn how memory leaks occur when components don't properly clean up side effects like timers or event listeners after unmounting. The core concept involves using the useEffect hook to manage side effects and its cleanup function to prevent leaks. You'll work with React's useState for state management and setInterval for creating the timer. By the end, you'll understand how to write components that avoid memory leaks by cleaning up resources when they are no longer needed.",
+      "usecase": "Memory leak prevention is critical in long-running React applications like data dashboards and admin panels, where users keep tabs open for hours while monitoring live charts, tables, and filters. For example, a financial analytics dashboard might continuously fetch and display real-time stock data; if event listeners or intervals from old components aren't cleaned up, the app gradually consumes more memory, slowing down the browser and potentially crashing it. Developers implement cleanup in useEffect to handle component unmounting—ensuring that subscriptions, WebSocket connections, or timers are properly disposed of when a user navigates away from a chart or closes a modal, maintaining app performance and stability."
+    },
+    "objectives": [
+      "Implement event listener cleanup in React components to prevent memory leaks",
+      "Apply the useEffect cleanup function to unsubscribe from subscriptions and timers",
+      "Construct a component that properly manages WebSocket connections with cleanup",
+      "Configure state updates to avoid setting state on unmounted components",
+      "Manipulate DOM references with useRef and clean them up when components unmount",
+      "Initialize and clear intervals or timeouts within useEffect's return function",
+      "Render conditional UI that safely handles asynchronous operations"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 9",
+        "title": "Import React and useState",
+        "instruction": "Import React and the useState hook from the 'react' package.",
+        "hint": "Use the import statement to bring in React and useState from 'react'.",
+        "analogousExample": "// Importing React and a hook\nimport React, { useState } from 'react';",
+        "seedCode": "// Import React and useState here",
+        "expectedOutcome": "You'll have React and useState available to use in your component.",
+        "successCriteria": [
+          "React and useState are imported from 'react'."
+        ],
+        "feedbackCorrect": "Great! You've imported React and useState correctly.",
+        "feedbackPartial": "You're close. Make sure you're importing both React and useState from 'react'.",
+        "feedbackWrong": "That's not quite right. You need to import React and useState from 'react'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "React",
+            "useState",
+            "'react'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 9",
+        "title": "Create the main App component",
+        "instruction": "Create a functional component named App that returns an empty div element.",
+        "hint": "Define the App component using either a function declaration or arrow function syntax, and have it return a <div> element.",
+        "analogousExample": "// Example of a functional component returning an empty div\nfunction ExampleComponent() {\n  return <div></div>;\n}",
+        "seedCode": "import React, { useState } from 'react';\n\n// Create the App component here",
+        "expectedOutcome": "The App component is defined and returns an empty div.",
+        "successCriteria": [
+          "A functional component named App exists and returns a <div> element."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the component, but make sure it's named 'App' and returns a <div> element.",
+        "feedbackWrong": "The App component isn't defined correctly. Check that you've created a function named App that returns a <div>.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "App",
+            "return",
+            "<div>"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 9",
+        "title": "Initialize state for counter",
+        "instruction": "Inside your App component, use useState to create a state variable named count with an initial value of 0.",
+        "hint": "Call useState(0) and destructure the returned array into count and setCount variables.",
+        "analogousExample": "// Example: initializing state with useState\nconst [value, setValue] = useState(initialValue);",
+        "seedCode": "import React, { useState } from 'react';\n\n// Create the App component here\nconst App = () => {\n  // Initialize count state here\n  \n  return (\n    <div>\n      <h1>Memory Leak Hunt</h1>\n    </div>\n  );\n};\n\nexport default App;",
+        "expectedOutcome": "The App component will have a count state variable initialized to 0, ready to track counter values.",
+        "successCriteria": [
+          "The useState hook is called with initial value 0, and the returned array is destructured into count and setCount variables."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're calling useState(0) and destructuring the result into [count, setCount].",
+        "feedbackWrong": "The count state isn't properly initialized. Use useState(0) to create the state variable.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "useState",
+            "count",
+            "0"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 9",
+        "title": "Define startTimer handler",
+        "instruction": "Inside your App component, define a function named startTimer that sets an interval to increment the count state every second and stores the interval ID in the intervalId state.",
+        "hint": "Use setInterval to call a function that updates the count. Remember to store the interval ID returned by setInterval in the intervalId state using setIntervalId.",
+        "analogousExample": "// Example: a function that starts an interval\nfunction startTimer() {\n  const id = setInterval(() => {\n    // Update state here\n  }, 1000);\n  // Store the interval ID in state\n}",
+        "seedCode": "import React, { useState } from 'react';\n\n// Create the App component here\nconst App = () => {\n  // Initialize count state here\n  const [count, setCount] = useState(0);\n  const [intervalId, setIntervalId] = useState(null);\n  \n  // Define startTimer function here\n  \n  return (\n    <div>\n      <h1>Memory Leak Hunt</h1>\n    </div>\n  );\n};\n\nexport default App;",
+        "expectedOutcome": "A startTimer function is defined that increments count every second and stores the interval ID.",
+        "successCriteria": [
+          "The startTimer function is defined, uses setInterval to increment count, and stores the interval ID in intervalId state."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've defined a function, but make sure it uses setInterval to increment count and stores the interval ID in intervalId state.",
+        "feedbackWrong": "The startTimer function is not defined correctly. It should use setInterval to update count and store the interval ID.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "startTimer",
+            "setInterval",
+            "setCount",
+            "setIntervalId"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 9",
+        "title": "Define stopTimer handler",
+        "instruction": "Define a function named stopTimer inside your App component that clears the running interval using intervalId and resets intervalId to null.",
+        "hint": "Use clearInterval with the intervalId state value, then call setIntervalId to reset it to null.",
+        "analogousExample": "// Similar: a function that stops something\nfunction stopMusic() {\n  clearTimeout(timerId);\n  setTimerId(null);\n}",
+        "seedCode": "import React, { useState } from 'react';\n\n// Create the App component here\nconst App = () => {\n  // Initialize count state here\n  const [count, setCount] = useState(0);\n  const [intervalId, setIntervalId] = useState(null);\n  \n  // Define startTimer function here\n  \n  // Define stopTimer function here\n  \n  return (\n    <div>\n      <h1>Memory Leak Hunt</h1>\n    </div>\n  );\n};\n\nexport default App;",
+        "expectedOutcome": "A stopTimer function is defined that clears the interval and resets the intervalId state.",
+        "successCriteria": [
+          "The stopTimer function is defined, calls clearInterval with intervalId, and sets intervalId to null."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure your stopTimer function both clears the interval using clearInterval(intervalId) and resets intervalId to null.",
+        "feedbackWrong": "The stopTimer function isn't defined correctly. It should clear the interval and reset the intervalId state to null.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "stopTimer",
+            "clearInterval",
+            "intervalId",
+            "setIntervalId",
+            "null"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 9",
+        "title": "Add counter display",
+        "instruction": "Inside your component's return statement, add a paragraph element that displays the current count value.",
+        "hint": "Use JSX curly braces to embed the count state variable inside the paragraph text.",
+        "analogousExample": "// Displaying a state value in JSX\n<p>Current value: {someState}</p>",
+        "seedCode": "import React, { useState } from 'react';\n\n// Create the App component here\nconst App = () => {\n  // Initialize count state here\n  const [count, setCount] = useState(0);\n  const [intervalId, setIntervalId] = useState(null);\n  \n  // Define startTimer function here\n  \n  // Define stopTimer function here\n  \n  return (\n    <div>\n      <h1>Memory Leak Hunt</h1>\n      \n    </div>\n  );\n};\n\nexport default App;",
+        "expectedOutcome": "The UI will show the current counter value below the heading.",
+        "successCriteria": [
+          "A paragraph element exists that displays the count state value."
+        ],
+        "feedbackCorrect": "Great! The counter value is now visible in the UI.",
+        "feedbackPartial": "You added a paragraph, but it might not be displaying the count value correctly. Make sure to use curly braces with the count variable.",
+        "feedbackWrong": "The paragraph element displaying the count value is missing or incorrect.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<p>",
+            "{count}",
+            "</p>"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 9",
+        "title": "Add start button and wire onClick",
+        "instruction": "Add a button element with the text 'Start Timer' inside the div, and set its onClick handler to call the startTimer function.",
+        "hint": "Use the <button> tag with onClick={startTimer} and the text content 'Start Timer'.",
+        "analogousExample": "// Adding a button with click handler\n<button onClick={handleClick}>Click Me</button>",
+        "seedCode": "import React, { useState } from 'react';\n\n// Create the App component here\nconst App = () => {\n  // Initialize count state here\n  const [count, setCount] = useState(0);\n  const [intervalId, setIntervalId] = useState(null);\n  \n  // Define startTimer function here\n  \n  // Define stopTimer function here\n  \n  return (\n    <div>\n      <h1>Memory Leak Hunt</h1>\n      \n    </div>\n  );\n};\n\nexport default App;",
+        "expectedOutcome": "A button labeled 'Start Timer' appears in the UI, and clicking it will trigger the startTimer function.",
+        "successCriteria": [
+          "The button element with text 'Start Timer' is added, and its onClick prop is set to startTimer."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You added a button, but make sure it has the correct text 'Start Timer' and the onClick handler is set to startTimer.",
+        "feedbackWrong": "The button is missing or not properly configured. Check that you added a <button> with onClick={startTimer} and the text 'Start Timer'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<button",
+            "onClick={startTimer}",
+            "Start Timer"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 9",
+        "title": "Add stop button and wire onClick",
+        "instruction": "Add a button element with the text 'Stop Timer' after the start button, and wire its onClick event to call the stopTimer function.",
+        "hint": "Add a <button> element with onClick={stopTimer} and the text content 'Stop Timer'.",
+        "analogousExample": "// Adding a button with an event handler\n<button onClick={handleStop}>Stop Action</button>",
+        "seedCode": "import React, { useState } from 'react';\n\n// Create the App component here\nconst App = () => {\n  // Initialize count state here\n  const [count, setCount] = useState(0);\n  const [intervalId, setIntervalId] = useState(null);\n  \n  // Define startTimer function here\n  const startTimer = () => {\n    const id = setInterval(() => {\n      setCount(prev => prev + 1);\n    }, 1000);\n    setIntervalId(id);\n  };\n  \n  // Define stopTimer function here\n  const stopTimer = () => {\n    clearInterval(intervalId);\n    setIntervalId(null);\n  };\n  \n  return (\n    <div>\n      <h1>Memory Leak Hunt</h1>\n      <p>Count: {count}</p>\n      <button onClick={startTimer}>Start Timer</button>\n      \n    </div>\n  );\n};\n\nexport default App;",
+        "expectedOutcome": "A 'Stop Timer' button appears next to the 'Start Timer' button, and clicking it will stop the counter.",
+        "successCriteria": [
+          "A button with text 'Stop Timer' is added, and its onClick event is connected to the stopTimer function."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You added a button, but make sure it has the correct text 'Stop Timer' and its onClick calls stopTimer.",
+        "feedbackWrong": "The stop button is missing or not properly connected. Add a <button> with onClick={stopTimer} and text 'Stop Timer'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<button",
+            "onClick={stopTimer}",
+            "Stop Timer"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 9",
+        "title": "Add cleanup function for memory leak prevention",
+        "instruction": "Add a return function inside the component that clears the interval if intervalId exists",
+        "hint": "Return a cleanup function from the component that checks if intervalId is not null and calls clearInterval(intervalId).",
+        "analogousExample": "// Cleanup example\nconst TimerComponent = () => {\n  const [timerId, setTimerId] = useState(null);\n  \n  // Cleanup on unmount\n  return () => {\n    if (timerId) {\n      clearInterval(timerId);\n    }\n  };\n};",
+        "seedCode": "import React, { useState } from 'react';\n\n// Create the App component here\nconst App = () => {\n  // Initialize count state here\n  const [count, setCount] = useState(0);\n  const [intervalId, setIntervalId] = useState(null);\n  \n  // Define startTimer function here\n  const startTimer = () => {\n    const id = setInterval(() => {\n      setCount(prev => prev + 1);\n    }, 1000);\n    setIntervalId(id);\n  };\n  \n  // Define stopTimer function here\n  const stopTimer = () => {\n    clearInterval(intervalId);\n    setIntervalId(null);\n  };\n  \n  // Add cleanup function here\n  \n  return (\n    <div>\n      <h1>Memory Leak Hunt</h1>\n      <p>Count: {count}</p>\n      <button onClick={startTimer}>Start Timer</button>\n      \n    </div>\n  );\n};\n\nexport default App;",
+        "expectedOutcome": "The component will have a cleanup function that prevents memory leaks by clearing the interval when the component unmounts.",
+        "successCriteria": [
+          "A return function is added inside the component that checks intervalId and calls clearInterval if it exists."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure your cleanup function checks if intervalId exists and clears it with clearInterval.",
+        "feedbackWrong": "The cleanup function is missing or incorrect. Add a return function that clears the interval when the component unmounts.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "return",
+            "() =>",
+            "clearInterval",
+            "intervalId"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import React and useState",
+        "id": "step1"
+      },
+      {
+        "label": "Create the main App component",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize state for counter",
+        "id": "step3"
+      },
+      {
+        "label": "Define startTimer handler",
+        "id": "step4"
+      },
+      {
+        "label": "Define stopTimer handler",
+        "id": "step5"
+      },
+      {
+        "label": "Add counter display",
+        "id": "step6"
+      },
+      {
+        "label": "Add start button and wire onClick",
+        "id": "step7"
+      },
+      {
+        "label": "Add stop button and wire onClick",
+        "id": "step8"
+      },
+      {
+        "label": "Add cleanup function for memory leak prevention",
+        "id": "step9"
+      }
+    ]
+  },
+  "source": "content"
+}

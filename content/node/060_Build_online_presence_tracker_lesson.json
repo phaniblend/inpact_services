@@ -1,0 +1,362 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-node-60",
+    "track": "node",
+    "lessonNum": 60,
+    "title": "Build online presence tracker",
+    "shortName": "P60",
+    "intro": {
+      "tag": "LESSON #60",
+      "title": "Build online presence tracker",
+      "body": "In this lesson, you will build a simple online presence tracker that monitors whether a user is currently active or idle on a webpage. You will learn how to use event listeners to detect user interactions like mouse movements and key presses. The core programming concept involves managing state to track the user's status and updating it based on real-time events. You'll work with JavaScript's built-in browser APIs, such as setTimeout and clearTimeout, to handle timing logic for determining idle states. This project will help you understand how to create responsive web applications that react to user behavior.",
+      "usecase": "Online presence trackers are essential in collaborative applications like Slack, Discord, and Google Docs, where they display real-time user status indicators (online/offline/away). Developers implement these systems in customer support dashboards to show agent availability, in project management tools like Trello to indicate active team members, and in multiplayer gaming platforms to show which friends are currently playing. This pattern involves maintaining WebSocket connections, updating user status in databases, and broadcasting presence changes to connected clients—a fundamental skill for building responsive, collaborative web applications."
+    },
+    "objectives": [
+      "Construct a Node.js server to track user online presence",
+      "Initialize and configure WebSocket connections for real-time communication",
+      "Implement user status updates (online/offline) with timestamps",
+      "Integrate data persistence to store user presence history",
+      "Manipulate user presence data to calculate active durations",
+      "Render real-time presence updates to connected clients",
+      "Apply authentication middleware to secure presence tracking endpoints",
+      "Control WebSocket events to handle connection and disconnection scenarios"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 10",
+        "title": "Import required Node.js modules",
+        "instruction": "Import the 'http' and 'fs' modules using require() statements.",
+        "hint": "Use the require() function to import each module. You'll need these for creating a server and working with files.",
+        "analogousExample": "// Example: importing modules in Node.js\nconst path = require('path');\nconst os = require('os');",
+        "seedCode": "// Import the required modules here\n",
+        "expectedOutcome": "Two require() statements that import the 'http' and 'fs' modules.",
+        "successCriteria": [
+          "The 'http' and 'fs' modules are imported using require() statements."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you import both 'http' and 'fs' modules using require().",
+        "feedbackWrong": "import both the 'http' and 'fs' modules using require() statements.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "require('http')",
+            "require('fs')"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 10",
+        "title": "Create server instance",
+        "instruction": "Create an HTTP server instance using the http module's createServer() method. Store it in a constant named 'server'.",
+        "hint": "Use the http module you imported to call createServer() and assign the result to a constant.",
+        "analogousExample": "// Creating a server instance\nconst server = http.createServer();",
+        "seedCode": "// Import the required modules here\nconst http = require('http');\n\n// Create the HTTP server instance here\n",
+        "expectedOutcome": "You should have a constant named 'server' that holds the HTTP server instance created by http.createServer().",
+        "successCriteria": [
+          "The server constant is declared and assigned the result of http.createServer()."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're using the http module's createServer() method and storing it in a constant named 'server'.",
+        "feedbackWrong": "create an HTTP server instance using the http module's createServer() method and store it in a constant named 'server'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "server",
+            "createServer"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 10",
+        "title": "Define server request handler",
+        "instruction": "Add a callback function as the first argument to createServer() that handles incoming HTTP requests and responses.",
+        "hint": "The callback function should take two parameters: request and response. You can use an arrow function or function declaration.",
+        "analogousExample": "// Similar: a basic request handler\nconst handler = (req, res) => {\n  // Handle request here\n};",
+        "seedCode": "// Import the required modules here\nconst http = require('http');\n\n// Create the HTTP server instance here\nconst server = http.createServer((req, res) => {\n  // Request handler logic will go here\n});",
+        "expectedOutcome": "The createServer() call now includes a callback function that will process all incoming HTTP requests.",
+        "successCriteria": [
+          "A callback function with req and res parameters is passed to createServer()."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you've added a complete function with both req and res parameters inside createServer().",
+        "feedbackWrong": "The server instance should include a callback function as the first argument to createServer(). Try adding (req, res) => {} inside the parentheses.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "createServer",
+            "(",
+            "req",
+            "res",
+            "=>",
+            "{",
+            "}"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 10",
+        "title": "Initialize presence tracking data",
+        "instruction": "Create a variable named 'activeUsers' and initialize it as an empty array to store active user information.",
+        "hint": "Use the 'const' keyword to declare the variable and set it equal to an empty array [].",
+        "analogousExample": "// Example: creating an empty array for storing items\nconst shoppingCart = [];",
+        "seedCode": "// Import the required modules here\nconst http = require('http');\n\n// Create the HTTP server instance here\nconst server = http.createServer((req, res) => {\n  // Request handler logic will go here\n});\n\n// Initialize presence tracking data here\n",
+        "expectedOutcome": "You'll have a variable ready to store user presence data when users connect to your tracker.",
+        "successCriteria": [
+          "The 'activeUsers' variable is declared and initialized as an empty array."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you've created a variable named 'activeUsers' and set it to an empty array [].",
+        "feedbackWrong": "create a variable to store active user information as an array.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "activeUsers",
+            "[]",
+            "="
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 10",
+        "title": "Set up request routing logic",
+        "instruction": "Inside the request handler, add conditional logic to check the request URL and send different responses for the root path '/' and the '/status' path.",
+        "hint": "Use an if-else statement with req.url to check the path. Send a simple text response for each route.",
+        "analogousExample": "// Example: routing based on URL\nif (req.url === '/') {\n  res.end('Home page');\n} else if (req.url === '/about') {\n  res.end('About page');\n}",
+        "seedCode": "// Import the required modules here\nconst http = require('http');\n\n// Create the HTTP server instance here\nconst server = http.createServer((req, res) => {\n  // Add routing logic here\n});\n\n// Initialize presence tracking data here",
+        "expectedOutcome": "The server will respond with different messages for the '/' and '/status' routes.",
+        "successCriteria": [
+          "The request handler contains conditional logic that checks req.url and sends appropriate responses for '/' and '/status'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added some routing logic, but it doesn't handle both '/' and '/status' paths correctly.",
+        "feedbackWrong": "The routing logic is missing or doesn't check req.url to handle different paths.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "req.url",
+            "'/'",
+            "'/status'",
+            "if",
+            "else",
+            "res.end"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 10",
+        "title": "Create user join endpoint",
+        "instruction": "Inside the request handler, add an if statement to handle POST requests to the '/join' path. In the if block, parse the request body to get the username, add it to the users array, and send a JSON response confirming the user joined.",
+        "hint": "Check if req.method is 'POST' and req.url is '/join'. Use req.on('data') to collect the body data, then JSON.parse it. Push the username to the users array and respond with a success message.",
+        "analogousExample": "// Example: handling a POST endpoint\nif (req.method === 'POST' && req.url === '/add') {\n  let body = '';\n  req.on('data', chunk => body += chunk);\n  req.on('end', () => {\n    const data = JSON.parse(body);\n    items.push(data.item);\n    res.writeHead(200, { 'Content-Type': 'application/json' });\n    res.end(JSON.stringify({ message: 'Item added' }));\n  });\n}",
+        "seedCode": "// Import the required modules here\nconst http = require('http');\n\n// Create the HTTP server instance here\nconst server = http.createServer((req, res) => {\n  // Add routing logic here\n  // Add POST /join endpoint here\n});\n\n// Initialize presence tracking data here\nlet users = [];",
+        "expectedOutcome": "The server will now accept POST requests to '/join' with a JSON body containing a username, add that user to the users array, and respond with a JSON success message.",
+        "successCriteria": [
+          "The request handler includes an if statement checking for POST method and '/join' URL, parses the request body, pushes the username to the users array, and sends a JSON response."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the endpoint, but make sure to handle the request body parsing and respond with JSON. Check if you're using req.on('data') and req.on('end') to collect the body data.",
+        "feedbackWrong": "The endpoint isn't fully implemented. Ensure you're checking for POST method and '/join' URL, parsing the request body to get the username, adding it to the users array, and sending a JSON response.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "POST",
+            "'/join'",
+            "req.on",
+            "JSON.parse",
+            "users.push",
+            "JSON.stringify"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 10",
+        "title": "Create user leave endpoint",
+        "instruction": "Add a route handler for POST requests to '/leave' that removes a user from the users array based on the username sent in the request body.",
+        "hint": "Inside the request handler callback, check if the request method is 'POST' and the URL is '/leave'. Parse the request body to get the username, then filter it out from the users array.",
+        "analogousExample": "// Similar: remove item from array based on condition\nfunction removeUser(users, username) {\n  return users.filter(user => user !== username);\n}",
+        "seedCode": "// Import the required modules here\nconst http = require('http');\n\n// Create the HTTP server instance here\nconst server = http.createServer((req, res) => {\n  // Add routing logic here\n  // Add POST /join endpoint here\n  // Add POST /leave endpoint here\n});\n\n// Initialize presence tracking data here\nlet users = [];",
+        "expectedOutcome": "The server will handle POST requests to '/leave' by removing the specified user from the online list.",
+        "successCriteria": [
+          "A POST route for '/leave' is implemented that removes users from the users array."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure to properly parse the request body and filter the users array.",
+        "feedbackWrong": "The leave endpoint isn't working correctly. Check the routing logic and the array filtering.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "req.method",
+            "req.url",
+            "'/leave'",
+            "POST",
+            "users.filter",
+            "username"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 10",
+        "title": "Create status check endpoint",
+        "instruction": "Inside the server's request handler, add a route for GET requests to '/status' that returns the users array as JSON.",
+        "hint": "Check if the request method is 'GET' and the URL is '/status', then set the response header for JSON and send the users array.",
+        "analogousExample": "// Example: simple GET endpoint\nif (req.method === 'GET' && req.url === '/data') {\n  res.writeHead(200, { 'Content-Type': 'application/json' });\n  res.end(JSON.stringify({ data: 'example' }));\n}",
+        "seedCode": "const http = require('http');\n\nconst server = http.createServer((req, res) => {\n  // Add routing logic here\n  // Add POST /join endpoint here\n  // Add POST /leave endpoint here\n  // Add GET /status endpoint here\n});\n\nlet users = [];",
+        "expectedOutcome": "The server will respond to GET requests at '/status' with a JSON array of online users.",
+        "successCriteria": [
+          "A GET route for '/status' is implemented that returns the users array as JSON with proper headers."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure to check both the method and URL, set the Content-Type header, and send the users array as JSON.",
+        "feedbackWrong": "The status endpoint is not implemented correctly. Review the routing logic and JSON response format.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "req.method === 'GET'",
+            "req.url === '/status'",
+            "Content-Type': 'application/json'",
+            "JSON.stringify(users)"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 10",
+        "title": "Add basic HTML interface",
+        "instruction": "Inside the request handler, add a route for GET requests to '/' that serves a basic HTML page using fs.readFile() to read an HTML file.",
+        "hint": "Check if req.method is 'GET' and req.url is '/', then use fs.readFile() to read a file like 'index.html' and send it as the response.",
+        "analogousExample": "// Serving an HTML file\nif (req.method === 'GET' && req.url === '/') {\n  fs.readFile('index.html', (err, data) => {\n    if (err) {\n      res.writeHead(500);\n      res.end('Error loading page');\n    } else {\n      res.writeHead(200, { 'Content-Type': 'text/html' });\n      res.end(data);\n    }\n  });\n}",
+        "seedCode": "const http = require('http');\nconst fs = require('fs');\n\nconst server = http.createServer((req, res) => {\n  // Add routing logic here\n  // Add POST /join endpoint here\n  // Add POST /leave endpoint here\n  // Add GET /status endpoint here\n  // Add GET / endpoint here to serve HTML\n});\n\nlet users = [];",
+        "expectedOutcome": "The server will now respond to GET requests to the root URL with an HTML page, providing a basic web interface for the presence tracker.",
+        "successCriteria": [
+          "The request handler includes a conditional check for GET requests to '/' that uses fs.readFile() to serve an HTML file with proper error handling."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added some routing logic, but make sure to check for both GET method and '/' URL, and use fs.readFile() to serve the HTML file.",
+        "feedbackWrong": "The route for serving HTML is missing or incorrect. Review how to handle GET requests and serve files with fs.readFile().",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "req.method === 'GET'",
+            "req.url === '/'",
+            "fs.readFile",
+            "index.html",
+            "text/html"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 10",
+        "title": "Start the server",
+        "instruction": "Call the server.listen() method to start your server listening on port 3000.",
+        "hint": "Add server.listen(3000) at the end of your code, after the server is created and your request handler is defined.",
+        "analogousExample": "// Starting a server on a specific port\nconst myServer = http.createServer(handler);\nmyServer.listen(8080);",
+        "seedCode": "const http = require('http');\nconst fs = require('fs');\n\nconst server = http.createServer((req, res) => {\n  // Add routing logic here\n  // Add POST /join endpoint here\n  // Add POST /leave endpoint here\n  // Add GET /status endpoint here\n  // Add GET / endpoint here to serve HTML\n});\n\nlet users = [];\n\n// Start the server here",
+        "expectedOutcome": "Your server will be ready to accept incoming HTTP connections on port 3000.",
+        "successCriteria": [
+          "The server.listen(3000) method is called to start the server."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you call the listen method on your server instance with the correct port number.",
+        "feedbackWrong": "The server is not started correctly. You need to call server.listen(3000) to begin accepting connections.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "server.listen",
+            "3000"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import required Node.js modules",
+        "id": "step1"
+      },
+      {
+        "label": "Create server instance",
+        "id": "step2"
+      },
+      {
+        "label": "Define server request handler",
+        "id": "step3"
+      },
+      {
+        "label": "Initialize presence tracking data",
+        "id": "step4"
+      },
+      {
+        "label": "Set up request routing logic",
+        "id": "step5"
+      },
+      {
+        "label": "Create user join endpoint",
+        "id": "step6"
+      },
+      {
+        "label": "Create user leave endpoint",
+        "id": "step7"
+      },
+      {
+        "label": "Create status check endpoint",
+        "id": "step8"
+      },
+      {
+        "label": "Add basic HTML interface",
+        "id": "step9"
+      },
+      {
+        "label": "Start the server",
+        "id": "step10"
+      }
+    ]
+  },
+  "source": "content"
+}

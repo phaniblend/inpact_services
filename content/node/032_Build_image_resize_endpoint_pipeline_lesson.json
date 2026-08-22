@@ -1,0 +1,330 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-node-32",
+    "track": "node",
+    "lessonNum": 32,
+    "title": "Build image resize endpoint pipeline",
+    "shortName": "P32",
+    "intro": {
+      "tag": "LESSON #32",
+      "title": "Build image resize endpoint pipeline",
+      "body": "In this lesson, you will build a Node.js endpoint that receives an image, resizes it to a specified width and height, and returns the processed image. You'll learn how to handle file uploads using the `multer` middleware, manipulate images with the `sharp` library, and stream the result back in a response. The core concept is creating a pipeline that processes data through sequential steps: receiving, transforming, and outputting. By the end, you'll have a functional API endpoint that can dynamically resize images on demand.",
+      "usecase": "Image resizing endpoints are essential in modern web applications that handle user-generated content, such as social media platforms like Instagram or Facebook. When users upload profile pictures or share photos, these services automatically create multiple optimized versions for different display contexts—thumbnails, feeds, and high-resolution views. E-commerce sites like Amazon use similar pipelines to generate product image variants for listings, galleries, and mobile previews. Developers implement these endpoints to ensure fast loading times, consistent visual quality, and efficient storage across diverse device screens and bandwidth conditions."
+    },
+    "objectives": [
+      "Implement an Express.js endpoint to receive image uploads",
+      "Configure middleware to process multipart form data for file uploads",
+      "Manipulate uploaded images using Sharp library for resizing operations",
+      "Construct a file storage system to save processed images",
+      "Integrate error handling for image processing failures",
+      "Control response formats to return processed image URLs or errors",
+      "Initialize and configure the complete image resize pipeline"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 9",
+        "title": "Import required Node.js modules",
+        "instruction": "Import the required Node.js modules: fs/promises for file operations, path for path manipulation, http for creating the server, and sharp for image processing.",
+        "hint": "Use the import statement to bring in the modules. Remember to use the correct module names: 'fs/promises', 'path', 'http', and 'sharp'.",
+        "analogousExample": "// Example: importing modules in Node.js\nimport fs from 'fs/promises';\nimport path from 'path';\nimport http from 'http';\nimport sharp from 'sharp';",
+        "seedCode": "// Import the required Node.js modules here\n",
+        "expectedOutcome": "The code will have import statements for fs/promises, path, http, and sharp modules.",
+        "successCriteria": [
+          "All four modules (fs/promises, path, http, and sharp) are imported using the import statement."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've imported some modules, but not all. Make sure to import fs/promises, path, http, and sharp.",
+        "feedbackWrong": "The required modules are not imported. You need to import fs/promises, path, http, and sharp for this lesson.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "fs/promises",
+            "path",
+            "http",
+            "sharp"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 9",
+        "title": "Create the HTTP server",
+        "instruction": "Create an HTTP server using the imported http module and configure it to listen on port 3000.",
+        "hint": "Use the http.createServer() method and call .listen() on the returned server object.",
+        "analogousExample": "// Example: creating a basic HTTP server\nconst http = require('http');\nconst server = http.createServer((req, res) => {\n  res.end('Hello');\n});\nserver.listen(3000, () => {\n  console.log('Server listening on port 3000');\n});",
+        "seedCode": "// Import the required Node.js modules here\nconst http = require('http');\n\n// Create your HTTP server here\n",
+        "expectedOutcome": "A server is created and configured to listen on port 3000.",
+        "successCriteria": [
+          "The server is created with http.createServer() and configured to listen on port 3000."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're using http.createServer() and calling .listen(3000) on the server object.",
+        "feedbackWrong": "The server wasn't properly created. Remember to use http.createServer() and configure it to listen on port 3000.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "createServer",
+            "listen",
+            "3000"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 9",
+        "title": "Define the request handler function",
+        "instruction": "Define an async function named 'requestHandler' that takes 'req' and 'res' parameters and will handle all incoming HTTP requests to the server.",
+        "hint": "Create an async function that accepts the request and response objects as parameters. The function body can be empty for now.",
+        "analogousExample": "// Example of a basic async request handler\nasync function requestHandler(req, res) {\n  // Handle request logic here\n}",
+        "seedCode": "// Import the required Node.js modules here\nconst http = require('http');\n\n// Create your HTTP server here\n\n// Define your request handler function here",
+        "expectedOutcome": "You should have an async function named 'requestHandler' that accepts 'req' and 'res' parameters.",
+        "successCriteria": [
+          "An async function named 'requestHandler' is defined with 'req' and 'res' parameters."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure your function is async, named 'requestHandler', and accepts both 'req' and 'res' parameters.",
+        "feedbackWrong": "The function definition doesn't match requirements. Check that it's async, named 'requestHandler', and has both 'req' and 'res' parameters.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "async",
+            "requestHandler",
+            "req",
+            "res"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 9",
+        "title": "Parse URL parameters from the request",
+        "instruction": "Inside your request handler function, parse the request URL to extract width and height parameters from the query string.",
+        "hint": "Use the built-in URL object to parse the request URL and access its searchParams property to get query parameters.",
+        "analogousExample": "// Example: parsing query parameters\nfunction handleRequest(req, res) {\n  const url = new URL(req.url, 'http://localhost');\n  const width = url.searchParams.get('width');\n  const height = url.searchParams.get('height');\n}",
+        "seedCode": "// Import the required Node.js modules here\nconst http = require('http');\n\n// Create your HTTP server here\n\n// Define your request handler function here\nfunction requestHandler(req, res) {\n  // Parse URL parameters from the request\n}",
+        "expectedOutcome": "Your request handler will be able to extract width and height values from the query string of incoming requests.",
+        "successCriteria": [
+          "The request handler function uses the URL object to parse the request URL and extracts width and height parameters from searchParams."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're using the URL object correctly and extracting both width and height parameters.",
+        "feedbackWrong": "Check that you're using the URL constructor with the request URL and accessing searchParams.get() for both parameters.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "URL",
+            "searchParams",
+            "get",
+            "width",
+            "height"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 9",
+        "title": "Validate input parameters",
+        "instruction": "Inside the requestHandler function, add validation logic to check that the width and height parameters are valid positive numbers. If either is invalid, send a 400 status with an error message and return early.",
+        "hint": "Parse the width and height from the URL parameters, then check if they are numbers greater than 0. Use res.writeHead and res.end to send an error response if validation fails.",
+        "analogousExample": "// Example: validating numeric input\nfunction validateInput(width, height) {\n  if (isNaN(width) || width <= 0 || isNaN(height) || height <= 0) {\n    return false;\n  }\n  return true;\n}",
+        "seedCode": "// Import the required Node.js modules here\nconst http = require('http');\n\n// Create your HTTP server here\n\n// Define your request handler function here\nfunction requestHandler(req, res) {\n  // Parse URL parameters from the request\n  const url = new URL(req.url, `http://${req.headers.host}`);\n  const width = url.searchParams.get('width');\n  const height = url.searchParams.get('height');\n  \n  // Add validation logic here\n}",
+        "expectedOutcome": "The request handler will now validate width and height parameters before proceeding, returning a 400 error for invalid inputs.",
+        "successCriteria": [
+          "The validation logic checks that width and height are positive numbers, sends a 400 status with an error message if invalid, and returns early."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added some validation, but make sure to check both width and height are positive numbers and send a proper 400 error response.",
+        "feedbackWrong": "The validation logic is missing or incorrect. Ensure you parse width and height, validate them as positive numbers, and handle invalid cases with a 400 response.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "width",
+            "height",
+            "isNaN",
+            "<= 0",
+            "400",
+            "writeHead",
+            "end",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 9",
+        "title": "Read the source image file",
+        "instruction": "Inside your requestHandler function, use fs.promises.readFile to read the source image file 'input.jpg' from the filesystem. Store the result in a variable named imageBuffer.",
+        "hint": "You'll need to use await with readFile since it returns a promise. Make sure your function is async to use await.",
+        "analogousExample": "// Reading a file asynchronously\nasync function readConfig() {\n  const data = await fs.promises.readFile('config.json');\n  return data;\n}",
+        "seedCode": "// Import the required Node.js modules here\nconst http = require('http');\nconst fs = require('fs/promises');\n\n// Create your HTTP server here\n\n// Define your request handler function here\nasync function requestHandler(req, res) {\n  // Parse URL parameters from the request\n  const url = new URL(req.url, `http://${req.headers.host}`);\n  const width = url.searchParams.get('width');\n  const height = url.searchParams.get('height');\n  \n  // Add validation logic here\n  \n  // Read the source image file here\n}",
+        "expectedOutcome": "The requestHandler function will now be able to read the image file asynchronously and store its binary data in imageBuffer.",
+        "successCriteria": [
+          "The requestHandler function uses fs.promises.readFile to read 'input.jpg' and stores the result in imageBuffer."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're using fs.promises.readFile (not fs.readFileSync) and storing the result in a variable named imageBuffer.",
+        "feedbackWrong": "The code doesn't properly read the image file. Remember to use fs.promises.readFile with await inside your async requestHandler function.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "fs.promises.readFile",
+            "'input.jpg'",
+            "imageBuffer",
+            "await"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 9",
+        "title": "Resize the image using Sharp",
+        "instruction": "Inside the requestHandler function, after reading the source image file, use the Sharp library to resize the image to the specified width and height.",
+        "hint": "Use the sharp() function with the image data, then chain .resize() with the width and height parameters.",
+        "analogousExample": "// Similar: using Sharp to resize an image\nconst sharp = require('sharp');\nsharp(imageBuffer).resize(300, 200).toBuffer();",
+        "seedCode": "// Import the required Node.js modules here\nconst http = require('http');\nconst fs = require('fs/promises');\n\n// Create your HTTP server here\n\n// Define your request handler function here\nasync function requestHandler(req, res) {\n  // Parse URL parameters from the request\n  const url = new URL(req.url, `http://${req.headers.host}`);\n  const width = url.searchParams.get('width');\n  const height = url.searchParams.get('height');\n  \n  // Add validation logic here\n  \n  // Read the source image file here\n  \n  // Resize the image using Sharp here\n}",
+        "expectedOutcome": "The image data will be resized to the specified dimensions using the Sharp library.",
+        "successCriteria": [
+          "Sharp is used to resize the image with the width and height parameters from the URL."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're using the sharp() function with the image data and chaining .resize() with the width and height parameters.",
+        "feedbackWrong": "The image resizing step is missing or incorrect. Remember to use the Sharp library to resize the image to the specified width and height.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "sharp",
+            "resize",
+            "width",
+            "height"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 9",
+        "title": "Add error handling for invalid requests",
+        "instruction": "Wrap the existing request handler logic in a try-catch block to handle errors for missing files, invalid parameters, and processing errors.",
+        "hint": "Add try { ... } catch (error) { ... } around the existing logic inside your requestHandler function. In the catch block, send appropriate HTTP error responses.",
+        "analogousExample": "// Example: try-catch with HTTP error responses\ntry {\n  // Your main logic here\n} catch (error) {\n  res.writeHead(500, { 'Content-Type': 'text/plain' });\n  res.end('Internal Server Error');\n}",
+        "seedCode": "// Import the required Node.js modules here\nconst http = require('http');\nconst fs = require('fs/promises');\n\n// Create your HTTP server here\n\n// Define your request handler function here\nasync function requestHandler(req, res) {\n  // Parse URL parameters from the request\n  const url = new URL(req.url, `http://${req.headers.host}`);\n  const width = url.searchParams.get('width');\n  const height = url.searchParams.get('height');\n  \n  // Add validation logic here\n  \n  // Read the source image file here\n  \n  // Resize the image using Sharp here\n  \n  // Send the resized image as response\n}",
+        "expectedOutcome": "The request handler will now gracefully handle errors by sending appropriate HTTP error responses instead of crashing.",
+        "successCriteria": [
+          "The requestHandler function contains a try-catch block that wraps the main logic and sends HTTP error responses in the catch block."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added some error handling, but make sure to wrap all the main logic in the try block and send proper HTTP responses in the catch block.",
+        "feedbackWrong": "The error handling isn't implemented correctly. Review how to use try-catch blocks and HTTP error responses in Node.js.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "try",
+            "catch",
+            "res.writeHead",
+            "res.end"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 9",
+        "title": "Test the endpoint with a sample request",
+        "instruction": "Start the server by calling server.listen() on port 3000 and add a console.log to confirm it's running.",
+        "hint": "Call the listen method on your server object with port 3000 and a callback function that logs a message.",
+        "analogousExample": "// Starting a basic server\nconst server = http.createServer();\nserver.listen(3000, () => {\n  console.log('Server running on port 3000');\n});",
+        "seedCode": "// Import the required Node.js modules here\nconst http = require('http');\nconst fs = require('fs/promises');\n\n// Create your HTTP server here\nconst server = http.createServer(requestHandler);\n\n// Define your request handler function here\nasync function requestHandler(req, res) {\n  // Parse URL parameters from the request\n  const url = new URL(req.url, `http://${req.headers.host}`);\n  const width = url.searchParams.get('width');\n  const height = url.searchParams.get('height');\n  \n  // Add validation logic here\n  if (!width || !height || isNaN(width) || isNaN(height)) {\n    res.writeHead(400, { 'Content-Type': 'text/plain' });\n    res.end('Invalid width or height parameters');\n    return;\n  }\n  \n  // Read the source image file here\n  let imageBuffer;\n  try {\n    imageBuffer = await fs.readFile('./sample.jpg');\n  } catch (err) {\n    res.writeHead(404, { 'Content-Type': 'text/plain' });\n    res.end('Source image not found');\n    return;\n  }\n  \n  // Resize the image using Sharp here\n  const sharp = require('sharp');\n  let resizedImage;\n  try {\n    resizedImage = await sharp(imageBuffer)\n      .resize(parseInt(width), parseInt(height))\n      .toBuffer();\n  } catch (err) {\n    res.writeHead(500, { 'Content-Type': 'text/plain' });\n    res.end('Image processing failed');\n    return;\n  }\n  \n  // Send the resized image as response\n  res.writeHead(200, { 'Content-Type': 'image/jpeg' });\n  res.end(resizedImage);\n}\n\n// Start the server here",
+        "expectedOutcome": "The server will start and log a confirmation message, making the endpoint ready for testing.",
+        "successCriteria": [
+          "The server is started on port 3000 with a console.log message confirming it's running."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the server, but make sure you included a console.log message to confirm it's running. Check that you're listening on port 3000.",
+        "feedbackWrong": "The server isn't properly started. You need to call server.listen() with port 3000 and a callback function that logs a message.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "server.listen",
+            "3000",
+            "console.log"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import required Node.js modules",
+        "id": "step1"
+      },
+      {
+        "label": "Create the HTTP server",
+        "id": "step2"
+      },
+      {
+        "label": "Define the request handler function",
+        "id": "step3"
+      },
+      {
+        "label": "Parse URL parameters from the request",
+        "id": "step4"
+      },
+      {
+        "label": "Validate input parameters",
+        "id": "step5"
+      },
+      {
+        "label": "Read the source image file",
+        "id": "step6"
+      },
+      {
+        "label": "Resize the image using Sharp",
+        "id": "step7"
+      },
+      {
+        "label": "Add error handling for invalid requests",
+        "id": "step8"
+      },
+      {
+        "label": "Test the endpoint with a sample request",
+        "id": "step9"
+      }
+    ]
+  },
+  "source": "content"
+}

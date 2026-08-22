@@ -1,0 +1,559 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-react-ts-121",
+    "track": "react-ts",
+    "lessonNum": 121,
+    "title": "Query Building in RTK",
+    "shortName": "RTK QUERY",
+    "intro": {
+      "tag": "LESSON #121 — RTK QUERY",
+      "title": "RTK Query: Writing Your First builder.query",
+      "body": "In this lesson you will construct a complete RTK Query endpoint from scratch, one surgical micro-step at a time. You will understand every token in the expression `getPosts: builder.query<Post[], void>({ query: () => '/posts' })` — what it does, why it exists, and how to recall it from memory without looking anything up. You begin by defining the data shape with a TypeScript interface, then move into the RTK Query API configuration layer, and finish by wiring the complete endpoint and exported hook.",
+      "usecase": "RTK Query is the data-fetching and caching layer built into Redux Toolkit. In real applications it replaces dozens of lines of manual action creators, reducers, selectors, and loading-state boilerplate with a single declarative endpoint definition. You will use `builder.query` every time your UI needs to READ data from a server — fetching lists, profiles, catalogues, and more. Mastering this pattern is the gateway to auto-generated React hooks like `useGetPostsQuery()` that handle loading, error, and data states with minimal extra code."
+    },
+    "objectives": [
+      "Build a query with dynamic parameters by typing the endpoint arg as an object (e.g. { page: number; filter: string }) and constructing the URL with template literals so multiple typed pieces work together as one coherent UI pattern.",
+      "Use the transformResponse option typed as (raw: RawResponse) => TransformedType to normalize API data before it hits the cache so the pattern drives visible behavior and can be verified in the UI, runtime, or compiler.",
+      "Apply the providesTags option typed as (result, error, arg) => TagDescription<TagType>[] to associate cache tags with a query result so the learner sees how a typed pattern changes behavior, reuse, or safety in practice.",
+      "Apply the invalidatesTags option on a mutation to automatically refetch all queries that provide the invalidated tag so the learner sees how a typed pattern changes behavior, reuse, or safety in practice so async data is handled with an explicit and safe data shape."
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 15",
+        "title": "Define the Post TypeScript Interface",
+        "instruction": "Before RTK Query can know what shape of data to expect back from the server, you must tell TypeScript. In **api.ts**, write an `interface` named `Post` with three fields: `id` (number), `title` (string), and `body` (string).",
+        "hint": "Use the `interface` keyword followed by the name. Each field sits on its own line ending with a semicolon.",
+        "analogousExample": "// Analogous interface:\ninterface Product {\n  id: number;\n  name: string;\n  price: number;\n}\n// Now declare Post with id, title, body.",
+        "seedCode": {
+          "api.ts": "// Step 1: Define the Post interface\n// JSONPlaceholder /posts returns { id, title, body }\n\n// YOUR CODE HERE:\n"
+        },
+        "expectedOutcome": "An `interface Post` exists with id: number, title: string, and body: string. This interface will be used as the result type in `builder.query` later.",
+        "successCriteria": [
+          "The keyword `interface` is used",
+          "The interface is named `Post`",
+          "Fields id, title, and body use the correct types"
+        ],
+        "feedbackCorrect": "Excellent! TypeScript now knows what a Post looks like. You will plug `Post[]` into the generic in a later step.",
+        "feedbackPartial": "Check that id, title, and body are all present with types number, string, string.",
+        "feedbackWrong": "Use: `interface Post { id: number; title: string; body: string; }`",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "interface",
+            "Post",
+            "id",
+            "number",
+            "title",
+            "string",
+            "body"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.85
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 15",
+        "title": "Import createApi and fetchBaseQuery",
+        "instruction": "In **api.ts**, at the top of the file, add an import that brings in **`createApi`** and **`fetchBaseQuery`** from **`'@reduxjs/toolkit/query/react'`**.",
+        "hint": "Use a single import statement with both names in curly braces.",
+        "analogousExample": "import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';",
+        "seedCode": {
+          "api.ts": "// Step 2: RTK Query imports (place above the Post interface)\n\n// YOUR CODE HERE:\n\ninterface Post {\n  id: number;\n  title: string;\n  body: string;\n}\n"
+        },
+        "expectedOutcome": "Both `createApi` and `fetchBaseQuery` are imported from `@reduxjs/toolkit/query/react`.",
+        "successCriteria": [
+          "`createApi` appears in the import list",
+          "`fetchBaseQuery` appears in the import list",
+          "The module path ends with `query/react`"
+        ],
+        "feedbackCorrect": "Imports ready. Next you will open the `createApi` options object.",
+        "feedbackPartial": "Check spelling and ensure both helpers come from `@reduxjs/toolkit/query/react`.",
+        "feedbackWrong": "Add: `import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';`",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "createApi",
+            "fetchBaseQuery",
+            "reduxjs/toolkit/query/react"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 15",
+        "title": "Open createApi and set reducerPath",
+        "instruction": "In **api.ts**, below the `Post` interface, declare **`const postsApi`** assigned to **`createApi({ ... })`**. Inside the options object, add **`reducerPath: 'postsApi'`**.",
+        "hint": "`reducerPath` registers this API slice in the Redux store under that key.",
+        "analogousExample": "const ordersApi = createApi({\n  reducerPath: 'ordersApi',\n});",
+        "seedCode": {
+          "api.ts": "import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';\n\ninterface Post {\n  id: number;\n  title: string;\n  body: string;\n}\n\n// Step 3: const postsApi = createApi({ reducerPath: 'postsApi' }) — baseQuery next\n\n// YOUR CODE HERE:\n"
+        },
+        "expectedOutcome": "`postsApi` is declared and `createApi` receives `reducerPath: 'postsApi'`.",
+        "successCriteria": [
+          "`createApi` is called",
+          "`reducerPath` is set to a string",
+          "The binding is named `postsApi`"
+        ],
+        "feedbackCorrect": "`reducerPath` is set. Next you will wire `fetchBaseQuery` as `baseQuery`.",
+        "feedbackPartial": "Ensure `reducerPath` lives inside the object passed to `createApi`.",
+        "feedbackWrong": "Declare `const postsApi = createApi({ reducerPath: 'postsApi' });` (you may add `baseQuery` in the same object if you already know the next step).",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "createApi",
+            "postsApi",
+            "reducerPath"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 15",
+        "title": "Add baseQuery with fetchBaseQuery",
+        "instruction": "In **api.ts**, inside the **same** `createApi` options object as `reducerPath`, add **`baseQuery`** set to **`fetchBaseQuery({ baseUrl: 'https://jsonplaceholder.typicode.com' })`**. Do **not** add **`endpoints`** yet — you will add it in the next step.",
+        "hint": "`baseQuery` tells RTK Query how to reach the network; `fetchBaseQuery` is the usual HTTP adapter.",
+        "analogousExample": "baseQuery: fetchBaseQuery({\n  baseUrl: 'https://jsonplaceholder.typicode.com',\n}),",
+        "seedCode": {
+          "api.ts": "import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';\n\ninterface Post {\n  id: number;\n  title: string;\n  body: string;\n}\n\nconst postsApi = createApi({\n  reducerPath: 'postsApi',\n  // Step 4: baseQuery + jsonplaceholder — no endpoints yet\n\n  // YOUR CODE HERE:\n});\n"
+        },
+        "expectedOutcome": "`baseQuery` uses `fetchBaseQuery` with the JSONPlaceholder base URL. The `createApi` call still has no `endpoints` property.",
+        "successCriteria": [
+          "`fetchBaseQuery` wraps the base URL",
+          "The URL points at JSONPlaceholder"
+        ],
+        "feedbackCorrect": "Network wiring is in place. Next you will add the `endpoints` factory.",
+        "feedbackPartial": "Add `baseQuery:` beside `reducerPath` inside `createApi({ ... })`.",
+        "feedbackWrong": "Add `baseQuery: fetchBaseQuery({ baseUrl: 'https://jsonplaceholder.typicode.com' })` inside the options object.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "fetchBaseQuery",
+            "baseUrl",
+            "jsonplaceholder"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.75
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 15",
+        "title": "Add the endpoints Factory Function",
+        "instruction": "Inside `createApi({})` in **api.ts**, add `endpoints: (builder) => ({})` — a function that receives `builder` and returns an empty object for now.",
+        "hint": "Return an object literal with `({})` so the `{` is not parsed as a block body.",
+        "analogousExample": "endpoints: (builder) => ({\n}),",
+        "seedCode": {
+          "api.ts": "import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';\n\ninterface Post {\n  id: number;\n  title: string;\n  body: string;\n}\n\nconst postsApi = createApi({\n  reducerPath: 'postsApi',\n  baseQuery: fetchBaseQuery({\n    baseUrl: 'https://jsonplaceholder.typicode.com',\n  }),\n  // Step 5: endpoints: (builder) => ({})\n\n  // YOUR CODE HERE:\n});\n"
+        },
+        "expectedOutcome": "`endpoints: (builder) => ({})` is present inside `createApi`.",
+        "successCriteria": [
+          "`endpoints` is defined",
+          "`builder` is the parameter",
+          "The returned object starts empty"
+        ],
+        "feedbackCorrect": "`builder` is now in scope for the next steps.",
+        "feedbackPartial": "Use an arrow function that returns `({})`.",
+        "feedbackWrong": "Add exactly: `endpoints: (builder) => ({})` inside the createApi options.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "endpoints",
+            "builder"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 15",
+        "title": "Start the getPosts endpoint with builder.query",
+        "instruction": "Inside the object returned by `endpoints`, object literals need a key and value. In **api.ts**, add **`getPosts:`** with the value starting as just **`builder.query`** (no generics or call yet). So far: `getPosts: builder.query`. The name `getPosts` is what RTK Query uses to generate `useGetPostsQuery`.",
+        "hint": "`builder.query` is the read-data tool; `builder.mutation` is for writes.",
+        "analogousExample": "// Read vs write on builder:\n// builder.query   → GET-style reads\n// builder.mutation → POST/PUT/DELETE\n\ngetPosts: builder.query",
+        "seedCode": {
+          "api.ts": "import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';\n\ninterface Post {\n  id: number;\n  title: string;\n  body: string;\n}\n\nconst postsApi = createApi({\n  reducerPath: 'postsApi',\n  baseQuery: fetchBaseQuery({\n    baseUrl: 'https://jsonplaceholder.typicode.com',\n  }),\n  endpoints: (builder) => ({\n    // Step 6: getPosts: builder.query (nothing more yet)\n\n    // YOUR CODE HERE:\n  }),\n});\n"
+        },
+        "expectedOutcome": "`getPosts: builder.query` appears inside the endpoints object.",
+        "successCriteria": [
+          "`getPosts` is the property key",
+          "`builder.query` is the start of the value"
+        ],
+        "feedbackCorrect": "Right tool and name. Next you will add generics.",
+        "feedbackPartial": "You need both a property name (`getPosts`) and `builder.query` as the value.",
+        "feedbackWrong": "Inside `({})` for endpoints, add: `getPosts: builder.query`",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "getPosts",
+            "builder.query"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.85
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 15",
+        "title": "Complete builder.query generics: Post[], void",
+        "instruction": "In **api.ts**, after `builder.query`, write the full generic **`builder.query<Post[], void>`**: open `<` right after `query`, add the result type **`Post[]`** (the `/posts` response is a list of posts), then a comma, then **`void`** as the argument type — this query takes no runtime parameters — and close with `>`.",
+        "hint": "Pattern: `<ResultType, ArgType>`. List responses use `Post[]`. When there is nothing to pass into the hook at runtime, the second type is `void`.",
+        "analogousExample": "getPosts: builder.query<Post[], void>",
+        "seedCode": {
+          "api.ts": "import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';\n\ninterface Post {\n  id: number;\n  title: string;\n  body: string;\n}\n\nconst postsApi = createApi({\n  reducerPath: 'postsApi',\n  baseQuery: fetchBaseQuery({\n    baseUrl: 'https://jsonplaceholder.typicode.com',\n  }),\n  endpoints: (builder) => ({\n    // Step 7: getPosts: builder.query<Post[], void>\n\n    // YOUR CODE HERE:\n  }),\n});\n"
+        },
+        "expectedOutcome": "`getPosts: builder.query<Post[], void>` is present with both type parameters and the generic closed.",
+        "successCriteria": [
+          "`Post[]` is the first (result) type parameter",
+          "`void` is the second (argument) type parameter",
+          "The generic is closed with `>`"
+        ],
+        "feedbackCorrect": "Signature complete: many posts out, nothing in — you are ready to open the config object next.",
+        "feedbackPartial": "Use `builder.query<Post[], void>` — comma between `Post[]` and `void`, then `>`.",
+        "feedbackWrong": "Write `getPosts: builder.query<Post[], void>`",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "getPosts",
+            "builder.query",
+            "Post[]",
+            "void"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.85
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 15",
+        "title": "Open the configuration object with a function call",
+        "instruction": "In **api.ts**, **call** `builder.query<Post[], void>` with an open config object: **`({`** — so the line ends with `builder.query<Post[], void>({`.",
+        "hint": "Parenthesis `(` starts the call; `{` starts the config object.",
+        "analogousExample": "getPosts: builder.query<Post[], void>({",
+        "seedCode": {
+          "api.ts": "import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';\n\ninterface Post {\n  id: number;\n  title: string;\n  body: string;\n}\n\nconst postsApi = createApi({\n  reducerPath: 'postsApi',\n  baseQuery: fetchBaseQuery({\n    baseUrl: 'https://jsonplaceholder.typicode.com',\n  }),\n  endpoints: (builder) => ({\n    // Step 8: getPosts: builder.query<Post[], void>({\n\n    // YOUR CODE HERE:\n  }),\n});\n"
+        },
+        "expectedOutcome": "`builder.query<Post[], void>({` is written; config object is open.",
+        "successCriteria": [
+          "`(` follows the generic",
+          "`{` opens the config object"
+        ],
+        "feedbackCorrect": "Config object opened. Next: the required `query` field.",
+        "feedbackPartial": "After `void>` add `({` to call and open the config.",
+        "feedbackWrong": "Write `getPosts: builder.query<Post[], void>({`",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "getPosts",
+            "builder.query",
+            "Post[]",
+            "void",
+            "({"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 15",
+        "title": "Write the query property key",
+        "instruction": "Inside the config object in **api.ts**, add the key **`query:`** (RTK Query reads this to build the request).",
+        "hint": "Only the key and colon this step; the arrow function comes next.",
+        "analogousExample": "query:",
+        "seedCode": {
+          "api.ts": "import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';\n\ninterface Post {\n  id: number;\n  title: string;\n  body: string;\n}\n\nconst postsApi = createApi({\n  reducerPath: 'postsApi',\n  baseQuery: fetchBaseQuery({\n    baseUrl: 'https://jsonplaceholder.typicode.com',\n  }),\n  endpoints: (builder) => ({\n    getPosts: builder.query<Post[], void>({\n      // Step 9: add query:\n\n      // YOUR CODE HERE:\n    })\n  }),\n});\n"
+        },
+        "expectedOutcome": "`query:` appears inside the `builder.query` config object.",
+        "successCriteria": [
+          "The property name is `query` followed by a colon"
+        ],
+        "feedbackCorrect": "Required field named. Next: the function value.",
+        "feedbackPartial": "Inside `{` after `(`, type `query:`",
+        "feedbackWrong": "Add `query:` inside the config object.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "query:"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.85
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 15",
+        "title": "Add the empty parameter list for query",
+        "instruction": "In **api.ts**, after `query:`, add the start of an arrow function with an **empty** parameter list: **`()`** (ArgType was `void`).",
+        "hint": "Next step adds `=>`.",
+        "analogousExample": "query: ()",
+        "seedCode": {
+          "api.ts": "import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';\n\ninterface Post {\n  id: number;\n  title: string;\n  body: string;\n}\n\nconst postsApi = createApi({\n  reducerPath: 'postsApi',\n  baseQuery: fetchBaseQuery({\n    baseUrl: 'https://jsonplaceholder.typicode.com',\n  }),\n  endpoints: (builder) => ({\n    getPosts: builder.query<Post[], void>({\n      // Step 10: query: ()\n\n      // YOUR CODE HERE:\n    })\n  }),\n});\n"
+        },
+        "expectedOutcome": "`query: ()` is present.",
+        "successCriteria": [
+          "Empty `()` after `query:`"
+        ],
+        "feedbackCorrect": "No-argument query function started.",
+        "feedbackPartial": "Write `query: ()` inside the config.",
+        "feedbackWrong": "After `query:` write `()`.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "query:",
+            "()"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.85
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 15",
+        "title": "Add the fat arrow =>",
+        "instruction": "In **api.ts**, complete **`query: () =>`**. ",
+        "hint": "Use `=>`, not `->`.",
+        "analogousExample": "query: () =>",
+        "seedCode": {
+          "api.ts": "import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';\n\ninterface Post {\n  id: number;\n  title: string;\n  body: string;\n}\n\nconst postsApi = createApi({\n  reducerPath: 'postsApi',\n  baseQuery: fetchBaseQuery({\n    baseUrl: 'https://jsonplaceholder.typicode.com',\n  }),\n  endpoints: (builder) => ({\n    getPosts: builder.query<Post[], void>({\n      // Step 11: query: () =>\n\n      // YOUR CODE HERE:\n    })\n  }),\n});\n"
+        },
+        "expectedOutcome": "`query: () =>` is written.",
+        "successCriteria": [
+          "Fat arrow present after `()`"
+        ],
+        "feedbackCorrect": "Almost there — return the path string next.",
+        "feedbackPartial": "Add `=>` after `query: ()`.",
+        "feedbackWrong": "Write `query: () =>`",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "query:",
+            "=>"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.85
+        }
+      },
+      {
+        "id": "step12",
+        "type": "question",
+        "phase": "Step 12 of 15",
+        "title": "Return the path '/posts'",
+        "instruction": "In **api.ts**, after `=>`, return the path string **`'/posts'`** so the full line is **`query: () => '/posts'`**. RTK Query joins this with your `baseUrl`.",
+        "hint": "Relative path only; `baseUrl` already includes the host.",
+        "analogousExample": "query: () => '/posts'",
+        "seedCode": {
+          "api.ts": "import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';\n\ninterface Post {\n  id: number;\n  title: string;\n  body: string;\n}\n\nconst postsApi = createApi({\n  reducerPath: 'postsApi',\n  baseQuery: fetchBaseQuery({\n    baseUrl: 'https://jsonplaceholder.typicode.com',\n  }),\n  endpoints: (builder) => ({\n    getPosts: builder.query<Post[], void>({\n      // Step 12: query: () => '/posts'\n\n      // YOUR CODE HERE:\n    })\n  }),\n});\n"
+        },
+        "expectedOutcome": "`query: () => '/posts'` is complete inside the config.",
+        "successCriteria": [
+          "Path `'/posts'` is returned"
+        ],
+        "feedbackCorrect": "Fetcher target is defined.",
+        "feedbackPartial": "Use quoted `'/posts'` after `=>`.",
+        "feedbackWrong": "Write `query: () => '/posts'`",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "query:",
+            "=>",
+            "/posts"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.85
+        }
+      },
+      {
+        "id": "step13",
+        "type": "question",
+        "phase": "Step 13 of 15",
+        "title": "Close the config object and the builder.query call",
+        "instruction": "In **api.ts**, close the config with **`}`** and the call with **`)`** so the endpoint value ends with **`})`** after the query line.",
+        "hint": "`})` — brace then paren.",
+        "analogousExample": "})\n// closes { ... } then the ( ... ) call",
+        "seedCode": {
+          "api.ts": "import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';\n\ninterface Post {\n  id: number;\n  title: string;\n  body: string;\n}\n\nconst postsApi = createApi({\n  reducerPath: 'postsApi',\n  baseQuery: fetchBaseQuery({\n    baseUrl: 'https://jsonplaceholder.typicode.com',\n  }),\n  endpoints: (builder) => ({\n    // Step 13: full getPosts line with closing })\n    // getPosts: builder.query<Post[], void>({ query: () => '/posts' })\n\n    // YOUR CODE HERE:\n  }),\n});\n"
+        },
+        "expectedOutcome": "`getPosts: builder.query<Post[], void>({ query: () => '/posts' })` is syntactically complete.",
+        "successCriteria": [
+          "Config and call are closed with `})`"
+        ],
+        "feedbackCorrect": "Endpoint expression is valid. Next: export the hook.",
+        "feedbackPartial": "After `'/posts'` add `})` to close object and call.",
+        "feedbackWrong": "End with `query: () => '/posts' })` on the getPosts property.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "getPosts",
+            "query:",
+            "/posts",
+            "})"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step14",
+        "type": "question",
+        "phase": "Step 14 of 15",
+        "title": "Export useGetPostsQuery",
+        "instruction": "In **api.ts**, after the `createApi` call, export the generated hook: **`export const { useGetPostsQuery } = postsApi;`** (use the same API const name you used for `createApi`).",
+        "hint": "Hook name is derived from the endpoint key `getPosts`.",
+        "analogousExample": "export const { useGetPostsQuery } = postsApi;",
+        "seedCode": {
+          "api.ts": "import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';\n\ninterface Post {\n  id: number;\n  title: string;\n  body: string;\n}\n\nconst postsApi = createApi({\n  reducerPath: 'postsApi',\n  baseQuery: fetchBaseQuery({\n    baseUrl: 'https://jsonplaceholder.typicode.com',\n  }),\n  endpoints: (builder) => ({\n    getPosts: builder.query<Post[], void>({\n      query: () => '/posts',\n    }),\n  }),\n});\n\n// Step 14: export the hook from your API instance\n\n// YOUR CODE HERE:\n"
+        },
+        "expectedOutcome": "`useGetPostsQuery` is exported from the same object as `createApi`.",
+        "successCriteria": [
+          "`export`",
+          "`useGetPostsQuery`",
+          "`postsApi` or your API const name"
+        ],
+        "feedbackCorrect": "You can now import `useGetPostsQuery` in components (with store setup elsewhere).",
+        "feedbackPartial": "Destructure `useGetPostsQuery` from your exported API object.",
+        "feedbackWrong": "Add: `export const { useGetPostsQuery } = postsApi;`",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "export",
+            "useGetPostsQuery"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step15",
+        "type": "question",
+        "phase": "Step 15 of 15",
+        "title": "Recall: full api module from memory",
+        "instruction": "In **api.ts**, rewrite the entire module from memory: import, `Post` interface, `postsApi` with `getPosts`, and **`export const { useGetPostsQuery } = postsApi;`**. This step checks recall of the full pattern.",
+        "hint": "Order: import → interface → createApi → export hooks.",
+        "analogousExample": "// import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';\n// interface Post { ... }\n// const postsApi = createApi({ ... getPosts: builder.query<Post[], void>({ query: () => '/posts' }) ... });\n// export const { useGetPostsQuery } = postsApi;",
+        "seedCode": {
+          "api.ts": "// Step 15: Write the full api.ts from memory (no scaffolding).\n\n// YOUR CODE HERE:\n"
+        },
+        "expectedOutcome": "A complete RTK Query slice file with typed `getPosts` and exported `useGetPostsQuery`.",
+        "successCriteria": [
+          "Import from `@reduxjs/toolkit/query/react`",
+          "`Post` interface",
+          "`createApi` with jsonplaceholder baseUrl",
+          "`getPosts` endpoint",
+          "`useGetPostsQuery` export"
+        ],
+        "feedbackCorrect": "You can reproduce the core RTK Query query endpoint pattern on your own.",
+        "feedbackPartial": "Check import, interface, createApi, getPosts, and hook export.",
+        "feedbackWrong": "Rebuild: import → interface Post → createApi with reducerPath, baseQuery, endpoints → getPosts → export hooks.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "createApi",
+            "fetchBaseQuery",
+            "interface",
+            "Post",
+            "getPosts",
+            "builder.query",
+            "query:",
+            "/posts",
+            "useGetPostsQuery",
+            "export"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.85
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Post interface",
+        "id": "step1"
+      },
+      {
+        "label": "RTK imports",
+        "id": "step2"
+      },
+      {
+        "label": "reducerPath",
+        "id": "step3"
+      },
+      {
+        "label": "baseQuery",
+        "id": "step4"
+      },
+      {
+        "label": "endpoints factory",
+        "id": "step5"
+      },
+      {
+        "label": "getPosts + builder.query",
+        "id": "step6"
+      },
+      {
+        "label": "Generics Post[], void",
+        "id": "step7"
+      },
+      {
+        "label": "Open config ({",
+        "id": "step8"
+      },
+      {
+        "label": "query:",
+        "id": "step9"
+      },
+      {
+        "label": "query: ()",
+        "id": "step10"
+      },
+      {
+        "label": "Fat arrow",
+        "id": "step11"
+      },
+      {
+        "label": "Path /posts",
+        "id": "step12"
+      },
+      {
+        "label": "Close })",
+        "id": "step13"
+      },
+      {
+        "label": "Export hook",
+        "id": "step14"
+      },
+      {
+        "label": "Full recall",
+        "id": "step15"
+      }
+    ],
+    "answerShape": "multi-file"
+  },
+  "source": "content"
+}

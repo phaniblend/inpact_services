@@ -1,0 +1,404 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-react-ts-108",
+    "track": "react-ts",
+    "lessonNum": 108,
+    "title": "Session Timeout Hook",
+    "shortName": "P108",
+    "intro": {
+      "tag": "LESSON #108",
+      "title": "Session Timeout Hook",
+      "body": "In this lesson, you will build a custom React hook called `useSessionTimeout` that automatically logs a user out after a period of inactivity. You will learn the core concept of managing side effects and state over time using React hooks like `useState`, `useEffect`, and `useRef`. The main technologies involved are React with TypeScript, focusing on event listeners, timers, and cleanup functions. By the end, you'll have a reusable hook that enhances application security by handling session expiration.",
+      "usecase": "Session timeout hooks are essential for security and user experience in applications that handle sensitive data. In banking dashboards, they automatically log users out after periods of inactivity to prevent unauthorized access to financial information. E-commerce admin panels use them to protect order management systems while preserving unsaved work with warning modals. Healthcare portals implement these hooks to comply with HIPAA regulations by securing patient records during idle time. Developers add this pattern to any authenticated application where session security matters."
+    },
+    "objectives": [
+      "Implement a custom React hook that tracks user inactivity",
+      "Configure timeout duration and callback functions for session expiration",
+      "Initialize event listeners for user interaction detection",
+      "Manipulate timer state to reset on user activity",
+      "Apply the session timeout hook within a React component",
+      "Control the display of timeout warnings based on hook state",
+      "Integrate cleanup mechanisms to remove event listeners"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 11",
+        "title": "Import React and required hooks (useState, useEffect, useCallback, useRef)",
+        "instruction": "Import React and the hooks useState, useEffect, useCallback, and useRef from 'react'.",
+        "hint": "Use a single import statement to bring in all the named exports from the 'react' package.",
+        "analogousExample": "// Importing multiple hooks from React\nimport React, { useState, useEffect } from 'react';",
+        "seedCode": "// Import React and the required hooks here\n",
+        "expectedOutcome": "The import statement should be added at the top of the file, making all the necessary hooks available for use.",
+        "successCriteria": [
+          "React, useState, useEffect, useCallback, and useRef are imported from 'react'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've imported some of the required hooks, but not all. Make sure to import React, useState, useEffect, useCallback, and useRef from 'react'.",
+        "feedbackWrong": "The import statement is missing or incorrect. You need to import React, useState, useEffect, useCallback, and useRef from 'react'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "React",
+            "useState",
+            "useEffect",
+            "useCallback",
+            "useRef",
+            "'react'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 11",
+        "title": "Define the useSessionTimeout hook interface",
+        "instruction": "Define a TypeScript interface named SessionTimeoutReturn that specifies the hook's return type with three properties: timeLeft (number), resetTimeout (function that returns void), and isActive (boolean).",
+        "hint": "Use the 'interface' keyword followed by the interface name and property definitions with their types.",
+        "analogousExample": "// Example: Interface for a user object\ninterface User {\n  id: number;\n  name: string;\n  isActive: boolean;\n}",
+        "seedCode": "// Import React and the required hooks here\n\n// Define the SessionTimeoutReturn interface here",
+        "expectedOutcome": "An interface named SessionTimeoutReturn is defined with the three required properties and their correct TypeScript types.",
+        "successCriteria": [
+          "The SessionTimeoutReturn interface is defined with timeLeft: number, resetTimeout: () => void, and isActive: boolean properties."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Check that your interface has all three properties with the correct TypeScript types: timeLeft (number), resetTimeout (function returning void), and isActive (boolean).",
+        "feedbackWrong": "The interface definition is missing or incorrect. Remember to use the 'interface' keyword, name it SessionTimeoutReturn, and include all three properties with their types.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "interface",
+            "SessionTimeoutReturn",
+            "timeLeft:",
+            "number",
+            "resetTimeout:",
+            "() => void",
+            "isActive:",
+            "boolean"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 11",
+        "title": "Create the useSessionTimeout hook function",
+        "instruction": "Create a function called useSessionTimeout that takes a parameter named timeoutInSeconds (type: number) and returns the SessionTimeoutReturn interface you defined earlier.",
+        "hint": "Start with either 'function useSessionTimeout(timeoutInSeconds: number): SessionTimeoutReturn' or 'const useSessionTimeout = (timeoutInSeconds: number): SessionTimeoutReturn =>'.",
+        "analogousExample": "// Example: a typed function that returns an interface\ninterface ExampleReturn {\n  value: string;\n}\n\nfunction exampleFunction(param: number): ExampleReturn {\n  return { value: 'example' };\n}",
+        "seedCode": "// Import React and the required hooks here\n\n// Define the SessionTimeoutReturn interface here\n\n// Create the useSessionTimeout hook function here",
+        "expectedOutcome": "A function named useSessionTimeout is defined with proper TypeScript typing for its parameter and return type.",
+        "successCriteria": [
+          "The useSessionTimeout function is created with a timeoutInSeconds parameter of type number and returns the SessionTimeoutReturn interface."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure the function is named exactly 'useSessionTimeout', takes a 'timeoutInSeconds: number' parameter, and returns 'SessionTimeoutReturn'.",
+        "feedbackWrong": "The function definition is missing or incorrect. Create a function named useSessionTimeout with the specified parameter type and return type.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "useSessionTimeout",
+            "timeoutInSeconds: number",
+            "SessionTimeoutReturn"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 11",
+        "title": "Initialize state for time left and active status",
+        "instruction": "Inside the useSessionTimeout hook function, use useState to create two state variables: timeLeft (number) and isActive (boolean). Initialize timeLeft with 0 and isActive with false.",
+        "hint": "Remember to import useState if you haven't already. Use destructuring to create the state variables with proper TypeScript types.",
+        "analogousExample": "// Example: initializing state with useState\nconst [count, setCount] = useState<number>(0);\nconst [isLoading, setIsLoading] = useState<boolean>(false);",
+        "seedCode": "import React, { useState, useEffect, useCallback, useRef } from 'react';\n\ninterface SessionTimeoutReturn {\n  timeLeft: number;\n  isActive: boolean;\n  resetTimer: () => void;\n  toggleTimer: () => void;\n}\n\nconst useSessionTimeout = (timeoutSeconds: number = 300): SessionTimeoutReturn => {\n  // Initialize state for timeLeft and isActive here\n};\n\nexport default useSessionTimeout;",
+        "expectedOutcome": "The hook now has timeLeft and isActive state variables initialized with proper TypeScript types.",
+        "successCriteria": [
+          "timeLeft state is declared as a number initialized to 0, and isActive state is declared as a boolean initialized to false."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added some state, but make sure both timeLeft (number) and isActive (boolean) are properly declared with useState.",
+        "feedbackWrong": "The state initialization is missing or incorrect. Use useState to create both timeLeft and isActive with proper types and initial values.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "useState",
+            "timeLeft",
+            "isActive",
+            "number",
+            "boolean",
+            "0",
+            "false"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 11",
+        "title": "Create a ref to store the interval ID",
+        "instruction": "Inside the useSessionTimeout hook, declare a ref using useRef to store the interval ID. Use TypeScript to type the ref as React.MutableRefObject<NodeJS.Timeout | null>.",
+        "hint": "Call useRef with an initial value of null and specify the type parameter to ensure TypeScript knows it holds a NodeJS.Timeout or null.",
+        "analogousExample": "// Example: creating a ref for a timer ID\nconst timerRef = useRef<NodeJS.Timeout | null>(null);",
+        "seedCode": "import React, { useState, useEffect, useCallback, useRef } from 'react';\n\ninterface SessionTimeoutReturn {\n  timeLeft: number;\n  isActive: boolean;\n  resetTimer: () => void;\n  toggleTimer: () => void;\n}\n\nconst useSessionTimeout = (timeoutSeconds: number = 300): SessionTimeoutReturn => {\n  // Initialize state for timeLeft and isActive here\n  \n  // Create a ref for the interval ID here\n  \n};\n\nexport default useSessionTimeout;",
+        "expectedOutcome": "The hook now includes a ref that will persist the interval ID across renders, typed correctly for TypeScript.",
+        "successCriteria": [
+          "A ref named intervalRef (or similar) is declared with useRef, typed as React.MutableRefObject<NodeJS.Timeout | null>, and initialized to null."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've created a ref, but check the type annotation. It should be React.MutableRefObject<NodeJS.Timeout | null> to match the interval ID type.",
+        "feedbackWrong": "The ref is missing or incorrectly typed. Use useRef with the correct TypeScript type to store the interval ID.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "useRef",
+            "NodeJS.Timeout",
+            "null"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 11",
+        "title": "Define the startTimer function",
+        "instruction": "Inside the useSessionTimeout hook, define a function named startTimer that sets up an interval to decrement the timeLeft state by 1 every second.",
+        "hint": "Use setInterval to run a callback every 1000 milliseconds. Inside the callback, update timeLeft using its setter function.",
+        "analogousExample": "// Example: a function that starts a countdown\nfunction startCountdown() {\n  setInterval(() => {\n    setCount(prev => prev - 1);\n  }, 1000);\n}",
+        "seedCode": "import React, { useState, useEffect, useCallback, useRef } from 'react';\n\ninterface SessionTimeoutReturn {\n  timeLeft: number;\n  isActive: boolean;\n  resetTimer: () => void;\n  toggleTimer: () => void;\n}\n\nconst useSessionTimeout = (timeoutSeconds: number = 300): SessionTimeoutReturn => {\n  // Initialize state for timeLeft and isActive here\n  \n  // Create a ref for the interval ID here\n  \n  // Define the startTimer function here\n  \n};\n\nexport default useSessionTimeout;",
+        "expectedOutcome": "A startTimer function is defined within the hook, ready to be called to begin the countdown.",
+        "successCriteria": [
+          "The startTimer function is defined and uses setInterval to decrement timeLeft every second."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started defining startTimer, but make sure it uses setInterval to update timeLeft every 1000 milliseconds.",
+        "feedbackWrong": "The startTimer function is not defined or doesn't set up an interval to decrement timeLeft.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "startTimer",
+            "setInterval",
+            "timeLeft",
+            "1000"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 11",
+        "title": "Memoize the resetTimeout function with useCallback",
+        "instruction": "Wrap the existing resetTimeout function definition with useCallback to memoize it, specifying the proper dependencies.",
+        "hint": "useCallback returns a memoized version of the callback that only changes if one of its dependencies has changed.",
+        "analogousExample": "// Example of memoizing a function\nconst memoizedHandler = useCallback(() => {\n  console.log('Handler called');\n}, [dependency]);",
+        "seedCode": "import React, { useState, useEffect, useCallback, useRef } from 'react';\n\ninterface SessionTimeoutReturn {\n  timeLeft: number;\n  isActive: boolean;\n  resetTimer: () => void;\n  toggleTimer: () => void;\n}\n\nconst useSessionTimeout = (timeoutSeconds: number = 300): SessionTimeoutReturn => {\n  // Initialize state for timeLeft and isActive here\n  \n  // Create a ref for the interval ID here\n  \n  // Define the startTimer function here\n  \n  // Define the resetTimeout function here\n  const resetTimeout = useCallback(() => {\n    // Reset logic will go here\n  }, []);\n  \n};\n\nexport default useSessionTimeout;",
+        "expectedOutcome": "The resetTimeout function is now memoized with useCallback, which will help prevent unnecessary re-renders in components that use this hook.",
+        "successCriteria": [
+          "resetTimeout is wrapped with useCallback and has an appropriate dependency array (likely empty for this function)."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added useCallback, but check if the dependency array is correct. For resetTimeout, what dependencies does it actually need?",
+        "feedbackWrong": "The resetTimeout function should be wrapped with useCallback. Make sure you're using the useCallback hook imported earlier.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "useCallback",
+            "resetTimeout"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 11",
+        "title": "Set up useEffect to manage timer lifecycle",
+        "instruction": "Inside the useSessionTimeout hook, create a useEffect hook that starts the timer when the component mounts and cleans up the interval when the component unmounts.",
+        "hint": "Use useEffect with an empty dependency array for mount/unmount behavior. Inside, call startTimer and return a cleanup function that clears the interval using the intervalRef.",
+        "analogousExample": "// Example: useEffect for mount/unmount cleanup\nuseEffect(() => {\n  console.log('Component mounted');\n  const timer = setInterval(() => {}, 1000);\n  return () => {\n    console.log('Component unmounted');\n    clearInterval(timer);\n  };\n}, []);",
+        "seedCode": "import React, { useState, useEffect, useCallback, useRef } from 'react';\n\ninterface SessionTimeoutReturn {\n  timeLeft: number;\n  isActive: boolean;\n  resetTimer: () => void;\n  toggleTimer: () => void;\n}\n\nconst useSessionTimeout = (timeoutSeconds: number = 300): SessionTimeoutReturn => {\n  // Initialize state for timeLeft and isActive here\n  \n  // Create a ref for the interval ID here\n  \n  // Define the startTimer function here\n  \n  // Define the resetTimeout function here\n  const resetTimeout = useCallback(() => {\n    // Reset logic will go here\n  }, []);\n  \n  // Add useEffect here\n  \n};\n\nexport default useSessionTimeout;",
+        "expectedOutcome": "The useEffect hook is added to manage the timer's lifecycle, ensuring proper cleanup.",
+        "successCriteria": [
+          "The useEffect hook is defined with an empty dependency array, calls startTimer, and returns a cleanup function that clears the interval using intervalRef.current."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure your useEffect has an empty dependency array, calls startTimer, and returns a cleanup function that clears the interval.",
+        "feedbackWrong": "The useEffect hook is missing or incorrect. It should start the timer on mount and clean up on unmount.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "useEffect",
+            "startTimer",
+            "return",
+            "clearInterval",
+            "intervalRef.current"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 11",
+        "title": "Return the hook's values from useSessionTimeout",
+        "instruction": "Return an object containing timeLeft, resetTimeout, and isActive from the useSessionTimeout hook function.",
+        "hint": "At the end of the hook function, use the return keyword followed by an object with the three properties.",
+        "analogousExample": "// Similar: returning values from a custom hook\nfunction useCounter() {\n  const [count, setCount] = useState(0);\n  const increment = () => setCount(count + 1);\n  return { count, increment };\n}",
+        "seedCode": "import React, { useState, useEffect, useCallback, useRef } from 'react';\n\ninterface SessionTimeoutReturn {\n  timeLeft: number;\n  isActive: boolean;\n  resetTimer: () => void;\n  toggleTimer: () => void;\n}\n\nconst useSessionTimeout = (timeoutSeconds: number = 300): SessionTimeoutReturn => {\n  // Initialize state for timeLeft and isActive here\n  \n  // Create a ref for the interval ID here\n  \n  // Define the startTimer function here\n  \n  // Define the resetTimeout function here\n  const resetTimeout = useCallback(() => {\n    // Reset logic will go here\n  }, []);\n  \n  // Add useEffect here\n  \n  // Return the hook values here\n};\n\nexport default useSessionTimeout;",
+        "expectedOutcome": "The hook now returns an object with timeLeft, resetTimeout, and isActive properties, completing its basic structure.",
+        "successCriteria": [
+          "The useSessionTimeout hook returns an object containing timeLeft, resetTimeout, and isActive."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure you're returning an object with exactly three properties: timeLeft, resetTimeout, and isActive.",
+        "feedbackWrong": "The hook should return an object containing timeLeft, resetTimeout, and isActive. Check that you're using the return keyword with the correct object structure.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "return",
+            "{",
+            "timeLeft",
+            "resetTimeout",
+            "isActive",
+            "}"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 11",
+        "title": "Create a demo component to test the hook",
+        "instruction": "Create a functional component named SessionTimeoutDemo that uses the useSessionTimeout hook.",
+        "hint": "Define a component that calls useSessionTimeout with a timeout value and returns JSX to display the hook's values.",
+        "analogousExample": "// Example: a component that uses a custom hook\nfunction DemoComponent() {\n  const { value, update } = useCustomHook();\n  return (\n    <div>\n      <p>Value: {value}</p>\n    </div>\n  );\n}",
+        "seedCode": "import React, { useState, useEffect, useCallback, useRef } from 'react';\n\ninterface SessionTimeoutReturn {\n  timeLeft: number;\n  isActive: boolean;\n  resetTimer: () => void;\n  toggleTimer: () => void;\n}\n\nconst useSessionTimeout = (timeoutSeconds: number = 300): SessionTimeoutReturn => {\n  // Initialize state for timeLeft and isActive here\n  \n  // Create a ref for the interval ID here\n  \n  // Define the startTimer function here\n  \n  // Define the resetTimeout function here\n  const resetTimeout = useCallback(() => {\n    // Reset logic will go here\n  }, []);\n  \n  // Add useEffect here\n  \n  // Return the hook values here\n};\n\nexport default useSessionTimeout;\n\n// Create the SessionTimeoutDemo component here",
+        "expectedOutcome": "A SessionTimeoutDemo component is defined that imports and uses the useSessionTimeout hook.",
+        "successCriteria": [
+          "The component is named SessionTimeoutDemo, calls useSessionTimeout, and returns JSX."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the component, but make sure it's named SessionTimeoutDemo, calls useSessionTimeout, and returns JSX.",
+        "feedbackWrong": "The component isn't defined correctly. Create a functional component named SessionTimeoutDemo that uses the useSessionTimeout hook.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "SessionTimeoutDemo",
+            "useSessionTimeout",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 11",
+        "title": "Add UI elements and wire event handlers",
+        "instruction": "Inside the SessionTimeoutDemo component's return statement, add a paragraph that displays the current time left in minutes and seconds, and a button that calls resetTimer when clicked.",
+        "hint": "Use the timeLeft value from the hook to calculate minutes and seconds. The button should have an onClick handler that calls resetTimer.",
+        "analogousExample": "// Displaying a value and wiring a button\n<p>Time remaining: {minutes}:{seconds}</p>\n<button onClick={resetTimer}>Reset Timer</button>",
+        "seedCode": "import React, { useState, useEffect, useCallback, useRef } from 'react';\n\ninterface SessionTimeoutReturn {\n  timeLeft: number;\n  isActive: boolean;\n  resetTimer: () => void;\n  toggleTimer: () => void;\n}\n\nconst useSessionTimeout = (timeoutSeconds: number = 300): SessionTimeoutReturn => {\n  // Initialize state for timeLeft and isActive here\n  \n  // Create a ref for the interval ID here\n  \n  // Define the startTimer function here\n  \n  // Define the resetTimeout function here\n  const resetTimeout = useCallback(() => {\n    // Reset logic will go here\n  }, []);\n  \n  // Add useEffect here\n  \n  // Return the hook values here\n};\n\nexport default useSessionTimeout;\n\n// Create the SessionTimeoutDemo component here\nconst SessionTimeoutDemo = () => {\n  const { timeLeft, isActive, resetTimer, toggleTimer } = useSessionTimeout(60);\n  \n  return (\n    <div>\n      {/* Add paragraph and button here */}\n    </div>\n  );\n};\n\nexport default SessionTimeoutDemo;",
+        "expectedOutcome": "The UI will show the countdown timer and a reset button that works when clicked.",
+        "successCriteria": [
+          "The paragraph displays timeLeft formatted as minutes:seconds, and the button's onClick handler calls resetTimer."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure you've added both the paragraph showing timeLeft and a button with onClick={resetTimer}.",
+        "feedbackWrong": "The UI elements or event handler wiring are missing. Add a paragraph to display timeLeft and a button that calls resetTimer when clicked.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<p>",
+            "{",
+            "timeLeft",
+            "}",
+            "</p>",
+            "<button",
+            "onClick={resetTimer}",
+            ">",
+            "Reset Timer",
+            "</button>"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import React and required hooks (useState, useEffect, useCallback, useRef)",
+        "id": "step1"
+      },
+      {
+        "label": "Define the useSessionTimeout hook interface",
+        "id": "step2"
+      },
+      {
+        "label": "Create the useSessionTimeout hook function",
+        "id": "step3"
+      },
+      {
+        "label": "Initialize state for time left and active status",
+        "id": "step4"
+      },
+      {
+        "label": "Create a ref to store the interval ID",
+        "id": "step5"
+      },
+      {
+        "label": "Define the startTimer function",
+        "id": "step6"
+      },
+      {
+        "label": "Memoize the resetTimeout function with useCallback",
+        "id": "step7"
+      },
+      {
+        "label": "Set up useEffect to manage timer lifecycle",
+        "id": "step8"
+      },
+      {
+        "label": "Return the hook's values from useSessionTimeout",
+        "id": "step9"
+      },
+      {
+        "label": "Create a demo component to test the hook",
+        "id": "step10"
+      },
+      {
+        "label": "Add UI elements and wire event handlers",
+        "id": "step11"
+      }
+    ]
+  },
+  "source": "content"
+}

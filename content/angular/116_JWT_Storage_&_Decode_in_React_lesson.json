@@ -1,0 +1,459 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-angular-116",
+    "track": "angular",
+    "lessonNum": 116,
+    "title": "JWT Storage & Decode in React",
+    "shortName": "P116",
+    "intro": {
+      "tag": "LESSON #116",
+      "title": "JWT Storage & Decode in React",
+      "body": "In this lesson, you will build a simple Angular application that stores a JSON Web Token (JWT) in the browser's localStorage and decodes it to display user information. You will learn the core concept of managing authentication state and securely handling tokens on the client side. The main technologies involved are Angular services for logic, TypeScript for type safety, and the jwt-decode library for parsing the token. By the end, you'll understand how to persist user sessions and extract data from JWTs in a structured Angular project.",
+      "usecase": "In real-world Angular applications, JWT storage and decoding is essential for user authentication and authorization. This pattern appears in dashboards where user roles determine accessible features, in e-commerce platforms that persist login sessions, and in admin panels that display user-specific data. Developers implement JWT handling to secure API calls, manage user sessions across page refreshes, and personalize UI elements based on decoded token claims like user roles or permissions."
+    },
+    "objectives": [
+      "Construct an Angular service to manage JWT token storage and retrieval",
+      "Implement token decoding logic using the jwt-decode library in a TypeScript service",
+      "Configure Angular HTTP interceptors to automatically attach JWT tokens to outgoing requests",
+      "Initialize and bind decoded token data to Angular component properties for display",
+      "Integrate token validation checks within Angular route guards for protected routes",
+      "Manipulate token storage using browser localStorage with proper error handling",
+      "Render user information from decoded JWT tokens in Angular template views"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 12",
+        "title": "Import Angular modules and JWT decode library",
+        "instruction": "Import Component from '@angular/core' and jwt_decode from 'jwt-decode' library.",
+        "hint": "Use the import statement to bring in the necessary modules. Component is needed for Angular components, and jwt_decode will help decode JWT tokens.",
+        "analogousExample": "// Importing modules in Angular\nimport { Component } from '@angular/core';\nimport jwt_decode from 'jwt-decode';",
+        "seedCode": {
+          "App.tsx": "// Import Component from '@angular/core' and jwt_decode from 'jwt-decode'",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "The necessary imports are added to set up the Angular environment for JWT handling.",
+        "successCriteria": [
+          "Component is imported from '@angular/core' and jwt_decode is imported from 'jwt-decode'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you've imported both Component and jwt_decode. Check the import statements.",
+        "feedbackWrong": "The imports are not correct. You need to import Component from '@angular/core' and jwt_decode from 'jwt-decode'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "Component",
+            "@angular/core",
+            "jwt_decode",
+            "jwt-decode"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 12",
+        "title": "Create the main component class",
+        "instruction": "Create a component class named JwtStorageComponent with the @Component decorator and an empty template.",
+        "hint": "Use the imported Component decorator to define your component class. The template can be empty for now.",
+        "analogousExample": "// Example: basic Angular component\n@Component({\n  selector: 'app-example',\n  template: ''\n})\nexport class ExampleComponent {}",
+        "seedCode": {
+          "App.tsx": "import { Component } from '@angular/core';\nimport jwt_decode from 'jwt-decode';\n\n// Create your component class here",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "A component class named JwtStorageComponent is defined with the @Component decorator.",
+        "successCriteria": [
+          "The JwtStorageComponent class is created with the @Component decorator and an empty template."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the component, but make sure to include both the @Component decorator and the class definition with the correct name.",
+        "feedbackWrong": "The component class wasn't created correctly. Check that you're using the @Component decorator and naming the class JwtStorageComponent.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "@Component",
+            "JwtStorageComponent",
+            "class",
+            "template"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 12",
+        "title": "Define component properties for JWT data",
+        "instruction": "Inside your component class, add two properties: 'token' of type string and 'decodedToken' of type any.",
+        "hint": "Add these as class properties directly inside the class body, using TypeScript type annotations.",
+        "analogousExample": "// Example: class properties with types\nclass UserProfile {\n  username: string;\n  age: number;\n}",
+        "seedCode": {
+          "App.tsx": "import { Component } from '@angular/core';\nimport jwt_decode from 'jwt-decode';\n\n@Component({\n  selector: 'app-jwt-demo',\n  template: ''\n})\nexport class JwtDemoComponent {\n  // Add token: string and decodedToken: any properties here\n}",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "Your component class will have typed properties ready to store JWT token data.",
+        "successCriteria": [
+          "The component class contains 'token: string' and 'decodedToken: any' as properties."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You defined at least one property, but make sure you have both 'token: string' and 'decodedToken: any'.",
+        "feedbackWrong": "The component class doesn't contain the required typed properties. Add 'token: string' and 'decodedToken: any' inside the class.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "token:",
+            "decodedToken:",
+            "string",
+            "any"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 12",
+        "title": "Initialize component with sample JWT token",
+        "instruction": "In the JwtDemoComponent class, initialize the token property with a sample JWT string in the constructor.",
+        "hint": "Add a constructor method that sets this.token to a hardcoded JWT string. You can use any valid JWT format for demonstration.",
+        "analogousExample": "// Similar: initializing a property in constructor\nclass ExampleComponent {\n  message: string;\n  \n  constructor() {\n    this.message = 'Hello World';\n  }\n}",
+        "seedCode": {
+          "App.tsx": "import { Component } from '@angular/core';\nimport jwt_decode from 'jwt-decode';\n\n@Component({\n  selector: 'app-jwt-demo',\n  template: ''\n})\nexport class JwtDemoComponent {\n  // Add token: string and decodedToken: any properties here\n  \n  constructor() {\n    // Initialize token property with a sample JWT string\n  }\n}",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "The component will have a sample JWT token stored in the token property when instantiated.",
+        "successCriteria": [
+          "The token property is initialized with a JWT string in the constructor."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're setting the token property to a valid JWT string format in the constructor.",
+        "feedbackWrong": "The token property needs to be initialized with a sample JWT string in the constructor. Check that you're using the correct syntax for Angular class constructors.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "constructor",
+            "this.token",
+            "="
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 12",
+        "title": "Create method to store JWT in localStorage",
+        "instruction": "Inside the JwtDemoComponent class, add a method named storeToken() that saves the current token property to localStorage using the key 'jwtToken'.",
+        "hint": "Use localStorage.setItem('jwtToken', this.token) inside the method body.",
+        "analogousExample": "// Example: method to save data\nsaveData() {\n  localStorage.setItem('myData', this.data);\n}",
+        "seedCode": {
+          "App.tsx": "import { Component } from '@angular/core';\nimport jwt_decode from 'jwt-decode';\n\n@Component({\n  selector: 'app-jwt-demo',\n  template: ''\n})\nexport class JwtDemoComponent {\n  token: string = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c';\n  decodedToken: any = null;\n\n  constructor() {\n    // Token is initialized above\n  }\n\n  // Add storeToken() method here\n}",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "The component will have a storeToken() method that can persist the JWT token to the browser's localStorage.",
+        "successCriteria": [
+          "A storeToken() method exists in the JwtDemoComponent class and calls localStorage.setItem('jwtToken', this.token)."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added a method, but check that it's named storeToken() and correctly uses localStorage.setItem('jwtToken', this.token).",
+        "feedbackWrong": "The storeToken() method is missing or incorrect. Make sure to add a method that saves this.token to localStorage with the key 'jwtToken'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "storeToken",
+            "localStorage.setItem",
+            "'jwtToken'",
+            "this.token"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 12",
+        "title": "Create method to retrieve JWT from localStorage",
+        "instruction": "Add a method named getStoredToken() to your component that reads the JWT token from localStorage and returns it.",
+        "hint": "Use localStorage.getItem('jwtToken') to retrieve the stored token value.",
+        "analogousExample": "// Example: retrieving data from localStorage\npublic getUsername(): string | null {\n  return localStorage.getItem('username');\n}",
+        "seedCode": {
+          "App.tsx": "import { Component } from '@angular/core';\nimport jwt_decode from 'jwt-decode';\n\n@Component({\n  selector: 'app-jwt-demo',\n  template: ''\n})\nexport class JwtDemoComponent {\n  token: string = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c';\n  decodedToken: any = null;\n\n  constructor() {\n    // Token is initialized above\n  }\n\n  // Add storeToken() method here\n\n  // Add getStoredToken() method here\n}",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "The component will have a getStoredToken() method that retrieves the token from localStorage.",
+        "successCriteria": [
+          "The getStoredToken() method is defined and returns the value from localStorage.getItem('jwtToken')."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added a method, but make sure it reads from localStorage using getItem('jwtToken') and returns the value.",
+        "feedbackWrong": "The method is missing or doesn't properly retrieve the token from localStorage. Check the localStorage.getItem() syntax.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "getStoredToken",
+            "localStorage.getItem",
+            "jwtToken"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 12",
+        "title": "Create method to decode JWT using jwt-decode",
+        "instruction": "Add a decodeToken() method that uses jwt_decode() to parse the token and assign the result to the decodedToken property.",
+        "hint": "Inside the JwtDemoComponent class, define a method named decodeToken that calls jwt_decode with this.token and sets this.decodedToken to the result.",
+        "analogousExample": "// Similar: a method that processes data\nprocessData() {\n  this.result = someLibrary(this.input);\n}",
+        "seedCode": {
+          "App.tsx": "import { Component } from '@angular/core';\nimport jwt_decode from 'jwt-decode';\n\n@Component({\n  selector: 'app-jwt-demo',\n  template: ''\n})\nexport class JwtDemoComponent {\n  token: string = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c';\n  decodedToken: any = null;\n\n  constructor() {\n    // Token is initialized above\n  }\n\n  // Add storeToken() method here\n\n  // Add getStoredToken() method here\n\n  // Add decodeToken() method here\n}",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "The component will have a decodeToken method that can parse the JWT token and store its decoded payload.",
+        "successCriteria": [
+          "A decodeToken method is defined that calls jwt_decode with this.token and assigns the result to this.decodedToken."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your decodeToken method correctly calls jwt_decode with this.token and assigns the result to this.decodedToken.",
+        "feedbackWrong": "The decodeToken method is missing or doesn't properly decode the token. Remember to use jwt_decode(this.token) and assign it to this.decodedToken.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "decodeToken",
+            "jwt_decode",
+            "this.token",
+            "this.decodedToken"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 12",
+        "title": "Add template structure with header section",
+        "instruction": "In the @Component decorator, add a template property with a header element containing the text 'JWT Storage & Decode Demo'.",
+        "hint": "The template property should be a string containing HTML. Add it inside the @Component decorator object.",
+        "analogousExample": "// Example: Adding a template with a header\n@Component({\n  selector: 'app-example',\n  template: '<h1>Example Component</h1>'\n})",
+        "seedCode": {
+          "App.tsx": "import { Component } from '@angular/core';\nimport jwt_decode from 'jwt-decode';\n\n@Component({\n  selector: 'app-jwt-demo',\n  template: ''\n})\nexport class JwtDemoComponent {\n  token: string = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c';\n  decodedToken: any = null;\n\n  constructor() {\n    // Token is initialized above\n  }\n\n  // Add storeToken() method here\n\n  // Add getStoredToken() method here\n\n  // Add decodeToken() method here\n}",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "The component will have a basic template structure with a header displaying the lesson title.",
+        "successCriteria": [
+          "The @Component decorator includes a template property with a header element containing 'JWT Storage & Decode Demo'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added a template, but make sure it includes a header element with the exact text 'JWT Storage & Decode Demo'.",
+        "feedbackWrong": "The template property is missing or doesn't contain the required header with the lesson title. Check the @Component decorator.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "template:",
+            "'<h1>JWT Storage & Decode Demo</h1>'",
+            "template: '<h1>JWT Storage & Decode Demo</h1>'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 12",
+        "title": "Add token display section to template",
+        "instruction": "In the component's template, add a <section> element with a heading and a paragraph to display the current token property.",
+        "hint": "Use the token property from the component class in the template with interpolation syntax {{ token }}.",
+        "analogousExample": "// Example: Displaying a property in Angular template\n<section>\n  <h3>Current Value</h3>\n  <p>{{ myValue }}</p>\n</section>",
+        "seedCode": {
+          "App.tsx": "import { Component } from '@angular/core';\nimport jwt_decode from 'jwt-decode';\n\n@Component({\n  selector: 'app-jwt-demo',\n  template: ''\n})\nexport class JwtDemoComponent {\n  token: string = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c';\n  decodedToken: any = null;\n\n  constructor() {\n    // Token is initialized above\n  }\n\n  // Add storeToken() method here\n\n  // Add getStoredToken() method here\n\n  // Add decodeToken() method here\n}",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "The template now contains a section that displays the JWT token value from the component's token property.",
+        "successCriteria": [
+          "The template includes a <section> element with a heading (e.g., <h3>) and a paragraph (<p>) showing {{ token }}."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added some template structure, but make sure to include both a heading and a paragraph with the token property displayed using interpolation.",
+        "feedbackWrong": "The template doesn't yet have the required token display section. Add a <section> with a heading and paragraph showing {{ token }}.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<section>",
+            "<h3>",
+            "<p>",
+            "{{ token }}"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 12",
+        "title": "Add decoded token display section",
+        "instruction": "In the component's template, add a new section with a heading 'Decoded Token' and display the decodedToken property using Angular's JSON pipe.",
+        "hint": "Use the JSON pipe (| json) to format the decodedToken object for display in the template.",
+        "analogousExample": "// Displaying an object with JSON pipe\n<div>\n  <h3>User Data</h3>\n  <pre>{{ userData | json }}</pre>\n</div>",
+        "seedCode": {
+          "App.tsx": "import { Component } from '@angular/core';\nimport jwt_decode from 'jwt-decode';\n\n@Component({\n  selector: 'app-jwt-demo',\n  template: ''\n})\nexport class JwtDemoComponent {\n  token: string = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c';\n  decodedToken: any = null;\n\n  constructor() {\n    // Token is initialized above\n  }\n\n  // Add storeToken() method here\n\n  // Add getStoredToken() method here\n\n  // Add decodeToken() method here\n}",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "The template will include a section that displays the decoded JWT token data in a formatted JSON structure.",
+        "successCriteria": [
+          "Template contains a heading 'Decoded Token' and displays decodedToken using the JSON pipe."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added the section, but make sure to include both the heading and use the JSON pipe correctly on the decodedToken property.",
+        "feedbackWrong": "The template doesn't yet show the decoded token section. Add a heading and use the JSON pipe to display the decodedToken property.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "Decoded Token",
+            "decodedToken",
+            "json"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 12",
+        "title": "Add storage buttons with click handlers",
+        "instruction": "In the template section of the @Component decorator, add three buttons with labels 'Store Token', 'Retrieve Token', and 'Decode Token', each with (click) handlers calling the respective methods you'll implement.",
+        "hint": "Add the buttons inside the template string. Use Angular's (click) event binding to call the methods.",
+        "analogousExample": "// Example: Adding buttons with click handlers\n@Component({\n  selector: 'app-example',\n  template: `\n    <button (click)=\"storeToken()\">Store Token</button>\n    <button (click)=\"getStoredToken()\">Retrieve Token</button>\n    <button (click)=\"decodeToken()\">Decode Token</button>\n  `\n})",
+        "seedCode": {
+          "App.tsx": "import { Component } from '@angular/core';\nimport jwt_decode from 'jwt-decode';\n\n@Component({\n  selector: 'app-jwt-demo',\n  template: ''\n})\nexport class JwtDemoComponent {\n  token: string = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c';\n  decodedToken: any = null;\n\n  constructor() {\n    // Token is initialized above\n  }\n\n  // Add storeToken() method here\n\n  // Add getStoredToken() method here\n\n  // Add decodeToken() method here\n}",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "The component template will have three interactive buttons that will trigger JWT storage operations when clicked.",
+        "successCriteria": [
+          "Three buttons with labels 'Store Token', 'Retrieve Token', and 'Decode Token' are added to the template, each with (click) handlers calling storeToken(), getStoredToken(), and decodeToken() respectively."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You added some buttons, but check that all three are present with correct labels and (click) handlers.",
+        "feedbackWrong": "The template doesn't have the required three buttons with click handlers. Review the instruction and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<button",
+            "(click)=\"storeToken()\"",
+            "(click)=\"getStoredToken()\"",
+            "(click)=\"decodeToken()\"",
+            "Store Token",
+            "Retrieve Token",
+            "Decode Token"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step12",
+        "type": "question",
+        "phase": "Step 12 of 12",
+        "title": "Add clear functionality button",
+        "instruction": "Add a method named clearToken to your component that removes the token from localStorage and resets the component's token and decodedToken properties.",
+        "hint": "The method should call localStorage.removeItem with the appropriate key, then set this.token to an empty string and this.decodedToken to null.",
+        "analogousExample": "// Similar: a method that clears data\nclearData() {\n  localStorage.removeItem('myData');\n  this.data = '';\n  this.processedData = null;\n}",
+        "seedCode": {
+          "App.tsx": "import { Component } from '@angular/core';\nimport jwt_decode from 'jwt-decode';\n\n@Component({\n  selector: 'app-jwt-demo',\n  template: ''\n})\nexport class JwtDemoComponent {\n  token: string = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c';\n  decodedToken: any = null;\n\n  constructor() {\n    // Token is initialized above\n  }\n\n  // Add storeToken() method here\n\n  // Add getStoredToken() method here\n\n  // Add decodeToken() method here\n\n  // Add clearToken() method here\n}",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "The component will have a clearToken method that properly cleans up JWT storage and resets component state.",
+        "successCriteria": [
+          "The clearToken method exists, calls localStorage.removeItem, and resets both token and decodedToken properties."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your clearToken method removes the token from localStorage and resets both component properties.",
+        "feedbackWrong": "The clearToken method is missing or incomplete. It should remove the token from localStorage and reset the component's token and decodedToken properties.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "clearToken",
+            "localStorage.removeItem",
+            "this.token",
+            "this.decodedToken"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import Angular modules and JWT decode library",
+        "id": "step1"
+      },
+      {
+        "label": "Create the main component class",
+        "id": "step2"
+      },
+      {
+        "label": "Define component properties for JWT data",
+        "id": "step3"
+      },
+      {
+        "label": "Initialize component with sample JWT token",
+        "id": "step4"
+      },
+      {
+        "label": "Create method to store JWT in localStorage",
+        "id": "step5"
+      },
+      {
+        "label": "Create method to retrieve JWT from localStorage",
+        "id": "step6"
+      },
+      {
+        "label": "Create method to decode JWT using jwt-decode",
+        "id": "step7"
+      },
+      {
+        "label": "Add template structure with header section",
+        "id": "step8"
+      },
+      {
+        "label": "Add token display section to template",
+        "id": "step9"
+      },
+      {
+        "label": "Add decoded token display section",
+        "id": "step10"
+      },
+      {
+        "label": "Add storage buttons with click handlers",
+        "id": "step11"
+      },
+      {
+        "label": "Add clear functionality button",
+        "id": "step12"
+      }
+    ],
+    "answerShape": "multi-file"
+  },
+  "source": "content"
+}

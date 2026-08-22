@@ -1,0 +1,431 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-ts-34",
+    "track": "ts",
+    "lessonNum": 34,
+    "title": "Build typed middleware pipeline",
+    "shortName": "P34",
+    "intro": {
+      "tag": "LESSON #34",
+      "title": "Build typed middleware pipeline",
+      "body": "In this lesson, you will build a typed middleware pipeline in TypeScript, which is a series of processing functions that handle and transform data in a specific order. You will learn how to use TypeScript's generic types and function signatures to ensure each middleware function receives and returns properly typed data, making your pipeline safe and predictable. The main constructs involved include defining a Middleware type, creating a use method to add functions, and implementing a run method to execute the chain. By the end, you'll have a reusable, type-safe pipeline that can process requests through multiple stages with full TypeScript support.",
+      "usecase": "This typed middleware pattern is essential for building robust backend APIs and web frameworks, such as Express.js with TypeScript, where you need to process HTTP requests through a series of validation, authentication, and logging steps. In a dashboard application, middleware can sequentially handle user authentication, parse query parameters for data filtering, and log analytics before rendering the final chart data. Developers use this to ensure type-safe request/response flows, preventing runtime errors in features like payment processing or admin panels where each step must enforce specific data contracts."
+    },
+    "objectives": [
+      "Construct a typed middleware function that accepts a context object and a next function.",
+      "Initialize a pipeline array to store multiple middleware functions with proper type annotations.",
+      "Implement a function to execute the middleware pipeline in sequence, passing context between handlers.",
+      "Apply type constraints to ensure middleware functions conform to a specific signature.",
+      "Integrate error handling within the pipeline to catch and propagate exceptions.",
+      "Manipulate the context object within middleware to add or modify properties in a type-safe manner.",
+      "Configure the pipeline to conditionally skip or modify the execution flow based on context values."
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 12",
+        "title": "Import TypeScript types and utilities",
+        "instruction": "Import the necessary TypeScript types and utilities that will be used throughout the lesson. Add the following imports at the top of your file: `Request`, `Response`, `NextFunction` from 'express', and `Middleware` type from 'express'.",
+        "hint": "Use the import syntax to bring in the types you'll need for building typed middleware. Remember to import from the correct module.",
+        "analogousExample": "// Example: importing types for a different context\nimport { Request, Response } from 'express';\nimport { Router } from 'express';\n\n// This shows how to import specific types from a module",
+        "seedCode": "// Import the necessary TypeScript types and utilities here\n\n// Your middleware pipeline code will go below",
+        "expectedOutcome": "The file will have the required imports at the top, setting up the foundation for building typed middleware.",
+        "successCriteria": [
+          "The imports for Request, Response, NextFunction, and Middleware type from 'express' are present."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but some imports are missing. Make sure to import Request, Response, NextFunction, and the Middleware type from 'express'.",
+        "feedbackWrong": "The imports are not correct. You need to import Request, Response, NextFunction, and Middleware type from 'express' to proceed.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "Request",
+            "Response",
+            "NextFunction",
+            "Middleware",
+            "'express'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 12",
+        "title": "Define the Middleware type interface",
+        "instruction": "Define a TypeScript interface named 'Middleware' that describes a function signature for middleware. The interface should specify a function type that takes a 'context' parameter of type 'any' and returns either 'void' or a 'Promise<void>'.",
+        "hint": "Use the 'interface' keyword to declare the Middleware interface. Inside, define a call signature that matches the described function type.",
+        "analogousExample": "// Example: defining a function type interface\ninterface Handler {\n    (request: any): void;\n}",
+        "seedCode": "// Import the necessary TypeScript types and utilities here\n\n// Define the Middleware interface here\n\n// Your middleware pipeline code will go below",
+        "expectedOutcome": "You'll have a TypeScript interface that serves as a typed contract for middleware functions throughout the pipeline.",
+        "successCriteria": [
+          "The Middleware interface is defined with a call signature that takes a 'context: any' parameter and returns 'void | Promise<void>'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started defining the interface, but check the function signature. Make sure it takes a 'context' parameter of type 'any' and returns either 'void' or 'Promise<void>'.",
+        "feedbackWrong": "The Middleware interface isn't defined correctly. Remember to use the 'interface' keyword and define a call signature that matches: (context: any) => void | Promise<void>.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "interface",
+            "Middleware",
+            "context",
+            "any",
+            "void",
+            "Promise"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 12",
+        "title": "Define the Context type interface",
+        "instruction": "Define a TypeScript interface named 'Context' that will represent the data structure middleware functions can access and modify.",
+        "hint": "Create an interface with properties that middleware might need, like 'request' and 'response' objects.",
+        "analogousExample": "// Example: a typed data structure interface\ninterface UserData {\n  id: number;\n  name: string;\n  email: string;\n}",
+        "seedCode": "// Import the necessary TypeScript types and utilities here\n\n// Define the Middleware interface here\n\n// Define the Context type interface here\n\n// Your middleware pipeline code will go below",
+        "expectedOutcome": "A Context interface is defined with typed properties, providing a structured type for middleware context data.",
+        "successCriteria": [
+          "An interface named 'Context' is defined with at least one typed property."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure you're defining an interface named 'Context' with proper TypeScript syntax.",
+        "feedbackWrong": "The Context interface isn't defined correctly. Check that you're using 'interface Context' with typed properties.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "interface",
+            "Context",
+            "{"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 12",
+        "title": "Create the first middleware function",
+        "instruction": "Create a function named 'loggerMiddleware' that follows the Middleware interface. It should accept a Context parameter and a next callback, log the context, then call next.",
+        "hint": "Define a function with the signature (context: Context, next: () => void) => void. Inside, log the context (e.g., console.log) and then invoke next().",
+        "analogousExample": "// Example of a typed middleware function\nfunction loggerMiddleware(context: Context, next: () => void): void {\n  console.log('Context:', context);\n  next();\n}",
+        "seedCode": "// Import the necessary TypeScript types and utilities here\n\n// Define the Middleware interface here\n\n// Define the Context type interface here\n\n// Your middleware pipeline code will go below\n\n// Create the first middleware function here\n",
+        "expectedOutcome": "A typed middleware function named 'loggerMiddleware' is defined, implementing the Middleware interface with logging and next call.",
+        "successCriteria": [
+          "The loggerMiddleware function is defined with correct parameter types (Context and () => void), logs the context, and calls next()."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the middleware function, but ensure it has the correct parameter types, logs the context, and calls next().",
+        "feedbackWrong": "The middleware function is missing or doesn't follow the Middleware interface. Check the function signature and implementation.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "loggerMiddleware",
+            "context: Context",
+            "next: () => void",
+            "console.log",
+            "next()"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 12",
+        "title": "Create the second middleware function",
+        "instruction": "Create a second middleware function named 'secondMiddleware' that follows the Middleware interface. It should accept a Context object and a next function, and return a modified Context.",
+        "hint": "Follow the same pattern as the first middleware function. Define a function that takes context and next parameters, performs some operation, and returns the result of calling next with the updated context.",
+        "analogousExample": "// Example of another typed middleware function\nfunction secondMiddleware(context: Context, next: (ctx: Context) => Context): Context {\n  // Modify context here\n  const updatedContext = { ...context, processedBySecond: true };\n  return next(updatedContext);\n}",
+        "seedCode": "// Import the necessary TypeScript types and utilities here\n\n// Define the Middleware interface here\n\n// Define the Context type interface here\n\n// Your middleware pipeline code will go below\n\n// Create the first middleware function here\n\n// Create the second middleware function here",
+        "expectedOutcome": "A second middleware function named 'secondMiddleware' is defined with proper TypeScript typing that matches the Middleware interface.",
+        "successCriteria": [
+          "The 'secondMiddleware' function is defined with correct parameters (context: Context, next: (ctx: Context) => Context) and returns a Context object."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've created a function, but check that it follows the Middleware interface exactly. Ensure it accepts both parameters (context and next) with correct types and returns a Context object.",
+        "feedbackWrong": "The second middleware function isn't properly defined. Review the Middleware interface and ensure your function matches its signature: it should accept a Context and a next function, and return a Context.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "secondMiddleware",
+            "context",
+            "next",
+            "Context",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 12",
+        "title": "Define the Pipeline type",
+        "instruction": "Define a TypeScript type alias named 'Pipeline' that represents an array of Middleware functions.",
+        "hint": "Use the 'type' keyword to create a type alias. The type should be an array of the 'Middleware' interface you defined earlier.",
+        "analogousExample": "// Example: defining a type for an array of functions\ntype HandlerArray = ((input: string) => string)[];",
+        "seedCode": "// Import the necessary TypeScript types and utilities here\n\n// Define the Middleware interface here\n\n// Define the Context type interface here\n\n// Your middleware pipeline code will go below\n\n// Create the first middleware function here\n\n// Create the second middleware function here\n\n// Define the Pipeline type here",
+        "expectedOutcome": "A type alias 'Pipeline' is defined as an array of Middleware functions.",
+        "successCriteria": [
+          "The 'Pipeline' type alias is defined using the 'type' keyword and specifies an array of 'Middleware' functions."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're using the 'type' keyword and that the Pipeline type represents an array of Middleware functions.",
+        "feedbackWrong": "The Pipeline type definition is missing or incorrect. Remember to create a type alias for an array of Middleware functions.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "type",
+            "Pipeline",
+            "Middleware",
+            "[]"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 12",
+        "title": "Create the pipeline runner function",
+        "instruction": "Create a function named 'runPipeline' that takes a Context and an array of Middleware functions, executes them in sequence, and returns the final Context.",
+        "hint": "Define a function with proper TypeScript parameters and return type. Use a for...of loop to iterate through middleware and call each with the context.",
+        "analogousExample": "// Similar: a function that processes items in sequence\nfunction processItems(items: Item[], processors: Processor[]): Item {\n  let result = items[0];\n  for (const processor of processors) {\n    result = processor(result);\n  }\n  return result;\n}",
+        "seedCode": "// Import the necessary TypeScript types and utilities here\n\n// Define the Middleware interface here\n\n// Define the Context type interface here\n\n// Your middleware pipeline code will go below\n\n// Create the first middleware function here\n\n// Create the second middleware function here\n\n// Define the Pipeline type here\n\n// Create the pipeline runner function here",
+        "expectedOutcome": "The runPipeline function is defined with proper typing and sequential execution logic.",
+        "successCriteria": [
+          "A function named 'runPipeline' exists, accepts Context and Middleware[] parameters, iterates through middleware, calls each with context, and returns the final Context."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your function accepts both Context and Middleware[] parameters and properly iterates through all middleware functions.",
+        "feedbackWrong": "The pipeline runner function isn't implemented correctly. Check that you've defined a function with the right parameters and execution logic.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "runPipeline",
+            "Context",
+            "Middleware[]",
+            "for",
+            "middleware",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 12",
+        "title": "Initialize the middleware pipeline",
+        "instruction": "Create a constant named 'pipeline' that is an array containing your two middleware functions (firstMiddleware and secondMiddleware), typed as 'Pipeline'.",
+        "hint": "Use the 'Pipeline' type you defined earlier to type the array. The array should contain the two middleware functions in the order they should execute.",
+        "analogousExample": "// Similar: typed array of functions\nconst steps: Step[] = [firstStep, secondStep];",
+        "seedCode": "// Import the necessary TypeScript types and utilities here\n\n// Define the Middleware interface here\n\n// Define the Context type interface here\n\n// Your middleware pipeline code will go below\n\n// Create the first middleware function here\n\n// Create the second middleware function here\n\n// Define the Pipeline type here\n\n// Create the pipeline runner function here\n\n// Initialize the middleware pipeline here\nconst pipeline: Pipeline = [firstMiddleware, secondMiddleware];",
+        "expectedOutcome": "A typed array constant named 'pipeline' containing your two middleware functions.",
+        "successCriteria": [
+          "The 'pipeline' constant is declared, typed as 'Pipeline', and contains both middleware functions in an array."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure the array is typed as 'Pipeline' and contains both middleware functions.",
+        "feedbackWrong": "The pipeline initialization is missing or incorrect. Create a constant named 'pipeline' typed as 'Pipeline' containing both middleware functions.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "const",
+            "pipeline",
+            "Pipeline",
+            "[",
+            "firstMiddleware",
+            "secondMiddleware",
+            "]"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 12",
+        "title": "Create initial context data",
+        "instruction": "Create an initial context object that matches the Context interface. Name it 'initialContext' and declare it with the Context type.",
+        "hint": "Define a constant variable named 'initialContext' and assign it an object with properties that satisfy the Context interface you defined earlier.",
+        "analogousExample": "// Example: typed object initialization\ninterface User {\n  name: string;\n  age: number;\n}\n\nconst initialUser: User = {\n  name: 'Alice',\n  age: 30\n};",
+        "seedCode": "// Import the necessary TypeScript types and utilities here\n\n// Define the Middleware interface here\n\n// Define the Context type interface here\n\n// Your middleware pipeline code will go below\n\n// Create the first middleware function here\n\n// Create the second middleware function here\n\n// Define the Pipeline type here\n\n// Create the pipeline runner function here\n\n// Initialize the middleware pipeline here\nconst pipeline: Pipeline = [firstMiddleware, secondMiddleware];\n\n// Create initial context data here\n",
+        "expectedOutcome": "A typed initialContext object is created, ready to be passed through the middleware pipeline.",
+        "successCriteria": [
+          "An 'initialContext' constant is declared with the Context type and contains valid properties matching the Context interface."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure 'initialContext' is declared with the Context type and contains all required properties from the interface.",
+        "feedbackWrong": "The initial context object is missing or doesn't match the Context interface. Check the interface definition and ensure all required properties are present.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "initialContext",
+            "Context",
+            "{",
+            "}"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 12",
+        "title": "Execute the pipeline with initial context",
+        "instruction": "Call the pipelineRunner function with the pipeline and initialContext variables as arguments.",
+        "hint": "Use the pipelineRunner function you created earlier, passing it the pipeline array and initialContext object.",
+        "analogousExample": "// Similar: calling a function with arguments\nconst result = processData(data, config);",
+        "seedCode": "// Import the necessary TypeScript types and utilities here\n\n// Define the Middleware interface here\n\n// Define the Context type interface here\n\n// Your middleware pipeline code will go below\n\n// Create the first middleware function here\n\n// Create the second middleware function here\n\n// Define the Pipeline type here\n\n// Create the pipeline runner function here\n\n// Initialize the middleware pipeline here\nconst pipeline: Pipeline = [firstMiddleware, secondMiddleware];\n\n// Create initial context data here\n\n// Call the pipeline runner here",
+        "expectedOutcome": "The pipeline will execute both middleware functions in sequence, processing the context and returning the final result.",
+        "successCriteria": [
+          "The pipelineRunner function is called with the pipeline and initialContext as arguments."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're calling pipelineRunner with both required arguments: the pipeline array and initialContext object.",
+        "feedbackWrong": "The pipeline execution isn't quite right. Remember to call the pipelineRunner function with the pipeline and initialContext variables.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "pipelineRunner",
+            "pipeline",
+            "initialContext"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 12",
+        "title": "Add a third middleware function",
+        "instruction": "Create a third middleware function named 'thirdMiddleware' that logs a message and modifies the context before passing it to the next middleware.",
+        "hint": "Define a function that follows the Middleware interface: it should accept a Context object and a next function, perform some action, then call next(context).",
+        "analogousExample": "// Example of a middleware function\nfunction thirdMiddleware(context: Context, next: (ctx: Context) => void) {\n  console.log('Third middleware executing');\n  context.data += ' processed by third';\n  next(context);\n}",
+        "seedCode": "// Import the necessary TypeScript types and utilities here\n\n// Define the Middleware interface here\n\n// Define the Context type interface here\n\n// Your middleware pipeline code will go below\n\n// Create the first middleware function here\n\n// Create the second middleware function here\n\n// Define the Pipeline type here\n\n// Create the pipeline runner function here\n\n// Initialize the middleware pipeline here\nconst pipeline: Pipeline = [firstMiddleware, secondMiddleware];\n\n// Create initial context data here\n\n// Call the pipeline runner here\n\n// Create the third middleware function here",
+        "expectedOutcome": "A third middleware function is defined and ready to be added to the pipeline in the next step.",
+        "successCriteria": [
+          "The function 'thirdMiddleware' is defined with the correct signature (Context, next) and performs a logging operation and context modification."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've created a function, but make sure it follows the Middleware interface: accepts Context and next parameters, and calls next(context) after its logic.",
+        "feedbackWrong": "The third middleware function is missing or doesn't match the expected structure. Review the Middleware interface and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "thirdMiddleware",
+            "context",
+            "next",
+            "console.log",
+            "next(context)"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step12",
+        "type": "question",
+        "phase": "Step 12 of 12",
+        "title": "Execute the extended pipeline",
+        "instruction": "Execute the updated pipeline with all three middleware functions by calling the pipeline runner with the pipeline and initial context.",
+        "hint": "Use the pipeline runner function you created earlier, passing in the pipeline array (which now includes three middleware functions) and the initial context object.",
+        "analogousExample": "// Similar: calling a function with updated arguments\nconst result = processData(updatedData, config);",
+        "seedCode": "// Import the necessary TypeScript types and utilities here\n\n// Define the Middleware interface here\n\n// Define the Context type interface here\n\n// Your middleware pipeline code will go below\n\n// Create the first middleware function here\n\n// Create the second middleware function here\n\n// Define the Pipeline type here\n\n// Create the pipeline runner function here\n\n// Initialize the middleware pipeline here\nconst pipeline: Pipeline = [firstMiddleware, secondMiddleware];\n\n// Create initial context data here\n\n// Call the pipeline runner here\n\n// Create the third middleware function here\n\n// Execute the extended pipeline here",
+        "expectedOutcome": "The pipeline runner will process all three middleware functions in sequence, updating the context and logging messages to demonstrate the complete typed middleware pipeline.",
+        "successCriteria": [
+          "The pipeline runner is called with the updated pipeline array containing all three middleware functions and the initial context."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're calling the pipeline runner function with both the pipeline array and the initial context.",
+        "feedbackWrong": "That doesn't look right. You need to execute the pipeline runner with the updated pipeline and initial context.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "runPipeline",
+            "pipeline",
+            "initialContext"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import TypeScript types and utilities",
+        "id": "step1"
+      },
+      {
+        "label": "Define the Middleware type interface",
+        "id": "step2"
+      },
+      {
+        "label": "Define the Context type interface",
+        "id": "step3"
+      },
+      {
+        "label": "Create the first middleware function",
+        "id": "step4"
+      },
+      {
+        "label": "Create the second middleware function",
+        "id": "step5"
+      },
+      {
+        "label": "Define the Pipeline type",
+        "id": "step6"
+      },
+      {
+        "label": "Create the pipeline runner function",
+        "id": "step7"
+      },
+      {
+        "label": "Initialize the middleware pipeline",
+        "id": "step8"
+      },
+      {
+        "label": "Create initial context data",
+        "id": "step9"
+      },
+      {
+        "label": "Execute the pipeline with initial context",
+        "id": "step10"
+      },
+      {
+        "label": "Add a third middleware function",
+        "id": "step11"
+      },
+      {
+        "label": "Execute the extended pipeline",
+        "id": "step12"
+      }
+    ]
+  },
+  "source": "content"
+}

@@ -1,0 +1,895 @@
+{
+  "id": "copy-list-random-pointer",
+  "title": "Copy List with Random Pointer",
+  "pattern": "linked-list",
+  "difficulty": "medium",
+  "language": "javascript",
+  "status": "draft",
+  "flow": [
+    {
+      "stepId": "title",
+      "mentorSays": "At the end of this lesson, you will be able to:\n\n1. Understand what Copy List with Random Pointer asks for\n2. Use a hash map to map original nodes to copied nodes\n3. Handle the random pointer correctly in the copy\n4. Create a deep copy of the linked list\n5. Implement the solution step by step in your chosen language",
+      "action": "continue",
+      "next": "lesson-illustration"
+    },
+    {
+      "stepId": "lesson-illustration",
+      "mentorSays": "Perfect! Now let's understand what the Copy List with Random Pointer lesson is asking.\n\n**Lesson Definition:**\nA linked list of length n is given such that each node contains an additional random pointer, which could point to any node in the list, or null.\n\nConstruct a deep copy of the list. The deep copy should consist of exactly n brand new nodes, where each new node has its value set to the value of its corresponding original node. Both the next and random pointer of the new nodes should point to new nodes in the copied list such that the pointers in the original list and copied list represent the same list state.\n\n**Key Observations:**\n- We need to create a deep copy (new nodes, not references to original)\n- Each node has: val, next, and random pointers\n- Random pointer can point to any node or null\n- We need to preserve the structure of both next and random pointers\n\n**Example 1:**\nOriginal list:\n7 -> 13 -> 11 -> 10 -> 1 -> null\n\nRandom pointers:\n- Node 7: random -> null\n- Node 13: random -> 7\n- Node 11: random -> 1\n- Node 10: random -> 11\n- Node 1: random -> 7\n\nWe need to create a new list with same structure but new nodes.\n\n**Step-by-step trace (Two-pass approach with hash map):**\n\nOriginal: 7 -> 13 -> 11 -> 10 -> 1 -> null\n\n**Pass 1: Create all nodes and map**\n- Create node(7), map[original_7] = new_7\n- Create node(13), map[original_13] = new_13\n- Create node(11), map[original_11] = new_11\n- Create node(10), map[original_10] = new_10\n- Create node(1), map[original_1] = new_1\n\n**Pass 2: Set next and random pointers**\n- For each original node, set:\n  - new_node.next = map[original_node.next]\n  - new_node.random = map[original_node.random]\n\nResult: New list with same structure but new nodes!\n\n**Key Insight:**\n- Use hash map to map original nodes to copied nodes\n- First pass: create all nodes and build the map\n- Second pass: use map to set next and random pointers\n- This handles cycles and random pointers correctly\n\n**What makes this tricky:**\n1. Understanding deep copy (new nodes, not references)\n2. Handling random pointers that point to nodes we haven't created yet\n3. Using hash map to link original and copied nodes\n4. Two-pass approach: create first, link second\n\n**Common pitfalls:**\n- Creating shallow copy (sharing nodes)\n- Not handling null pointers correctly\n- Setting random pointer before node exists\n- Not using hash map (can't link properly)",
+      "example": "Example:\nOriginal: 7 -> 13 -> 11 -> 10 -> 1\nRandom: 13->7, 11->1, 10->11, 1->7\n\nCopy: New list with same structure",
+      "action": "continue",
+      "next": "thinking-challenge"
+    },
+    {
+      "stepId": "thinking-challenge",
+      "mentorSays": "Now that you understand what the lesson wants, here's the real question:\n\nHow would YOU create a deep copy of a linked list with random pointers?\n\nThink about it for a moment. What approach feels natural to you?",
+      "choices": [
+        {
+          "label": "Use hash map - create all nodes first, then set pointers",
+          "next": "explore-hashmap"
+        },
+        {
+          "label": "Create nodes and set pointers in one pass",
+          "next": "explore-single-pass"
+        },
+        {
+          "label": "Use recursion to copy node by node",
+          "next": "explore-recursive"
+        }
+      ]
+    },
+    {
+      "stepId": "explore-single-pass",
+      "mentorSays": "That's an interesting approach! You're thinking: \"I'll create nodes and set pointers in one pass.\"\n\nHowever, this is tricky because:\n- Random pointer might point to a node we haven't created yet\n- We need to know all nodes before we can set random pointers\n\nThere's a cleaner two-pass approach with hash map. Would you like to learn that?",
+      "action": "continue",
+      "next": "explore-hashmap"
+    },
+    {
+      "stepId": "explore-recursive",
+      "mentorSays": "That's a good approach! You're thinking: \"I'll use recursion to copy node by node.\"\n\nRecursion works, but it's more complex. The hash map approach is cleaner:\n- First pass: create all nodes and build map\n- Second pass: set all pointers using map\n- Handles cycles and random pointers elegantly\n\nLet's learn the hash map approach!",
+      "action": "continue",
+      "next": "explore-hashmap"
+    },
+    {
+      "stepId": "explore-hashmap",
+      "mentorSays": "Excellent choice! Hash map is the optimal solution. Here's the core idea:\n\n**The Algorithm:**\n1. **Pass 1 - Create nodes**: Traverse original list, create new node for each original node, store mapping in hash map\n2. **Pass 2 - Set pointers**: Traverse original list again, for each node:\n   - Set new_node.next = map[original_node.next]\n   - Set new_node.random = map[original_node.random]\n3. **Return**: Return map[head] (the copied head)\n\n**Why it works**:\n- Hash map allows us to link original nodes to copied nodes\n- First pass ensures all nodes exist before we set pointers\n- Second pass uses map to correctly set next and random\n- Handles null pointers (map[null] = null)\n\n**Key insight**: We can't set random pointer until we know where it points, so we create all nodes first!\n\nLet's trace with list: 7 -> 13 -> null, random: 13 -> 7\n\n**Pass 1:**\n- original = 7: create new_7, map[7] = new_7\n- original = 13: create new_13, map[13] = new_13\n- original = null: done\n\n**Pass 2:**\n- original = 7: new_7.next = map[13] = new_13, new_7.random = map[null] = null\n- original = 13: new_13.next = map[null] = null, new_13.random = map[7] = new_7\n\nResult: new_7 -> new_13 -> null, new_13.random = new_7 ✓\n\nThis is O(n) time and O(n) space! Now let's code it step by step.",
+      "action": "continue",
+      "next": "language-selection"
+    },
+    {
+      "stepId": "language-selection",
+      "mentorSays": "Great! Now let's code this solution. Which programming language would you like to use?",
+      "choices": [
+        {
+          "label": "JavaScript",
+          "next": "variable-check-js"
+        },
+        {
+          "label": "Python",
+          "next": "variable-check-python"
+        },
+        {
+          "label": "Java",
+          "next": "variable-check-java"
+        },
+        {
+          "label": "C++",
+          "next": "variable-check-cpp"
+        },
+        {
+          "label": "TypeScript",
+          "next": "variable-check-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-check-js",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in JS?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-js"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-js",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'map' or 'current') and put data inside it.",
+      "example": "let map = new Map();  // Hash map\nlet current = head;  // Current node",
+      "action": "continue",
+      "next": "function-check-js"
+    },
+    {
+      "stepId": "function-check-js",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in JS?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-js"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-js",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "function copyRandomList(head) {\n  // Returns a deep copy of the list\n  return null;\n}",
+      "action": "continue",
+      "next": "parameter-check-js"
+    },
+    {
+      "stepId": "parameter-check-js",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "hashmap-check-js"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-js",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'function copyRandomList(head)', 'head' is a parameter.",
+      "example": "function copyRandomList(head) {\n  // Parameter receives head of original list\n}\n\n// Call: copyRandomList(originalHead)",
+      "action": "continue",
+      "next": "hashmap-check-js"
+    },
+    {
+      "stepId": "hashmap-check-js",
+      "mentorSays": "To solve this lesson, we'll use a hash map. Do you know what a hash map is?",
+      "choices": [
+        {
+          "label": "Yes, I know hash maps",
+          "next": "linkedlist-check-js"
+        },
+        {
+          "label": "No, explain hash maps",
+          "next": "hashmap-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "hashmap-explanation-js",
+      "mentorSays": "A hash map (also called dictionary or object) stores key-value pairs. We can quickly look up values by their key.",
+      "example": "let map = new Map();\nmap.set(originalNode, newNode);  // Store mapping\nlet copied = map.get(originalNode);  // Get copied node",
+      "action": "continue",
+      "next": "linkedlist-check-js"
+    },
+    {
+      "stepId": "linkedlist-check-js",
+      "mentorSays": "To solve this lesson, we'll work with linked lists. Do you know what a linked list is in JS?",
+      "choices": [
+        {
+          "label": "Yes, I know linked lists",
+          "next": "coding-start-js"
+        },
+        {
+          "label": "No, explain linked lists",
+          "next": "linkedlist-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "linkedlist-explanation-js",
+      "mentorSays": "A linked list is a data structure where each node points to the next node. In this lesson, nodes also have a random pointer.",
+      "example": "class Node {\n  constructor(val) {\n    this.val = val;\n    this.next = null;\n    this.random = null;\n  }\n}",
+      "action": "continue",
+      "next": "coding-start-js"
+    },
+    {
+      "stepId": "coding-start-js",
+      "mentorSays": "Perfect! Let's implement the copy list solution in JS. We'll create a function that takes the head of the original list and returns a deep copy.",
+      "example": "function copyRandomList(head) {\n  \n}",
+      "action": "continue",
+      "next": "coding-base-case-js"
+    },
+    {
+      "stepId": "coding-base-case-js",
+      "mentorSays": "Add the base case: if head is null, return null.",
+      "example": "function copyRandomList(head) {\n  // Base case: empty list\n  if (head === null) {\n    return null;\n  }\n  \n}",
+      "action": "continue",
+      "next": "coding-init-map-js"
+    },
+    {
+      "stepId": "coding-init-map-js",
+      "mentorSays": "Initialize a hash map to store mappings from original nodes to copied nodes.",
+      "example": "function copyRandomList(head) {\n  if (head === null) {\n    return null;\n  }\n  \n  // Hash map: original node -> copied node\n  let map = new Map();\n  \n}",
+      "action": "continue",
+      "next": "coding-pass1-create-js"
+    },
+    {
+      "stepId": "coding-pass1-create-js",
+      "mentorSays": "First pass: Traverse the original list and create a new node for each original node. Store the mapping in the hash map.",
+      "example": "function copyRandomList(head) {\n  if (head === null) {\n    return null;\n  }\n  \n  let map = new Map();\n  \n  // Pass 1: Create all nodes and build map\n  let current = head;\n  while (current !== null) {\n    map.set(current, new Node(current.val));\n    current = current.next;\n  }\n  \n}",
+      "action": "continue",
+      "next": "coding-pass2-set-next-js"
+    },
+    {
+      "stepId": "coding-pass2-set-next-js",
+      "mentorSays": "Second pass: Traverse the original list again. For each node, set the next pointer of the copied node using the map.",
+      "example": "function copyRandomList(head) {\n  if (head === null) {\n    return null;\n  }\n  \n  let map = new Map();\n  \n  let current = head;\n  while (current !== null) {\n    map.set(current, new Node(current.val));\n    current = current.next;\n  }\n  \n  // Pass 2: Set next pointers\n  current = head;\n  while (current !== null) {\n    map.get(current).next = map.get(current.next) || null;\n    current = current.next;\n  }\n  \n}",
+      "action": "continue",
+      "next": "coding-pass2-set-random-js"
+    },
+    {
+      "stepId": "coding-pass2-set-random-js",
+      "mentorSays": "Still in second pass: Set the random pointer of each copied node using the map.",
+      "example": "function copyRandomList(head) {\n  if (head === null) {\n    return null;\n  }\n  \n  let map = new Map();\n  \n  let current = head;\n  while (current !== null) {\n    map.set(current, new Node(current.val));\n    current = current.next;\n  }\n  \n  current = head;\n  while (current !== null) {\n    map.get(current).next = map.get(current.next) || null;\n    map.get(current).random = map.get(current.random) || null;\n    current = current.next;\n  }\n  \n}",
+      "action": "continue",
+      "next": "coding-return-js"
+    },
+    {
+      "stepId": "coding-return-js",
+      "mentorSays": "Return the copied head node using the map.",
+      "example": "function copyRandomList(head) {\n  if (head === null) {\n    return null;\n  }\n  \n  let map = new Map();\n  \n  let current = head;\n  while (current !== null) {\n    map.set(current, new Node(current.val));\n    current = current.next;\n  }\n  \n  current = head;\n  while (current !== null) {\n    map.get(current).next = map.get(current.next) || null;\n    map.get(current).random = map.get(current.random) || null;\n    current = current.next;\n  }\n  \n  // Return copied head\n  return map.get(head);\n}",
+      "action": "continue",
+      "next": "test-code-js"
+    },
+    {
+      "stepId": "test-code-js",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** List: 7 -> 13 -> 11 -> 10 -> 1, Random: 13->7, 11->1, 10->11, 1->7\nExpected: Deep copy with same structure\n\n**Test 2:** List: 1 -> 2 -> null, Random: 1->2, 2->1\nExpected: Deep copy with random pointers\n\n**Test 3:** List: null\nExpected: null\n\n**Test 4:** List: 1 -> null, Random: 1->null\nExpected: Single node copy\n\n**Test 5:** List: 1 -> 2 -> 3, Random: all null\nExpected: Copy with no random pointers\n\n**Test 6:** Verify the copied list is independent (modifying original doesn't affect copy)\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: List with random pointers\nTest 2: List with circular random pointers\nTest 3: Empty list",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-python",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in PYTHON?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-python"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-python",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'map' or 'current') and put data inside it.",
+      "example": "let map = new Map();  // Hash map\nlet current = head;  // Current node",
+      "action": "continue",
+      "next": "function-check-python"
+    },
+    {
+      "stepId": "function-check-python",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in PYTHON?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-python"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-python",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "function copyRandomList(head) {\n  // Returns a deep copy of the list\n  return null;\n}",
+      "action": "continue",
+      "next": "parameter-check-python"
+    },
+    {
+      "stepId": "parameter-check-python",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "hashmap-check-python"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-python",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'function copyRandomList(head)', 'head' is a parameter.",
+      "example": "function copyRandomList(head) {\n  // Parameter receives head of original list\n}\n\n// Call: copyRandomList(originalHead)",
+      "action": "continue",
+      "next": "hashmap-check-python"
+    },
+    {
+      "stepId": "hashmap-check-python",
+      "mentorSays": "To solve this lesson, we'll use a hash map. Do you know what a hash map is?",
+      "choices": [
+        {
+          "label": "Yes, I know hash maps",
+          "next": "linkedlist-check-python"
+        },
+        {
+          "label": "No, explain hash maps",
+          "next": "hashmap-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "hashmap-explanation-python",
+      "mentorSays": "A hash map (also called dictionary or object) stores key-value pairs. We can quickly look up values by their key.",
+      "example": "let map = new Map();\nmap.set(originalNode, newNode);  // Store mapping\nlet copied = map.get(originalNode);  // Get copied node",
+      "action": "continue",
+      "next": "linkedlist-check-python"
+    },
+    {
+      "stepId": "linkedlist-check-python",
+      "mentorSays": "To solve this lesson, we'll work with linked lists. Do you know what a linked list is in PYTHON?",
+      "choices": [
+        {
+          "label": "Yes, I know linked lists",
+          "next": "coding-start-python"
+        },
+        {
+          "label": "No, explain linked lists",
+          "next": "linkedlist-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "linkedlist-explanation-python",
+      "mentorSays": "A linked list is a data structure where each node points to the next node. In this lesson, nodes also have a random pointer.",
+      "example": "class Node {\n  constructor(val) {\n    this.val = val;\n    this.next = null;\n    this.random = null;\n  }\n}",
+      "action": "continue",
+      "next": "coding-start-python"
+    },
+    {
+      "stepId": "coding-start-python",
+      "mentorSays": "Perfect! Let's implement the copy list solution in PYTHON. We'll create a function that takes the head of the original list and returns a deep copy.",
+      "example": "function copyRandomList(head) {\n  \n}",
+      "action": "continue",
+      "next": "coding-base-case-python"
+    },
+    {
+      "stepId": "coding-base-case-python",
+      "mentorSays": "Add the base case: if head is null, return null.",
+      "example": "function copyRandomList(head) {\n  // Base case: empty list\n  if (head === null) {\n    return null;\n  }\n  \n}",
+      "action": "continue",
+      "next": "coding-init-map-python"
+    },
+    {
+      "stepId": "coding-init-map-python",
+      "mentorSays": "Initialize a hash map to store mappings from original nodes to copied nodes.",
+      "example": "function copyRandomList(head) {\n  if (head === null) {\n    return null;\n  }\n  \n  // Hash map: original node -> copied node\n  let map = new Map();\n  \n}",
+      "action": "continue",
+      "next": "coding-pass1-create-python"
+    },
+    {
+      "stepId": "coding-pass1-create-python",
+      "mentorSays": "First pass: Traverse the original list and create a new node for each original node. Store the mapping in the hash map.",
+      "example": "function copyRandomList(head) {\n  if (head === null) {\n    return null;\n  }\n  \n  let map = new Map();\n  \n  // Pass 1: Create all nodes and build map\n  let current = head;\n  while (current !== null) {\n    map.set(current, new Node(current.val));\n    current = current.next;\n  }\n  \n}",
+      "action": "continue",
+      "next": "coding-pass2-set-next-python"
+    },
+    {
+      "stepId": "coding-pass2-set-next-python",
+      "mentorSays": "Second pass: Traverse the original list again. For each node, set the next pointer of the copied node using the map.",
+      "example": "function copyRandomList(head) {\n  if (head === null) {\n    return null;\n  }\n  \n  let map = new Map();\n  \n  let current = head;\n  while (current !== null) {\n    map.set(current, new Node(current.val));\n    current = current.next;\n  }\n  \n  // Pass 2: Set next pointers\n  current = head;\n  while (current !== null) {\n    map.get(current).next = map.get(current.next) || null;\n    current = current.next;\n  }\n  \n}",
+      "action": "continue",
+      "next": "coding-pass2-set-random-python"
+    },
+    {
+      "stepId": "coding-pass2-set-random-python",
+      "mentorSays": "Still in second pass: Set the random pointer of each copied node using the map.",
+      "example": "function copyRandomList(head) {\n  if (head === null) {\n    return null;\n  }\n  \n  let map = new Map();\n  \n  let current = head;\n  while (current !== null) {\n    map.set(current, new Node(current.val));\n    current = current.next;\n  }\n  \n  current = head;\n  while (current !== null) {\n    map.get(current).next = map.get(current.next) || null;\n    map.get(current).random = map.get(current.random) || null;\n    current = current.next;\n  }\n  \n}",
+      "action": "continue",
+      "next": "coding-return-python"
+    },
+    {
+      "stepId": "coding-return-python",
+      "mentorSays": "Return the copied head node using the map.",
+      "example": "function copyRandomList(head) {\n  if (head === null) {\n    return null;\n  }\n  \n  let map = new Map();\n  \n  let current = head;\n  while (current !== null) {\n    map.set(current, new Node(current.val));\n    current = current.next;\n  }\n  \n  current = head;\n  while (current !== null) {\n    map.get(current).next = map.get(current.next) || null;\n    map.get(current).random = map.get(current.random) || null;\n    current = current.next;\n  }\n  \n  // Return copied head\n  return map.get(head);\n}",
+      "action": "continue",
+      "next": "test-code-python"
+    },
+    {
+      "stepId": "test-code-python",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** List: 7 -> 13 -> 11 -> 10 -> 1, Random: 13->7, 11->1, 10->11, 1->7\nExpected: Deep copy with same structure\n\n**Test 2:** List: 1 -> 2 -> null, Random: 1->2, 2->1\nExpected: Deep copy with random pointers\n\n**Test 3:** List: null\nExpected: null\n\n**Test 4:** List: 1 -> null, Random: 1->null\nExpected: Single node copy\n\n**Test 5:** List: 1 -> 2 -> 3, Random: all null\nExpected: Copy with no random pointers\n\n**Test 6:** Verify the copied list is independent (modifying original doesn't affect copy)\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: List with random pointers\nTest 2: List with circular random pointers\nTest 3: Empty list",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-java",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in JAVA?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-java"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-java",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'map' or 'current') and put data inside it.",
+      "example": "let map = new Map();  // Hash map\nlet current = head;  // Current node",
+      "action": "continue",
+      "next": "function-check-java"
+    },
+    {
+      "stepId": "function-check-java",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in JAVA?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-java"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-java",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "function copyRandomList(head) {\n  // Returns a deep copy of the list\n  return null;\n}",
+      "action": "continue",
+      "next": "parameter-check-java"
+    },
+    {
+      "stepId": "parameter-check-java",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "hashmap-check-java"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-java",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'function copyRandomList(head)', 'head' is a parameter.",
+      "example": "function copyRandomList(head) {\n  // Parameter receives head of original list\n}\n\n// Call: copyRandomList(originalHead)",
+      "action": "continue",
+      "next": "hashmap-check-java"
+    },
+    {
+      "stepId": "hashmap-check-java",
+      "mentorSays": "To solve this lesson, we'll use a hash map. Do you know what a hash map is?",
+      "choices": [
+        {
+          "label": "Yes, I know hash maps",
+          "next": "linkedlist-check-java"
+        },
+        {
+          "label": "No, explain hash maps",
+          "next": "hashmap-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "hashmap-explanation-java",
+      "mentorSays": "A hash map (also called dictionary or object) stores key-value pairs. We can quickly look up values by their key.",
+      "example": "let map = new Map();\nmap.set(originalNode, newNode);  // Store mapping\nlet copied = map.get(originalNode);  // Get copied node",
+      "action": "continue",
+      "next": "linkedlist-check-java"
+    },
+    {
+      "stepId": "linkedlist-check-java",
+      "mentorSays": "To solve this lesson, we'll work with linked lists. Do you know what a linked list is in JAVA?",
+      "choices": [
+        {
+          "label": "Yes, I know linked lists",
+          "next": "coding-start-java"
+        },
+        {
+          "label": "No, explain linked lists",
+          "next": "linkedlist-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "linkedlist-explanation-java",
+      "mentorSays": "A linked list is a data structure where each node points to the next node. In this lesson, nodes also have a random pointer.",
+      "example": "class Node {\n  constructor(val) {\n    this.val = val;\n    this.next = null;\n    this.random = null;\n  }\n}",
+      "action": "continue",
+      "next": "coding-start-java"
+    },
+    {
+      "stepId": "coding-start-java",
+      "mentorSays": "Perfect! Let's implement the copy list solution in JAVA. We'll create a function that takes the head of the original list and returns a deep copy.",
+      "example": "function copyRandomList(head) {\n  \n}",
+      "action": "continue",
+      "next": "coding-base-case-java"
+    },
+    {
+      "stepId": "coding-base-case-java",
+      "mentorSays": "Add the base case: if head is null, return null.",
+      "example": "function copyRandomList(head) {\n  // Base case: empty list\n  if (head === null) {\n    return null;\n  }\n  \n}",
+      "action": "continue",
+      "next": "coding-init-map-java"
+    },
+    {
+      "stepId": "coding-init-map-java",
+      "mentorSays": "Initialize a hash map to store mappings from original nodes to copied nodes.",
+      "example": "function copyRandomList(head) {\n  if (head === null) {\n    return null;\n  }\n  \n  // Hash map: original node -> copied node\n  let map = new Map();\n  \n}",
+      "action": "continue",
+      "next": "coding-pass1-create-java"
+    },
+    {
+      "stepId": "coding-pass1-create-java",
+      "mentorSays": "First pass: Traverse the original list and create a new node for each original node. Store the mapping in the hash map.",
+      "example": "function copyRandomList(head) {\n  if (head === null) {\n    return null;\n  }\n  \n  let map = new Map();\n  \n  // Pass 1: Create all nodes and build map\n  let current = head;\n  while (current !== null) {\n    map.set(current, new Node(current.val));\n    current = current.next;\n  }\n  \n}",
+      "action": "continue",
+      "next": "coding-pass2-set-next-java"
+    },
+    {
+      "stepId": "coding-pass2-set-next-java",
+      "mentorSays": "Second pass: Traverse the original list again. For each node, set the next pointer of the copied node using the map.",
+      "example": "function copyRandomList(head) {\n  if (head === null) {\n    return null;\n  }\n  \n  let map = new Map();\n  \n  let current = head;\n  while (current !== null) {\n    map.set(current, new Node(current.val));\n    current = current.next;\n  }\n  \n  // Pass 2: Set next pointers\n  current = head;\n  while (current !== null) {\n    map.get(current).next = map.get(current.next) || null;\n    current = current.next;\n  }\n  \n}",
+      "action": "continue",
+      "next": "coding-pass2-set-random-java"
+    },
+    {
+      "stepId": "coding-pass2-set-random-java",
+      "mentorSays": "Still in second pass: Set the random pointer of each copied node using the map.",
+      "example": "function copyRandomList(head) {\n  if (head === null) {\n    return null;\n  }\n  \n  let map = new Map();\n  \n  let current = head;\n  while (current !== null) {\n    map.set(current, new Node(current.val));\n    current = current.next;\n  }\n  \n  current = head;\n  while (current !== null) {\n    map.get(current).next = map.get(current.next) || null;\n    map.get(current).random = map.get(current.random) || null;\n    current = current.next;\n  }\n  \n}",
+      "action": "continue",
+      "next": "coding-return-java"
+    },
+    {
+      "stepId": "coding-return-java",
+      "mentorSays": "Return the copied head node using the map.",
+      "example": "function copyRandomList(head) {\n  if (head === null) {\n    return null;\n  }\n  \n  let map = new Map();\n  \n  let current = head;\n  while (current !== null) {\n    map.set(current, new Node(current.val));\n    current = current.next;\n  }\n  \n  current = head;\n  while (current !== null) {\n    map.get(current).next = map.get(current.next) || null;\n    map.get(current).random = map.get(current.random) || null;\n    current = current.next;\n  }\n  \n  // Return copied head\n  return map.get(head);\n}",
+      "action": "continue",
+      "next": "test-code-java"
+    },
+    {
+      "stepId": "test-code-java",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** List: 7 -> 13 -> 11 -> 10 -> 1, Random: 13->7, 11->1, 10->11, 1->7\nExpected: Deep copy with same structure\n\n**Test 2:** List: 1 -> 2 -> null, Random: 1->2, 2->1\nExpected: Deep copy with random pointers\n\n**Test 3:** List: null\nExpected: null\n\n**Test 4:** List: 1 -> null, Random: 1->null\nExpected: Single node copy\n\n**Test 5:** List: 1 -> 2 -> 3, Random: all null\nExpected: Copy with no random pointers\n\n**Test 6:** Verify the copied list is independent (modifying original doesn't affect copy)\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: List with random pointers\nTest 2: List with circular random pointers\nTest 3: Empty list",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-cpp",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in CPP?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-cpp"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-cpp",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'map' or 'current') and put data inside it.",
+      "example": "let map = new Map();  // Hash map\nlet current = head;  // Current node",
+      "action": "continue",
+      "next": "function-check-cpp"
+    },
+    {
+      "stepId": "function-check-cpp",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in CPP?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-cpp"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-cpp",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "function copyRandomList(head) {\n  // Returns a deep copy of the list\n  return null;\n}",
+      "action": "continue",
+      "next": "parameter-check-cpp"
+    },
+    {
+      "stepId": "parameter-check-cpp",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "hashmap-check-cpp"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-cpp",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'function copyRandomList(head)', 'head' is a parameter.",
+      "example": "function copyRandomList(head) {\n  // Parameter receives head of original list\n}\n\n// Call: copyRandomList(originalHead)",
+      "action": "continue",
+      "next": "hashmap-check-cpp"
+    },
+    {
+      "stepId": "hashmap-check-cpp",
+      "mentorSays": "To solve this lesson, we'll use a hash map. Do you know what a hash map is?",
+      "choices": [
+        {
+          "label": "Yes, I know hash maps",
+          "next": "linkedlist-check-cpp"
+        },
+        {
+          "label": "No, explain hash maps",
+          "next": "hashmap-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "hashmap-explanation-cpp",
+      "mentorSays": "A hash map (also called dictionary or object) stores key-value pairs. We can quickly look up values by their key.",
+      "example": "let map = new Map();\nmap.set(originalNode, newNode);  // Store mapping\nlet copied = map.get(originalNode);  // Get copied node",
+      "action": "continue",
+      "next": "linkedlist-check-cpp"
+    },
+    {
+      "stepId": "linkedlist-check-cpp",
+      "mentorSays": "To solve this lesson, we'll work with linked lists. Do you know what a linked list is in CPP?",
+      "choices": [
+        {
+          "label": "Yes, I know linked lists",
+          "next": "coding-start-cpp"
+        },
+        {
+          "label": "No, explain linked lists",
+          "next": "linkedlist-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "linkedlist-explanation-cpp",
+      "mentorSays": "A linked list is a data structure where each node points to the next node. In this lesson, nodes also have a random pointer.",
+      "example": "class Node {\n  constructor(val) {\n    this.val = val;\n    this.next = null;\n    this.random = null;\n  }\n}",
+      "action": "continue",
+      "next": "coding-start-cpp"
+    },
+    {
+      "stepId": "coding-start-cpp",
+      "mentorSays": "Perfect! Let's implement the copy list solution in CPP. We'll create a function that takes the head of the original list and returns a deep copy.",
+      "example": "function copyRandomList(head) {\n  \n}",
+      "action": "continue",
+      "next": "coding-base-case-cpp"
+    },
+    {
+      "stepId": "coding-base-case-cpp",
+      "mentorSays": "Add the base case: if head is null, return null.",
+      "example": "function copyRandomList(head) {\n  // Base case: empty list\n  if (head === null) {\n    return null;\n  }\n  \n}",
+      "action": "continue",
+      "next": "coding-init-map-cpp"
+    },
+    {
+      "stepId": "coding-init-map-cpp",
+      "mentorSays": "Initialize a hash map to store mappings from original nodes to copied nodes.",
+      "example": "function copyRandomList(head) {\n  if (head === null) {\n    return null;\n  }\n  \n  // Hash map: original node -> copied node\n  let map = new Map();\n  \n}",
+      "action": "continue",
+      "next": "coding-pass1-create-cpp"
+    },
+    {
+      "stepId": "coding-pass1-create-cpp",
+      "mentorSays": "First pass: Traverse the original list and create a new node for each original node. Store the mapping in the hash map.",
+      "example": "function copyRandomList(head) {\n  if (head === null) {\n    return null;\n  }\n  \n  let map = new Map();\n  \n  // Pass 1: Create all nodes and build map\n  let current = head;\n  while (current !== null) {\n    map.set(current, new Node(current.val));\n    current = current.next;\n  }\n  \n}",
+      "action": "continue",
+      "next": "coding-pass2-set-next-cpp"
+    },
+    {
+      "stepId": "coding-pass2-set-next-cpp",
+      "mentorSays": "Second pass: Traverse the original list again. For each node, set the next pointer of the copied node using the map.",
+      "example": "function copyRandomList(head) {\n  if (head === null) {\n    return null;\n  }\n  \n  let map = new Map();\n  \n  let current = head;\n  while (current !== null) {\n    map.set(current, new Node(current.val));\n    current = current.next;\n  }\n  \n  // Pass 2: Set next pointers\n  current = head;\n  while (current !== null) {\n    map.get(current).next = map.get(current.next) || null;\n    current = current.next;\n  }\n  \n}",
+      "action": "continue",
+      "next": "coding-pass2-set-random-cpp"
+    },
+    {
+      "stepId": "coding-pass2-set-random-cpp",
+      "mentorSays": "Still in second pass: Set the random pointer of each copied node using the map.",
+      "example": "function copyRandomList(head) {\n  if (head === null) {\n    return null;\n  }\n  \n  let map = new Map();\n  \n  let current = head;\n  while (current !== null) {\n    map.set(current, new Node(current.val));\n    current = current.next;\n  }\n  \n  current = head;\n  while (current !== null) {\n    map.get(current).next = map.get(current.next) || null;\n    map.get(current).random = map.get(current.random) || null;\n    current = current.next;\n  }\n  \n}",
+      "action": "continue",
+      "next": "coding-return-cpp"
+    },
+    {
+      "stepId": "coding-return-cpp",
+      "mentorSays": "Return the copied head node using the map.",
+      "example": "function copyRandomList(head) {\n  if (head === null) {\n    return null;\n  }\n  \n  let map = new Map();\n  \n  let current = head;\n  while (current !== null) {\n    map.set(current, new Node(current.val));\n    current = current.next;\n  }\n  \n  current = head;\n  while (current !== null) {\n    map.get(current).next = map.get(current.next) || null;\n    map.get(current).random = map.get(current.random) || null;\n    current = current.next;\n  }\n  \n  // Return copied head\n  return map.get(head);\n}",
+      "action": "continue",
+      "next": "test-code-cpp"
+    },
+    {
+      "stepId": "test-code-cpp",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** List: 7 -> 13 -> 11 -> 10 -> 1, Random: 13->7, 11->1, 10->11, 1->7\nExpected: Deep copy with same structure\n\n**Test 2:** List: 1 -> 2 -> null, Random: 1->2, 2->1\nExpected: Deep copy with random pointers\n\n**Test 3:** List: null\nExpected: null\n\n**Test 4:** List: 1 -> null, Random: 1->null\nExpected: Single node copy\n\n**Test 5:** List: 1 -> 2 -> 3, Random: all null\nExpected: Copy with no random pointers\n\n**Test 6:** Verify the copied list is independent (modifying original doesn't affect copy)\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: List with random pointers\nTest 2: List with circular random pointers\nTest 3: Empty list",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-ts",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in TS?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-ts"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-ts",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'map' or 'current') and put data inside it.",
+      "example": "let map = new Map();  // Hash map\nlet current = head;  // Current node",
+      "action": "continue",
+      "next": "function-check-ts"
+    },
+    {
+      "stepId": "function-check-ts",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in TS?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-ts"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-ts",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "function copyRandomList(head) {\n  // Returns a deep copy of the list\n  return null;\n}",
+      "action": "continue",
+      "next": "parameter-check-ts"
+    },
+    {
+      "stepId": "parameter-check-ts",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "hashmap-check-ts"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-ts",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'function copyRandomList(head)', 'head' is a parameter.",
+      "example": "function copyRandomList(head) {\n  // Parameter receives head of original list\n}\n\n// Call: copyRandomList(originalHead)",
+      "action": "continue",
+      "next": "hashmap-check-ts"
+    },
+    {
+      "stepId": "hashmap-check-ts",
+      "mentorSays": "To solve this lesson, we'll use a hash map. Do you know what a hash map is?",
+      "choices": [
+        {
+          "label": "Yes, I know hash maps",
+          "next": "linkedlist-check-ts"
+        },
+        {
+          "label": "No, explain hash maps",
+          "next": "hashmap-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "hashmap-explanation-ts",
+      "mentorSays": "A hash map (also called dictionary or object) stores key-value pairs. We can quickly look up values by their key.",
+      "example": "let map = new Map();\nmap.set(originalNode, newNode);  // Store mapping\nlet copied = map.get(originalNode);  // Get copied node",
+      "action": "continue",
+      "next": "linkedlist-check-ts"
+    },
+    {
+      "stepId": "linkedlist-check-ts",
+      "mentorSays": "To solve this lesson, we'll work with linked lists. Do you know what a linked list is in TS?",
+      "choices": [
+        {
+          "label": "Yes, I know linked lists",
+          "next": "coding-start-ts"
+        },
+        {
+          "label": "No, explain linked lists",
+          "next": "linkedlist-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "linkedlist-explanation-ts",
+      "mentorSays": "A linked list is a data structure where each node points to the next node. In this lesson, nodes also have a random pointer.",
+      "example": "class Node {\n  constructor(val) {\n    this.val = val;\n    this.next = null;\n    this.random = null;\n  }\n}",
+      "action": "continue",
+      "next": "coding-start-ts"
+    },
+    {
+      "stepId": "coding-start-ts",
+      "mentorSays": "Perfect! Let's implement the copy list solution in TS. We'll create a function that takes the head of the original list and returns a deep copy.",
+      "example": "function copyRandomList(head) {\n  \n}",
+      "action": "continue",
+      "next": "coding-base-case-ts"
+    },
+    {
+      "stepId": "coding-base-case-ts",
+      "mentorSays": "Add the base case: if head is null, return null.",
+      "example": "function copyRandomList(head) {\n  // Base case: empty list\n  if (head === null) {\n    return null;\n  }\n  \n}",
+      "action": "continue",
+      "next": "coding-init-map-ts"
+    },
+    {
+      "stepId": "coding-init-map-ts",
+      "mentorSays": "Initialize a hash map to store mappings from original nodes to copied nodes.",
+      "example": "function copyRandomList(head) {\n  if (head === null) {\n    return null;\n  }\n  \n  // Hash map: original node -> copied node\n  let map = new Map();\n  \n}",
+      "action": "continue",
+      "next": "coding-pass1-create-ts"
+    },
+    {
+      "stepId": "coding-pass1-create-ts",
+      "mentorSays": "First pass: Traverse the original list and create a new node for each original node. Store the mapping in the hash map.",
+      "example": "function copyRandomList(head) {\n  if (head === null) {\n    return null;\n  }\n  \n  let map = new Map();\n  \n  // Pass 1: Create all nodes and build map\n  let current = head;\n  while (current !== null) {\n    map.set(current, new Node(current.val));\n    current = current.next;\n  }\n  \n}",
+      "action": "continue",
+      "next": "coding-pass2-set-next-ts"
+    },
+    {
+      "stepId": "coding-pass2-set-next-ts",
+      "mentorSays": "Second pass: Traverse the original list again. For each node, set the next pointer of the copied node using the map.",
+      "example": "function copyRandomList(head) {\n  if (head === null) {\n    return null;\n  }\n  \n  let map = new Map();\n  \n  let current = head;\n  while (current !== null) {\n    map.set(current, new Node(current.val));\n    current = current.next;\n  }\n  \n  // Pass 2: Set next pointers\n  current = head;\n  while (current !== null) {\n    map.get(current).next = map.get(current.next) || null;\n    current = current.next;\n  }\n  \n}",
+      "action": "continue",
+      "next": "coding-pass2-set-random-ts"
+    },
+    {
+      "stepId": "coding-pass2-set-random-ts",
+      "mentorSays": "Still in second pass: Set the random pointer of each copied node using the map.",
+      "example": "function copyRandomList(head) {\n  if (head === null) {\n    return null;\n  }\n  \n  let map = new Map();\n  \n  let current = head;\n  while (current !== null) {\n    map.set(current, new Node(current.val));\n    current = current.next;\n  }\n  \n  current = head;\n  while (current !== null) {\n    map.get(current).next = map.get(current.next) || null;\n    map.get(current).random = map.get(current.random) || null;\n    current = current.next;\n  }\n  \n}",
+      "action": "continue",
+      "next": "coding-return-ts"
+    },
+    {
+      "stepId": "coding-return-ts",
+      "mentorSays": "Return the copied head node using the map.",
+      "example": "function copyRandomList(head) {\n  if (head === null) {\n    return null;\n  }\n  \n  let map = new Map();\n  \n  let current = head;\n  while (current !== null) {\n    map.set(current, new Node(current.val));\n    current = current.next;\n  }\n  \n  current = head;\n  while (current !== null) {\n    map.get(current).next = map.get(current.next) || null;\n    map.get(current).random = map.get(current.random) || null;\n    current = current.next;\n  }\n  \n  // Return copied head\n  return map.get(head);\n}",
+      "action": "continue",
+      "next": "test-code-ts"
+    },
+    {
+      "stepId": "test-code-ts",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** List: 7 -> 13 -> 11 -> 10 -> 1, Random: 13->7, 11->1, 10->11, 1->7\nExpected: Deep copy with same structure\n\n**Test 2:** List: 1 -> 2 -> null, Random: 1->2, 2->1\nExpected: Deep copy with random pointers\n\n**Test 3:** List: null\nExpected: null\n\n**Test 4:** List: 1 -> null, Random: 1->null\nExpected: Single node copy\n\n**Test 5:** List: 1 -> 2 -> 3, Random: all null\nExpected: Copy with no random pointers\n\n**Test 6:** Verify the copied list is independent (modifying original doesn't affect copy)\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: List with random pointers\nTest 2: List with circular random pointers\nTest 3: Empty list",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "final",
+      "mentorSays": "Well done! You've successfully implemented the Copy List with Random Pointer solution!\n\n**Time Complexity:** O(n)\n- We traverse the list twice (two passes)\n- Each pass visits each node exactly once\n- Hash map operations (get/set) are O(1) average case\n- Total: O(n) time\n\n**Space Complexity:** O(n)\n- Hash map stores n mappings (original -> copied)\n- We create n new nodes\n- Total: O(n) space\n\n**Key Takeaways:**\n1. **Hash map**: Maps original nodes to copied nodes\n2. **Two-pass approach**: Create all nodes first, then set pointers\n3. **Deep copy**: All nodes are new, not references to original\n4. **Null handling**: map.get(null) returns null (or use || null)\n5. **Independence**: Copied list is completely independent of original\n\n**Common Mistakes to Avoid:**\n- Creating shallow copy (sharing nodes with original)\n- Setting random pointer before node exists\n- Not handling null pointers correctly\n- Not using hash map (can't link properly)\n- Modifying original list during copy\n\n**Related Practice Lessons:**\n- Clone Graph (LeetCode #133) - similar approach with graph\n- Copy List with Random Pointer (variation) - optimize to O(1) space\n- Deep Copy Nested List (LeetCode #385) - copy nested structures\n\nKeep practicing linked list lessons - they're common in interviews!",
+      "action": "continue"
+    }
+  ]
+}

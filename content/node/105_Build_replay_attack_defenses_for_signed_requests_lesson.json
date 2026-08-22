@@ -1,0 +1,426 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-node-105",
+    "track": "node",
+    "lessonNum": 105,
+    "title": "Build replay attack defenses for signed requests",
+    "shortName": "P105",
+    "intro": {
+      "tag": "LESSON #105",
+      "title": "Build replay attack defenses for signed requests",
+      "body": "In this lesson, you will build a simple Node.js server that defends against replay attacks on signed requests. You will learn to implement a nonce (a unique, one-time-use token) to ensure each signed request can only be processed once. The core programming concept involves using timestamps and in-memory storage to track and validate nonces. You will work with JavaScript, the Node.js built-in modules, and basic server-side logic. By the end, you will understand how to secure APIs by preventing attackers from reusing intercepted requests.",
+      "usecase": "Replay attack defenses are essential in payment processing APIs like Stripe or PayPal, where signed requests must be validated to prevent duplicate charges. E-commerce platforms implement these protections when handling webhook notifications for order confirmations or inventory updates. API gateways in microservices architectures use timestamp-based nonces to secure communication between internal services. Financial trading platforms and cryptocurrency exchanges rely on these mechanisms to ensure transaction requests can't be intercepted and replayed maliciously."
+    },
+    "objectives": [
+      "Initialize a nonce store to track used request identifiers",
+      "Construct a middleware function to validate request timestamps",
+      "Apply a nonce validation check within the request signing verification process",
+      "Configure a timestamp window to reject requests outside an acceptable time range",
+      "Integrate nonce and timestamp checks into an existing request authentication flow",
+      "Manipulate request headers to include required nonce and timestamp values",
+      "Update a route handler to reject requests that fail replay attack defenses"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 12",
+        "title": "Import required Node.js modules",
+        "instruction": "Import the crypto, fs, and url modules from Node.js using the require() syntax.",
+        "hint": "Use require('module-name') for each module. These are built-in Node.js modules, so no npm installation is needed.",
+        "analogousExample": "// Example: importing built-in modules\nconst http = require('http');\nconst path = require('path');",
+        "seedCode": "// Import the crypto, fs, and url modules here",
+        "expectedOutcome": "The crypto, fs, and url modules are imported and ready to use for cryptographic operations and URL parsing.",
+        "successCriteria": [
+          "The crypto, fs, and url modules are imported using require() statements."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've imported some modules, but make sure to import all three: crypto, fs, and url.",
+        "feedbackWrong": "The imports are missing or incorrect. Use require() to import the crypto, fs, and url modules from Node.js.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "require('crypto')",
+            "require('fs')",
+            "require('url')"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 12",
+        "title": "Create a function to generate a secure signature",
+        "instruction": "Create a function named generateSignature that takes payload and secretKey as parameters and returns an HMAC-SHA256 signature as a hex string.",
+        "hint": "Use the crypto.createHmac method with 'sha256' algorithm, update it with the payload, and digest it as 'hex'.",
+        "analogousExample": "// Example: a function that creates a hash\nfunction hashData(data, key) {\n  const hmac = crypto.createHmac('sha256', key);\n  hmac.update(data);\n  return hmac.digest('hex');\n}",
+        "seedCode": "// Import the crypto, fs, and url modules here\n\n// Create the generateSignature function here",
+        "expectedOutcome": "A function named generateSignature that uses crypto.createHmac to produce a hex signature from payload and secretKey.",
+        "successCriteria": [
+          "Function generateSignature is defined with parameters payload and secretKey, uses crypto.createHmac('sha256', secretKey), updates with payload, and returns hex digest."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure your function takes both payload and secretKey parameters and returns the hex digest of the HMAC.",
+        "feedbackWrong": "The function is missing key elements. It should use crypto.createHmac with 'sha256', update with payload, and return hex digest.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "generateSignature",
+            "payload",
+            "secretKey",
+            "createHmac",
+            "sha256",
+            "update",
+            "digest",
+            "hex"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 12",
+        "title": "Create a function to verify signatures",
+        "instruction": "Create a function named verifySignature that takes the same parameters as generateSignature (secret, method, path, timestamp, body) plus a receivedSignature parameter, and returns true if the signatures match or false otherwise.",
+        "hint": "Inside the function, call generateSignature with the provided parameters to compute the expected signature, then compare it with receivedSignature using strict equality.",
+        "analogousExample": "// Similar: a function that compares two values\nfunction compareValues(a, b) {\n  const computed = a + 5;\n  return computed === b;\n}",
+        "seedCode": "// Import the crypto, fs, and url modules here\n\n// Create the generateSignature function here\n\n// Create the verifySignature function here",
+        "expectedOutcome": "A verifySignature function that validates signatures by recomputing and comparing them.",
+        "successCriteria": [
+          "The verifySignature function is defined, takes the required parameters, calls generateSignature, and returns a boolean comparison result."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure your function takes all the required parameters, calls generateSignature, and returns the comparison result.",
+        "feedbackWrong": "The verifySignature function isn't quite right. It should compute a new signature and compare it to the received one.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "verifySignature",
+            "generateSignature",
+            "return",
+            "===",
+            "true",
+            "false"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 12",
+        "title": "Initialize a nonce storage mechanism",
+        "instruction": "Create a Set named 'usedNonces' to store nonces that have already been used.",
+        "hint": "Initialize a Set variable at the top level of your file, after the imports and before the functions.",
+        "analogousExample": "// Example: creating a Set to store unique values\nconst usedItems = new Set();",
+        "seedCode": "// Import the crypto, fs, and url modules here\nconst crypto = require('crypto');\nconst fs = require('fs');\nconst url = require('url');\n\n// Create the generateSignature function here\nfunction generateSignature(data, privateKey) {\n  const sign = crypto.createSign('SHA256');\n  sign.update(data);\n  sign.end();\n  return sign.sign(privateKey, 'base64');\n}\n\n// Create the verifySignature function here\nfunction verifySignature(data, signature, publicKey) {\n  const verify = crypto.createVerify('SHA256');\n  verify.update(data);\n  verify.end();\n  return verify.verify(publicKey, signature, 'base64');\n}",
+        "expectedOutcome": "A Set named 'usedNonces' is created to track nonces and prevent replay attacks.",
+        "successCriteria": [
+          "A Set variable named 'usedNonces' is declared and initialized."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're creating a Set named 'usedNonces' to store the nonces.",
+        "feedbackWrong": "That doesn't look right. You need to create a Set named 'usedNonces' to store nonces that have been used.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "usedNonces",
+            "Set"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 12",
+        "title": "Create a function to generate a unique nonce",
+        "instruction": "Create a function named generateNonce that returns a random string using crypto.randomBytes.",
+        "hint": "Use crypto.randomBytes to generate random bytes, then convert them to a hex string.",
+        "analogousExample": "// Example: generating a random token\nfunction generateToken() {\n  return crypto.randomBytes(16).toString('hex');\n}",
+        "seedCode": "const crypto = require('crypto');\nconst fs = require('fs');\nconst url = require('url');\n\nfunction generateSignature(data, privateKey) {\n  const sign = crypto.createSign('SHA256');\n  sign.update(data);\n  sign.end();\n  return sign.sign(privateKey, 'base64');\n}\n\nfunction verifySignature(data, signature, publicKey) {\n  const verify = crypto.createVerify('SHA256');\n  verify.update(data);\n  verify.end();\n  return verify.verify(publicKey, signature, 'base64');\n}\n\n// Create the generateNonce function here",
+        "expectedOutcome": "A function that generates a random nonce string using crypto.randomBytes.",
+        "successCriteria": [
+          "The generateNonce function is defined and returns a random hex string."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure your function uses crypto.randomBytes and returns a hex string.",
+        "feedbackWrong": "Try again. Create a function named generateNonce that returns a random hex string using crypto.randomBytes.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "generateNonce",
+            "crypto.randomBytes",
+            "toString('hex')"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 12",
+        "title": "Create a function to validate nonces",
+        "instruction": "Define a function named validateNonce that takes a nonce string as a parameter and returns a boolean indicating whether the nonce is valid (not previously used).",
+        "hint": "The function should check if the nonce exists in the nonceStorage Set and return false if it does. If it doesn't exist, add it to the storage and return true.",
+        "analogousExample": "// Example: function that validates a token\nfunction validateToken(token) {\n  if (usedTokens.has(token)) {\n    return false;\n  }\n  usedTokens.add(token);\n  return true;\n}",
+        "seedCode": "const crypto = require('crypto');\nconst fs = require('fs');\nconst url = require('url');\n\nfunction generateSignature(data, privateKey) {\n  const sign = crypto.createSign('SHA256');\n  sign.update(data);\n  sign.end();\n  return sign.sign(privateKey, 'base64');\n}\n\nfunction verifySignature(data, signature, publicKey) {\n  const verify = crypto.createVerify('SHA256');\n  verify.update(data);\n  verify.end();\n  return verify.verify(publicKey, signature, 'base64');\n}\n\n// Create the generateNonce function here\n\n// Define validateNonce function here",
+        "expectedOutcome": "A validateNonce function that prevents replay attacks by ensuring each nonce is used only once.",
+        "successCriteria": [
+          "The validateNonce function exists, takes a nonce parameter, checks nonceStorage, adds new nonces, and returns a boolean."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your function properly checks the storage and returns true/false appropriately.",
+        "feedbackWrong": "The validateNonce function is missing or doesn't match the expected structure. Review the hint and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "validateNonce",
+            "nonce",
+            "nonceStorage",
+            "has",
+            "add",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 12",
+        "title": "Create a function to get current timestamp",
+        "instruction": "Create a function named getCurrentTimestamp that returns the current Unix timestamp in seconds.",
+        "hint": "You can get the current timestamp in milliseconds using Date.now(), then convert it to seconds.",
+        "analogousExample": "// Example: a function returning current time in seconds\nfunction getCurrentTimestamp() {\n  return Math.floor(Date.now() / 1000);\n}",
+        "seedCode": "const crypto = require('crypto');\nconst fs = require('fs');\nconst url = require('url');\n\nfunction generateSignature(data, privateKey) {\n  const sign = crypto.createSign('SHA256');\n  sign.update(data);\n  sign.end();\n  return sign.sign(privateKey, 'base64');\n}\n\nfunction verifySignature(data, signature, publicKey) {\n  const verify = crypto.createVerify('SHA256');\n  verify.update(data);\n  verify.end();\n  return verify.verify(publicKey, signature, 'base64');\n}\n\n// Create the generateNonce function here\n\n// Define validateNonce function here\n\n// Create getCurrentTimestamp function here",
+        "expectedOutcome": "A function named getCurrentTimestamp that returns the current Unix timestamp in seconds.",
+        "successCriteria": [
+          "The getCurrentTimestamp function is defined and returns a numeric timestamp in seconds."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the function, but make sure it returns the current Unix timestamp in seconds (not milliseconds).",
+        "feedbackWrong": "The function isn't defined correctly. Create a function named getCurrentTimestamp that returns the current Unix timestamp in seconds.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "getCurrentTimestamp",
+            "Date.now",
+            "1000",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 12",
+        "title": "Create a function to validate request timestamps",
+        "instruction": "Create a function named validateTimestamp that takes a timestamp parameter and returns true if the timestamp is within an acceptable time window (e.g., within the last 5 minutes).",
+        "hint": "You can use the getCurrentTimestamp function (which you'll create later) to get the current time, then compare the difference with the provided timestamp.",
+        "analogousExample": "// Example: time validation function\nfunction validateTimestamp(timestamp) {\n  const currentTime = Date.now();\n  const timeWindow = 5 * 60 * 1000; // 5 minutes in milliseconds\n  return (currentTime - timestamp) <= timeWindow;\n}",
+        "seedCode": "const crypto = require('crypto');\nconst fs = require('fs');\nconst url = require('url');\n\nfunction generateSignature(data, privateKey) {\n  const sign = crypto.createSign('SHA256');\n  sign.update(data);\n  sign.end();\n  return sign.sign(privateKey, 'base64');\n}\n\nfunction verifySignature(data, signature, publicKey) {\n  const verify = crypto.createVerify('SHA256');\n  verify.update(data);\n  verify.end();\n  return verify.verify(publicKey, signature, 'base64');\n}\n\n// Create the generateNonce function here\n\n// Define validateNonce function here\n\n// Create getCurrentTimestamp function here\n\n// Create validateTimestamp function here",
+        "expectedOutcome": "A validateTimestamp function is added that checks if a timestamp is within a reasonable time window to prevent replay attacks.",
+        "successCriteria": [
+          "The validateTimestamp function is defined, takes a timestamp parameter, and returns a boolean indicating whether the timestamp is within an acceptable time window."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the function, but make sure it takes a timestamp parameter and returns true/false based on whether it's within the time window.",
+        "feedbackWrong": "The validateTimestamp function isn't properly defined. It should take a timestamp and check if it's within an acceptable time window (like 5 minutes).",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "validateTimestamp",
+            "timestamp",
+            "return",
+            "timeWindow",
+            "currentTime"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 12",
+        "title": "Create a function to build a secure request",
+        "instruction": "Define a function named buildSecureRequest that takes payload, privateKey, and an optional timestamp as parameters, and returns an object containing the payload, nonce, timestamp, and signature.",
+        "hint": "Inside the function, generate a nonce using generateNonce, get the current timestamp (or use the provided one), combine them with the payload into a data string, sign it with generateSignature, and return the complete request object.",
+        "analogousExample": "// Example: a function that creates a structured object\nfunction createUserProfile(name, email) {\n  const id = generateUniqueId();\n  const createdAt = Date.now();\n  return {\n    id,\n    name,\n    email,\n    createdAt\n  };\n}",
+        "seedCode": "const crypto = require('crypto');\nconst fs = require('fs');\nconst url = require('url');\n\nfunction generateSignature(data, privateKey) {\n  const sign = crypto.createSign('SHA256');\n  sign.update(data);\n  sign.end();\n  return sign.sign(privateKey, 'base64');\n}\n\nfunction verifySignature(data, signature, publicKey) {\n  const verify = crypto.createVerify('SHA256');\n  verify.update(data);\n  verify.end();\n  return verify.verify(publicKey, signature, 'base64');\n}\n\n// Create the generateNonce function here\n\n// Define validateNonce function here\n\n// Create getCurrentTimestamp function here\n\n// Create validateTimestamp function here\n\n// Define buildSecureRequest function here",
+        "expectedOutcome": "A function that constructs a secure request object with all required security elements.",
+        "successCriteria": [
+          "The buildSecureRequest function is defined, generates a nonce, includes a timestamp, creates a signature, and returns an object with payload, nonce, timestamp, and signature."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the function, but make sure it generates a nonce, includes a timestamp, creates a signature using the payload and privateKey, and returns the complete request object.",
+        "feedbackWrong": "The function is missing or incorrect. Review the instruction: define a function named buildSecureRequest that returns an object with payload, nonce, timestamp, and signature.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "function buildSecureRequest",
+            "generateNonce",
+            "getCurrentTimestamp",
+            "generateSignature",
+            "return",
+            "payload",
+            "nonce",
+            "timestamp",
+            "signature"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 12",
+        "title": "Create a function to validate incoming requests",
+        "instruction": "Define a function named validateIncomingRequest that takes request data, signature, nonce, and timestamp as parameters and returns a validation result.",
+        "hint": "The function should check all three security aspects: signature verification, nonce validation, and timestamp validation.",
+        "analogousExample": "// Example: A validation function that checks multiple conditions\nfunction validateUser(email, password, token) {\n  const emailValid = email.includes('@');\n  const passwordValid = password.length >= 8;\n  const tokenValid = token === 'secure-token';\n  return emailValid && passwordValid && tokenValid;\n}",
+        "seedCode": "const crypto = require('crypto');\nconst fs = require('fs');\nconst url = require('url');\n\nfunction generateSignature(data, privateKey) {\n  const sign = crypto.createSign('SHA256');\n  sign.update(data);\n  sign.end();\n  return sign.sign(privateKey, 'base64');\n}\n\nfunction verifySignature(data, signature, publicKey) {\n  const verify = crypto.createVerify('SHA256');\n  verify.update(data);\n  verify.end();\n  return verify.verify(publicKey, signature, 'base64');\n}\n\n// Create the generateNonce function here\n\n// Define validateNonce function here\n\n// Create getCurrentTimestamp function here\n\n// Create validateTimestamp function here\n\n// Define buildSecureRequest function here\n\n// Define validateIncomingRequest function here",
+        "expectedOutcome": "A complete validation function that will be used to check incoming requests for replay attack protection.",
+        "successCriteria": [
+          "Function validateIncomingRequest is defined with parameters for request data, signature, nonce, and timestamp, and returns a validation result."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the function, but make sure it takes all required parameters and returns a validation result.",
+        "feedbackWrong": "The validation function isn't properly defined. Check that you've created a function named validateIncomingRequest with the correct parameters.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "validateIncomingRequest",
+            "function",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 12",
+        "title": "Create a main function to demonstrate the system",
+        "instruction": "Define a function named 'main' that simulates creating and validating a secure request using the functions you've built.",
+        "hint": "The main function should call your existing functions in sequence: generate a nonce, get a timestamp, build a secure request, then validate it.",
+        "analogousExample": "// Example of a main function that orchestrates other functions\nfunction main() {\n  const result = processData();\n  console.log('Result:', result);\n}",
+        "seedCode": "const crypto = require('crypto');\nconst fs = require('fs');\nconst url = require('url');\n\nfunction generateSignature(data, privateKey) {\n  const sign = crypto.createSign('SHA256');\n  sign.update(data);\n  sign.end();\n  return sign.sign(privateKey, 'base64');\n}\n\nfunction verifySignature(data, signature, publicKey) {\n  const verify = crypto.createVerify('SHA256');\n  verify.update(data);\n  verify.end();\n  return verify.verify(publicKey, signature, 'base64');\n}\n\n// Create the generateNonce function here\n\n// Define validateNonce function here\n\n// Create getCurrentTimestamp function here\n\n// Create validateTimestamp function here\n\n// Define buildSecureRequest function here\n\n// Define validateIncomingRequest function here\n\n// Define the main function here",
+        "expectedOutcome": "A main function is defined that will serve as the entry point to demonstrate your replay attack defense system.",
+        "successCriteria": [
+          "A function named 'main' is defined in the code."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you've defined a function named 'main'.",
+        "feedbackWrong": "The main function wasn't defined correctly. Please create a function named 'main'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "function main",
+            "main()"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step12",
+        "type": "question",
+        "phase": "Step 12 of 12",
+        "title": "Execute the demonstration",
+        "instruction": "Call the main function you created earlier to run the demonstration and log the results.",
+        "hint": "Simply invoke the main function by writing its name followed by parentheses.",
+        "analogousExample": "// Calling a function to execute it\nfunction main() {\n  console.log('System running');\n}\n\nmain();",
+        "seedCode": "const crypto = require('crypto');\nconst fs = require('fs');\nconst url = require('url');\n\nfunction generateSignature(data, privateKey) {\n  const sign = crypto.createSign('SHA256');\n  sign.update(data);\n  sign.end();\n  return sign.sign(privateKey, 'base64');\n}\n\nfunction verifySignature(data, signature, publicKey) {\n  const verify = crypto.createVerify('SHA256');\n  verify.update(data);\n  verify.end();\n  return verify.verify(publicKey, signature, 'base64');\n}\n\n// Create the generateNonce function here\n\n// Define validateNonce function here\n\n// Create getCurrentTimestamp function here\n\n// Create validateTimestamp function here\n\n// Define buildSecureRequest function here\n\n// Define validateIncomingRequest function here\n\n// Define the main function here\n\n// Call the main function here",
+        "expectedOutcome": "The demonstration runs and logs results showing the replay attack defense system in action.",
+        "successCriteria": [
+          "The main function is called to execute the demonstration."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're calling the main function you created earlier. Just write its name followed by parentheses.",
+        "feedbackWrong": "That's not quite right. You need to call the main function to run the demonstration. Look for where you defined the main function and invoke it.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "main()"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import required Node.js modules",
+        "id": "step1"
+      },
+      {
+        "label": "Create a function to generate a secure signature",
+        "id": "step2"
+      },
+      {
+        "label": "Create a function to verify signatures",
+        "id": "step3"
+      },
+      {
+        "label": "Initialize a nonce storage mechanism",
+        "id": "step4"
+      },
+      {
+        "label": "Create a function to generate a unique nonce",
+        "id": "step5"
+      },
+      {
+        "label": "Create a function to validate nonces",
+        "id": "step6"
+      },
+      {
+        "label": "Create a function to get current timestamp",
+        "id": "step7"
+      },
+      {
+        "label": "Create a function to validate request timestamps",
+        "id": "step8"
+      },
+      {
+        "label": "Create a function to build a secure request",
+        "id": "step9"
+      },
+      {
+        "label": "Create a function to validate incoming requests",
+        "id": "step10"
+      },
+      {
+        "label": "Create a main function to demonstrate the system",
+        "id": "step11"
+      },
+      {
+        "label": "Execute the demonstration",
+        "id": "step12"
+      }
+    ]
+  },
+  "source": "content"
+}

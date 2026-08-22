@@ -1,0 +1,323 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-angular-87",
+    "track": "angular",
+    "lessonNum": 87,
+    "title": "Feature Flag Hook",
+    "shortName": "P87",
+    "intro": {
+      "tag": "LESSON #87",
+      "title": "Feature Flag Hook",
+      "body": "In this lesson, you will build a reusable Angular service that acts as a 'feature flag hook' to control the visibility of UI features in your application. You will learn how to use Angular's dependency injection and RxJS Observables to create a centralized flag management system. The core concept involves conditionally rendering components based on boolean flags fetched from a mock configuration. By the end, you'll have a service that can be injected anywhere to toggle features on or off dynamically.",
+      "usecase": "Feature flags are essential for controlled rollouts in production applications. In Angular dashboards, they allow teams to gradually enable new analytics panels or experimental data visualizations for specific user segments. E-commerce platforms use feature flags to test checkout flow improvements or seasonal promotions with limited audiences before full deployment. This pattern also enables A/B testing of UI components like redesigned navigation menus or updated form layouts while maintaining a stable user experience for most customers."
+    },
+    "objectives": [
+      "Construct a custom Angular service to manage feature flag state",
+      "Implement a reactive feature flag hook using Angular's dependency injection",
+      "Configure component templates to conditionally render content based on feature flags",
+      "Integrate the feature flag service into multiple components within an Angular application",
+      "Manipulate feature flag values dynamically to control UI visibility",
+      "Initialize feature flags with default values and update them through user interactions",
+      "Bind component logic to feature flag changes using Angular's change detection"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 9",
+        "title": "Import Component and Injectable from Angular core",
+        "instruction": "Import Component and Injectable from '@angular/core' at the top of your TypeScript file.",
+        "hint": "Use the import statement with curly braces to bring in multiple symbols from the same module.",
+        "analogousExample": "// Importing Angular core decorators\nimport { Component, Injectable } from '@angular/core';",
+        "seedCode": "// Import Component and Injectable from '@angular/core'\n\n",
+        "expectedOutcome": "The file will have the necessary imports for creating Angular components and injectable services.",
+        "successCriteria": [
+          "Component and Injectable are imported from '@angular/core'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're importing both Component and Injectable from '@angular/core'.",
+        "feedbackWrong": "Please import both Component and Injectable from the '@angular/core' module using the correct import syntax.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "Component",
+            "Injectable",
+            "@angular/core"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 9",
+        "title": "Create FeatureFlagService with Injectable decorator",
+        "instruction": "Create a class named FeatureFlagService and decorate it with @Injectable() to make it an Angular service.",
+        "hint": "Use the @Injectable() decorator above your class definition. The class should be exportable.",
+        "analogousExample": "// Example of an Angular service\n@Injectable()\nexport class DataService {\n  // Service logic goes here\n}",
+        "seedCode": "import { Component, Injectable } from '@angular/core';\n\n// Create FeatureFlagService class with @Injectable() decorator\n",
+        "expectedOutcome": "A FeatureFlagService class is defined with the @Injectable() decorator, ready to be used as an injectable service.",
+        "successCriteria": [
+          "FeatureFlagService class is created and decorated with @Injectable()."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you have both the @Injectable() decorator and the FeatureFlagService class definition.",
+        "feedbackWrong": "The service wasn't created correctly. Check that you used @Injectable() and defined the FeatureFlagService class.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "FeatureFlagService",
+            "@Injectable()",
+            "class",
+            "export"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 9",
+        "title": "Add feature flags object to FeatureFlagService",
+        "instruction": "Inside the FeatureFlagService class, add a private property named 'featureFlags' with type Record<string, boolean> and initialize it with an object containing at least two feature flags (e.g., 'newDashboard' and 'darkMode') set to boolean values.",
+        "hint": "Use TypeScript's Record type to define an object with string keys and boolean values. Initialize it directly in the property declaration.",
+        "analogousExample": "// Example: private property with Record type\nprivate settings: Record<string, boolean> = {\n  notifications: true,\n  autoSave: false\n};",
+        "seedCode": "import { Component, Injectable } from '@angular/core';\n\n@Injectable()\nexport class FeatureFlagService {\n  // Add private featureFlags property here\n}",
+        "expectedOutcome": "The FeatureFlagService will have a private featureFlags property storing configuration for feature flags.",
+        "successCriteria": [
+          "FeatureFlagService contains a private 'featureFlags' property of type Record<string, boolean> initialized with at least two feature flag entries."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure the property is private, has the correct Record<string, boolean> type, and is initialized with an object containing boolean values.",
+        "feedbackWrong": "The feature flags property is missing or incorrect. Check the property name, type, and initialization syntax.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "private",
+            "featureFlags",
+            "Record<string, boolean>",
+            "=",
+            "{"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 9",
+        "title": "Create FeatureFlagComponent with Component decorator",
+        "instruction": "Create a new Angular component class named FeatureFlagComponent and decorate it with @Component().",
+        "hint": "Add a class declaration with the @Component decorator from '@angular/core'.",
+        "analogousExample": "// Example: creating a basic Angular component\n@Component({\n  selector: 'app-example',\n  template: '<p>Example component</p>'\n})\nexport class ExampleComponent {}",
+        "seedCode": "import { Component, Injectable } from '@angular/core';\n\n@Injectable()\nexport class FeatureFlagService {\n  // Add private featureFlags property here\n  \n  // Add isEnabled method here\n}\n\n// Create FeatureFlagComponent here",
+        "expectedOutcome": "A FeatureFlagComponent class is created with the @Component decorator applied.",
+        "successCriteria": [
+          "The FeatureFlagComponent class exists and is decorated with @Component."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure you've created a class named FeatureFlagComponent and applied the @Component decorator.",
+        "feedbackWrong": "The FeatureFlagComponent with @Component decorator wasn't created correctly. Check the syntax and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "FeatureFlagComponent",
+            "@Component",
+            "class"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 9",
+        "title": "Add FeatureFlagService to component constructor",
+        "instruction": "In the FeatureFlagComponent class, add a constructor that injects FeatureFlagService as a private parameter.",
+        "hint": "Use the constructor keyword with a parameter of type FeatureFlagService, and mark it as private to make it a class property.",
+        "analogousExample": "// Example: injecting a service\nconstructor(private dataService: DataService) {}",
+        "seedCode": "import { Component, Injectable } from '@angular/core';\n\n@Injectable()\nexport class FeatureFlagService {\n  // Add private featureFlags property here\n  \n  // Add isEnabled method here\n}\n\n@Component({\n  selector: 'app-feature-flag',\n  template: ''\n})\nexport class FeatureFlagComponent {\n  // Add constructor here\n}",
+        "expectedOutcome": "The FeatureFlagComponent now has a constructor that receives FeatureFlagService via dependency injection.",
+        "successCriteria": [
+          "FeatureFlagComponent has a constructor with a private parameter of type FeatureFlagService."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure the constructor parameter is typed as FeatureFlagService and marked as private.",
+        "feedbackWrong": "Check that you've added a constructor to FeatureFlagComponent with a private FeatureFlagService parameter.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "constructor",
+            "FeatureFlagService",
+            "private"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 9",
+        "title": "Create component properties for feature flags",
+        "instruction": "Inside the FeatureFlagComponent class, add two public properties: 'showNewFeature' and 'showBetaFeature', both typed as boolean and initialized to false.",
+        "hint": "Add these properties directly in the class body, using TypeScript syntax: propertyName: type = initialValue.",
+        "analogousExample": "// Example: component properties\nclass MyComponent {\n  public isActive: boolean = false;\n  public count: number = 0;\n}",
+        "seedCode": "import { Component, Injectable } from '@angular/core';\n\n@Injectable()\nexport class FeatureFlagService {\n  // Add private featureFlags property here\n  \n  // Add isEnabled method here\n}\n\n@Component({\n  selector: 'app-feature-flag',\n  template: ''\n})\nexport class FeatureFlagComponent {\n  // Add constructor here\n  \n  // Add public properties here\n}",
+        "expectedOutcome": "The FeatureFlagComponent will have two boolean properties to track feature flag states.",
+        "successCriteria": [
+          "The FeatureFlagComponent class contains 'showNewFeature: boolean = false' and 'showBetaFeature: boolean = false' as public properties."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added some properties, but make sure both 'showNewFeature' and 'showBetaFeature' are present with boolean types and false initial values.",
+        "feedbackWrong": "The component properties are missing or incorrect. Add two public boolean properties initialized to false.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "showNewFeature: boolean = false",
+            "showBetaFeature: boolean = false"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 9",
+        "title": "Initialize feature flag properties in ngOnInit",
+        "instruction": "Implement the ngOnInit lifecycle hook in your FeatureFlagComponent to initialize the feature flag properties using the service's isEnabled method.",
+        "hint": "Add ngOnInit method inside the component class and set each property to the result of calling this.featureFlagService.isEnabled() with the appropriate flag name.",
+        "analogousExample": "// Example: implementing ngOnInit\nngOnInit() {\n  this.isFeatureEnabled = this.featureFlagService.isEnabled('featureName');\n}",
+        "seedCode": "import { Component, Injectable } from '@angular/core';\n\n@Injectable()\nexport class FeatureFlagService {\n  private featureFlags = {\n    newDashboard: true,\n    darkMode: false,\n    exportFeature: true\n  };\n\n  isEnabled(flagName: string): boolean {\n    return this.featureFlags[flagName] || false;\n  }\n}\n\n@Component({\n  selector: 'app-feature-flag',\n  template: ''\n})\nexport class FeatureFlagComponent {\n  constructor(private featureFlagService: FeatureFlagService) {}\n\n  newDashboardEnabled = false;\n  darkModeEnabled = false;\n  exportFeatureEnabled = false;\n\n  // Implement ngOnInit here\n}",
+        "expectedOutcome": "The component will have an ngOnInit method that initializes all three feature flag properties using the service.",
+        "successCriteria": [
+          "ngOnInit method is implemented and sets newDashboardEnabled, darkModeEnabled, and exportFeatureEnabled using featureFlagService.isEnabled()"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added ngOnInit, but make sure you're initializing all three feature flag properties using the service's isEnabled method.",
+        "feedbackWrong": "The ngOnInit method is missing or not properly implemented. Try adding the ngOnInit lifecycle hook and initializing the feature flag properties.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "ngOnInit",
+            "newDashboardEnabled",
+            "darkModeEnabled",
+            "exportFeatureEnabled",
+            "featureFlagService.isEnabled"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 9",
+        "title": "Add template with feature flag conditional display",
+        "instruction": "In the FeatureFlagComponent's template, add a paragraph element that displays 'New Dashboard is enabled!' only when the newDashboardEnabled property is true, using Angular's *ngIf directive.",
+        "hint": "Use the *ngIf structural directive with the component property to conditionally show content. The syntax is *ngIf=\"propertyName\".",
+        "analogousExample": "// Conditional display example\n@Component({\n  selector: 'app-example',\n  template: '<p *ngIf=\"isVisible\">Content is visible!</p>'\n})\nexport class ExampleComponent {\n  isVisible = true;\n}",
+        "seedCode": "import { Component, Injectable } from '@angular/core';\n\n@Injectable()\nexport class FeatureFlagService {\n  private featureFlags = {\n    newDashboard: true,\n    darkMode: false,\n    exportFeature: true\n  };\n\n  isEnabled(flagName: string): boolean {\n    return this.featureFlags[flagName] || false;\n  }\n}\n\n@Component({\n  selector: 'app-feature-flag',\n  template: ''\n})\nexport class FeatureFlagComponent {\n  constructor(private featureFlagService: FeatureFlagService) {}\n\n  newDashboardEnabled = false;\n  darkModeEnabled = false;\n  exportFeatureEnabled = false;\n\n  // Implement ngOnInit here\n}",
+        "expectedOutcome": "The component template will conditionally display content based on the newDashboardEnabled feature flag property.",
+        "successCriteria": [
+          "The template contains a paragraph element with *ngIf directive that uses the newDashboardEnabled property."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure you're using the *ngIf directive with the correct property name.",
+        "feedbackWrong": "The template doesn't yet have the required conditional display. Try adding a paragraph with *ngIf=\"newDashboardEnabled\".",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "*ngIf",
+            "newDashboardEnabled",
+            "<p"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 9",
+        "title": "Add toggle button to the template",
+        "instruction": "In the FeatureFlagComponent template, add a button element with the text 'Toggle Dark Mode' that will be used to toggle the darkModeEnabled flag.",
+        "hint": "Add a <button> element inside the template string. The button text should be 'Toggle Dark Mode'.",
+        "analogousExample": "// Adding a button to an Angular template\n@Component({\n  selector: 'app-example',\n  template: '<button>Click me</button>'\n})\nexport class ExampleComponent {}",
+        "seedCode": "import { Component, Injectable } from '@angular/core';\n\n@Injectable()\nexport class FeatureFlagService {\n  private featureFlags = {\n    newDashboard: true,\n    darkMode: false,\n    exportFeature: true\n  };\n\n  isEnabled(flagName: string): boolean {\n    return this.featureFlags[flagName] || false;\n  }\n}\n\n@Component({\n  selector: 'app-feature-flag',\n  template: ''\n})\nexport class FeatureFlagComponent {\n  constructor(private featureFlagService: FeatureFlagService) {}\n\n  newDashboardEnabled = false;\n  darkModeEnabled = false;\n  exportFeatureEnabled = false;\n\n  // Implement ngOnInit here\n}",
+        "expectedOutcome": "The FeatureFlagComponent template now contains a button element with the text 'Toggle Dark Mode'.",
+        "successCriteria": [
+          "The template includes a <button> element with the text content 'Toggle Dark Mode'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure the button has the exact text 'Toggle Dark Mode' and is properly placed in the template.",
+        "feedbackWrong": "The template doesn't contain the required button element. Please add a <button> with the text 'Toggle Dark Mode' to the template.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "template:",
+            "'<button>Toggle Dark Mode</button>'",
+            "<button>",
+            "Toggle Dark Mode"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import Component and Injectable from Angular core",
+        "id": "step1"
+      },
+      {
+        "label": "Create FeatureFlagService with Injectable decorator",
+        "id": "step2"
+      },
+      {
+        "label": "Add feature flags object to FeatureFlagService",
+        "id": "step3"
+      },
+      {
+        "label": "Create FeatureFlagComponent with Component decorator",
+        "id": "step4"
+      },
+      {
+        "label": "Add FeatureFlagService to component constructor",
+        "id": "step5"
+      },
+      {
+        "label": "Create component properties for feature flags",
+        "id": "step6"
+      },
+      {
+        "label": "Initialize feature flag properties in ngOnInit",
+        "id": "step7"
+      },
+      {
+        "label": "Add template with feature flag conditional display",
+        "id": "step8"
+      },
+      {
+        "label": "Add toggle button to the template",
+        "id": "step9"
+      }
+    ]
+  },
+  "source": "content"
+}

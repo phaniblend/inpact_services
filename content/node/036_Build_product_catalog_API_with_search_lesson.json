@@ -1,0 +1,394 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-node-36",
+    "track": "node",
+    "lessonNum": 36,
+    "title": "Build product catalog API with search",
+    "shortName": "P36",
+    "intro": {
+      "tag": "LESSON #36",
+      "title": "Build product catalog API with search",
+      "body": "In this lesson, you will build a simple product catalog API using Node.js that allows you to list products and search them by name. You will learn how to set up a basic HTTP server, define API endpoints, and handle incoming requests. The core programming concepts include using JavaScript objects to model data and implementing search logic with array methods. You'll work with Node.js's built-in 'http' module to create a server and respond with JSON data, giving you a practical introduction to backend web development.",
+      "usecase": "Product catalog APIs with search functionality are foundational to virtually every e-commerce platform and content management system. When you search for products on Amazon, filter items by category on Etsy, or browse inventory on a retail store's website, you're interacting with this exact pattern. As a Node.js developer, you'll implement these APIs to power search interfaces, category filters, and product listing pages that handle thousands of requests daily. Mastering this skill enables you to build scalable backend systems for online marketplaces, inventory management dashboards, and content discovery platforms."
+    },
+    "objectives": [
+      "Construct a Node.js server with Express to handle HTTP requests",
+      "Implement API endpoints for retrieving and filtering product data",
+      "Configure middleware to parse incoming JSON request bodies",
+      "Integrate search functionality to filter products by query parameters",
+      "Initialize and manipulate an in-memory data store for product catalog operations",
+      "Apply error handling to manage invalid requests and missing resources",
+      "Render structured JSON responses with appropriate HTTP status codes"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 11",
+        "title": "Import required Node.js modules",
+        "instruction": "Import the http module for creating the server and the url module for parsing query strings.",
+        "hint": "Use the require() function to import Node.js built-in modules. The http module is named 'http' and the url module is named 'url'.",
+        "analogousExample": "// Importing built-in modules\nconst fs = require('fs');\nconst path = require('path');",
+        "seedCode": "// Import the http and url modules here",
+        "expectedOutcome": "The http and url modules are imported and ready to use for building the API server.",
+        "successCriteria": [
+          "The http and url modules are imported using require() statements."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're importing both modules: http for the server and url for parsing query strings. Check that you're using the correct module names.",
+        "feedbackWrong": "import two Node.js built-in modules: 'http' for creating the server and 'url' for parsing query strings. Use the require() function for each import.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "require('http')",
+            "require('url')"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 11",
+        "title": "Define product catalog data",
+        "instruction": "Create an array named 'products' containing at least three product objects. Each object should have 'id', 'name', 'category', and 'price' properties.",
+        "hint": "Define the array using const products = [ {...}, {...}, {...} ]. Use numeric IDs, string names/categories, and numeric prices.",
+        "analogousExample": "// Example: array of objects with properties\nconst books = [\n  { id: 1, title: 'The Hobbit', author: 'J.R.R. Tolkien', pages: 310 },\n  { id: 2, title: '1984', author: 'George Orwell', pages: 328 }\n];",
+        "seedCode": "// Import the http and url modules here\n\n// Create your products array here",
+        "expectedOutcome": "A products array with at least three product objects, each containing id, name, category, and price properties.",
+        "successCriteria": [
+          "The products array exists with at least three objects, each having id, name, category, and price properties."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but check that each product object has all four required properties (id, name, category, price).",
+        "feedbackWrong": "Make sure you create an array named 'products' with at least three product objects, each containing id, name, category, and price properties.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "products",
+            "[",
+            "]",
+            "{",
+            "id",
+            "name",
+            "category",
+            "price"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 11",
+        "title": "Create the HTTP server",
+        "instruction": "Use the imported http module to create a server with http.createServer() and make it listen on port 3000.",
+        "hint": "Call http.createServer() and chain .listen(3000) to start the server on port 3000.",
+        "analogousExample": "// Create a basic HTTP server\nconst server = http.createServer();\nserver.listen(3000, () => {\n  console.log('Server running on port 3000');\n});",
+        "seedCode": "// Import the http and url modules here\n\n// Create your products array here\n\n// Create your HTTP server here",
+        "expectedOutcome": "A server is created and listening for requests on port 3000.",
+        "successCriteria": [
+          "The code uses http.createServer() and .listen(3000) to start the server."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're using http.createServer() and calling .listen(3000) on it.",
+        "feedbackWrong": "The server isn't set up correctly. Use http.createServer() to create a server and .listen(3000) to start it.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "http.createServer",
+            "listen",
+            "3000"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 11",
+        "title": "Handle incoming requests",
+        "instruction": "Inside the server callback function, add the logic to handle incoming HTTP requests and send a basic response.",
+        "hint": "Use the request and response parameters in your callback function. Start by setting a response header and writing a simple message.",
+        "analogousExample": "// Example: basic request handler\nfunction requestHandler(req, res) {\n  res.writeHead(200, { 'Content-Type': 'text/plain' });\n  res.end('Request received');\n}",
+        "seedCode": "// Import the http and url modules here\nconst http = require('http');\nconst url = require('url');\n\n// Create your products array here\nconst products = [\n  { id: 1, name: 'Laptop', price: 999 },\n  { id: 2, name: 'Mouse', price: 25 }\n];\n\n// Create your HTTP server here\nconst server = http.createServer((req, res) => {\n  // Add your request handling logic here\n});",
+        "expectedOutcome": "The server will now respond to any incoming request with a basic HTTP response.",
+        "successCriteria": [
+          "The server callback function includes code to set a response header and send a response message."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the request handler, but make sure to include both setting a response header and sending a response message.",
+        "feedbackWrong": "The request handler isn't complete. Check that you're using the req and res parameters to handle the request and send a response.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "writeHead",
+            "end",
+            "200"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 11",
+        "title": "Parse request URL and query parameters",
+        "instruction": "Inside the request handler, use the url module to parse the request URL and extract the pathname and query parameters.",
+        "hint": "Use url.parse() with the request URL and set the second argument to true to parse query parameters into an object.",
+        "analogousExample": "// Example: parsing a URL\nconst parsedUrl = url.parse(req.url, true);\nconst pathname = parsedUrl.pathname;\nconst query = parsedUrl.query;",
+        "seedCode": "const http = require('http');\nconst url = require('url');\n\nconst products = [\n  { id: 1, name: 'Laptop', price: 999 },\n  { id: 2, name: 'Mouse', price: 25 }\n];\n\nconst server = http.createServer((req, res) => {\n  // Parse the request URL and extract pathname and query parameters\n});",
+        "expectedOutcome": "The request handler will be able to inspect the URL path and query parameters to route requests appropriately.",
+        "successCriteria": [
+          "The code uses url.parse() with req.url and true to get pathname and query parameters."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure to parse the URL with the second argument set to true to get query parameters as an object.",
+        "feedbackWrong": "The URL parsing is missing or incorrect. Use url.parse(req.url, true) to parse the URL and extract pathname and query.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "url.parse",
+            "req.url",
+            "true",
+            "pathname",
+            "query"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 11",
+        "title": "Implement GET /products endpoint",
+        "instruction": "Inside the request handler, check if the request URL path is '/products' and the method is 'GET',",
+        "hint": "Use an if statement to compare req.url and req.method, then set appropriate headers and send JSON response.",
+        "analogousExample": "// Example route handler\nif (req.url === '/api/data' && req.method === 'GET') {\n  res.writeHead(200, { 'Content-Type': 'application/json' });\n  res.end(JSON.stringify({ data: 'example' }));\n}",
+        "seedCode": "const http = require('http');\nconst url = require('url');\n\nconst products = [\n  { id: 1, name: 'Laptop', price: 999 },\n  { id: 2, name: 'Mouse', price: 25 }\n];\n\nconst server = http.createServer((req, res) => {\n  // Parse the request URL and extract pathname and query parameters\n  // Check if the request URL path is '/products' and method is GET, then return all products as JSON\n});",
+        "expectedOutcome": "The server will respond to GET requests to '/products' with a JSON array of all products.",
+        "successCriteria": [
+          "The request handler includes an if statement checking for '/products' path and 'GET' method, sets 'Content-Type' header to 'application/json', and sends products as JSON."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure to check both the path and method, set the correct headers, and send the products array as JSON.",
+        "feedbackWrong": "The endpoint isn't working correctly. Check if you're comparing the path and method properly and sending the JSON response.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "'/products'",
+            "'GET'",
+            "writeHead",
+            "'application/json'",
+            "JSON.stringify",
+            "products"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 11",
+        "title": "return all products as JSON",
+        "instruction": "return all products as JSON.",
+        "hint": "Use an if statement to compare req.url and req.method, then set appropriate headers and send JSON response.",
+        "analogousExample": "// Example route handler\nif (req.url === '/api/data' && req.method === 'GET') {\n  res.writeHead(200, { 'Content-Type': 'application/json' });\n  res.end(JSON.stringify({ data: 'example' }));\n}",
+        "seedCode": "const http = require('http');\nconst url = require('url');\n\nconst products = [\n  { id: 1, name: 'Laptop', price: 999 },\n  { id: 2, name: 'Mouse', price: 25 }\n];\n\nconst server = http.createServer((req, res) => {\n  // Parse the request URL and extract pathname and query parameters\n  // Check if the request URL path is '/products' and method is GET, then return all products as JSON\n});",
+        "expectedOutcome": "",
+        "successCriteria": [
+          "Complete the step as instructed."
+        ],
+        "feedbackCorrect": "Great! Step completed.",
+        "feedbackPartial": "Review the instruction and try again.",
+        "feedbackWrong": "Check the instruction and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "'/products'",
+            "'GET'",
+            "writeHead",
+            "'application/json'",
+            "JSON.stringify",
+            "products"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 11",
+        "title": "Add CORS headers to responses",
+        "instruction": "Inside the server's request handler, set the 'Access-Control-Allow-Origin' header to '*' on the response object before sending any response.",
+        "hint": "Use res.setHeader('Access-Control-Allow-Origin', '*') to allow requests from any origin.",
+        "analogousExample": "// Setting a response header\nres.setHeader('Content-Type', 'application/json');",
+        "seedCode": "const http = require('http');\nconst url = require('url');\n\nconst products = [\n  { id: 1, name: 'Laptop', price: 999 },\n  { id: 2, name: 'Mouse', price: 25 }\n];\n\nconst server = http.createServer((req, res) => {\n  // Add CORS header here\n  // Parse the request URL and extract pathname and query parameters\n  // Check if the request URL path is '/products' and method is GET, then return all products as JSON\n});",
+        "expectedOutcome": "The server will include CORS headers in all responses, making the API accessible from different origins.",
+        "successCriteria": [
+          "The response object has the 'Access-Control-Allow-Origin' header set to '*'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're setting the header correctly with res.setHeader('Access-Control-Allow-Origin', '*').",
+        "feedbackWrong": "The CORS header wasn't added. Remember to use res.setHeader() to set 'Access-Control-Allow-Origin' to '*' inside the request handler.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "setHeader",
+            "Access-Control-Allow-Origin",
+            "'*'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 11",
+        "title": "Implement basic search functionality",
+        "instruction": "Inside the request handler, after parsing the URL, check if the 'search' query parameter exists. If it does, filter the products array to only include products whose name contains the search term (case-insensitive).",
+        "hint": "Use the parsed query object from the url.parse function. You can filter using the array's filter method and the string's includes method.",
+        "analogousExample": "// Filtering an array based on a query parameter\nconst searchTerm = query.search;\nlet filteredProducts = products;\nif (searchTerm) {\n  filteredProducts = products.filter(product => \n    product.name.toLowerCase().includes(searchTerm.toLowerCase())\n  );\n}",
+        "seedCode": "const http = require('http');\nconst url = require('url');\n\nconst products = [\n  { id: 1, name: 'Laptop', price: 999 },\n  { id: 2, name: 'Mouse', price: 25 }\n];\n\nconst server = http.createServer((req, res) => {\n  // Add CORS header here\n  // Parse the request URL and extract pathname and query parameters\n  // Check if the request URL path is '/products' and method is GET, then return all products as JSON\n  // Implement search functionality here\n});",
+        "expectedOutcome": "The request handler will now filter products by name when a 'search' query parameter is provided.",
+        "successCriteria": [
+          "The code includes logic to filter the products array based on a 'search' query parameter."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but the search logic might be incomplete. Make sure you're checking for the 'search' query parameter and filtering the products array correctly.",
+        "feedbackWrong": "The search functionality isn't implemented yet. Remember to check for the 'search' query parameter and filter the products array based on it.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "search",
+            "filter",
+            "includes",
+            "toLowerCase"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 11",
+        "title": "Add category filtering",
+        "instruction": "Inside the request handler, after implementing the basic search functionality, check if the 'category' query parameter exists and filter the products array to only include items whose 'category' property matches the provided value.",
+        "hint": "You can access the category parameter from the parsed query object. Use the filter method on the products array to create a filtered list based on the category value.",
+        "analogousExample": "// Filtering an array by property\nconst items = [\n  { name: 'apple', type: 'fruit' },\n  { name: 'carrot', type: 'vegetable' }\n];\nconst category = 'fruit';\nconst filtered = items.filter(item => item.type === category);",
+        "seedCode": "const http = require('http');\nconst url = require('url');\n\nconst products = [\n  { id: 1, name: 'Laptop', price: 999, category: 'electronics' },\n  { id: 2, name: 'Mouse', price: 25, category: 'electronics' }\n];\n\nconst server = http.createServer((req, res) => {\n  // Add CORS header here\n  // Parse the request URL and extract pathname and query parameters\n  // Check if the request URL path is '/products' and method is GET, then return all products as JSON\n  // Implement search functionality here\n  // Add category filtering here\n});",
+        "expectedOutcome": "The API will now support filtering products by category when a 'category' query parameter is provided in the request URL.",
+        "successCriteria": [
+          "The request handler includes logic to filter products by the 'category' query parameter when it exists."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're correctly accessing the 'category' parameter from the query object and using the filter method properly.",
+        "feedbackWrong": "The category filtering logic is missing or incorrect. Check that you're accessing the query parameter and filtering the products array appropriately.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "category",
+            "filter",
+            "query"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 11",
+        "title": "Combine search and category filters",
+        "instruction": "Inside the request handler, implement logic to apply both search term and category filters when both query parameters are provided, filtering the products array accordingly.",
+        "hint": "Check if both 'search' and 'category' query parameters exist, then filter products where name includes the search term AND category matches.",
+        "analogousExample": "// Example: applying multiple filters\nconst filtered = items.filter(item => {\n  let matches = true;\n  if (search) matches = matches && item.name.includes(search);\n  if (category) matches = matches && item.category === category;\n  return matches;\n});",
+        "seedCode": "const http = require('http');\nconst url = require('url');\n\nconst products = [\n  { id: 1, name: 'Laptop', price: 999, category: 'electronics' },\n  { id: 2, name: 'Mouse', price: 25, category: 'electronics' }\n];\n\nconst server = http.createServer((req, res) => {\n  // Add CORS header here\n  // Parse the request URL and extract pathname and query parameters\n  // Check if the request URL path is '/products' and method is GET, then return all products as JSON\n  // Implement search functionality here\n  // Add category filtering here\n  // Combine search and category filters here\n});",
+        "expectedOutcome": "The API will correctly filter products by both search term and category when both query parameters are present in the request.",
+        "successCriteria": [
+          "Products are filtered to include only items matching both search term (in name) and category when both query parameters are provided."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added some filtering logic, but it doesn't properly combine both search and category conditions.",
+        "feedbackWrong": "The combined filtering logic is missing or incorrect. Check that you're applying both conditions with logical AND.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "filter",
+            "search",
+            "category",
+            "&&",
+            "includes"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import required Node.js modules",
+        "id": "step1"
+      },
+      {
+        "label": "Define product catalog data",
+        "id": "step2"
+      },
+      {
+        "label": "Create the HTTP server",
+        "id": "step3"
+      },
+      {
+        "label": "Handle incoming requests",
+        "id": "step4"
+      },
+      {
+        "label": "Parse request URL and query parameters",
+        "id": "step5"
+      },
+      {
+        "label": "Implement GET /products endpoint",
+        "id": "step6"
+      },
+      {
+        "label": "return all products as JSON",
+        "id": "step7"
+      },
+      {
+        "label": "Add CORS headers to responses",
+        "id": "step8"
+      },
+      {
+        "label": "Implement basic search functionality",
+        "id": "step9"
+      },
+      {
+        "label": "Add category filtering",
+        "id": "step10"
+      },
+      {
+        "label": "Combine search and category filters",
+        "id": "step11"
+      }
+    ]
+  },
+  "source": "content"
+}

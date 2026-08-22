@@ -1,0 +1,297 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-angular-117",
+    "track": "angular",
+    "lessonNum": 117,
+    "title": "Session Timeout Hook",
+    "shortName": "P117",
+    "intro": {
+      "tag": "LESSON #117",
+      "title": "Session Timeout Hook",
+      "body": "In this lesson, you will build a reusable Angular service that tracks user inactivity and triggers a session timeout warning. You will learn how to use RxJS Observables and Angular's dependency injection to create a custom hook-like service. The core concept involves listening to browser events to detect inactivity and managing state with timers. By the end, you'll have a practical service that can be integrated into any Angular component to enhance user experience with session management.",
+      "usecase": "Session timeout hooks are essential in security-sensitive applications like banking dashboards and healthcare portals where user sessions must automatically expire after inactivity. When users step away from medical record systems or financial trading platforms, these hooks trigger warnings and eventually log them out to prevent unauthorized access. Developers implement this pattern in admin panels, e-commerce checkout flows, and collaborative tools to balance security with user experience by giving clear countdown notifications before session termination."
+    },
+    "objectives": [
+      "Implement a custom Angular hook to track user inactivity",
+      "Configure inactivity timeout thresholds using reactive patterns",
+      "Initialize and manage session timeout state with RxJS observables",
+      "Integrate the session timeout hook into an Angular component",
+      "Bind user interaction events to reset the inactivity timer",
+      "Control session expiration behavior through configurable parameters",
+      "Render visual feedback when the session approaches timeout"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 8",
+        "title": "Import Angular core modules and RxJS utilities",
+        "instruction": "Import Component, Injectable, OnDestroy, OnInit from '@angular/core' and Subject, timer, takeUntil from 'rxjs'",
+        "hint": "Use the import statement with curly braces to import multiple symbols from each package.",
+        "analogousExample": "// Importing multiple Angular modules\nimport { Component, Injectable } from '@angular/core';\n// Importing RxJS utilities\nimport { Subject, timer } from 'rxjs';",
+        "seedCode": "// Import Angular core modules and RxJS utilities here",
+        "expectedOutcome": "The necessary Angular and RxJS modules are imported for building the session timeout hook.",
+        "successCriteria": [
+          "Component, Injectable, OnDestroy, OnInit are imported from '@angular/core' and Subject, timer, takeUntil are imported from 'rxjs'"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You imported some modules, but check if you have all required ones: Component, Injectable, OnDestroy, OnInit from '@angular/core' and Subject, timer, takeUntil from 'rxjs'.",
+        "feedbackWrong": "The imports are missing or incorrect. You need to import Component, Injectable, OnDestroy, OnInit from '@angular/core' and Subject, timer, takeUntil from 'rxjs'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "Component",
+            "Injectable",
+            "OnDestroy",
+            "OnInit",
+            "@angular/core",
+            "Subject",
+            "timer",
+            "takeUntil",
+            "rxjs"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 8",
+        "title": "Create the SessionTimeoutService",
+        "instruction": "Create a new Angular service class named 'SessionTimeoutService' with the @Injectable() decorator.",
+        "hint": "Use the 'export class' syntax and add the @Injectable() decorator above the class definition.",
+        "analogousExample": "// Example of a basic Angular service\n@Injectable()\nexport class DataService {\n  constructor() {}\n}",
+        "seedCode": "import { Injectable } from '@angular/core';\nimport { Subject, timer } from 'rxjs';\n\n// Create the SessionTimeoutService class with @Injectable() decorator\n",
+        "expectedOutcome": "You will have a service class ready to implement session timeout logic in the next steps.",
+        "successCriteria": [
+          "SessionTimeoutService class is created with @Injectable() decorator"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure you have both the @Injectable() decorator and the class named exactly 'SessionTimeoutService'.",
+        "feedbackWrong": "The service wasn't created correctly. Check that you used the @Injectable() decorator and named the class 'SessionTimeoutService'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "@Injectable()",
+            "class SessionTimeoutService",
+            "export"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 8",
+        "title": "Add private properties to SessionTimeoutService",
+        "instruction": "Inside the SessionTimeoutService class, add a private property named 'timeoutInSeconds' with type number and a private property named 'destroy$' with type Subject<void>.",
+        "hint": "Use TypeScript's private modifier before the property names. Initialize 'destroy$' as a new Subject<void>().",
+        "analogousExample": "// Similar: private properties in a service\nprivate count: number = 0;\nprivate data$ = new Subject<string>();",
+        "seedCode": "import { Injectable } from '@angular/core';\nimport { Subject, timer } from 'rxjs';\n\n// Create the SessionTimeoutService class with @Injectable() decorator\n@Injectable({\n  providedIn: 'root'\n})\nexport class SessionTimeoutService {\n  // Add private properties here\n}",
+        "expectedOutcome": "The service will have two private properties ready for timeout management.",
+        "successCriteria": [
+          "The SessionTimeoutService class contains private 'timeoutInSeconds' (number) and 'destroy$' (Subject<void>) properties."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You added some properties, but make sure both 'timeoutInSeconds' (type number) and 'destroy$' (type Subject<void>) are present and private.",
+        "feedbackWrong": "The service is missing the required private properties. Add 'timeoutInSeconds: number' and 'destroy$: Subject<void>' inside the class.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "private timeoutInSeconds",
+            "private destroy$",
+            "Subject<void>"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 8",
+        "title": "Create startTimer method in service",
+        "instruction": "Inside the SessionTimeoutService class, create a public method named startTimer that takes a timeoutDuration parameter of type number and returns void.",
+        "hint": "Add the method signature after the private properties. Remember to use the correct TypeScript syntax for class methods.",
+        "analogousExample": "// Example: A method in a service class\npublic startProcess(delay: number): void {\n  // Method implementation goes here\n}",
+        "seedCode": "import { Injectable } from '@angular/core';\nimport { Subject, timer } from 'rxjs';\n\n// Create the SessionTimeoutService class with @Injectable() decorator\n@Injectable({\n  providedIn: 'root'\n})\nexport class SessionTimeoutService {\n  // Add private properties here\n  \n  // Create startTimer method here\n}",
+        "expectedOutcome": "The SessionTimeoutService will have a startTimer method signature ready for implementing timer logic in the next steps.",
+        "successCriteria": [
+          "The SessionTimeoutService class contains a public startTimer method with a timeoutDuration: number parameter and void return type."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure the method is public, named startTimer, takes a timeoutDuration parameter of type number, and returns void.",
+        "feedbackWrong": "The startTimer method is not properly defined. Check that it's a public method with the correct signature: startTimer(timeoutDuration: number): void.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "startTimer",
+            "timeoutDuration",
+            "number",
+            "void"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 8",
+        "title": "Implement OnDestroy in service",
+        "instruction": "Implement the ngOnDestroy lifecycle method in SessionTimeoutService to complete the destroy$ Subject.",
+        "hint": "Add the OnDestroy interface and implement ngOnDestroy to call destroy$.next() and destroy$.complete().",
+        "analogousExample": "// Example: Implementing OnDestroy in a service\nimport { Injectable, OnDestroy } from '@angular/core';\nimport { Subject } from 'rxjs';\n\n@Injectable({\n  providedIn: 'root'\n})\nexport class ExampleService implements OnDestroy {\n  private destroy$ = new Subject<void>();\n\n  ngOnDestroy() {\n    this.destroy$.next();\n    this.destroy$.complete();\n  }\n}",
+        "seedCode": "import { Injectable } from '@angular/core';\nimport { Subject, timer } from 'rxjs';\n\n// Create the SessionTimeoutService class with @Injectable() decorator\n@Injectable({\n  providedIn: 'root'\n})\nexport class SessionTimeoutService {\n  // Add private properties here\n  \n  // Create startTimer method here\n  \n  // Create resetTimer method here\n  \n  // Implement ngOnDestroy method here\n}",
+        "expectedOutcome": "The service will properly clean up subscriptions when destroyed by completing the destroy$ Subject.",
+        "successCriteria": [
+          "SessionTimeoutService implements OnDestroy interface and has ngOnDestroy method that calls next() and complete() on destroy$."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're implementing the OnDestroy interface and calling both next() and complete() on the destroy$ Subject.",
+        "feedbackWrong": "The ngOnDestroy method is missing or incomplete. Remember to implement the OnDestroy interface and properly complete the destroy$ Subject.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "OnDestroy",
+            "ngOnDestroy",
+            "destroy$.next()",
+            "destroy$.complete()"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 8",
+        "title": "Create the main AppComponent",
+        "instruction": "Create the AppComponent class with the @Component decorator and a basic template that includes a heading.",
+        "hint": "Use the @Component decorator from '@angular/core' to define the component. The template can be a simple string with an <h1> element.",
+        "analogousExample": "// Example: a basic Angular component\n@Component({\n  selector: 'app-example',\n  template: '<h1>Example Component</h1>'\n})\nexport class ExampleComponent {}",
+        "seedCode": "import { Injectable } from '@angular/core';\nimport { Subject, timer } from 'rxjs';\n\n// Create the SessionTimeoutService class with @Injectable() decorator\n@Injectable({\n  providedIn: 'root'\n})\nexport class SessionTimeoutService {\n  // Add private properties here\n  \n  // Create startTimer method here\n  \n  // Create resetTimer method here\n  \n  // Implement ngOnDestroy method here\n}\n\n// Create the AppComponent class with @Component decorator and basic template\n",
+        "expectedOutcome": "The AppComponent class is created with a @Component decorator and a template containing a heading.",
+        "successCriteria": [
+          "AppComponent class is defined with @Component decorator, selector 'app-root', and template with an <h1> element."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the AppComponent, but make sure to include the @Component decorator with selector 'app-root' and a template with an <h1> element.",
+        "feedbackWrong": "The AppComponent wasn't created correctly. Remember to use @Component decorator with selector 'app-root' and include a basic template with a heading.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "@Component",
+            "selector",
+            "'app-root'",
+            "template",
+            "<h1>",
+            "export class AppComponent"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 8",
+        "title": "Inject SessionTimeoutService into AppComponent",
+        "instruction": "In the AppComponent class, add a constructor that injects the SessionTimeoutService as a dependency.",
+        "hint": "Use dependency injection by declaring a constructor parameter with the service type.",
+        "analogousExample": "// Example: injecting a service\nconstructor(private myService: MyService) {}",
+        "seedCode": "import { Injectable } from '@angular/core';\nimport { Subject, timer } from 'rxjs';\n\n// Create the SessionTimeoutService class with @Injectable() decorator\n@Injectable({\n  providedIn: 'root'\n})\nexport class SessionTimeoutService {\n  // Add private properties here\n  \n  // Create startTimer method here\n  \n  // Create resetTimer method here\n  \n  // Implement ngOnDestroy method here\n}\n\n// Create the AppComponent class with @Component decorator and basic template\n\n// Add constructor injection here",
+        "expectedOutcome": "The AppComponent will have access to the session timeout service through dependency injection.",
+        "successCriteria": [
+          "AppComponent constructor includes SessionTimeoutService parameter with proper type annotation."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure the constructor parameter has the correct type (SessionTimeoutService).",
+        "feedbackWrong": "The constructor injection is missing or incorrect. Check that you're injecting SessionTimeoutService as a parameter.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "constructor",
+            "SessionTimeoutService"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 8",
+        "title": "Initialize timer in AppComponent ngOnInit",
+        "instruction": "In the AppComponent class, implement the OnInit interface and create an ngOnInit method that calls this.sessionTimeoutService.startTimer() to start the session timer when the component initializes.",
+        "hint": "Add 'OnInit' to the import from '@angular/core' if not already present, then implement it in the AppComponent class and define the ngOnInit lifecycle hook method.",
+        "analogousExample": "// Example: implementing OnInit and starting a service\nimport { Component, OnInit } from '@angular/core';\nimport { DataService } from './data.service';\n\n@Component({\n  selector: 'app-example',\n  template: '<p>Example</p>'\n})\nexport class ExampleComponent implements OnInit {\n  constructor(private dataService: DataService) {}\n\n  ngOnInit() {\n    this.dataService.loadData();\n  }\n}",
+        "seedCode": "import { Injectable } from '@angular/core';\nimport { Subject, timer } from 'rxjs';\n\n@Injectable({\n  providedIn: 'root'\n})\nexport class SessionTimeoutService {\n  // Add private properties here\n  \n  // Create startTimer method here\n  \n  // Create resetTimer method here\n  \n  // Implement ngOnDestroy method here\n}\n\nimport { Component } from '@angular/core';\nimport { SessionTimeoutService } from './session-timeout.service';\n\n@Component({\n  selector: 'app-root',\n  template: '<h1>Session Timeout Demo</h1>'\n})\nexport class AppComponent {\n  constructor(private sessionTimeoutService: SessionTimeoutService) {}\n  \n  // Implement OnInit and create ngOnInit method here\n}",
+        "expectedOutcome": "The AppComponent will implement the OnInit interface and have an ngOnInit method that calls the service's startTimer method to initialize the session timer when the component loads.",
+        "successCriteria": [
+          "AppComponent implements OnInit, has an ngOnInit method, and calls this.sessionTimeoutService.startTimer() inside ngOnInit."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you've implemented the OnInit interface, created the ngOnInit method, and called this.sessionTimeoutService.startTimer() inside it.",
+        "feedbackWrong": "The component needs to implement OnInit and define an ngOnInit method that starts the timer. Check that you've imported OnInit and called the service method correctly.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "implements OnInit",
+            "ngOnInit",
+            "startTimer"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import Angular core modules and RxJS utilities",
+        "id": "step1"
+      },
+      {
+        "label": "Create the SessionTimeoutService",
+        "id": "step2"
+      },
+      {
+        "label": "Add private properties to SessionTimeoutService",
+        "id": "step3"
+      },
+      {
+        "label": "Create startTimer method in service",
+        "id": "step4"
+      },
+      {
+        "label": "Implement OnDestroy in service",
+        "id": "step5"
+      },
+      {
+        "label": "Create the main AppComponent",
+        "id": "step6"
+      },
+      {
+        "label": "Inject SessionTimeoutService into AppComponent",
+        "id": "step7"
+      },
+      {
+        "label": "Initialize timer in AppComponent ngOnInit",
+        "id": "step8"
+      }
+    ]
+  },
+  "source": "content"
+}

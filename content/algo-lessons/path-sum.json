@@ -1,0 +1,860 @@
+{
+  "id": "path-sum",
+  "title": "Path Sum",
+  "pattern": "tree",
+  "difficulty": "easy",
+  "language": "javascript",
+  "status": "draft",
+  "flow": [
+    {
+      "stepId": "title",
+      "mentorSays": "At the end of this lesson, you will be able to:\n\n1. Understand what the Path Sum lesson asks for\n2. Use recursion to check if a path from root to leaf sums to target\n3. Track the current sum as we traverse the tree\n4. Handle base cases (null nodes, leaf nodes)\n5. Implement the solution step by step in your chosen language",
+      "action": "continue",
+      "next": "lesson-illustration"
+    },
+    {
+      "stepId": "lesson-illustration",
+      "mentorSays": "Perfect! Now let's understand what the Path Sum lesson is asking.\n\n**Lesson Definition:**\nGiven the root of a binary tree and an integer `targetSum`, return `true` if the tree has a root-to-leaf path such that adding up all the values along the path equals `targetSum`.\n\nA leaf is a node with no children.\n\n**Key Observations:**\n- We need to find a path from root to a leaf (not any node)\n- The sum of all values on the path must equal targetSum\n- We traverse from root to leaf, accumulating the sum\n- A leaf has no children (both left and right are null)\n\n**Example 1:**\nTree:\n    5\n   / \\\n  4   8\n /   / \\\n11  13  4\n/ \\      \\\n7  2      1\n\ntargetSum = 22\n\nPath: 5 -> 4 -> 11 -> 2\nSum: 5 + 4 + 11 + 2 = 22 ✓\n\nAnswer: true\n\n**Example 2:**\nTree:\n    1\n   / \\\n  2   3\n\ntargetSum = 5\n\nPath 1: 1 -> 2, Sum = 3\nPath 2: 1 -> 3, Sum = 4\n\nNo path sums to 5.\nAnswer: false\n\n**Example 3:**\nTree: null\ntargetSum = 0\n\nEmpty tree has no paths.\nAnswer: false\n\n**Step-by-step trace for Example 1 (Recursive approach):**\n\nTree:\n    5\n   / \\\n  4   8\n /   / \\\n11  13  4\n/ \\      \\\n7  2      1\n\ntargetSum = 22\n\nWe'll use recursion with a running sum:\n- **hasPathSum(5, 22)**:\n  - Current sum = 5\n  - Remaining = 22 - 5 = 17\n  - Check left: hasPathSum(4, 17)\n  - Check right: hasPathSum(8, 17)\n  - Return left || right\n\n- **hasPathSum(4, 17)**:\n  - Current sum = 4\n  - Remaining = 17 - 4 = 13\n  - Check left: hasPathSum(11, 13)\n  - Check right: null, skip\n  - Return result from left\n\n- **hasPathSum(11, 13)**:\n  - Current sum = 11\n  - Remaining = 13 - 11 = 2\n  - Check left: hasPathSum(7, 2) = false\n  - Check right: hasPathSum(2, 2) = true ✓\n  - Return false || true = true\n\n- **hasPathSum(2, 2)**:\n  - Current sum = 2\n  - Remaining = 2 - 2 = 0\n  - This is a leaf (both children null)\n  - Remaining == 0, return true ✓\n\n**Key Insight:**\nWe subtract the current node's value from targetSum as we go down. When we reach a leaf, if the remaining sum is 0, we found a valid path!\n\n**What makes this tricky:**\n1. Understanding that we need a root-to-leaf path (not root-to-any-node)\n2. Tracking the remaining sum as we traverse\n3. Handling the base case: leaf node with remaining sum == 0\n4. Returning true if ANY path works (left OR right)\n\n**Common pitfalls:**\n- Not checking that we're at a leaf (checking any node)\n- Not handling null root correctly\n- Not using OR (||) to check left or right paths\n- Off-by-one errors in sum calculation",
+      "example": "Example 1:\nTree:\n    5\n   / \\\n  4   8\n /   / \\\n11  13  4\n/ \\      \\\n7  2      1\n\ntargetSum = 22\nPath: 5->4->11->2, Sum = 22\nAnswer: true\n\nExample 2:\nTree:\n    1\n   / \\\n  2   3\n\ntargetSum = 5\nNo path sums to 5\nAnswer: false",
+      "action": "continue",
+      "next": "thinking-challenge"
+    },
+    {
+      "stepId": "thinking-challenge",
+      "mentorSays": "Now that you understand what the lesson wants, here's the real question:\n\nHow would YOU check if there's a root-to-leaf path that sums to targetSum?\n\nThink about it for a moment. What approach feels natural to you?",
+      "choices": [
+        {
+          "label": "Use recursion - subtract current value from targetSum, check at leaf",
+          "next": "explore-recursive"
+        },
+        {
+          "label": "Use DFS with a stack to track path and sum",
+          "next": "explore-dfs"
+        },
+        {
+          "label": "Use BFS to check all paths level by level",
+          "next": "explore-bfs"
+        }
+      ]
+    },
+    {
+      "stepId": "explore-dfs",
+      "mentorSays": "That's a great approach! You're thinking: \"I'll use DFS with a stack to track the current path and sum.\"\n\nThis works perfectly! However, it requires a stack and uses O(h) space.\n\nThere's a more elegant recursive approach that uses the same space but is simpler. Would you like to learn that?",
+      "action": "continue",
+      "next": "explore-recursive"
+    },
+    {
+      "stepId": "explore-bfs",
+      "mentorSays": "That's a solid approach! You're thinking: \"I'll use BFS to check all paths level by level.\"\n\nThis works! However, it's more complex and uses more space.\n\nThere's a simpler recursive approach that's very elegant. Would you like to learn that?",
+      "action": "continue",
+      "next": "explore-recursive"
+    },
+    {
+      "stepId": "explore-recursive",
+      "mentorSays": "Excellent choice! Recursion is the most elegant solution for this lesson. Here's the core idea:\n\n**The Algorithm:**\n1. **Base case 1**: If root is null, return false (no path exists)\n2. **Base case 2**: If root is a leaf (both children null) AND targetSum == root.val, return true\n3. **Recursive case**: \n   - Subtract root.val from targetSum\n   - Recursively check left subtree: hasPathSum(root.left, targetSum - root.val)\n   - Recursively check right subtree: hasPathSum(root.right, targetSum - root.val)\n   - Return left || right (true if either path works)\n\n**Why it works**:\n- We subtract the current node's value from targetSum as we go down\n- When we reach a leaf, if remaining sum equals the leaf's value, we found a path\n- We check both left and right subtrees, returning true if either has a valid path\n\n**Key insight**: Instead of tracking a running sum, we subtract from targetSum! This simplifies the logic.\n\nLet's trace with tree:\n    5\n   / \\\n  4   8\n\ntargetSum = 9\n\n- **hasPathSum(5, 9)**:\n  - Not a leaf, subtract: remaining = 9 - 5 = 4\n  - Left: hasPathSum(4, 4) = true\n  - Right: hasPathSum(8, 4) = false\n  - Return true || false = true ✓\n\n- **hasPathSum(4, 4)**:\n  - Is a leaf (both children null)\n  - targetSum == root.val (4 == 4), return true ✓\n\nThis is O(n) time (visit each node once) and O(h) space (recursion stack)! Now let's code it step by step.",
+      "action": "continue",
+      "next": "language-selection"
+    },
+    {
+      "stepId": "language-selection",
+      "mentorSays": "Great! Now let's code this solution. Which programming language would you like to use?",
+      "choices": [
+        {
+          "label": "JavaScript",
+          "next": "variable-check-js"
+        },
+        {
+          "label": "Python",
+          "next": "variable-check-python"
+        },
+        {
+          "label": "Java",
+          "next": "variable-check-java"
+        },
+        {
+          "label": "C++",
+          "next": "variable-check-cpp"
+        },
+        {
+          "label": "TypeScript",
+          "next": "variable-check-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-check-js",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-js"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-js",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'remaining' or 'left') and put data inside it.",
+      "example": "let remaining = targetSum - root.val;  // Remaining sum",
+      "action": "continue",
+      "next": "function-check-js"
+    },
+    {
+      "stepId": "function-check-js",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-js"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-js",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "function hasPathSum(root, targetSum) {\n  // Returns true if path exists\n  return false;\n}",
+      "action": "continue",
+      "next": "parameter-check-js"
+    },
+    {
+      "stepId": "parameter-check-js",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "tree-check-js"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-js",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'function hasPathSum(root, targetSum)', the 'root' and 'targetSum' are parameters.",
+      "example": "function hasPathSum(root, targetSum) {\n  // Parameters receive values\n}\n\n// Call: hasPathSum(rootNode, 22)",
+      "action": "continue",
+      "next": "tree-check-js"
+    },
+    {
+      "stepId": "tree-check-js",
+      "mentorSays": "To solve this lesson, we'll need to work with binary trees. Do you know what a binary tree is?",
+      "choices": [
+        {
+          "label": "Yes, I know binary trees",
+          "next": "recursion-check-js"
+        },
+        {
+          "label": "No, explain binary trees",
+          "next": "tree-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "tree-explanation-js",
+      "mentorSays": "A binary tree is a data structure where each node has at most two children (left and right). Each node contains a value and references to its children.",
+      "example": "// Node structure:\nclass TreeNode {\n  constructor(val, left, right) {\n    this.val = val;\n    this.left = left;\n    this.right = right;\n  }\n}",
+      "action": "continue",
+      "next": "recursion-check-js"
+    },
+    {
+      "stepId": "recursion-check-js",
+      "mentorSays": "To solve this lesson, we'll use recursion. Do you know what recursion is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know recursion",
+          "next": "coding-start-js"
+        },
+        {
+          "label": "No, explain recursion",
+          "next": "recursion-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "recursion-explanation-js",
+      "mentorSays": "Recursion is when a function calls itself. For tree lessons, we often use recursion because:\n- A tree is naturally recursive (each subtree is also a tree)\n- We can solve the lesson for the whole tree by solving it for subtrees",
+      "example": "function hasPathSum(root, targetSum) {\n  // Base cases\n  if (root === null) return false;\n  if (root.left === null && root.right === null) {\n    return targetSum === root.val;\n  }\n  \n  // Recursive calls\n  return hasPathSum(root.left, targetSum - root.val) ||\n         hasPathSum(root.right, targetSum - root.val);\n}",
+      "action": "continue",
+      "next": "coding-start-js"
+    },
+    {
+      "stepId": "coding-start-js",
+      "mentorSays": "Perfect! Let's implement the path sum solution in JavaScript. We'll create a function that takes the root and targetSum, and returns true if a path exists.",
+      "example": "function hasPathSum(root, targetSum) {\n  \n}",
+      "action": "continue",
+      "next": "coding-base-case-null-js"
+    },
+    {
+      "stepId": "coding-base-case-null-js",
+      "mentorSays": "First, handle the base case: if root is null, return false (no path exists).",
+      "example": "function hasPathSum(root, targetSum) {\n  // Base case: empty tree has no paths\n  if (root === null) {\n    return false;\n  }\n  \n}",
+      "action": "continue",
+      "next": "coding-base-case-leaf-js"
+    },
+    {
+      "stepId": "coding-base-case-leaf-js",
+      "mentorSays": "Check if we're at a leaf node (both children null). If so, check if targetSum equals the node's value.",
+      "example": "function hasPathSum(root, targetSum) {\n  if (root === null) {\n    return false;\n  }\n  \n  // Base case: leaf node\n  if (root.left === null && root.right === null) {\n    return targetSum === root.val;\n  }\n  \n}",
+      "action": "continue",
+      "next": "coding-recursive-left-js"
+    },
+    {
+      "stepId": "coding-recursive-left-js",
+      "mentorSays": "Recursively check the left subtree with the remaining sum (targetSum - root.val).",
+      "example": "function hasPathSum(root, targetSum) {\n  if (root === null) {\n    return false;\n  }\n  \n  if (root.left === null && root.right === null) {\n    return targetSum === root.val;\n  }\n  \n  // Recursively check left subtree\n  let left = hasPathSum(root.left, targetSum - root.val);\n  \n}",
+      "action": "continue",
+      "next": "coding-recursive-right-js"
+    },
+    {
+      "stepId": "coding-recursive-right-js",
+      "mentorSays": "Recursively check the right subtree with the remaining sum.",
+      "example": "function hasPathSum(root, targetSum) {\n  if (root === null) {\n    return false;\n  }\n  \n  if (root.left === null && root.right === null) {\n    return targetSum === root.val;\n  }\n  \n  let left = hasPathSum(root.left, targetSum - root.val);\n  // Recursively check right subtree\n  let right = hasPathSum(root.right, targetSum - root.val);\n  \n}",
+      "action": "continue",
+      "next": "coding-return-js"
+    },
+    {
+      "stepId": "coding-return-js",
+      "mentorSays": "Return true if either left or right subtree has a valid path (use OR operator).",
+      "example": "function hasPathSum(root, targetSum) {\n  if (root === null) {\n    return false;\n  }\n  \n  if (root.left === null && root.right === null) {\n    return targetSum === root.val;\n  }\n  \n  let left = hasPathSum(root.left, targetSum - root.val);\n  let right = hasPathSum(root.right, targetSum - root.val);\n  \n  // Return true if either path works\n  return left || right;\n}",
+      "action": "continue",
+      "next": "test-code-js"
+    },
+    {
+      "stepId": "test-code-js",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** root = [5,4,8,11,null,13,4,7,2,null,null,null,1], targetSum = 22\nExpected: true (path: 5->4->11->2)\n\n**Test 2:** root = [1,2,3], targetSum = 5\nExpected: false (no path sums to 5)\n\n**Test 3:** root = null, targetSum = 0\nExpected: false (empty tree)\n\n**Test 4:** root = [1,2], targetSum = 1\nExpected: false (path 1->2 sums to 3, not 1)\n\n**Test 5:** root = [1], targetSum = 1\nExpected: true (single node, value equals target)\n\n**Test 6:** root = [1,2], targetSum = 3\nExpected: true (path 1->2 sums to 3)\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: [5,4,8,11,null,13,4,7,2,null,null,null,1], 22 → true\nTest 2: [1,2,3], 5 → false\nTest 3: null, 0 → false\nTest 4: [1,2], 1 → false\nTest 5: [1], 1 → true\nTest 6: [1,2], 3 → true",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-python",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-python"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-python",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'remaining' or 'left') and put data inside it.",
+      "example": " remaining = targetSum - root.val;  // Remaining sum",
+      "action": "continue",
+      "next": "function-check-python"
+    },
+    {
+      "stepId": "function-check-python",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-python"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-python",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "def hasPathSum(root, targetSum) {\n  // Returns true if path exists\n  return false;\n}",
+      "action": "continue",
+      "next": "parameter-check-python"
+    },
+    {
+      "stepId": "parameter-check-python",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "tree-check-python"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-python",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'def hasPathSum(root, targetSum)', the 'root' and 'targetSum' are parameters.",
+      "example": "def hasPathSum(root, targetSum) {\n  // Parameters receive values\n}\n\n// Call: hasPathSum(rootNode, 22)",
+      "action": "continue",
+      "next": "tree-check-python"
+    },
+    {
+      "stepId": "tree-check-python",
+      "mentorSays": "To solve this lesson, we'll need to work with binary trees. Do you know what a binary tree is?",
+      "choices": [
+        {
+          "label": "Yes, I know binary trees",
+          "next": "recursion-check-python"
+        },
+        {
+          "label": "No, explain binary trees",
+          "next": "tree-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "tree-explanation-python",
+      "mentorSays": "A binary tree is a data structure where each node has at most two children (left and right). Each node contains a value and references to its children.",
+      "example": "// Node structure:\nclass TreeNode {\n  constructor(val, left, right) {\n    this.val = val;\n    this.left = left;\n    this.right = right;\n  }\n}",
+      "action": "continue",
+      "next": "recursion-check-python"
+    },
+    {
+      "stepId": "recursion-check-python",
+      "mentorSays": "To solve this lesson, we'll use recursion. Do you know what recursion is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know recursion",
+          "next": "coding-start-python"
+        },
+        {
+          "label": "No, explain recursion",
+          "next": "recursion-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "recursion-explanation-python",
+      "mentorSays": "Recursion is when a function calls itself. For tree lessons, we often use recursion because:\n- A tree is naturally recursive (each subtree is also a tree)\n- We can solve the lesson for the whole tree by solving it for subtrees",
+      "example": "function hasPathSum(root, targetSum) {\n  // Base cases\n  if (root === null) return false;\n  if (root.left === null && root.right === null) {\n    return targetSum === root.val;\n  }\n  \n  // Recursive calls\n  return hasPathSum(root.left, targetSum - root.val) ||\n         hasPathSum(root.right, targetSum - root.val);\n}",
+      "action": "continue",
+      "next": "coding-start-python"
+    },
+    {
+      "stepId": "coding-start-python",
+      "mentorSays": "Perfect! Let's implement the solution in Python.",
+      "example": "// Python implementation",
+      "action": "continue",
+      "next": "coding-base-case-null-python"
+    },
+    {
+      "stepId": "coding-base-case-null-python",
+      "mentorSays": "Handle base case: null root.",
+      "example": "// Python implementation",
+      "action": "continue",
+      "next": "coding-base-case-leaf-python"
+    },
+    {
+      "stepId": "coding-base-case-leaf-python",
+      "mentorSays": "Handle base case: leaf node.",
+      "example": "// Python implementation",
+      "action": "continue",
+      "next": "coding-recursive-left-python"
+    },
+    {
+      "stepId": "coding-recursive-left-python",
+      "mentorSays": "Recursively check left subtree.",
+      "example": "// Python implementation",
+      "action": "continue",
+      "next": "coding-recursive-right-python"
+    },
+    {
+      "stepId": "coding-recursive-right-python",
+      "mentorSays": "Recursively check right subtree.",
+      "example": "// Python implementation",
+      "action": "continue",
+      "next": "coding-return-python"
+    },
+    {
+      "stepId": "coding-return-python",
+      "mentorSays": "Return left || right.",
+      "example": "// Python implementation",
+      "action": "continue",
+      "next": "test-code-python"
+    },
+    {
+      "stepId": "test-code-python",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** root = [5,4,8,11,null,13,4,7,2,null,null,null,1], targetSum = 22\nExpected: true (path: 5->4->11->2)\n\n**Test 2:** root = [1,2,3], targetSum = 5\nExpected: false (no path sums to 5)\n\n**Test 3:** root = null, targetSum = 0\nExpected: false (empty tree)\n\n**Test 4:** root = [1,2], targetSum = 1\nExpected: false (path 1->2 sums to 3, not 1)\n\n**Test 5:** root = [1], targetSum = 1\nExpected: true (single node, value equals target)\n\n**Test 6:** root = [1,2], targetSum = 3\nExpected: true (path 1->2 sums to 3)\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: [5,4,8,11,null,13,4,7,2,null,null,null,1], 22 → true\nTest 2: [1,2,3], 5 → false\nTest 3: null, 0 → false\nTest 4: [1,2], 1 → false\nTest 5: [1], 1 → true\nTest 6: [1,2], 3 → true",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-java",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-java"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-java",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'remaining' or 'left') and put data inside it.",
+      "example": "boolean remaining = targetSum - root.val;  // Remaining sum",
+      "action": "continue",
+      "next": "function-check-java"
+    },
+    {
+      "stepId": "function-check-java",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-java"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-java",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "public boolean hasPathSum(root, targetSum) {\n  // Returns true if path exists\n  return false;\n}",
+      "action": "continue",
+      "next": "parameter-check-java"
+    },
+    {
+      "stepId": "parameter-check-java",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "tree-check-java"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-java",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'public boolean hasPathSum(root, targetSum)', the 'root' and 'targetSum' are parameters.",
+      "example": "public boolean hasPathSum(root, targetSum) {\n  // Parameters receive values\n}\n\n// Call: hasPathSum(rootNode, 22)",
+      "action": "continue",
+      "next": "tree-check-java"
+    },
+    {
+      "stepId": "tree-check-java",
+      "mentorSays": "To solve this lesson, we'll need to work with binary trees. Do you know what a binary tree is?",
+      "choices": [
+        {
+          "label": "Yes, I know binary trees",
+          "next": "recursion-check-java"
+        },
+        {
+          "label": "No, explain binary trees",
+          "next": "tree-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "tree-explanation-java",
+      "mentorSays": "A binary tree is a data structure where each node has at most two children (left and right). Each node contains a value and references to its children.",
+      "example": "// Node structure:\nclass TreeNode {\n  constructor(val, left, right) {\n    this.val = val;\n    this.left = left;\n    this.right = right;\n  }\n}",
+      "action": "continue",
+      "next": "recursion-check-java"
+    },
+    {
+      "stepId": "recursion-check-java",
+      "mentorSays": "To solve this lesson, we'll use recursion. Do you know what recursion is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know recursion",
+          "next": "coding-start-java"
+        },
+        {
+          "label": "No, explain recursion",
+          "next": "recursion-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "recursion-explanation-java",
+      "mentorSays": "Recursion is when a function calls itself. For tree lessons, we often use recursion because:\n- A tree is naturally recursive (each subtree is also a tree)\n- We can solve the lesson for the whole tree by solving it for subtrees",
+      "example": "function hasPathSum(root, targetSum) {\n  // Base cases\n  if (root === null) return false;\n  if (root.left === null && root.right === null) {\n    return targetSum === root.val;\n  }\n  \n  // Recursive calls\n  return hasPathSum(root.left, targetSum - root.val) ||\n         hasPathSum(root.right, targetSum - root.val);\n}",
+      "action": "continue",
+      "next": "coding-start-java"
+    },
+    {
+      "stepId": "coding-start-java",
+      "mentorSays": "Perfect! Let's implement the solution in Java.",
+      "example": "// Java implementation",
+      "action": "continue",
+      "next": "coding-base-case-null-java"
+    },
+    {
+      "stepId": "coding-base-case-null-java",
+      "mentorSays": "Handle base case: null root.",
+      "example": "// Java implementation",
+      "action": "continue",
+      "next": "coding-base-case-leaf-java"
+    },
+    {
+      "stepId": "coding-base-case-leaf-java",
+      "mentorSays": "Handle base case: leaf node.",
+      "example": "// Java implementation",
+      "action": "continue",
+      "next": "coding-recursive-left-java"
+    },
+    {
+      "stepId": "coding-recursive-left-java",
+      "mentorSays": "Recursively check left subtree.",
+      "example": "// Java implementation",
+      "action": "continue",
+      "next": "coding-recursive-right-java"
+    },
+    {
+      "stepId": "coding-recursive-right-java",
+      "mentorSays": "Recursively check right subtree.",
+      "example": "// Java implementation",
+      "action": "continue",
+      "next": "coding-return-java"
+    },
+    {
+      "stepId": "coding-return-java",
+      "mentorSays": "Return left || right.",
+      "example": "// Java implementation",
+      "action": "continue",
+      "next": "test-code-java"
+    },
+    {
+      "stepId": "test-code-java",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** root = [5,4,8,11,null,13,4,7,2,null,null,null,1], targetSum = 22\nExpected: true (path: 5->4->11->2)\n\n**Test 2:** root = [1,2,3], targetSum = 5\nExpected: false (no path sums to 5)\n\n**Test 3:** root = null, targetSum = 0\nExpected: false (empty tree)\n\n**Test 4:** root = [1,2], targetSum = 1\nExpected: false (path 1->2 sums to 3, not 1)\n\n**Test 5:** root = [1], targetSum = 1\nExpected: true (single node, value equals target)\n\n**Test 6:** root = [1,2], targetSum = 3\nExpected: true (path 1->2 sums to 3)\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: [5,4,8,11,null,13,4,7,2,null,null,null,1], 22 → true\nTest 2: [1,2,3], 5 → false\nTest 3: null, 0 → false\nTest 4: [1,2], 1 → false\nTest 5: [1], 1 → true\nTest 6: [1,2], 3 → true",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-cpp",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-cpp"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-cpp",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'remaining' or 'left') and put data inside it.",
+      "example": "bool remaining = targetSum - root.val;  // Remaining sum",
+      "action": "continue",
+      "next": "function-check-cpp"
+    },
+    {
+      "stepId": "function-check-cpp",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-cpp"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-cpp",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "bool hasPathSum(root, targetSum) {\n  // Returns true if path exists\n  return false;\n}",
+      "action": "continue",
+      "next": "parameter-check-cpp"
+    },
+    {
+      "stepId": "parameter-check-cpp",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "tree-check-cpp"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-cpp",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'bool hasPathSum(root, targetSum)', the 'root' and 'targetSum' are parameters.",
+      "example": "bool hasPathSum(root, targetSum) {\n  // Parameters receive values\n}\n\n// Call: hasPathSum(rootNode, 22)",
+      "action": "continue",
+      "next": "tree-check-cpp"
+    },
+    {
+      "stepId": "tree-check-cpp",
+      "mentorSays": "To solve this lesson, we'll need to work with binary trees. Do you know what a binary tree is?",
+      "choices": [
+        {
+          "label": "Yes, I know binary trees",
+          "next": "recursion-check-cpp"
+        },
+        {
+          "label": "No, explain binary trees",
+          "next": "tree-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "tree-explanation-cpp",
+      "mentorSays": "A binary tree is a data structure where each node has at most two children (left and right). Each node contains a value and references to its children.",
+      "example": "// Node structure:\nclass TreeNode {\n  constructor(val, left, right) {\n    this.val = val;\n    this.left = left;\n    this.right = right;\n  }\n}",
+      "action": "continue",
+      "next": "recursion-check-cpp"
+    },
+    {
+      "stepId": "recursion-check-cpp",
+      "mentorSays": "To solve this lesson, we'll use recursion. Do you know what recursion is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know recursion",
+          "next": "coding-start-cpp"
+        },
+        {
+          "label": "No, explain recursion",
+          "next": "recursion-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "recursion-explanation-cpp",
+      "mentorSays": "Recursion is when a function calls itself. For tree lessons, we often use recursion because:\n- A tree is naturally recursive (each subtree is also a tree)\n- We can solve the lesson for the whole tree by solving it for subtrees",
+      "example": "function hasPathSum(root, targetSum) {\n  // Base cases\n  if (root === null) return false;\n  if (root.left === null && root.right === null) {\n    return targetSum === root.val;\n  }\n  \n  // Recursive calls\n  return hasPathSum(root.left, targetSum - root.val) ||\n         hasPathSum(root.right, targetSum - root.val);\n}",
+      "action": "continue",
+      "next": "coding-start-cpp"
+    },
+    {
+      "stepId": "coding-start-cpp",
+      "mentorSays": "Perfect! Let's implement the solution in C++.",
+      "example": "// C++ implementation",
+      "action": "continue",
+      "next": "coding-base-case-null-cpp"
+    },
+    {
+      "stepId": "coding-base-case-null-cpp",
+      "mentorSays": "Handle base case: null root.",
+      "example": "// C++ implementation",
+      "action": "continue",
+      "next": "coding-base-case-leaf-cpp"
+    },
+    {
+      "stepId": "coding-base-case-leaf-cpp",
+      "mentorSays": "Handle base case: leaf node.",
+      "example": "// C++ implementation",
+      "action": "continue",
+      "next": "coding-recursive-left-cpp"
+    },
+    {
+      "stepId": "coding-recursive-left-cpp",
+      "mentorSays": "Recursively check left subtree.",
+      "example": "// C++ implementation",
+      "action": "continue",
+      "next": "coding-recursive-right-cpp"
+    },
+    {
+      "stepId": "coding-recursive-right-cpp",
+      "mentorSays": "Recursively check right subtree.",
+      "example": "// C++ implementation",
+      "action": "continue",
+      "next": "coding-return-cpp"
+    },
+    {
+      "stepId": "coding-return-cpp",
+      "mentorSays": "Return left || right.",
+      "example": "// C++ implementation",
+      "action": "continue",
+      "next": "test-code-cpp"
+    },
+    {
+      "stepId": "test-code-cpp",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** root = [5,4,8,11,null,13,4,7,2,null,null,null,1], targetSum = 22\nExpected: true (path: 5->4->11->2)\n\n**Test 2:** root = [1,2,3], targetSum = 5\nExpected: false (no path sums to 5)\n\n**Test 3:** root = null, targetSum = 0\nExpected: false (empty tree)\n\n**Test 4:** root = [1,2], targetSum = 1\nExpected: false (path 1->2 sums to 3, not 1)\n\n**Test 5:** root = [1], targetSum = 1\nExpected: true (single node, value equals target)\n\n**Test 6:** root = [1,2], targetSum = 3\nExpected: true (path 1->2 sums to 3)\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: [5,4,8,11,null,13,4,7,2,null,null,null,1], 22 → true\nTest 2: [1,2,3], 5 → false\nTest 3: null, 0 → false\nTest 4: [1,2], 1 → false\nTest 5: [1], 1 → true\nTest 6: [1,2], 3 → true",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-ts",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-ts"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-ts",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'remaining' or 'left') and put data inside it.",
+      "example": "let remaining = targetSum - root.val;  // Remaining sum",
+      "action": "continue",
+      "next": "function-check-ts"
+    },
+    {
+      "stepId": "function-check-ts",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-ts"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-ts",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "function hasPathSum(root, targetSum) {\n  // Returns true if path exists\n  return false;\n}",
+      "action": "continue",
+      "next": "parameter-check-ts"
+    },
+    {
+      "stepId": "parameter-check-ts",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "tree-check-ts"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-ts",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'function hasPathSum(root, targetSum)', the 'root' and 'targetSum' are parameters.",
+      "example": "function hasPathSum(root, targetSum) {\n  // Parameters receive values\n}\n\n// Call: hasPathSum(rootNode, 22)",
+      "action": "continue",
+      "next": "tree-check-ts"
+    },
+    {
+      "stepId": "tree-check-ts",
+      "mentorSays": "To solve this lesson, we'll need to work with binary trees. Do you know what a binary tree is?",
+      "choices": [
+        {
+          "label": "Yes, I know binary trees",
+          "next": "recursion-check-ts"
+        },
+        {
+          "label": "No, explain binary trees",
+          "next": "tree-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "tree-explanation-ts",
+      "mentorSays": "A binary tree is a data structure where each node has at most two children (left and right). Each node contains a value and references to its children.",
+      "example": "// Node structure:\nclass TreeNode {\n  constructor(val, left, right) {\n    this.val = val;\n    this.left = left;\n    this.right = right;\n  }\n}",
+      "action": "continue",
+      "next": "recursion-check-ts"
+    },
+    {
+      "stepId": "recursion-check-ts",
+      "mentorSays": "To solve this lesson, we'll use recursion. Do you know what recursion is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know recursion",
+          "next": "coding-start-ts"
+        },
+        {
+          "label": "No, explain recursion",
+          "next": "recursion-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "recursion-explanation-ts",
+      "mentorSays": "Recursion is when a function calls itself. For tree lessons, we often use recursion because:\n- A tree is naturally recursive (each subtree is also a tree)\n- We can solve the lesson for the whole tree by solving it for subtrees",
+      "example": "function hasPathSum(root, targetSum) {\n  // Base cases\n  if (root === null) return false;\n  if (root.left === null && root.right === null) {\n    return targetSum === root.val;\n  }\n  \n  // Recursive calls\n  return hasPathSum(root.left, targetSum - root.val) ||\n         hasPathSum(root.right, targetSum - root.val);\n}",
+      "action": "continue",
+      "next": "coding-start-ts"
+    },
+    {
+      "stepId": "coding-start-ts",
+      "mentorSays": "Perfect! Let's implement the solution in TypeScript.",
+      "example": "// TypeScript implementation",
+      "action": "continue",
+      "next": "coding-base-case-null-ts"
+    },
+    {
+      "stepId": "coding-base-case-null-ts",
+      "mentorSays": "Handle base case: null root.",
+      "example": "// TypeScript implementation",
+      "action": "continue",
+      "next": "coding-base-case-leaf-ts"
+    },
+    {
+      "stepId": "coding-base-case-leaf-ts",
+      "mentorSays": "Handle base case: leaf node.",
+      "example": "// TypeScript implementation",
+      "action": "continue",
+      "next": "coding-recursive-left-ts"
+    },
+    {
+      "stepId": "coding-recursive-left-ts",
+      "mentorSays": "Recursively check left subtree.",
+      "example": "// TypeScript implementation",
+      "action": "continue",
+      "next": "coding-recursive-right-ts"
+    },
+    {
+      "stepId": "coding-recursive-right-ts",
+      "mentorSays": "Recursively check right subtree.",
+      "example": "// TypeScript implementation",
+      "action": "continue",
+      "next": "coding-return-ts"
+    },
+    {
+      "stepId": "coding-return-ts",
+      "mentorSays": "Return left || right.",
+      "example": "// TypeScript implementation",
+      "action": "continue",
+      "next": "test-code-ts"
+    },
+    {
+      "stepId": "test-code-ts",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** root = [5,4,8,11,null,13,4,7,2,null,null,null,1], targetSum = 22\nExpected: true (path: 5->4->11->2)\n\n**Test 2:** root = [1,2,3], targetSum = 5\nExpected: false (no path sums to 5)\n\n**Test 3:** root = null, targetSum = 0\nExpected: false (empty tree)\n\n**Test 4:** root = [1,2], targetSum = 1\nExpected: false (path 1->2 sums to 3, not 1)\n\n**Test 5:** root = [1], targetSum = 1\nExpected: true (single node, value equals target)\n\n**Test 6:** root = [1,2], targetSum = 3\nExpected: true (path 1->2 sums to 3)\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: [5,4,8,11,null,13,4,7,2,null,null,null,1], 22 → true\nTest 2: [1,2,3], 5 → false\nTest 3: null, 0 → false\nTest 4: [1,2], 1 → false\nTest 5: [1], 1 → true\nTest 6: [1,2], 3 → true",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "final",
+      "mentorSays": "🎉 Well done! You've successfully implemented the Path Sum solution!\n\n**Time Complexity:** O(n)\n- We visit each node exactly once\n- n is the number of nodes in the tree\n\n**Space Complexity:** O(h)\n- The recursion stack uses space proportional to the height of the tree\n- In the worst case (skewed tree), h = n, so O(n)\n- In the best case (balanced tree), h = log n, so O(log n)\n\n**Key Takeaways:**\n1. **Recursive approach**: Subtract current value from targetSum, check at leaf\n2. **Base cases**: Null root = false, leaf with matching sum = true\n3. **Path must be root-to-leaf**: Not just root-to-any-node\n4. **OR logic**: Return true if left OR right subtree has a valid path\n5. **Subtract instead of add**: Simplifies logic by working backwards from target\n\n**Related Practice Lessons:**\n- Path Sum II (LeetCode #113) - find all paths that sum to target\n- Path Sum III (LeetCode #437) - paths don't need to start at root\n- Binary Tree Maximum Path Sum (LeetCode #124) - find maximum path sum\n\nKeep practicing tree lessons - they're fundamental for interviews!",
+      "action": "continue"
+    }
+  ]
+}

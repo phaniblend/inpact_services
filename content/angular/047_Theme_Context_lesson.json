@@ -1,0 +1,325 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-angular-47",
+    "track": "angular",
+    "lessonNum": 47,
+    "title": "Theme Context",
+    "shortName": "P47",
+    "intro": {
+      "tag": "LESSON #47",
+      "title": "Theme Context",
+      "body": "In this lesson, you will build a simple Angular application that uses a service to manage and share a theme (like 'light' or 'dark') across multiple components. You'll learn the core concept of dependency injection and service-based state management to create a shared context. The main technologies involved are Angular services, dependency injection, and component interaction. By the end, you'll understand how to centralize application state for consistent theming.",
+      "usecase": "Theme Context is essential for creating consistent, maintainable user interfaces across entire applications. In real-world Angular applications, this pattern appears in dashboard systems where multiple components (charts, tables, cards) need synchronized color schemes, or in e-commerce platforms where product listings, filters, and modals must share the same visual language. Developers use Theme Context to implement dark/light mode toggles that propagate changes instantly across navigation menus, forms, and content panels without prop drilling. This approach is particularly valuable in admin panels where reusable UI components need to adapt to different branding or accessibility requirements while keeping the codebase clean and scalable."
+    },
+    "objectives": [
+      "Implement a ThemeContext service to manage theme state across components",
+      "Configure dependency injection to provide the ThemeContext at the application root level",
+      "Initialize theme state with default values using Angular's BehaviorSubject",
+      "Manipulate theme state by implementing methods to toggle between light and dark modes",
+      "Bind component templates to theme state using Angular's async pipe",
+      "Integrate theme switching controls into UI components with event binding",
+      "Apply theme context to style components dynamically based on current theme state"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 9",
+        "title": "Import Component and Injectable from @angular/core",
+        "instruction": "Import the Component and Injectable decorators from '@angular/core'.",
+        "hint": "Use the import statement with curly braces to import multiple named exports from the same module.",
+        "analogousExample": "// Importing multiple decorators from Angular core\nimport { Component, Injectable } from '@angular/core';",
+        "seedCode": "// Import Component and Injectable from '@angular/core'",
+        "expectedOutcome": "The Component and Injectable decorators are imported and available for use in your Angular application.",
+        "successCriteria": [
+          "Component and Injectable are imported from '@angular/core'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're importing both Component and Injectable from '@angular/core'.",
+        "feedbackWrong": "Check your import statement. You need to import both Component and Injectable from '@angular/core'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "Component",
+            "Injectable",
+            "@angular/core"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 9",
+        "title": "Create Theme interface for type safety",
+        "instruction": "Create a TypeScript interface named 'Theme' with two properties: 'name' of type string and 'primaryColor' of type string.",
+        "hint": "Use the 'interface' keyword followed by the interface name and property definitions inside curly braces.",
+        "analogousExample": "// Example interface definition\ninterface User {\n  id: number;\n  username: string;\n}",
+        "seedCode": "// Import Component and Injectable from '@angular/core'\n\n// Create your Theme interface here",
+        "expectedOutcome": "You'll have a TypeScript interface that defines the shape of theme objects with name and primaryColor properties.",
+        "successCriteria": [
+          "A Theme interface is created with 'name: string' and 'primaryColor: string' properties."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure both properties are defined with the correct types (string).",
+        "feedbackWrong": "The Theme interface needs to be properly defined with both name and primaryColor properties of type string.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "interface",
+            "Theme",
+            "name:",
+            "primaryColor:",
+            "string"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 9",
+        "title": "Create ThemeService with Injectable decorator",
+        "instruction": "Create a class called ThemeService and decorate it with @Injectable() to make it an Angular service.",
+        "hint": "Use the Injectable decorator imported earlier. The class should be empty for now.",
+        "analogousExample": "// Example: creating a basic service\n@Injectable()\nexport class DataService {\n  // service logic goes here\n}",
+        "seedCode": "import { Component, Injectable } from '@angular/core';\n\ninterface Theme {\n  mode: 'light' | 'dark';\n  primaryColor: string;\n}\n\n// Create your ThemeService class here",
+        "expectedOutcome": "A ThemeService class decorated with @Injectable() will be created, ready to hold theme logic.",
+        "successCriteria": [
+          "ThemeService class exists and is decorated with @Injectable()"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You created the class, but make sure to add the @Injectable() decorator above it.",
+        "feedbackWrong": "The ThemeService class with @Injectable() decorator is missing. Create a class called ThemeService and add @Injectable() above it.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "class",
+            "ThemeService",
+            "@Injectable()"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 9",
+        "title": "Add theme data and currentTheme state to ThemeService",
+        "instruction": "Inside the ThemeService class, add a private property named 'themes' of type Theme[] and initialize it with two theme objects (one light, one dark), and add a public property named 'currentTheme' of type Theme.",
+        "hint": "Define the properties directly in the class body. Use the Theme interface type for both properties.",
+        "analogousExample": "// Example: class with typed properties\nclass SettingsService {\n  private options = { volume: 80, theme: 'dark' };\n  public currentOption = { volume: 80, theme: 'dark' };\n}",
+        "seedCode": "import { Component, Injectable } from '@angular/core';\n\ninterface Theme {\n  mode: 'light' | 'dark';\n  primaryColor: string;\n}\n\n@Injectable({\n  providedIn: 'root'\n})\nexport class ThemeService {\n  // Add themes array and currentTheme property here\n}",
+        "expectedOutcome": "The ThemeService will have a themes array with predefined theme objects and a currentTheme property to track the active theme.",
+        "successCriteria": [
+          "ThemeService contains a private themes array with two Theme objects and a public currentTheme property of type Theme."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you've defined both properties with the correct types and initialization.",
+        "feedbackWrong": "Check that you've added both properties inside the ThemeService class with proper TypeScript types.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "themes",
+            "currentTheme",
+            "Theme[]",
+            "private",
+            "public"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 9",
+        "title": "Create setCurrentTheme method in ThemeService",
+        "instruction": "Inside your ThemeService class, add a method named setCurrentTheme that takes a themeMode parameter of type 'light' | 'dark' and updates the currentTheme property to the corresponding theme from the themes array.",
+        "hint": "Use the find method on the themes array to locate the theme object matching the provided mode, then assign it to this.currentTheme.",
+        "analogousExample": "// Similar: method that updates a property\nclass CounterService {\n  count = 0;\n\n  increment() {\n    this.count += 1;\n  }\n}",
+        "seedCode": "import { Component, Injectable } from '@angular/core';\n\ninterface Theme {\n  mode: 'light' | 'dark';\n  primaryColor: string;\n}\n\n@Injectable({\n  providedIn: 'root'\n})\nexport class ThemeService {\n  // Add themes array and currentTheme property here\n  \n  // Add setCurrentTheme method here\n}",
+        "expectedOutcome": "The ThemeService will have a method that can change the current theme by mode name.",
+        "successCriteria": [
+          "The setCurrentTheme method is defined with a parameter of type 'light' | 'dark' and updates this.currentTheme to the matching theme object."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but ensure the method correctly finds the theme from the array and assigns it to currentTheme.",
+        "feedbackWrong": "The method is missing or doesn't properly update the currentTheme. Check the method signature and logic.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "setCurrentTheme",
+            "themeMode",
+            "this.currentTheme",
+            "find"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 9",
+        "title": "Create ThemeToggle component with Component decorator",
+        "instruction": "Create a new Angular component named ThemeToggle using the @Component() decorator. Make sure to import the Component decorator if not already imported.",
+        "hint": "Remember to use the @Component decorator and export the class. You can start with an empty template for now.",
+        "analogousExample": "// Example: creating a basic Angular component\n@Component({\n  selector: 'app-example',\n  template: '<p>Example component</p>'\n})\nexport class ExampleComponent {}",
+        "seedCode": "import { Component, Injectable } from '@angular/core';\n\ninterface Theme {\n  mode: 'light' | 'dark';\n  primaryColor: string;\n}\n\n@Injectable({\n  providedIn: 'root'\n})\nexport class ThemeService {\n  // Add themes array and currentTheme property here\n  \n  // Add setCurrentTheme method here\n}\n\n// Create ThemeToggle component here",
+        "expectedOutcome": "A new ThemeToggle component class is created with the @Component decorator.",
+        "successCriteria": [
+          "ThemeToggle component is defined with @Component decorator and exported."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure you've used the @Component decorator and exported the ThemeToggle class.",
+        "feedbackWrong": "The ThemeToggle component isn't properly defined. Check that you've used the @Component decorator and exported the class.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "@Component",
+            "ThemeToggle",
+            "export",
+            "class"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 9",
+        "title": "Inject ThemeService into ThemeToggle constructor",
+        "instruction": "In the ThemeToggle component class, add a constructor with a parameter for ThemeService. Use dependency injection to make the service available within the component.",
+        "hint": "Add a constructor method inside the ThemeToggle class with a parameter of type ThemeService. Angular will automatically inject the service instance.",
+        "analogousExample": "// Example: injecting a service into a component\nconstructor(private dataService: DataService) {}",
+        "seedCode": "import { Component, Injectable } from '@angular/core';\n\ninterface Theme {\n  mode: 'light' | 'dark';\n  primaryColor: string;\n}\n\n@Injectable({\n  providedIn: 'root'\n})\nexport class ThemeService {\n  // Add themes array and currentTheme property here\n  \n  // Add setCurrentTheme method here\n}\n\n// Create ThemeToggle component here\n@Component({\n  selector: 'app-theme-toggle',\n  template: ''\n})\nexport class ThemeToggle {\n  // Add constructor with ThemeService parameter here\n}",
+        "expectedOutcome": "The ThemeToggle component will have a constructor that receives ThemeService as a dependency, enabling access to theme data and methods.",
+        "successCriteria": [
+          "ThemeToggle component has a constructor with a ThemeService parameter."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure the constructor has a parameter of type ThemeService.",
+        "feedbackWrong": "The ThemeToggle component needs a constructor with a ThemeService parameter to access theme functionality.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "constructor",
+            "ThemeService"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 9",
+        "title": "Add template structure to ThemeToggle component",
+        "instruction": "Inside the ThemeToggle component's template, add a heading that says 'Theme Toggle' and an unordered list to display theme options.",
+        "hint": "Use Angular's template syntax with <h2> and <ul> elements. The list items will be added in a later step.",
+        "analogousExample": "// Example: basic component template structure\n@Component({\n  selector: 'app-example',\n  template: '<h2>Example Component</h2><ul></ul>'\n})\nexport class ExampleComponent {}",
+        "seedCode": "import { Component, Injectable } from '@angular/core';\n\ninterface Theme {\n  mode: 'light' | 'dark';\n  primaryColor: string;\n}\n\n@Injectable({\n  providedIn: 'root'\n})\nexport class ThemeService {\n  // Add themes array and currentTheme property here\n  \n  // Add setCurrentTheme method here\n}\n\n// Create ThemeToggle component here\n@Component({\n  selector: 'app-theme-toggle',\n  template: ''\n})\nexport class ThemeToggle {\n  // Add constructor with ThemeService parameter here\n}",
+        "expectedOutcome": "The ThemeToggle component will have a basic template structure with a heading and an empty unordered list.",
+        "successCriteria": [
+          "Template contains an <h2> element with text 'Theme Toggle' and a <ul> element"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you have both the heading and unordered list in the template.",
+        "feedbackWrong": "The template should include both a heading and an unordered list. Check your Angular template syntax.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<h2>",
+            "Theme Toggle",
+            "<ul>"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 9",
+        "title": "Display available themes in template using *ngFor",
+        "instruction": "In the ThemeToggle component template, add a <select> element with an *ngFor directive to iterate through the themes array from the ThemeService. Use the theme's mode as both the value and display text for each <option>.",
+        "hint": "Access the themes array from the injected ThemeService instance in your template using property binding and the *ngFor structural directive.",
+        "analogousExample": "// Example: Iterating over an array in Angular template\n@Component({\n  selector: 'app-example',\n  template: `\n    <select>\n      <option *ngFor=\"let item of items\" [value]=\"item\">{{ item }}</option>\n    </select>\n  `\n})\nexport class ExampleComponent {\n  items = ['Option 1', 'Option 2', 'Option 3'];\n}",
+        "seedCode": "import { Component, Injectable } from '@angular/core';\n\ninterface Theme {\n  mode: 'light' | 'dark';\n  primaryColor: string;\n}\n\n@Injectable({\n  providedIn: 'root'\n})\nexport class ThemeService {\n  themes: Theme[] = [\n    { mode: 'light', primaryColor: '#007bff' },\n    { mode: 'dark', primaryColor: '#343a40' }\n  ];\n  currentTheme: Theme = this.themes[0];\n\n  setCurrentTheme(theme: Theme): void {\n    this.currentTheme = theme;\n  }\n}\n\n@Component({\n  selector: 'app-theme-toggle',\n  template: ''\n})\nexport class ThemeToggle {\n  constructor(private themeService: ThemeService) {}\n}",
+        "expectedOutcome": "The ThemeToggle component template will contain a <select> element with <option> elements dynamically generated from the themes array in ThemeService.",
+        "successCriteria": [
+          "The template includes a <select> element with *ngFor iterating over themeService.themes, and each <option> displays the theme.mode."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're using *ngFor correctly and accessing the themes from themeService.",
+        "feedbackWrong": "The template doesn't yet display the themes. Remember to use *ngFor to iterate over themeService.themes and create <option> elements.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "*ngFor",
+            "themeService.themes",
+            "<select>",
+            "<option>",
+            "theme.mode"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import Component and Injectable from @angular/core",
+        "id": "step1"
+      },
+      {
+        "label": "Create Theme interface for type safety",
+        "id": "step2"
+      },
+      {
+        "label": "Create ThemeService with Injectable decorator",
+        "id": "step3"
+      },
+      {
+        "label": "Add theme data and currentTheme state to ThemeService",
+        "id": "step4"
+      },
+      {
+        "label": "Create setCurrentTheme method in ThemeService",
+        "id": "step5"
+      },
+      {
+        "label": "Create ThemeToggle component with Component decorator",
+        "id": "step6"
+      },
+      {
+        "label": "Inject ThemeService into ThemeToggle constructor",
+        "id": "step7"
+      },
+      {
+        "label": "Add template structure to ThemeToggle component",
+        "id": "step8"
+      },
+      {
+        "label": "Display available themes in template using *ngFor",
+        "id": "step9"
+      }
+    ]
+  },
+  "source": "content"
+}

@@ -1,0 +1,227 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-node-33",
+    "track": "node",
+    "lessonNum": 33,
+    "title": "Build secure static file serving rules",
+    "shortName": "P33",
+    "intro": {
+      "tag": "LESSON #33",
+      "title": "Build secure static file serving rules",
+      "body": "In this lesson, you will build a secure static file server using Node.js. You will learn how to safely serve files from a designated directory while preventing access to sensitive files outside that folder. The core programming concept involves using the Node.js 'fs' and 'path' modules to read files and validate file paths. You will implement security rules to block directory traversal attacks and restrict file types. By the end, you'll have a basic but robust server that serves static content securely.",
+      "usecase": "Secure static file serving is essential for any web application that serves user-uploaded content, downloadable resources, or client-side assets. In e-commerce platforms like Shopify, this pattern controls access to product images and PDF invoices, ensuring customers only see their own purchases. Content management systems like WordPress use it to safely serve theme files and media uploads while preventing directory traversal attacks. Developers implement these rules in dashboard settings panels where administrators configure file access permissions and security headers."
+    },
+    "objectives": [
+      "Construct a Node.js server with Express to serve static files from a designated directory.",
+      "Configure middleware to restrict file access to specific, safe file extensions.",
+      "Implement path validation to prevent directory traversal attacks in file requests.",
+      "Apply security headers to static file responses to mitigate common web vulnerabilities.",
+      "Initialize a logging mechanism to record file access attempts and errors.",
+      "Integrate a rate-limiting rule to control excessive requests to static resources.",
+      "Manipulate the server to return custom error pages for unauthorized file access."
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 6",
+        "title": "Import required Node.js modules",
+        "instruction": "Import the 'fs' (file system), 'path', and 'http' modules using require() statements.",
+        "hint": "Use the require() function to import each module. For example: const fs = require('fs');",
+        "analogousExample": "// Similar: importing core modules\nconst fs = require('fs');\nconst path = require('path');\nconst http = require('http');",
+        "seedCode": "// Import required modules here",
+        "expectedOutcome": "The code will have three require statements importing the fs, path, and http modules.",
+        "successCriteria": [
+          "fs, path, and http modules are imported using require() statements."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've imported some modules, but need all three: fs, path, and http.",
+        "feedbackWrong": "Check the module names and syntax. Use require() to import 'fs', 'path', and 'http'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "require('fs')",
+            "require('path')",
+            "require('http')"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 6",
+        "title": "Create the main server function",
+        "instruction": "Define a function called 'createSecureFileServer' that takes a port number as a parameter.",
+        "hint": "You can use either a function declaration or arrow function syntax. The function should accept one parameter (e.g., port).",
+        "analogousExample": "// Example: a function that takes a parameter\nfunction createApp(config) {\n  // function body\n}",
+        "seedCode": "// Import required modules here\n\n// Define createSecureFileServer function here",
+        "expectedOutcome": "A function named createSecureFileServer is defined with a port parameter.",
+        "successCriteria": [
+          "The createSecureFileServer function is defined and accepts a port parameter."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure the function is named exactly 'createSecureFileServer' and accepts a port parameter.",
+        "feedbackWrong": "The function definition is missing or incorrect. Please define a function named 'createSecureFileServer' that takes a port parameter.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "createSecureFileServer",
+            "port",
+            "function"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 6",
+        "title": "Initialize server configuration",
+        "instruction": "Inside the createSecureFileServer function, create a variable named 'baseDir' to store the base directory path (use './public') and another variable named 'allowedExtensions' as an array containing allowed file extensions: '.html', '.css', '.js', '.png'.",
+        "hint": "Use const to declare both variables. For allowedExtensions, create an array literal with the four string values.",
+        "analogousExample": "// Example: configuration variables\nfunction setupServer() {\n  const port = 3000;\n  const allowedMethods = ['GET', 'POST'];\n}",
+        "seedCode": "// Import required modules here\n\n// Define createSecureFileServer function here\nfunction createSecureFileServer() {\n  // Add configuration variables here\n}",
+        "expectedOutcome": "The function now contains two configuration variables: baseDir with the public directory path and allowedExtensions with the four allowed file extensions.",
+        "successCriteria": [
+          "The createSecureFileServer function contains a 'baseDir' variable set to './public' and an 'allowedExtensions' array with '.html', '.css', '.js', '.png'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added some configuration, but make sure you have both variables: 'baseDir' with './public' and 'allowedExtensions' as an array with all four file extensions.",
+        "feedbackWrong": "The configuration variables aren't set up correctly. Inside the function, create 'baseDir' with './public' and 'allowedExtensions' as an array containing '.html', '.css', '.js', '.png'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "baseDir",
+            "./public",
+            "allowedExtensions",
+            ".html",
+            ".css",
+            ".js",
+            ".png"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 6",
+        "title": "Parse and sanitize the requested URL path",
+        "instruction": "Inside the handleRequest function, parse the URL from the request object and use path.normalize() to sanitize the requested file path.",
+        "hint": "You can get the URL from req.url, then use path.normalize() to clean up the path and prevent directory traversal attacks.",
+        "analogousExample": "// Example: sanitizing a file path\nconst url = '/../secret/file.txt';\nconst safePath = path.normalize(url); // returns '/secret/file.txt'",
+        "seedCode": "// Import required modules here\n\n// Define createSecureFileServer function here\nfunction createSecureFileServer() {\n  // Add configuration variables here\n  \n  // Define handleRequest function here\n  function handleRequest(req, res) {\n    // Parse and sanitize the requested URL path here\n  }\n}",
+        "expectedOutcome": "The handleRequest function now includes code to parse the URL and sanitize the path using path.normalize().",
+        "successCriteria": [
+          "The handleRequest function contains req.url parsing and path.normalize() call to sanitize the file path."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're using both req.url to get the URL and path.normalize() to sanitize it within the handleRequest function.",
+        "feedbackWrong": "That doesn't seem right. You need to parse the URL from the request object and use path.normalize() to sanitize the file path inside the handleRequest function.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "req.url",
+            "path.normalize",
+            "handleRequest"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 6",
+        "title": "Validate file extension",
+        "instruction": "Inside the handleRequest function, after parsing the URL path, check if the requested file's extension is in an allowed extensions array.",
+        "hint": "You can create an array of allowed extensions (like ['.html', '.css', '.js', '.png']) and use the path.extname() method to get the file extension from the sanitized path.",
+        "analogousExample": "// Example: validating a file extension\nconst allowedExtensions = ['.txt', '.json'];\nconst fileExt = path.extname(filePath);\nconst isValidExtension = allowedExtensions.includes(fileExt);",
+        "seedCode": "// Import required modules here\n\n// Define createSecureFileServer function here\nfunction createSecureFileServer() {\n  // Add configuration variables here\n  \n  // Define handleRequest function here\n  function handleRequest(req, res) {\n    // Parse and sanitize the requested URL path here\n    \n    // Validate file extension here\n  }\n}",
+        "expectedOutcome": "The handleRequest function will include logic to validate the file extension against a list of allowed extensions.",
+        "successCriteria": [
+          "The code includes an allowedExtensions array and checks if the sanitized path's extension is in that array."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're checking the extension against an array of allowed extensions.",
+        "feedbackWrong": "The file extension validation is missing or incorrect. Review the example and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "allowedExtensions",
+            "path.extname",
+            "includes"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 6",
+        "title": "Export the server function",
+        "instruction": "Export the createSecureFileServer function using module.exports to make it available for use in other modules.",
+        "hint": "Add a module.exports statement at the end of your file, assigning the function to it.",
+        "analogousExample": "// Exporting a function for use in other files\nfunction createApp() {}\nmodule.exports = createApp;",
+        "seedCode": "// Import required modules here\n\n// Define createSecureFileServer function here\nfunction createSecureFileServer() {\n  // Add configuration variables here\n  \n  // Define handleRequest function here\n  function handleRequest(req, res) {\n    // Parse and sanitize the requested URL path here\n    \n    // Validate file extension here\n    \n    // Check if file exists here\n    \n    // Serve the file or return 404 here\n  }\n  \n  // Create and start the HTTP server here\n}\n\n// Export the function here",
+        "expectedOutcome": "The createSecureFileServer function is exported and can be imported and used in other Node.js modules.",
+        "successCriteria": [
+          "The createSecureFileServer function is exported using module.exports."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're exporting the function correctly using module.exports.",
+        "feedbackWrong": "The function isn't exported yet. Use module.exports to export the createSecureFileServer function.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "module.exports",
+            "createSecureFileServer"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import required Node.js modules",
+        "id": "step1"
+      },
+      {
+        "label": "Create the main server function",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize server configuration",
+        "id": "step3"
+      },
+      {
+        "label": "Parse and sanitize the requested URL path",
+        "id": "step4"
+      },
+      {
+        "label": "Validate file extension",
+        "id": "step5"
+      },
+      {
+        "label": "Export the server function",
+        "id": "step6"
+      }
+    ]
+  },
+  "source": "content"
+}

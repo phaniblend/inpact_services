@@ -1,0 +1,377 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-ts-70",
+    "track": "ts",
+    "lessonNum": 70,
+    "title": "Implement KeysMatching type",
+    "shortName": "P70",
+    "intro": {
+      "tag": "LESSON #70",
+      "title": "Implement KeysMatching type",
+      "body": "In this lesson, you will build a custom TypeScript utility type called `KeysMatching`. This type will filter the keys of an object to only include those whose values match a specified type. The core concept involves using mapped types and conditional types to iterate over object keys and check their value types. You will work with keyof, extends, and indexed access types to implement this logic. By the end, you will understand how to create reusable type utilities that enhance type safety in your TypeScript projects.",
+      "usecase": "The `KeysMatching` type is essential for building type-safe data filtering and selection components in real-world applications. For example, in a product dashboard with a dynamic filter panel, you need to ensure that a user can only select filter keys that correspond to numeric columns (like 'price' or 'inventory') for a range slider, not text-based ones. This pattern allows TypeScript to enforce that a 'filterByNumericKey' prop can only accept keys of the data object whose values are numbers, preventing runtime errors. It's commonly used in component libraries for tables, advanced search interfaces, and configuration panels where UI controls must be dynamically bound to specific, type-appropriate properties of a data model."
+    },
+    "objectives": [
+      "Construct a generic type that filters object keys based on value type",
+      "Apply conditional types to evaluate type compatibility within mapped types",
+      "Implement the KeysMatching type using key remapping and type inference",
+      "Manipulate union types to extract matching keys from object structures",
+      "Integrate the KeysMatching type with existing TypeScript interfaces",
+      "Configure type constraints to ensure type safety during key extraction",
+      "Render type-safe functions that accept only specific property keys"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 10",
+        "title": "Import TypeScript type utilities",
+        "instruction": "Import the TypeScript type utilities that will be used throughout the lesson. Add the import statement at the top of your file.",
+        "hint": "You'll need to import from 'typescript' or use built-in utilities. For this lesson, you'll use TypeScript's built-in utilities like keyof, typeof, and conditional types.",
+        "analogousExample": "// Example: importing utilities for a different type helper\nimport { ComponentType, PropsWithChildren } from 'react';",
+        "seedCode": "// Import TypeScript type utilities here\n\n// Your code will go below",
+        "expectedOutcome": "The file starts with the necessary import statement for TypeScript type utilities.",
+        "successCriteria": [
+          "The import statement is present and correctly references TypeScript utilities."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but check that your import statement includes the necessary utilities.",
+        "feedbackWrong": "The import statement is missing or incorrect. Make sure to import TypeScript type utilities.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 10",
+        "title": "Create a sample interface for demonstration",
+        "instruction": "Define a TypeScript interface named 'SampleData' with properties: 'id' (number), 'name' (string), 'isActive' (boolean), and 'tags' (string array).",
+        "hint": "Use the 'interface' keyword followed by the interface name and property definitions with type annotations.",
+        "analogousExample": "// Example interface definition\ninterface User {\n    id: number;\n    name: string;\n    isAdmin: boolean;\n    permissions: string[];\n}",
+        "seedCode": "// Import TypeScript type utilities here\n\n// Your code will go below\n\n// Define the SampleData interface here\n",
+        "expectedOutcome": "You'll have a SampleData interface with four typed properties to use as test data for the KeysMatching type.",
+        "successCriteria": [
+          "The SampleData interface is defined with id: number, name: string, isActive: boolean, and tags: string[] properties."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've defined an interface, but check that all four properties (id, name, isActive, tags) have the correct types.",
+        "feedbackWrong": "The interface definition is missing or incorrect. Make sure to use the 'interface' keyword and define all four properties with their types.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "interface",
+            "SampleData",
+            "id:",
+            "name:",
+            "isActive:",
+            "tags:",
+            "number",
+            "string",
+            "boolean",
+            "string[]"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 10",
+        "title": "Understand the KeysMatching type lesson",
+        "instruction": "Add a comment below the interface explaining what KeysMatching should do: extract keys whose values match a given type.",
+        "hint": "Write a single-line comment starting with // that describes the purpose of KeysMatching.",
+        "analogousExample": "// This function filters an array to keep only numbers\nfunction filterNumbers(arr: any[]) {\n  return arr.filter(item => typeof item === 'number');\n}",
+        "seedCode": "// Import TypeScript type utilities here\n\n// Your code will go below\n\n// Define the SampleData interface here\ninterface SampleData {\n  id: number;\n  name: string;\n  active: boolean;\n  tags: string[];\n}\n\n// Add your comment here",
+        "expectedOutcome": "A comment is added explaining that KeysMatching extracts keys whose values match a given type.",
+        "successCriteria": [
+          "The comment clearly states that KeysMatching filters object keys based on their value type."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Your comment is on the right track, but make sure it explicitly mentions that KeysMatching extracts keys whose values match a given type.",
+        "feedbackWrong": "The comment doesn't clearly explain what KeysMatching does. Try writing: \"// KeysMatching extracts keys whose values match a given type\".",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "KeysMatching",
+            "extract",
+            "keys",
+            "match",
+            "type"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 10",
+        "title": "Start implementing KeysMatching type",
+        "instruction": "Define the KeysMatching type with two generic parameters: T (object type) and U (value type to match). Use the 'type' keyword to create this generic type.",
+        "hint": "Start with 'type KeysMatching<T, U> = ' followed by the type definition. You'll fill in the actual logic in later steps.",
+        "analogousExample": "// Similar: generic type with two parameters\ntype Pair<A, B> = [A, B];",
+        "seedCode": "// Import TypeScript type utilities here\n\n// Your code will go below\n\n// Define the SampleData interface here\ninterface SampleData {\n  id: number;\n  name: string;\n  active: boolean;\n  tags: string[];\n}\n\n// Add your comment here\n\ntype KeysMatching<T, U> = ",
+        "expectedOutcome": "A generic type named KeysMatching with two type parameters T and U is defined, ready for implementation.",
+        "successCriteria": [
+          "The KeysMatching type is defined with two generic parameters T and U using the 'type' keyword."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure you're using the 'type' keyword and have both T and U as generic parameters.",
+        "feedbackWrong": "The KeysMatching type definition is missing or incorrect. It should start with 'type KeysMatching<T, U> = '.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "type",
+            "KeysMatching",
+            "<T,",
+            "U>",
+            "="
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 10",
+        "title": "Use keyof operator to get object keys",
+        "instruction": "Inside the KeysMatching type definition, apply the keyof operator to T to get a union of all its keys.",
+        "hint": "Use keyof T to extract all property names from type T as a union type.",
+        "analogousExample": "// Example: extracting keys from an interface\ntype PersonKeys = keyof Person; // 'name' | 'age' | 'email'",
+        "seedCode": "// Import TypeScript type utilities here\n\n// Your code will go below\n\n// Define the SampleData interface here\ninterface SampleData {\n  id: number;\n  name: string;\n  active: boolean;\n  tags: string[];\n}\n\n// Add your comment here\n\ntype KeysMatching<T, U> = keyof T",
+        "expectedOutcome": "The KeysMatching type now uses keyof to extract all keys from type T as a union type.",
+        "successCriteria": [
+          "The KeysMatching type definition includes keyof T."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're using keyof T inside the KeysMatching type definition.",
+        "feedbackWrong": "The KeysMatching type should use keyof T to extract all keys from type T.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "keyof",
+            "T"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 10",
+        "title": "Filter keys using conditional types",
+        "instruction": "Update the KeysMatching type to use a mapped type with a conditional check: for each key K in keyof T, check if T[K] extends U, and if so, keep K.",
+        "hint": "Use the syntax: [K in keyof T]: T[K] extends U ? K : never. This creates a mapped type where each key either maps to itself (if the value type matches U) or to never.",
+        "analogousExample": "// Example: Filter keys where value is string\ntype StringKeys<T> = {\n  [K in keyof T]: T[K] extends string ? K : never\n}[keyof T];",
+        "seedCode": "// Import TypeScript type utilities here\n\n// Your code will go below\n\n// Define the SampleData interface here\ninterface SampleData {\n  id: number;\n  name: string;\n  active: boolean;\n  tags: string[];\n}\n\n// Add your comment here\n\ntype KeysMatching<T, U> = keyof T",
+        "expectedOutcome": "The KeysMatching type now uses a mapped type with a conditional check to filter keys based on their value type.",
+        "successCriteria": [
+          "The KeysMatching type is updated to use a mapped type with a conditional check: [K in keyof T]: T[K] extends U ? K : never."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're using the correct conditional type syntax: T[K] extends U ? K : never.",
+        "feedbackWrong": "The KeysMatching type should use a mapped type with a conditional check. Try: [K in keyof T]: T[K] extends U ? K : never.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "[K in keyof T]",
+            "T[K] extends U",
+            "?",
+            "K",
+            ":",
+            "never"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 10",
+        "title": "Extract matching keys with indexed access",
+        "instruction": "Update the KeysMatching type to use indexed access with the conditional type to extract only the keys where T[K] extends U.",
+        "hint": "After the conditional check, use the key K in the true branch of the conditional type to collect the matching keys.",
+        "analogousExample": "// Example: Filter keys where property type matches string\ntype StringKeys<T> = {\n  [K in keyof T]: T[K] extends string ? K : never\n}[keyof T];",
+        "seedCode": "// Import TypeScript type utilities here\n\n// Your code will go below\n\n// Define the SampleData interface here\ninterface SampleData {\n  id: number;\n  name: string;\n  active: boolean;\n  tags: string[];\n}\n\n// Add your comment here\n\ntype KeysMatching<T, U> = {\n  [K in keyof T]: T[K] extends U ? K : never\n}[keyof T]",
+        "expectedOutcome": "The KeysMatching type should now properly filter keys using conditional types and indexed access to produce a union of keys where the property type matches U.",
+        "successCriteria": [
+          "The KeysMatching type uses a mapped type with a conditional check and indexed access to extract matching keys."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure your conditional type returns K for matching keys and never for non-matching ones, then use indexed access with [keyof T].",
+        "feedbackWrong": "Let's review: The KeysMatching type needs to map over keys, check if T[K] extends U, return K for matches, and use indexed access to get the union of matching keys.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "KeysMatching",
+            "T",
+            "U",
+            "keyof",
+            "T[K]",
+            "extends",
+            "K",
+            "never",
+            "[keyof T]"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 10",
+        "title": "Test KeysMatching with string values",
+        "instruction": "Create a type alias named StringKeys that uses the KeysMatching type to extract keys from SampleData where the values are strings.",
+        "hint": "Use the KeysMatching type you defined earlier, passing SampleData as the first type parameter and string as the second type parameter.",
+        "analogousExample": "// Example: extracting number keys from an interface\ninterface ExampleData {\n  id: number;\n  name: string;\n  count: number;\n}\ntype NumberKeys = KeysMatching<ExampleData, number>",
+        "seedCode": "// Import TypeScript type utilities here\n\n// Your code will go below\n\n// Define the SampleData interface here\ninterface SampleData {\n  id: number;\n  name: string;\n  active: boolean;\n  tags: string[];\n}\n\n// Add your comment here\n\ntype KeysMatching<T, U> = {\n  [K in keyof T]: T[K] extends U ? K : never\n}[keyof T]\n\n// Create the StringKeys type alias here",
+        "expectedOutcome": "A type alias StringKeys that correctly extracts the keys from SampleData where the values are strings (specifically 'name').",
+        "successCriteria": [
+          "The StringKeys type alias is created using KeysMatching<SampleData, string>."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure you're using the KeysMatching type with SampleData and string as type parameters.",
+        "feedbackWrong": "The StringKeys type alias wasn't created correctly. Remember to use KeysMatching<SampleData, string>.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "type",
+            "StringKeys",
+            "KeysMatching",
+            "SampleData",
+            "string"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 10",
+        "title": "Test KeysMatching with number values",
+        "instruction": "Create a type alias called NumberKeys that uses KeysMatching to extract keys from SampleData where the value type is number.",
+        "hint": "Use the KeysMatching type you defined earlier, passing SampleData as the first type parameter and number as the second type parameter.",
+        "analogousExample": "// Similar: extracting keys with boolean values\ntype BooleanKeys = KeysMatching<SampleData, boolean>",
+        "seedCode": "// Import TypeScript type utilities here\n\n// Your code will go below\n\n// Define the SampleData interface here\ninterface SampleData {\n  id: number;\n  name: string;\n  active: boolean;\n  tags: string[];\n}\n\n// Add your comment here\n\ntype KeysMatching<T, U> = {\n  [K in keyof T]: T[K] extends U ? K : never\n}[keyof T]\n\n// Create the StringKeys type alias here\n\n// Create the NumberKeys type alias here",
+        "expectedOutcome": "You will have a NumberKeys type that extracts only the keys from SampleData whose values are numbers.",
+        "successCriteria": [
+          "A type alias named NumberKeys is created using KeysMatching<SampleData, number>."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure you're using the KeysMatching type with SampleData and number as type parameters.",
+        "feedbackWrong": "Try creating a type alias called NumberKeys that uses KeysMatching<SampleData, number> to extract keys with number values.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "type",
+            "NumberKeys",
+            "=",
+            "KeysMatching",
+            "<",
+            "SampleData",
+            "number",
+            ">"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 10",
+        "title": "Test KeysMatching with boolean values",
+        "instruction": "Create a type alias called BooleanKeys that uses KeysMatching to extract keys from SampleData whose values are booleans.",
+        "hint": "Use the same pattern as StringKeys and NumberKeys, but specify the boolean type as the second type parameter.",
+        "analogousExample": "// Example: extracting keys with array values\ntype ArrayKeys = KeysMatching<SampleData, string[]>",
+        "seedCode": "// Import TypeScript type utilities here\n\n// Your code will go below\n\n// Define the SampleData interface here\ninterface SampleData {\n  id: number;\n  name: string;\n  active: boolean;\n  tags: string[];\n}\n\n// Add your comment here\n\ntype KeysMatching<T, U> = {\n  [K in keyof T]: T[K] extends U ? K : never\n}[keyof T]\n\n// Create the StringKeys type alias here\n\n// Create the NumberKeys type alias here\n\n// Create the BooleanKeys type alias here",
+        "expectedOutcome": "A BooleanKeys type alias that correctly identifies 'active' as the only key with boolean values in SampleData.",
+        "successCriteria": [
+          "BooleanKeys type alias is created using KeysMatching<SampleData, boolean>"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure you're using the correct syntax: type BooleanKeys = KeysMatching<SampleData, boolean>",
+        "feedbackWrong": "Try again. Remember to use the KeysMatching type with SampleData and boolean as type parameters.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "type",
+            "BooleanKeys",
+            "=",
+            "KeysMatching",
+            "<",
+            "SampleData",
+            "boolean",
+            ">"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import TypeScript type utilities",
+        "id": "step1"
+      },
+      {
+        "label": "Create a sample interface for demonstration",
+        "id": "step2"
+      },
+      {
+        "label": "Understand the KeysMatching type lesson",
+        "id": "step3"
+      },
+      {
+        "label": "Start implementing KeysMatching type",
+        "id": "step4"
+      },
+      {
+        "label": "Use keyof operator to get object keys",
+        "id": "step5"
+      },
+      {
+        "label": "Filter keys using conditional types",
+        "id": "step6"
+      },
+      {
+        "label": "Extract matching keys with indexed access",
+        "id": "step7"
+      },
+      {
+        "label": "Test KeysMatching with string values",
+        "id": "step8"
+      },
+      {
+        "label": "Test KeysMatching with number values",
+        "id": "step9"
+      },
+      {
+        "label": "Test KeysMatching with boolean values",
+        "id": "step10"
+      }
+    ]
+  },
+  "source": "content"
+}

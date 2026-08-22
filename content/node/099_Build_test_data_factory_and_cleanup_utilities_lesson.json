@@ -1,0 +1,410 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-node-99",
+    "track": "node",
+    "lessonNum": 99,
+    "title": "Build test data factory and cleanup utilities",
+    "shortName": "P99",
+    "intro": {
+      "tag": "LESSON #99",
+      "title": "Build test data factory and cleanup utilities",
+      "body": "In this lesson, you will build a test data factory and cleanup utilities to streamline your testing workflow. You'll learn how to create reusable functions that generate mock data for your Node.js applications, ensuring consistent and isolated test scenarios. The core programming concept involves using factory functions and object manipulation to produce structured test data on demand. You'll work with JavaScript objects, arrays, and functions, and implement cleanup logic to reset data between tests. By the end, you'll have practical tools to make your tests more efficient and maintainable.",
+      "usecase": "Test data factories are essential in real-world applications like e-commerce platforms, where developers need to generate realistic product listings, user profiles, and order histories for testing checkout flows. In financial dashboards, these utilities create mock transaction data to validate reporting features without touching production databases. When building social media features, factories generate user posts and comments to test moderation tools and feed algorithms. Cleanup utilities ensure test environments remain isolated, preventing data leaks between test suites in CI/CD pipelines for enterprise applications."
+    },
+    "objectives": [
+      "Construct a test data factory function that generates mock user objects with customizable properties",
+      "Implement a cleanup utility function that removes test data from a simulated database array",
+      "Configure the data factory to accept parameter overrides while maintaining default values",
+      "Integrate the factory and cleanup utilities within a test scenario to verify their functionality",
+      "Manipulate the factory's output to produce varied test cases for different user roles",
+      "Initialize a test runner that applies the factory to create data and uses the cleanup utility post-test",
+      "Apply the utilities in sequence to demonstrate a complete test setup and teardown workflow"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 12",
+        "title": "Import required Node.js modules",
+        "instruction": "Import the fs (file system) and path modules using require()",
+        "hint": "Use require('moduleName') to import Node.js core modules. Both modules are built-in, so no npm installation is needed.",
+        "analogousExample": "// Importing modules in Node.js\nconst fs = require('fs');\nconst path = require('path');",
+        "seedCode": "// Import fs and path modules here",
+        "expectedOutcome": "The fs and path modules are imported and ready to use for file operations and path handling.",
+        "successCriteria": [
+          "fs and path are imported using require()"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're importing both fs and path modules using require().",
+        "feedbackWrong": "import both the fs and path modules using require().",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "require('fs')",
+            "require('path')"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 12",
+        "title": "Create test data directory path constant",
+        "instruction": "Define a constant variable named TEST_DATA_DIR that points to a 'test-data' directory in your project using path.join() with __dirname.",
+        "hint": "Use path.join() to combine __dirname with the directory name 'test-data'.",
+        "analogousExample": "// Example: creating a directory path constant\nconst DATA_DIR = path.join(__dirname, 'data');",
+        "seedCode": "// Import fs and path modules here\nconst fs = require('fs');\nconst path = require('path');\n\n// Define test data directory path constant here\n",
+        "expectedOutcome": "You'll have a constant TEST_DATA_DIR that stores the absolute path to a test-data directory.",
+        "successCriteria": [
+          "The constant TEST_DATA_DIR is defined using path.join() with __dirname and 'test-data'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're using path.join() with __dirname and the directory name 'test-data'.",
+        "feedbackWrong": "That doesn't match what we need. Try defining a constant TEST_DATA_DIR using path.join(__dirname, 'test-data').",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "TEST_DATA_DIR",
+            "path.join",
+            "__dirname",
+            "'test-data'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 12",
+        "title": "Create test data factory function skeleton",
+        "instruction": "Define a function called createTestData that takes filename and data as parameters. The function body can be empty for now.",
+        "hint": "You can use either a function declaration or arrow function. The function should accept two parameters.",
+        "analogousExample": "// Example: function with parameters\nfunction createFile(name, content) {\n  // function body\n}",
+        "seedCode": "const fs = require('fs');\nconst path = require('path');\n\n// Define test data directory path constant here\n\n// Define createTestData function here",
+        "expectedOutcome": "A function named createTestData is defined with filename and data parameters.",
+        "successCriteria": [
+          "The createTestData function is defined with two parameters: filename and data."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure the function is named createTestData and accepts both filename and data parameters.",
+        "feedbackWrong": "The function isn't defined correctly. Check that it's named createTestData and accepts two parameters.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "createTestData",
+            "filename",
+            "data"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 12",
+        "title": "Implement file creation logic in factory",
+        "instruction": "Inside the createTestData function, use fs.writeFileSync to write the provided data to a file in the test directory. Use the path.join method to create the full file path.",
+        "hint": "Remember that writeFileSync takes the file path and data as arguments. You'll need to combine the test directory path with a filename.",
+        "analogousExample": "// Example: writing data to a file\nfunction saveData(data) {\n  const filePath = path.join(__dirname, 'data.json');\n  fs.writeFileSync(filePath, data);\n}",
+        "seedCode": "const fs = require('fs');\nconst path = require('path');\n\nconst TEST_DATA_DIR = path.join(__dirname, 'test-data');\n\nfunction createTestData(data) {\n  // Use fs.writeFileSync to write data to a file in TEST_DATA_DIR\n}",
+        "expectedOutcome": "The createTestData function will be able to write test data to a file when called.",
+        "successCriteria": [
+          "The createTestData function contains fs.writeFileSync with proper file path construction using path.join."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure you're using fs.writeFileSync and constructing the file path with path.join.",
+        "feedbackWrong": "The file creation logic isn't implemented correctly. Review how to use fs.writeFileSync and path.join.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "writeFileSync",
+            "path.join",
+            "TEST_DATA_DIR"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 12",
+        "title": "Add error handling to factory function",
+        "instruction": "Wrap the file writing logic inside the createTestData function with a try-catch block to handle potential errors.",
+        "hint": "Use try { ... } catch (error) { ... } around the fs.writeFileSync call.",
+        "analogousExample": "// Example: error handling for file operations\nfunction writeFileSafely(filePath, content) {\n  try {\n    fs.writeFileSync(filePath, content);\n    return { success: true };\n  } catch (error) {\n    return { success: false, error: error.message };\n  }\n}",
+        "seedCode": "const fs = require('fs');\nconst path = require('path');\n\nconst TEST_DATA_DIR = path.join(__dirname, 'test-data');\n\nfunction createTestData(data) {\n  // Use fs.writeFileSync to write data to a file in TEST_DATA_DIR\n}",
+        "expectedOutcome": "The createTestData function will have a try-catch block that wraps the file writing logic.",
+        "successCriteria": [
+          "The createTestData function contains a try-catch block that encloses the fs.writeFileSync call."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started adding error handling, but make sure the try-catch block properly wraps the file writing logic.",
+        "feedbackWrong": "The try-catch block is missing or incorrectly placed. Review the example and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "try",
+            "catch",
+            "fs.writeFileSync"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 12",
+        "title": "Create cleanup utility function skeleton",
+        "instruction": "Define a function called cleanupTestData that takes a filename as a parameter. The function body can be empty for now.",
+        "hint": "You can use either a function declaration or arrow function. Remember to include the filename parameter.",
+        "analogousExample": "// Example: a function with a parameter\nfunction deleteFile(filename) {}",
+        "seedCode": "const fs = require('fs');\nconst path = require('path');\n\nconst TEST_DATA_DIR = path.join(__dirname, 'test-data');\n\nfunction createTestData(data) {\n  // Use fs.writeFileSync to write data to a file in TEST_DATA_DIR\n}\n\n// Define cleanupTestData function here\n",
+        "expectedOutcome": "A cleanupTestData function skeleton is added to the file, ready for implementation in later steps.",
+        "successCriteria": [
+          "The cleanupTestData function is defined with a filename parameter and an empty body."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure you've defined a function named cleanupTestData that accepts a filename parameter.",
+        "feedbackWrong": "The cleanupTestData function isn't properly defined. Check that you've used the correct function name and parameter.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "cleanupTestData",
+            "filename"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 12",
+        "title": "Implement file deletion logic in cleanup",
+        "instruction": "Inside the cleanupTestData function, use fs.unlinkSync to delete the specified test file. The function should take a filename parameter and delete that file from the TEST_DATA_DIR.",
+        "hint": "Use path.join to create the full file path, then call fs.unlinkSync with that path. Don't forget to handle errors.",
+        "analogousExample": "// Similar: deleting a file\nfunction deleteFile(filename) {\n  const filePath = path.join(__dirname, 'files', filename);\n  fs.unlinkSync(filePath);\n}",
+        "seedCode": "const fs = require('fs');\nconst path = require('path');\n\nconst TEST_DATA_DIR = path.join(__dirname, 'test-data');\n\nfunction createTestData(data) {\n  // Use fs.writeFileSync to write data to a file in TEST_DATA_DIR\n}\n\nfunction cleanupTestData(filename) {\n  // Implement file deletion logic here\n}",
+        "expectedOutcome": "The cleanupTestData function should be able to delete a specified file from the test-data directory using synchronous file operations.",
+        "successCriteria": [
+          "cleanupTestData function uses fs.unlinkSync to delete files and includes proper path construction with path.join"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're using fs.unlinkSync and constructing the full file path with path.join.",
+        "feedbackWrong": "The cleanupTestData function doesn't properly implement file deletion. Review how to use fs.unlinkSync and path.join.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "fs.unlinkSync",
+            "path.join",
+            "TEST_DATA_DIR",
+            "filename"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 12",
+        "title": "Add error handling to cleanup function",
+        "instruction": "Wrap the file deletion logic in your cleanupTestData function with a try-catch block to handle cases where files don't exist during cleanup.",
+        "hint": "Use try { ... } catch (error) { ... } around the fs.unlinkSync call, and consider returning a status object or boolean to indicate success/failure.",
+        "analogousExample": "// Example: error handling in a file operation\nfunction safeDelete(filePath) {\n  try {\n    fs.unlinkSync(filePath);\n    return { success: true, message: 'File deleted' };\n  } catch (error) {\n    return { success: false, message: error.message };\n  }\n}",
+        "seedCode": "const fs = require('fs');\nconst path = require('path');\n\nconst TEST_DATA_DIR = path.join(__dirname, 'test-data');\n\nfunction createTestData(data) {\n  // Use fs.writeFileSync to write data to a file in TEST_DATA_DIR\n}\n\nfunction cleanupTestData(filename) {\n  // Implement file deletion logic here\n  // Wrap it in try-catch and return cleanup status\n}",
+        "expectedOutcome": "The cleanupTestData function should now include error handling that catches deletion errors (e.g., when the file doesn't exist) and returns a status indicating what happened.",
+        "successCriteria": [
+          "The cleanupTestData function contains a try-catch block around the file deletion logic and returns a status object or boolean."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure to wrap the deletion logic in try-catch and return a status from the function.",
+        "feedbackWrong": "The cleanup function still lacks error handling. Add a try-catch block to handle file deletion errors.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "try",
+            "catch",
+            "cleanupTestData",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 12",
+        "title": "Create sample test data object",
+        "instruction": "Define a sample data object with properties like id, name, and value. Add this object after your cleanupTestData function.",
+        "hint": "Create a simple JavaScript object with key-value pairs that represent typical test data.",
+        "analogousExample": "// Example: a sample product object\nconst sampleProduct = {\n  id: 1,\n  name: 'Widget',\n  price: 9.99\n};",
+        "seedCode": "const fs = require('fs');\nconst path = require('path');\n\nconst TEST_DATA_DIR = path.join(__dirname, 'test-data');\n\nfunction createTestData(data) {\n  // Use fs.writeFileSync to write data to a file in TEST_DATA_DIR\n}\n\nfunction cleanupTestData(filename) {\n  // Implement file deletion logic here\n  // Wrap it in try-catch and return cleanup status\n}\n\n// Define your sample test data object here",
+        "expectedOutcome": "A sample test data object is created with properties like id, name, and value.",
+        "successCriteria": [
+          "A sample data object is defined with at least id, name, and value properties."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've created an object, but make sure it includes properties like id, name, and value.",
+        "feedbackWrong": "The sample test data object is missing or doesn't have the expected structure.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "id",
+            "name",
+            "value"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 12",
+        "title": "Test the data factory with sample data",
+        "instruction": "Call the createTestData function with a test filename and the sample data object you created earlier.",
+        "hint": "Use the function name createTestData and pass two arguments: a string for the filename and your sample data object.",
+        "analogousExample": "// Example of calling a function with arguments\ncreateTestData('sample.json', { name: 'Test', value: 123 });",
+        "seedCode": "const fs = require('fs');\nconst path = require('path');\n\nconst TEST_DATA_DIR = path.join(__dirname, 'test-data');\n\nfunction createTestData(data) {\n  // Use fs.writeFileSync to write data to a file in TEST_DATA_DIR\n}\n\nfunction cleanupTestData(filename) {\n  // Implement file deletion logic here\n  // Wrap it in try-catch and return cleanup status\n}\n\n// Define your sample test data object here\n\n// Call createTestData here",
+        "expectedOutcome": "The createTestData function will be called with actual arguments, allowing you to test its functionality.",
+        "successCriteria": [
+          "createTestData is called with a filename string and the sample data object as arguments."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're calling createTestData with both a filename and your sample data object.",
+        "feedbackWrong": "The function call is missing or incorrect. You need to call createTestData with two arguments.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "createTestData",
+            "(",
+            ")"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 12",
+        "title": "Test the cleanup utility",
+        "instruction": "Call the cleanupTestData function with the same test filename you used in the previous step.",
+        "hint": "You need to invoke cleanupTestData and pass the filename string that matches the file created by createTestData.",
+        "analogousExample": "// Similar: calling a function with a filename\ncleanupTestData('test-file.txt');",
+        "seedCode": "const fs = require('fs');\nconst path = require('path');\n\nconst TEST_DATA_DIR = path.join(__dirname, 'test-data');\n\nfunction createTestData(data) {\n  // Use fs.writeFileSync to write data to a file in TEST_DATA_DIR\n}\n\nfunction cleanupTestData(filename) {\n  // Implement file deletion logic here\n  // Wrap it in try-catch and return cleanup status\n}\n\n// Define your sample test data object here\n\n// Call createTestData here\n\n// Call cleanupTestData here",
+        "expectedOutcome": "The cleanup function will be executed to remove the test file, verifying the cleanup utility works.",
+        "successCriteria": [
+          "cleanupTestData is called with a valid filename string."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're calling cleanupTestData with the exact filename string used in the previous step.",
+        "feedbackWrong": "The cleanup function wasn't called correctly. Check that you're invoking cleanupTestData with a filename argument.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "cleanupTestData",
+            "("
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step12",
+        "type": "question",
+        "phase": "Step 12 of 12",
+        "title": "Export the utility functions",
+        "instruction": "Export both the createTestData and cleanupTestData functions using module.exports so they can be imported in other modules.",
+        "hint": "Add a module.exports statement at the end of your file, assigning an object with both function names as properties.",
+        "analogousExample": "// Exporting multiple functions\nmodule.exports = {\n  add: (a, b) => a + b,\n  subtract: (a, b) => a - b\n};",
+        "seedCode": "const fs = require('fs');\nconst path = require('path');\n\nconst TEST_DATA_DIR = path.join(__dirname, 'test-data');\n\nfunction createTestData(data) {\n  // Use fs.writeFileSync to write data to a file in TEST_DATA_DIR\n}\n\nfunction cleanupTestData(filename) {\n  // Implement file deletion logic here\n  // Wrap it in try-catch and return cleanup status\n}\n\n// Define your sample test data object here\n\n// Call createTestData here\n\n// Call cleanupTestData here\n\n// Export the functions here",
+        "expectedOutcome": "Both functions are properly exported and ready for use in other Node.js modules.",
+        "successCriteria": [
+          "The createTestData and cleanupTestData functions are exported using module.exports."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure you're exporting both functions (createTestData and cleanupTestData) in the module.exports statement.",
+        "feedbackWrong": "Check that you're using module.exports to export both functions. The export should be at the end of the file.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "module.exports",
+            "createTestData",
+            "cleanupTestData"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import required Node.js modules",
+        "id": "step1"
+      },
+      {
+        "label": "Create test data directory path constant",
+        "id": "step2"
+      },
+      {
+        "label": "Create test data factory function skeleton",
+        "id": "step3"
+      },
+      {
+        "label": "Implement file creation logic in factory",
+        "id": "step4"
+      },
+      {
+        "label": "Add error handling to factory function",
+        "id": "step5"
+      },
+      {
+        "label": "Create cleanup utility function skeleton",
+        "id": "step6"
+      },
+      {
+        "label": "Implement file deletion logic in cleanup",
+        "id": "step7"
+      },
+      {
+        "label": "Add error handling to cleanup function",
+        "id": "step8"
+      },
+      {
+        "label": "Create sample test data object",
+        "id": "step9"
+      },
+      {
+        "label": "Test the data factory with sample data",
+        "id": "step10"
+      },
+      {
+        "label": "Test the cleanup utility",
+        "id": "step11"
+      },
+      {
+        "label": "Export the utility functions",
+        "id": "step12"
+      }
+    ]
+  },
+  "source": "content"
+}

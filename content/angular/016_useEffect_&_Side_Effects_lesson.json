@@ -1,0 +1,453 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-angular-16",
+    "track": "angular",
+    "lessonNum": 16,
+    "title": "useEffect & Side Effects",
+    "shortName": "P16",
+    "intro": {
+      "tag": "LESSON #16",
+      "title": "useEffect & Side Effects",
+      "body": "In this lesson, you'll build a dynamic user profile component that automatically fetches and displays user data when the component loads, and updates the page title based on the selected user. You'll learn about side effects in Angular - operations that interact with the outside world like API calls, DOM manipulation, or timers - and how to manage them properly using lifecycle hooks. The main concepts covered include the ngOnInit lifecycle hook for component initialization, dependency injection for services, and proper cleanup with ngOnDestroy. You'll work with Angular's component lifecycle, HTTP client for data fetching, and reactive programming patterns using RxJS observables. By the end, you'll understand when and how to perform side effects in Angular components while avoiding common pitfalls like memory leaks.",
+      "usecase": "Side effects with useEffect are essential in modern web applications for handling data fetching, subscriptions, and cleanup operations. You'll find this pattern in e-commerce sites that fetch product data when components mount, social media feeds that subscribe to real-time updates, and dashboard applications that poll APIs for live metrics. Dating apps use useEffect to track user location changes, streaming platforms manage video player lifecycle events, and banking apps handle authentication token refreshes. Every time you see a loading spinner, auto-updating content, or real-time notifications in apps like Slack, Twitter, or Airbnb, useEffect is managing those side effects behind the scenes."
+    },
+    "objectives": [
+      "Implement useEffect hooks to execute side effects in Angular components",
+      "Configure useEffect with dependency arrays to control when effects run",
+      "Construct cleanup functions to prevent memory leaks and cancel subscriptions",
+      "Apply useEffect to fetch data from external APIs on component mount",
+      "Manipulate DOM elements directly using useEffect for imperative operations",
+      "Initialize event listeners and timers within useEffect hooks",
+      "Integrate multiple useEffect hooks within a single component for different concerns",
+      "Control component lifecycle behaviors by binding effects to specific state changes"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 12",
+        "title": "Import Angular Core and OnInit lifecycle hook",
+        "instruction": "Import Component and OnInit from '@angular/core'",
+        "hint": "Use the import statement to bring in Component and OnInit from the Angular core library. Both symbols should be imported in a single import statement.",
+        "analogousExample": "// Similar: importing multiple symbols from a module\nimport { Router, ActivatedRoute } from '@angular/router';",
+        "seedCode": {
+          "App.tsx": "// Import Angular core dependencies here\n",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "Angular Component decorator and OnInit lifecycle hook are imported and ready to use",
+        "successCriteria": [
+          "Component and OnInit are imported from '@angular/core'"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Good start! Make sure you're importing both Component and OnInit from '@angular/core' in a single import statement.",
+        "feedbackWrong": "use the import statement with curly braces to import Component and OnInit from '@angular/core'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "Component",
+            "OnInit",
+            "@angular/core"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 12",
+        "title": "Create the main component class",
+        "instruction": "Create a component class named EffectDemoComponent that implements the OnInit interface",
+        "hint": "Use the class keyword followed by the component name, then add 'implements OnInit' to indicate it will use the ngOnInit lifecycle method",
+        "analogousExample": "// Similar: component class with lifecycle interface\nclass UserProfileComponent implements OnInit {\n  ngOnInit() {}\n}",
+        "seedCode": {
+          "App.tsx": "// Import Angular core dependencies here\n\n// Create your component class here",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "A component class is created that implements the OnInit interface, preparing it to use Angular's lifecycle hooks",
+        "successCriteria": [
+          "Component class named EffectDemoComponent is created and implements OnInit interface"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Good start! Make sure your component class implements the OnInit interface so it can use lifecycle methods.",
+        "feedbackWrong": "create a class that implements OnInit. This interface tells Angular that your component will use the ngOnInit lifecycle method.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "class",
+            "EffectDemoComponent",
+            "implements",
+            "OnInit"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 12",
+        "title": "Initialize component properties for data storage",
+        "instruction": "Add three properties to your component class: userData to store user information (initialize as null), isLoading to track loading state (initialize as false), and errorMessage to store error messages (initialize as empty string).",
+        "hint": "In Angular, component properties are declared inside the class body. You can initialize them with default values using the assignment operator.",
+        "analogousExample": "// Similar: declaring class properties with initial values\nexport class MyComponent {\n  name: string = '';\n  count: number = 0;\n}",
+        "seedCode": {
+          "App.tsx": "// Import Angular core dependencies here\n\n// Create your component class here\nexport class SideEffectsComponent {\n  // Add your properties here\n}",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "The component class will have three properties to manage different types of data and state throughout the component lifecycle.",
+        "successCriteria": [
+          "Component has userData property initialized as null, isLoading property initialized as false, and errorMessage property initialized as empty string"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Good start! Make sure all three properties are present: userData (null), isLoading (false), and errorMessage (empty string).",
+        "feedbackWrong": "The properties need to be declared inside the component class with proper initialization. Check that you have userData, isLoading, and errorMessage with their correct initial values.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "userData",
+            "isLoading",
+            "errorMessage",
+            "null",
+            "false",
+            "''"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 12",
+        "title": "Add the ngOnInit lifecycle method",
+        "instruction": "Add the ngOnInit method to your component class to handle component initialization logic",
+        "hint": "The ngOnInit method is called after the component's data-bound properties have been initialized. It should be a public method that returns void.",
+        "analogousExample": "// Similar: lifecycle method in a component\nngOnDestroy() {\n  // cleanup logic\n}",
+        "seedCode": {
+          "App.tsx": "// Import Angular core dependencies here\n\n// Create your component class here\nexport class SideEffectsComponent {\n  // Add your properties here\n  \n  // Add ngOnInit method here\n}",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "The component class will have an ngOnInit method ready to handle initialization logic",
+        "successCriteria": [
+          "The ngOnInit method is added to the SideEffectsComponent class"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure the ngOnInit method is properly defined within the component class.",
+        "feedbackWrong": "The ngOnInit method needs to be added to the component class. Remember, it's a lifecycle method that Angular calls during component initialization.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "ngOnInit"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 12",
+        "title": "Create a data fetching method",
+        "instruction": "Create a method named 'fetchUserData' that simulates fetching user data by setting a timeout and updating the userData property",
+        "hint": "Define a method that uses setTimeout to simulate an API call and assigns mock user data to the userData property after a delay",
+        "analogousExample": "// Similar: method that simulates async operation\nfetchProducts() {\n  setTimeout(() => {\n    this.products = ['Phone', 'Laptop'];\n  }, 1000);\n}",
+        "seedCode": {
+          "App.tsx": "import { Component, OnInit } from '@angular/core';\n\n@Component({\n  selector: 'app-side-effects',\n  template: '<div>Side Effects Demo</div>'\n})\nexport class SideEffectsComponent implements OnInit {\n  userData: any = null;\n  isLoading: boolean = false;\n  error: string = '';\n\n  ngOnInit() {\n    console.log('Component initialized');\n  }\n\n  // Add your fetchUserData method here\n}",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "A method called fetchUserData that uses setTimeout to simulate asynchronous data fetching and updates the userData property",
+        "successCriteria": [
+          "fetchUserData method is defined and uses setTimeout to update userData property with mock data"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Good start! Make sure your method uses setTimeout to simulate the async operation and updates the userData property.",
+        "feedbackWrong": "The method should be named 'fetchUserData' and use setTimeout to simulate fetching data by updating the userData property.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "fetchUserData",
+            "setTimeout",
+            "userData"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 12",
+        "title": "Call the data fetching method in ngOnInit",
+        "instruction": "Inside the ngOnInit lifecycle method, call the fetchUserData method to load initial data when the component initializes.",
+        "hint": "Use `this.fetchUserData()` to invoke the method inside ngOnInit. This ensures data is fetched when the component first loads.",
+        "analogousExample": "// Similar: calling a method in ngOnInit\nngOnInit() {\n  this.loadUserProfile();\n}",
+        "seedCode": {
+          "App.tsx": "import { Component, OnInit } from '@angular/core';\n\n@Component({\n  selector: 'app-side-effects',\n  template: '<div>Side Effects Demo</div>'\n})\nexport class SideEffectsComponent implements OnInit {\n  userData: any = null;\n  isLoading: boolean = false;\n  error: string = '';\n\n  ngOnInit() {\n    console.log('Component initialized');\n    // Call fetchUserData method here\n  }\n\n  fetchUserData() {\n    // Method implementation will be added\n  }\n}",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "The fetchUserData method is called inside ngOnInit, ensuring data fetching happens when the component initializes.",
+        "successCriteria": [
+          "The ngOnInit method contains a call to this.fetchUserData()"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Good start! Make sure you're calling the method with the correct syntax: this.fetchUserData()",
+        "feedbackWrong": "call the fetchUserData method inside ngOnInit using this.fetchUserData(). This will execute the side effect when the component loads.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "this.fetchUserData",
+            "ngOnInit"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 12",
+        "title": "Create the component template structure",
+        "instruction": "Replace the existing template with a structured div containing three sections: a loading indicator, an error message display, and a user data display area.",
+        "hint": "Use Angular template syntax to create conditional sections that will display different states of your component data.",
+        "analogousExample": "// Similar: structured template with sections\n@Component({\n  template: `\n    <div>\n      <div *ngIf=\"loading\">Loading...</div>\n      <div *ngIf=\"error\">Error occurred</div>\n      <div *ngIf=\"data\">Data: {{data}}</div>\n    </div>\n  `\n})",
+        "seedCode": {
+          "App.tsx": "import { Component, OnInit } from '@angular/core';\n\n@Component({\n  selector: 'app-side-effects',\n  template: `\n    <!-- Replace this with structured template -->\n    <div>Side Effects Demo</div>\n  `\n})\nexport class SideEffectsComponent implements OnInit {\n  userData: any = null;\n  isLoading: boolean = false;\n  error: string = '';\n\n  ngOnInit() {\n    console.log('Component initialized');\n    // Call fetchUserData method here\n  }\n\n  fetchUserData() {\n    // Method implementation will be added\n  }\n}",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "The component template now contains a structured div with sections for loading state, error messages, and user data display.",
+        "successCriteria": [
+          "Template contains a main div with nested divs for loading, error, and user data sections using Angular template syntax."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Good start! Make sure to include sections for loading, error, and data display within the main container.",
+        "feedbackWrong": "The template should contain a main div with nested sections for loading, error, and user data display areas.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "template",
+            "div",
+            "loading",
+            "error",
+            "userData"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 12",
+        "title": "Display loading state in the template",
+        "instruction": "Add a div with loading message that only displays when isLoading is true using the *ngIf directive",
+        "hint": "Use *ngIf=\"isLoading\" on a div element to conditionally show the loading message",
+        "analogousExample": "// Similar: conditional display with *ngIf\n<div *ngIf=\"showMessage\">Welcome!</div>",
+        "seedCode": {
+          "App.tsx": "import { Component, OnInit } from '@angular/core';\n\n@Component({\n  selector: 'app-side-effects',\n  template: `\n    <!-- Add loading div here -->\n    <div>Side Effects Demo</div>\n  `\n})\nexport class SideEffectsComponent implements OnInit {\n  userData: any = null;\n  isLoading: boolean = false;\n  error: string = '';\n\n  ngOnInit() {\n    console.log('Component initialized');\n    // Call fetchUserData method here\n  }\n\n  fetchUserData() {\n    // Method implementation will be added\n  }\n}",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "A div with loading message appears in the template that will only show when isLoading is true",
+        "successCriteria": [
+          "Template contains a div with *ngIf=\"isLoading\" and displays a loading message"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Good start! Make sure to use *ngIf=\"isLoading\" to conditionally display the loading message.",
+        "feedbackWrong": "use the *ngIf directive with the isLoading property to conditionally show the loading message.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "*ngIf",
+            "isLoading",
+            "loading"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 12",
+        "title": "Display fetched data in the template",
+        "instruction": "Add a div below the loading div to display the user data when it's available using Angular interpolation",
+        "hint": "Use *ngIf to conditionally show the user data only when userData is not null, and display properties like userData.name using double curly braces",
+        "analogousExample": "// Similar: displaying user information conditionally\n<div *ngIf=\"user\">\n  <h3>{{user.name}}</h3>\n  <p>{{user.email}}</p>\n</div>",
+        "seedCode": {
+          "App.tsx": "import { Component, OnInit } from '@angular/core';\n\n@Component({\n  selector: 'app-side-effects',\n  template: `\n    <!-- Add loading div here -->\n    <div>Side Effects Demo</div>\n    <!-- Add user data display div here -->\n  `\n})\nexport class SideEffectsComponent implements OnInit {\n  userData: any = null;\n  isLoading: boolean = false;\n  error: string = '';\n\n  ngOnInit() {\n    console.log('Component initialized');\n    // Call fetchUserData method here\n  }\n\n  fetchUserData() {\n    // Method implementation will be added\n  }\n}",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "A div with conditional rendering that displays user data properties when userData is available",
+        "successCriteria": [
+          "Template includes a div with *ngIf=\"userData\" that displays user data properties using interpolation"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Good start! Make sure to use *ngIf to conditionally render the user data and display the properties with double curly braces.",
+        "feedbackWrong": "add a div with *ngIf=\"userData\" to conditionally show the data, and use interpolation with {{}} to display the user properties.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "*ngIf",
+            "userData",
+            "{{",
+            "}}"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 12",
+        "title": "Display error messages in the template",
+        "instruction": "Add an error message div that conditionally displays when there's an error using the *ngIf directive.",
+        "hint": "Use *ngIf=\"error\" to show the div only when the error property has a value, and display the error message inside the div.",
+        "analogousExample": "// Conditional error display\n<div *ngIf=\"errorMessage\" class=\"error\">{{ errorMessage }}</div>",
+        "seedCode": {
+          "App.tsx": "import { Component, OnInit } from '@angular/core';\n\n@Component({\n  selector: 'app-side-effects',\n  template: `\n    <!-- Add loading div here -->\n    <div>Side Effects Demo</div>\n    <!-- Add user data display div here -->\n    <!-- Add error message div here -->\n  `\n})\nexport class SideEffectsComponent implements OnInit {\n  userData: any = null;\n  isLoading: boolean = false;\n  error: string = '';\n\n  ngOnInit() {\n    console.log('Component initialized');\n    // Call fetchUserData method here\n  }\n\n  fetchUserData() {\n    // Method implementation will be added\n  }\n}",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "A div element that conditionally renders error messages when the error property contains a value.",
+        "successCriteria": [
+          "Error message div is added with *ngIf directive that checks the error property and displays the error message."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Good start! Make sure the div uses *ngIf to conditionally display based on the error property.",
+        "feedbackWrong": "The error display should use *ngIf=\"error\" to conditionally show the div and {{ error }} to display the message.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "*ngIf",
+            "error",
+            "div"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 12",
+        "title": "Add a refresh button with click handler",
+        "instruction": "Add a refresh button to the template that calls the fetchUserData method when clicked",
+        "hint": "Use the (click) event binding to connect the button to the fetchUserData method",
+        "analogousExample": "// Similar: button with click event\n<button (click)=\"saveData()\">Save</button>",
+        "seedCode": {
+          "App.tsx": "import { Component, OnInit } from '@angular/core';\n\n@Component({\n  selector: 'app-side-effects',\n  template: `\n    <!-- Add loading div here -->\n    <div>Side Effects Demo</div>\n    <!-- Add user data display div here -->\n    <!-- Add error message div here -->\n    <!-- Add refresh button here -->\n  `\n})\nexport class SideEffectsComponent implements OnInit {\n  userData: any = null;\n  isLoading: boolean = false;\n  error: string = '';\n\n  ngOnInit() {\n    console.log('Component initialized');\n    // Call fetchUserData method here\n  }\n\n  fetchUserData() {\n    // Method implementation will be added\n  }\n}",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "A button element is added to the template with a click event binding that calls the fetchUserData method",
+        "successCriteria": [
+          "Template contains a button element with (click) event binding that calls fetchUserData"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Good start! Make sure your button has the (click) event binding that calls the fetchUserData method.",
+        "feedbackWrong": "The button needs a (click) event binding. Use (click)=\"fetchUserData()\" to call the method when the button is clicked.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "button",
+            "(click)",
+            "fetchUserData"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step12",
+        "type": "question",
+        "phase": "Step 12 of 12",
+        "title": "Test the component lifecycle and side effects",
+        "instruction": "Run the application to observe the component's lifecycle behavior and verify that the ngOnInit method executes when the component initializes.",
+        "hint": "Use ng serve to start the development server and check the browser console to see the lifecycle method execution.",
+        "analogousExample": "// Similar: testing component behavior\n// Run ng serve and open browser console to see logs",
+        "seedCode": {
+          "App.tsx": "import { Component, OnInit } from '@angular/core';\n\n@Component({\n  selector: 'app-side-effects',\n  template: `\n    <div *ngIf=\"isLoading\">Loading...</div>\n    <div>Side Effects Demo</div>\n    <div *ngIf=\"userData\">\n      <h3>User Data:</h3>\n      <p>Name: {{ userData.name }}</p>\n      <p>Email: {{ userData.email }}</p>\n    </div>\n    <div *ngIf=\"error\" style=\"color: red;\">{{ error }}</div>\n    <button (click)=\"fetchUserData()\">Refresh Data</button>\n  `\n})\nexport class SideEffectsComponent implements OnInit {\n  userData: any = null;\n  isLoading: boolean = false;\n  error: string = '';\n\n  ngOnInit() {\n    console.log('Component initialized');\n    this.fetchUserData();\n  }\n\n  fetchUserData() {\n    this.isLoading = true;\n    this.error = '';\n    \n    // Simulate API call with setTimeout\n    setTimeout(() => {\n      try {\n        // Simulate successful data fetch\n        this.userData = {\n          name: 'John Doe',\n          email: 'john.doe@example.com'\n        };\n        this.isLoading = false;\n      } catch (err) {\n        this.error = 'Failed to load data';\n        this.isLoading = false;\n      }\n    }, 2000);\n  }\n}",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "The application runs successfully and displays the component with proper lifecycle execution and side effect handling.",
+        "successCriteria": [
+          "The application starts without errors, the component initializes properly, and the console shows the ngOnInit lifecycle method execution."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Good start! Make sure the application is running and check the browser console to verify the lifecycle method execution.",
+        "feedbackWrong": "The application should run without errors. Check that ng serve is running and open the browser console to see the component lifecycle execution.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "ng serve",
+            "console",
+            "Component initialized"
+          ],
+          "partialThreshold": 0.4,
+          "correctThreshold": 0.7
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import Angular Core and OnInit lifecycle hook",
+        "id": "step1"
+      },
+      {
+        "label": "Create the main component class",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize component properties for data storage",
+        "id": "step3"
+      },
+      {
+        "label": "Add the ngOnInit lifecycle method",
+        "id": "step4"
+      },
+      {
+        "label": "Create a data fetching method",
+        "id": "step5"
+      },
+      {
+        "label": "Call the data fetching method in ngOnInit",
+        "id": "step6"
+      },
+      {
+        "label": "Create the component template structure",
+        "id": "step7"
+      },
+      {
+        "label": "Display loading state in the template",
+        "id": "step8"
+      },
+      {
+        "label": "Display fetched data in the template",
+        "id": "step9"
+      },
+      {
+        "label": "Display error messages in the template",
+        "id": "step10"
+      },
+      {
+        "label": "Add a refresh button with click handler",
+        "id": "step11"
+      },
+      {
+        "label": "Test the component lifecycle and side effects",
+        "id": "step12"
+      }
+    ],
+    "answerShape": "multi-file"
+  },
+  "source": "content"
+}

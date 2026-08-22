@@ -1,0 +1,437 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-js-57",
+    "track": "js",
+    "lessonNum": 57,
+    "title": "Write retry with exponential backoff",
+    "shortName": "P57",
+    "intro": {
+      "tag": "LESSON #57",
+      "title": "Write retry with exponential backoff",
+      "body": "In this lesson, you will build a function that retries a failing operation using exponential backoff, a common technique for handling temporary network or service errors. You'll learn to implement a retry mechanism that waits progressively longer between attempts, such as doubling the wait time after each failure. The core programming concepts involve using async/await for asynchronous operations, setTimeout for delays, and a loop with conditional logic to control retries. You'll work with JavaScript promises, error handling with try/catch, and basic arithmetic to calculate backoff intervals. By the end, you'll have a reusable utility that makes your applications more resilient to transient failures.",
+      "usecase": "In real-world applications, network requests often fail due to temporary issues like server overload or spotty connections. Exponential backoff with retry is a critical pattern for handling these failures gracefully, preventing your app from overwhelming the server with repeated immediate attempts. You'll see this in user-facing features like payment processing forms, where a transaction might need a few retries to succeed, or in data dashboards that automatically refresh critical metrics after a network hiccup. Implementing this pattern ensures your application is resilient and provides a smooth, reliable experience even under unstable conditions."
+    },
+    "objectives": [
+      "Construct a retry function that accepts an async operation and maximum retry attempts",
+      "Implement exponential backoff logic using setTimeout and increasing delay intervals",
+      "Configure the retry mechanism to handle promise rejections and resolve upon success",
+      "Integrate error handling to differentiate between retryable failures and fatal errors",
+      "Manipulate delay calculations using a base multiplier and exponential factor",
+      "Control retry flow with conditional logic that stops after maximum attempts",
+      "Initialize and test the retry function with simulated API calls and network failures"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 12",
+        "title": "Import required modules",
+        "instruction": "Since this is a pure JavaScript implementation, no imports are needed for basic functionality. Write a comment indicating that no external modules are required for this lesson.",
+        "hint": "You can write a single-line comment using // or a multi-line comment using /* */.",
+        "analogousExample": "// No external dependencies needed for this function",
+        "seedCode": "// No code yet — this is the first step.",
+        "expectedOutcome": "A comment is added to the file indicating that no imports are needed.",
+        "successCriteria": [
+          "A comment exists in the code file indicating no imports are required."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added a comment, but make sure it clearly indicates that no imports are required for this lesson.",
+        "feedbackWrong": "Please add a comment to indicate that no external modules are needed for this pure JavaScript implementation.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "//",
+            "import",
+            "no",
+            "needed",
+            "required",
+            "dependencies"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 12",
+        "title": "Create the retryWithBackoff function skeleton",
+        "instruction": "Create a function named retryWithBackoff that takes an async function as its first parameter and optional configuration parameters (maxRetries, initialDelay, maxDelay, factor). For now, just define the function signature with these parameters and an empty body.",
+        "hint": "Define a function with the given name and parameters. You can use either a function declaration or arrow function syntax. The parameters should be: asyncFn, maxRetries, initialDelay, maxDelay, factor.",
+        "analogousExample": "// Similar: function with multiple parameters\nfunction processData(data, options = {}) {\n  // Function body will be added later\n}",
+        "seedCode": "// Import required modules\n\n// Create the retryWithBackoff function skeleton\n// Your code here",
+        "expectedOutcome": "A function named retryWithBackoff is defined with the correct parameter signature, ready for implementation in later steps.",
+        "successCriteria": [
+          "The retryWithBackoff function is created with parameters: asyncFn, maxRetries, initialDelay, maxDelay, factor."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've created a function, but check the parameter names and order. The function should accept: asyncFn, maxRetries, initialDelay, maxDelay, factor.",
+        "feedbackWrong": "The function isn't defined correctly. Make sure you create a function named retryWithBackoff with the specified parameters.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "retryWithBackoff",
+            "asyncFn",
+            "maxRetries",
+            "initialDelay",
+            "maxDelay",
+            "factor"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 12",
+        "title": "Define default parameter values",
+        "instruction": "Inside the retryWithBackoff function, set default values for the maxRetries, initialDelay, maxDelay, and factor parameters if they are not provided when the function is called.",
+        "hint": "You can use default parameters in the function signature or check inside the function body. For example: maxRetries = maxRetries || 3.",
+        "analogousExample": "// Setting default values for function parameters\nfunction fetchData(url, timeout = 5000, retries = 3) {\n  // timeout defaults to 5000, retries defaults to 3\n}",
+        "seedCode": "// Import required modules\n\n// Create the retryWithBackoff function skeleton\nfunction retryWithBackoff(operation, maxRetries, initialDelay, maxDelay, factor) {\n  // Set default values for parameters here\n}",
+        "expectedOutcome": "The retryWithBackoff function should have sensible defaults for all configuration parameters.",
+        "successCriteria": [
+          "Default values are set for maxRetries, initialDelay, maxDelay, and factor parameters."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've set some default values, but make sure all four parameters (maxRetries, initialDelay, maxDelay, factor) have defaults.",
+        "feedbackWrong": "The function doesn't have default values for all required parameters. Check that maxRetries, initialDelay, maxDelay, and factor all have defaults.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "maxRetries",
+            "initialDelay",
+            "maxDelay",
+            "factor",
+            "default",
+            "="
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 12",
+        "title": "Initialize retry counter and current delay",
+        "instruction": "Inside the retryWithBackoff function, declare a variable named 'retryCount' initialized to 0 and another variable named 'currentDelay' initialized to the value of the 'initialDelay' parameter.",
+        "hint": "Use the 'let' keyword to declare variables that will be updated later. Set retryCount to 0 and currentDelay to initialDelay.",
+        "analogousExample": "// Example: initializing tracking variables\nfunction trackAttempts() {\n  let attemptCount = 0;\n  let currentWait = 1000;\n}",
+        "seedCode": "// Import required modules\n\n// Create the retryWithBackoff function skeleton\nfunction retryWithBackoff(operation, maxRetries, initialDelay, maxDelay, factor) {\n  // Set default values for parameters here\n  // Initialize retry counter and current delay here\n}",
+        "expectedOutcome": "The function will have two variables: retryCount starting at 0 and currentDelay starting with the initialDelay value.",
+        "successCriteria": [
+          "Variables retryCount and currentDelay are declared and initialized correctly inside the function body."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure both variables are declared and initialized correctly.",
+        "feedbackWrong": "Check that you've declared both variables inside the function with the correct initial values.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "retryCount",
+            "currentDelay",
+            "initialDelay",
+            "0"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 12",
+        "title": "Implement the main retry loop",
+        "instruction": "Inside the retryWithBackoff function, create a for loop that will iterate from 0 up to maxRetries (inclusive).",
+        "hint": "Use a standard for loop with a counter variable that starts at 0 and continues while it's less than or equal to maxRetries.",
+        "analogousExample": "// Example: basic for loop structure\nfor (let i = 0; i <= maxAttempts; i++) {\n  // Attempt operation here\n}",
+        "seedCode": "// Import required modules\n\n// Create the retryWithBackoff function skeleton\nfunction retryWithBackoff(operation, maxRetries, initialDelay, maxDelay, factor) {\n  // Set default values for parameters here\n  // Initialize retry counter and current delay here\n  \n  // Create for loop here\n}",
+        "expectedOutcome": "The retryWithBackoff function will have a for loop structure ready to handle multiple attempts.",
+        "successCriteria": [
+          "A for loop is implemented inside the function with proper loop conditions."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your for loop properly iterates from 0 up to maxRetries (inclusive).",
+        "feedbackWrong": "The retry loop structure is missing or incorrect. Remember to create a for loop that can handle multiple attempts.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "for",
+            "let",
+            "i",
+            "<=",
+            "maxRetries"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 12",
+        "title": "Add try-catch block for the async operation",
+        "instruction": "Inside the for loop, wrap the async operation call in a try-catch block to handle potential errors.",
+        "hint": "Use try { await operation() } catch (error) { ... } inside your loop.",
+        "analogousExample": "// Example: try-catch for async operation\nasync function fetchData() {\n  try {\n    const data = await fetch('url');\n    return data;\n  } catch (error) {\n    console.log('Error:', error);\n  }\n}",
+        "seedCode": "// Import required modules\n\n// Create the retryWithBackoff function skeleton\nfunction retryWithBackoff(operation, maxRetries, initialDelay, maxDelay, factor) {\n  // Set default values for parameters here\n  // Initialize retry counter and current delay here\n  \n  // Create for loop here\n  for (let i = 0; i <= maxRetries; i++) {\n    // Add try-catch block here\n  }\n}",
+        "expectedOutcome": "The retryWithBackoff function now includes a try-catch block inside the loop to handle errors from the async operation.",
+        "successCriteria": [
+          "The for loop contains a try-catch block that attempts to await the operation() call."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure the try-catch block is inside the for loop and properly handles the async operation.",
+        "feedbackWrong": "The try-catch block is missing or incorrectly placed. Remember to wrap the async operation call in try-catch inside the loop.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "try",
+            "catch",
+            "await",
+            "operation()"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 12",
+        "title": "Implement exponential backoff delay",
+        "instruction": "Inside the catch block, calculate the next delay using the exponential backoff formula (currentDelay * factor) and wait using setTimeout wrapped in a Promise.",
+        "hint": "After catching an error, calculate the next delay by multiplying currentDelay by factor. Then create a Promise that resolves after that delay using setTimeout.",
+        "analogousExample": "// Example: waiting with exponential backoff\nasync function waitWithBackoff(currentDelay, factor) {\n  const nextDelay = currentDelay * factor;\n  await new Promise(resolve => setTimeout(resolve, nextDelay));\n  return nextDelay;\n}",
+        "seedCode": "// Import required modules\n\n// Create the retryWithBackoff function skeleton\nfunction retryWithBackoff(operation, maxRetries, initialDelay, maxDelay, factor) {\n  // Set default values for parameters here\n  // Initialize retry counter and current delay here\n  \n  // Create for loop here\n  for (let i = 0; i <= maxRetries; i++) {\n    // Add try-catch block here\n    try {\n      \n    } catch (error) {\n      // Calculate next delay and wait here\n    }\n  }\n}",
+        "expectedOutcome": "The catch block now includes exponential backoff delay calculation and waiting logic.",
+        "successCriteria": [
+          "The catch block calculates nextDelay as currentDelay * factor and uses setTimeout wrapped in a Promise to wait before the next retry."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure you're calculating the next delay by multiplying currentDelay by factor, and using setTimeout wrapped in a Promise to wait.",
+        "feedbackWrong": "The catch block should calculate the next delay and wait using setTimeout wrapped in a Promise before continuing to the next retry attempt.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "currentDelay",
+            "*",
+            "factor",
+            "setTimeout",
+            "Promise",
+            "resolve"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 12",
+        "title": "Add success case handling",
+        "instruction": "Inside the try block, call the operation function with await and store its result in a variable.",
+        "hint": "Use await operation() to get the result, then return it.",
+        "analogousExample": "// Similar: calling an async function and returning its result\nasync function fetchData() {\n  try {\n    const data = await fetch('/api');\n    return data;\n  } catch (error) {\n    // handle error\n  }\n}",
+        "seedCode": "// Import required modules\n\n// Create the retryWithBackoff function skeleton\nfunction retryWithBackoff(operation, maxRetries, initialDelay, maxDelay, factor) {\n  // Set default values for parameters here\n  // Initialize retry counter and current delay here\n  \n  // Create for loop here\n  for (let i = 0; i <= maxRetries; i++) {\n    // Add try-catch block here\n    try {\n      // Call operation and return its result here\n    } catch (error) {\n      // Calculate next delay and wait here\n    }\n  }\n}",
+        "expectedOutcome": "The try block now contains a call to the async operation function and returns its result when successful.",
+        "successCriteria": [
+          "The try block includes await operation() and returns the result."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're calling the operation function with await and returning its result inside the try block.",
+        "feedbackWrong": "The try block should contain a call to the operation function with await, and return its result. Try adding: const result = await operation(); return result;",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "await",
+            "operation",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 12",
+        "title": "return that result immediately",
+        "instruction": "return that result immediately.",
+        "hint": "Use await operation() to get the result, then return it.",
+        "analogousExample": "// Similar: calling an async function and returning its result\nasync function fetchData() {\n  try {\n    const data = await fetch('/api');\n    return data;\n  } catch (error) {\n    // handle error\n  }\n}",
+        "seedCode": "// Import required modules\n\n// Create the retryWithBackoff function skeleton\nfunction retryWithBackoff(operation, maxRetries, initialDelay, maxDelay, factor) {\n  // Set default values for parameters here\n  // Initialize retry counter and current delay here\n  \n  // Create for loop here\n  for (let i = 0; i <= maxRetries; i++) {\n    // Add try-catch block here\n    try {\n      // Call operation and return its result here\n    } catch (error) {\n      // Calculate next delay and wait here\n    }\n  }\n}",
+        "expectedOutcome": "",
+        "successCriteria": [
+          "Complete the step as instructed."
+        ],
+        "feedbackCorrect": "Great! Step completed.",
+        "feedbackPartial": "Review the instruction and try again.",
+        "feedbackWrong": "Check the instruction and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "await",
+            "operation",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 12",
+        "title": "Add final error handling",
+        "instruction": "After the for loop in your retryWithBackoff function, throw the last error that was caught when all retries are exhausted.",
+        "hint": "You need to store the error from the catch block in a variable declared outside the loop, then throw it after the loop finishes.",
+        "analogousExample": "// Example: storing and throwing an error after retries\nlet lastError = null;\nfor (let i = 0; i < 3; i++) {\n    try {\n        // operation\n    } catch (error) {\n        lastError = error;\n    }\n}\nif (lastError) throw lastError;",
+        "seedCode": "// Import required modules\n\n// Create the retryWithBackoff function skeleton\nfunction retryWithBackoff(operation, maxRetries, initialDelay, maxDelay, factor) {\n    // Set default values for parameters here\n    // Initialize retry counter and current delay here\n    \n    // Create for loop here\n    for (let i = 0; i <= maxRetries; i++) {\n        // Add try-catch block here\n        try {\n            // Call operation and return its result here\n        } catch (error) {\n            // Calculate next delay and wait here\n        }\n    }\n    // Throw the last error after the loop\n}",
+        "expectedOutcome": "The function now properly throws an error when all retry attempts fail, providing a clear failure state.",
+        "successCriteria": [
+          "After the for loop, the function throws the last error encountered during retries."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're throwing the error after the loop completes, not inside the catch block.",
+        "feedbackWrong": "The final error handling is missing. After the loop, you need to throw the last error that was caught during retries.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "throw",
+            "error",
+            "after",
+            "loop"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 12",
+        "title": "Create a test function to demonstrate the retry me",
+        "instruction": "Create a simple async test function named 'simulateOperation' that simulates failures and successes. The function should take a parameter 'attempt' and throw an error for the first two attempts,",
+        "hint": "You can create an async function that uses conditional logic based on the attempt number. Use 'throw new Error()' for failures and 'return' for success.",
+        "analogousExample": "// Example of a test function with conditional behavior\nasync function testOperation(attempt) {\n    if (attempt < 2) {\n        throw new Error('Temporary failure');\n    }\n    return 'Success after retries';\n}",
+        "seedCode": "// Import required modules\n\n// Create the retryWithBackoff function skeleton\nfunction retryWithBackoff(operation, maxRetries, initialDelay, maxDelay, factor) {\n    // Set default values for parameters here\n    // Initialize retry counter and current delay here\n    \n    // Create for loop here\n    for (let i = 0; i <= maxRetries; i++) {\n        // Add try-catch block here\n        try {\n            // Call operation and return its result here\n        } catch (error) {\n            // Calculate next delay and wait here\n        }\n    }\n    // Throw the last error after the loop\n}\n\n// Create test function here",
+        "expectedOutcome": "You'll have a test function that can be passed to retryWithBackoff to demonstrate how the retry mechanism works with simulated failures.",
+        "successCriteria": [
+          "The 'simulateOperation' function is created as an async function that throws errors for attempts 0 and 1, and returns a success message for attempt 2."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've created a test function, but check if it correctly simulates failures for the first two attempts and success on the third attempt.",
+        "feedbackWrong": "The test function doesn't match the required pattern. It should be async, take an 'attempt' parameter, and have conditional logic to throw errors for attempts 0 and 1, then return success for attempt 2.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "async",
+            "function",
+            "simulateOperation",
+            "attempt",
+            "throw",
+            "Error",
+            "return",
+            "Operation succeeded"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step12",
+        "type": "question",
+        "phase": "Step 12 of 12",
+        "title": "return 'Operation succeeded!' on the third at",
+        "instruction": "return 'Operation succeeded!' on the third attempt.",
+        "hint": "You can create an async function that uses conditional logic based on the attempt number. Use 'throw new Error()' for failures and 'return' for success.",
+        "analogousExample": "// Example of a test function with conditional behavior\nasync function testOperation(attempt) {\n    if (attempt < 2) {\n        throw new Error('Temporary failure');\n    }\n    return 'Success after retries';\n}",
+        "seedCode": "// Import required modules\n\n// Create the retryWithBackoff function skeleton\nfunction retryWithBackoff(operation, maxRetries, initialDelay, maxDelay, factor) {\n    // Set default values for parameters here\n    // Initialize retry counter and current delay here\n    \n    // Create for loop here\n    for (let i = 0; i <= maxRetries; i++) {\n        // Add try-catch block here\n        try {\n            // Call operation and return its result here\n        } catch (error) {\n            // Calculate next delay and wait here\n        }\n    }\n    // Throw the last error after the loop\n}\n\n// Create test function here",
+        "expectedOutcome": "",
+        "successCriteria": [
+          "Complete the step as instructed."
+        ],
+        "feedbackCorrect": "Great! Step completed.",
+        "feedbackPartial": "Review the instruction and try again.",
+        "feedbackWrong": "Check the instruction and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "async",
+            "function",
+            "simulateOperation",
+            "attempt",
+            "throw",
+            "Error",
+            "return",
+            "Operation succeeded"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import required modules",
+        "id": "step1"
+      },
+      {
+        "label": "Create the retryWithBackoff function skeleton",
+        "id": "step2"
+      },
+      {
+        "label": "Define default parameter values",
+        "id": "step3"
+      },
+      {
+        "label": "Initialize retry counter and current delay",
+        "id": "step4"
+      },
+      {
+        "label": "Implement the main retry loop",
+        "id": "step5"
+      },
+      {
+        "label": "Add try-catch block for the async operation",
+        "id": "step6"
+      },
+      {
+        "label": "Implement exponential backoff delay",
+        "id": "step7"
+      },
+      {
+        "label": "Add success case handling",
+        "id": "step8"
+      },
+      {
+        "label": "return that result immediately",
+        "id": "step9"
+      },
+      {
+        "label": "Add final error handling",
+        "id": "step10"
+      },
+      {
+        "label": "Create a test function to demonstrate the retry me",
+        "id": "step11"
+      },
+      {
+        "label": "return 'Operation succeeded!' on the third at",
+        "id": "step12"
+      }
+    ]
+  },
+  "source": "content"
+}

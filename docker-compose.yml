@@ -1,0 +1,87 @@
+# IPF local infra — OneDev / Mattermost / Postgres / LDAP
+#
+# Prefer restarting already-created containers from the handoff machine first:
+#   docker start ipf-ldap ipf-mattermost ipf-postgres onedev-inpact
+# A brand-new OneDev has none of the pre-seeded projects (ids 2/3/4) this app assumes.
+#
+# Use this compose only when standing up a *new* machine and you accept re-seeding OneDev,
+# or when the named volumes below already hold your data.
+#
+# Usage:
+#   docker compose up -d
+#   docker compose ps
+#   docker compose down          # stops; keeps volumes
+#   docker compose down -v       # DESTRUCTIVE — wipes OneDev/Mattermost/LDAP data
+
+name: ipf
+
+services:
+  ipf-postgres:
+    image: postgres:15-alpine
+    container_name: ipf-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: mmuser
+      POSTGRES_PASSWORD: mmuser_password
+      POSTGRES_DB: mattermost
+    volumes:
+      - ipf_pg_data:/var/lib/postgresql/data
+    # Bound only on the Docker network — Mattermost reaches it as ipf-postgres:5432
+    expose:
+      - "5432"
+
+  ipf-mattermost:
+    image: mattermost/mattermost-team-edition:9.11
+    container_name: ipf-mattermost
+    restart: unless-stopped
+    depends_on:
+      - ipf-postgres
+    environment:
+      MM_SQLSETTINGS_DRIVERNAME: postgres
+      MM_SQLSETTINGS_DATASOURCE: postgres://mmuser:mmuser_password@ipf-postgres:5432/mattermost?sslmode=disable&connect_timeout=10
+      MM_SERVICESETTINGS_SITEURL: http://localhost:8065
+      MM_SERVICESETTINGS_ENABLELOCALMODE: "true"
+    ports:
+      - "8065:8065"
+    volumes:
+      - ipf_mm_data:/mattermost/data
+      - ipf_mm_config:/mattermost/config
+      - ipf_mm_logs:/mattermost/logs
+
+  onedev-inpact:
+    image: 1dev/server:latest
+    container_name: onedev-inpact
+    restart: unless-stopped
+    ports:
+      - "6610:6610"
+      - "6611:6611"
+    volumes:
+      - ipf_onedev_data:/opt/onedev
+    # First boot: create admin, then manually recreate cohort-applications (id may not stay 2),
+    # team-ops, module-library — or restore a volume backup from the handoff machine.
+
+  ipf-ldap:
+    image: osixia/openldap:1.5.0
+    container_name: ipf-ldap
+    restart: unless-stopped
+    environment:
+      LDAP_ORGANISATION: Inpact
+      LDAP_DOMAIN: inpact.live
+      LDAP_ADMIN_PASSWORD: ${LDAP_ADMIN_PASSWORD:-admin}
+    ports:
+      - "389:389"
+      - "636:636"
+    volumes:
+      - ipf_ldap_data:/var/lib/ldap
+      - ipf_ldap_config:/etc/ldap/slapd.d
+    # Seed ou=core users via ldapadd after first boot — see docs/HANDOFF.md §4.
+    # Test accounts (PD_Core / ID_core / PM_Core, password inpact): scripts/seed-ldap-core-test-users.ldif
+
+volumes:
+  ipf_pg_data:
+  ipf_mm_data:
+  ipf_mm_config:
+  ipf_mm_logs:
+  ipf_onedev_data:
+  ipf_ldap_data:
+  ipf_ldap_config:

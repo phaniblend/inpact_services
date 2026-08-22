@@ -1,0 +1,355 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-express-04",
+    "track": "express",
+    "lessonNum": 4,
+    "title": "Authentication middleware",
+    "shortName": "P04",
+    "intro": {
+      "tag": "LESSON #4",
+      "title": "Authentication middleware",
+      "body": "In this lesson, you will build a simple authentication middleware for an Express.js application. You'll learn how to create a function that checks for a valid user token in incoming HTTP requests before allowing access to protected routes. The core programming concept is middleware—a piece of code that runs between the request and response in Express. You'll use JavaScript functions, Express's `app.use()` or route-specific middleware, and simulate token verification. By the end, you'll understand how to secure routes by intercepting and validating requests.",
+      "usecase": "Authentication middleware is essential in any web application that requires user accounts and protected resources. You'll see this pattern in e-commerce sites where only logged-in users can access their order history, in banking apps that secure account dashboards, and in content platforms that restrict premium articles to subscribers. As a developer, you'll implement authentication middleware to protect API endpoints, validate user sessions before serving sensitive data, and redirect unauthorized requests to login pages. This ensures that only authenticated users can access specific routes like user profiles, admin panels, or payment processing functionality."
+    },
+    "objectives": [
+      "Construct a middleware function that validates a JSON Web Token from an incoming request",
+      "Apply the authentication middleware to specific routes to protect them from unauthorized access",
+      "Configure the middleware to attach user data from the token to the request object for downstream use",
+      "Integrate the middleware with an Express application to handle authentication across multiple endpoints",
+      "Manipulate the request-response cycle to send appropriate error responses when authentication fails",
+      "Initialize a token verification process using a secret key within the middleware",
+      "Control access to protected routes by conditionally allowing or blocking request progression based on token validity"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 10",
+        "title": "Import Express and create the basic server",
+        "instruction": "Import Express using require() and create a basic Express app with app.listen() on port 3000.",
+        "hint": "Use require('express') to import Express, then create an app instance and start the server on port 3000.",
+        "analogousExample": "// Importing a module and setting up a server\nconst express = require('express');\nconst app = express();\napp.listen(3000, () => {\n  console.log('Server is running on port 3000');\n});",
+        "seedCode": "// Import Express and create the basic server here",
+        "expectedOutcome": "An Express server is set up and listening on port 3000.",
+        "successCriteria": [
+          "Express is imported using require(), an app instance is created, and app.listen() starts the server on port 3000."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure to include all three parts: importing Express, creating the app, and starting the server on port 3000.",
+        "feedbackWrong": "The server setup is incomplete. Check that you've imported Express, created an app instance, and called app.listen() on port 3000.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "require('express')",
+            "express()",
+            "app.listen(3000"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 10",
+        "title": "Add middleware to parse JSON request bodies",
+        "instruction": "Add the built-in Express middleware to parse incoming JSON request bodies using app.use(express.json()).",
+        "hint": "Use app.use() with express.json() as the middleware function.",
+        "analogousExample": "// Adding middleware to parse JSON\napp.use(express.json());",
+        "seedCode": "// Import Express and create the basic server here\n\n// Add JSON parsing middleware here",
+        "expectedOutcome": "The server will now automatically parse JSON data from incoming requests and make it available in req.body.",
+        "successCriteria": [
+          "The app.use(express.json()) middleware is added to the server setup."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're using app.use() with express.json() as the argument.",
+        "feedbackWrong": "The middleware wasn't added correctly. Remember to use app.use(express.json()) to parse JSON request bodies.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "app.use",
+            "express.json"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 10",
+        "title": "Create a mock user database array",
+        "instruction": "Create a users array with objects containing id, username, and password properties. Place it after the JSON parsing middleware.",
+        "hint": "Define a constant variable named 'users' and assign it an array of user objects. Each object should have id (number), username (string), and password (string) properties.",
+        "analogousExample": "// Example: array of objects\nconst products = [\n  { id: 1, name: 'Laptop', price: 999 },\n  { id: 2, name: 'Mouse', price: 25 }\n];",
+        "seedCode": "// Import Express and create the basic server here\n\n// Add JSON parsing middleware here\n\n// Create mock user database array here",
+        "expectedOutcome": "A users array with at least one user object containing id, username, and password properties will be created for authentication testing.",
+        "successCriteria": [
+          "A constant 'users' array exists with objects containing id, username, and password properties."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've created an array, but make sure it's named 'users' and contains objects with id, username, and password properties.",
+        "feedbackWrong": "The users array wasn't created correctly. Create a constant array named 'users' containing objects with id, username, and password properties.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "users",
+            "id",
+            "username",
+            "password"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 10",
+        "title": "Create a login route handler",
+        "instruction": "Create a POST /login route handler that checks username and password against the users array and returns a success message.",
+        "hint": "Use app.post('/login', ...) with a callback function that receives req and res parameters. Inside, extract username and password from req.body, find a matching user in the users array, and send a response.",
+        "analogousExample": "// Example route handler for authentication\napp.post('/login', (req, res) => {\n  const { username, password } = req.body;\n  const user = users.find(u => u.username === username && u.password === password);\n  if (user) {\n    res.json({ message: 'Login successful' });\n  } else {\n    res.status(401).json({ message: 'Invalid credentials' });\n  }\n});",
+        "seedCode": "const express = require('express');\nconst app = express();\n\napp.use(express.json());\n\nconst users = [\n  { id: 1, username: 'alice', password: 'pass123' },\n  { id: 2, username: 'bob', password: 'secret456' }\n];\n\n// Create POST /login route handler here\n\nconst PORT = 3000;\napp.listen(PORT, () => {\n  console.log(`Server running on port ${PORT}`);\n});",
+        "expectedOutcome": "A POST /login route is added that validates credentials against the mock user database and returns a JSON response.",
+        "successCriteria": [
+          "The code includes app.post('/login', ...) with a callback that checks req.body against the users array and sends a JSON response."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure to check both username and password against the users array and send a JSON response.",
+        "feedbackWrong": "The login route handler is missing or incomplete. Ensure you create a POST route at '/login' that validates credentials and returns a response.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "app.post(\"/login\"",
+            "req.body",
+            "users.find",
+            "res.json"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 10",
+        "title": "Create the authentication middleware function",
+        "instruction": "Create a function called authMiddleware that takes req, res, and next parameters. Place it above the route handlers but below the users array.",
+        "hint": "Define a function with three parameters: req, res, and next. You can use either a function declaration or arrow function syntax.",
+        "analogousExample": "// Example middleware function structure\nfunction exampleMiddleware(req, res, next) {\n  // Middleware logic here\n  next();\n}",
+        "seedCode": "const express = require('express');\nconst app = express();\n\napp.use(express.json());\n\nconst users = [\n  { id: 1, username: 'alice', password: 'pass123' },\n  { id: 2, username: 'bob', password: 'secret456' }\n];\n\n// Create authMiddleware function here\n\n// Create POST /login route handler here\n\nconst PORT = 3000;\napp.listen(PORT, () => {\n  console.log(`Server running on port ${PORT}`);\n});",
+        "expectedOutcome": "You will have an authMiddleware function defined with the correct parameters, ready to implement authentication logic in later steps.",
+        "successCriteria": [
+          "The authMiddleware function is created with req, res, and next parameters."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've created a function, but make sure it's named exactly 'authMiddleware' and accepts all three parameters: req, res, and next.",
+        "feedbackWrong": "The authMiddleware function is not properly defined. Create a function named authMiddleware that takes req, res, and next as parameters.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "authMiddleware",
+            "req",
+            "res",
+            "next"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 10",
+        "title": "Add authentication logic to the middleware",
+        "instruction": "Inside the authMiddleware function, add logic to check for an Authorization header, verify a token, and attach user data to req.user.",
+        "hint": "Extract the token from req.headers.authorization, verify it matches a user, and set req.user with the found user object.",
+        "analogousExample": "// Middleware function with authentication logic\nfunction authMiddleware(req, res, next) {\n  const token = req.headers.authorization;\n  if (!token) {\n    return res.status(401).json({ error: 'No token provided' });\n  }\n  const user = users.find(u => u.id === parseInt(token));\n  if (!user) {\n    return res.status(403).json({ error: 'Invalid token' });\n  }\n  req.user = user;\n  next();\n}",
+        "seedCode": "const express = require('express');\nconst app = express();\n\napp.use(express.json());\n\nconst users = [\n  { id: 1, username: 'alice', password: 'pass123' },\n  { id: 2, username: 'bob', password: 'secret456' }\n];\n\nfunction authMiddleware(req, res, next) {\n  // Add authentication logic here\n}\n\n// Create POST /login route handler here\n\nconst PORT = 3000;\napp.listen(PORT, () => {\n  console.log(`Server running on port ${PORT}`);\n});",
+        "expectedOutcome": "The authMiddleware function will now check for an Authorization header, verify the token, and attach user data to the request object.",
+        "successCriteria": [
+          "The authMiddleware function includes logic to extract a token from req.headers.authorization, verify it against the users array, set req.user with the matched user, and handle missing or invalid tokens with appropriate error responses."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added some authentication logic, but it might be missing one or more key parts: checking for the Authorization header, verifying the token against users, setting req.user, or handling errors with status codes.",
+        "feedbackWrong": "The authMiddleware function doesn't yet contain the required authentication logic. Review the instruction to add token verification and user attachment.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "req.headers.authorization",
+            "users.find",
+            "req.user",
+            "res.status",
+            "next"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 10",
+        "title": "Handle missing or invalid tokens in middleware",
+        "instruction": "Inside your authMiddleware function, add logic to check if the authorization header exists and is valid. If missing or invalid, return a 401 status with an error message. If valid, call next() to proceed.",
+        "hint": "Check req.headers.authorization. If it's missing or doesn't start with 'Bearer ', send a 401 response with res.status(401).json({ error: 'Unauthorized' }). Otherwise, call next().",
+        "analogousExample": "// Example: middleware with error handling\nfunction checkAuth(req, res, next) {\n  const token = req.headers.authorization;\n  if (!token || !token.startsWith('Bearer ')) {\n    return res.status(401).json({ error: 'Unauthorized' });\n  }\n  next();\n}",
+        "seedCode": "const express = require('express');\nconst app = express();\n\napp.use(express.json());\n\nconst users = [\n  { id: 1, username: 'alice', password: 'pass123' },\n  { id: 2, username: 'bob', password: 'secret456' }\n];\n\nfunction authMiddleware(req, res, next) {\n  // Add authentication logic here\n}\n\n// Create POST /login route handler here\n\nconst PORT = 3000;\napp.listen(PORT, () => {\n  console.log(`Server running on port ${PORT}`);\n});",
+        "expectedOutcome": "The authMiddleware function now handles missing or invalid tokens by returning a 401 status and error message, and calls next() for valid tokens.",
+        "successCriteria": [
+          "The authMiddleware function checks req.headers.authorization, returns 401 if missing or invalid, and calls next() otherwise."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure to check both missing headers and invalid format (should start with 'Bearer ').",
+        "feedbackWrong": "The middleware should check the authorization header and return 401 if it's missing or doesn't start with 'Bearer '.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "req.headers.authorization",
+            "401",
+            "next()"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 10",
+        "title": "Create a protected route that uses the middleware",
+        "instruction": "Create a GET /profile route that uses the authMiddleware function and returns the user profile from req.user.",
+        "hint": "Use app.get() to define the route, pass authMiddleware as the second argument, then in the route handler, access req.user and send a JSON response.",
+        "analogousExample": "// Example of a protected route\napp.get('/dashboard', authMiddleware, (req, res) => {\n  res.json({ user: req.user });\n});",
+        "seedCode": "const express = require('express');\nconst app = express();\n\napp.use(express.json());\n\nconst users = [\n  { id: 1, username: 'alice', password: 'pass123' },\n  { id: 2, username: 'bob', password: 'secret456' }\n];\n\nfunction authMiddleware(req, res, next) {\n  // Add authentication logic here\n}\n\n// Create POST /login route handler here\n\n// Create GET /profile route here\n\nconst PORT = 3000;\napp.listen(PORT, () => {\n  console.log(`Server running on port ${PORT}`);\n});",
+        "expectedOutcome": "A GET /profile route is defined that uses authMiddleware and returns the user profile from req.user.",
+        "successCriteria": [
+          "The route is defined with app.get('/profile', authMiddleware, handler), and the handler sends a JSON response containing req.user."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure the route uses authMiddleware and returns the user profile from req.user.",
+        "feedbackWrong": "The route is missing or doesn't use authMiddleware correctly. Review how to define a route with middleware.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "app.get",
+            "'/profile'",
+            "authMiddleware",
+            "req.user",
+            "res.json"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 10",
+        "title": "Test the login route to get a token",
+        "instruction": "Add a console.log statement inside the POST /login route handler to log the token when a successful login occurs.",
+        "hint": "After generating the token in the login route, add console.log('Token:', token) to see the token in your terminal when testing.",
+        "analogousExample": "// Example: logging a value in a route handler\napp.post('/login', (req, res) => {\n  // ... authentication logic\n  const token = 'generated-token';\n  console.log('Generated token:', token);\n  res.json({ token });\n});",
+        "seedCode": "const express = require('express');\nconst app = express();\n\napp.use(express.json());\n\nconst users = [\n  { id: 1, username: 'alice', password: 'pass123' },\n  { id: 2, username: 'bob', password: 'secret456' }\n];\n\nfunction authMiddleware(req, res, next) {\n  // Add authentication logic here\n}\n\n// Create POST /login route handler here\n\n// Create GET /profile route here\n\nconst PORT = 3000;\napp.listen(PORT, () => {\n  console.log(`Server running on port ${PORT}`);\n});",
+        "expectedOutcome": "When you test the login route with valid credentials, you'll see the generated token logged to your terminal console.",
+        "successCriteria": [
+          "The POST /login route handler includes a console.log statement that outputs the token after successful authentication."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure the console.log statement is inside the login route handler and logs the actual token variable.",
+        "feedbackWrong": "The login route handler doesn't include the required console.log statement. Add console.log('Token:', token) after generating the token.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "console.log",
+            "token"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 10",
+        "title": "Test the protected route with the token",
+        "instruction": "Send a GET request to the /profile route with the Authorization header containing the token you received from the login route.",
+        "hint": "Use a tool like curl, Postman, or your browser's developer tools to make the request. The header should be 'Authorization: Bearer <your-token>'.",
+        "analogousExample": "// Testing a protected route with a token\n// curl -H \"Authorization: Bearer abc123\" http://localhost:3000/profile",
+        "seedCode": "const express = require('express');\nconst app = express();\n\napp.use(express.json());\n\nconst users = [\n  { id: 1, username: 'alice', password: 'pass123' },\n  { id: 2, username: 'bob', password: 'secret456' }\n];\n\nfunction authMiddleware(req, res, next) {\n  // Add authentication logic here\n}\n\n// Create POST /login route handler here\n\n// Create GET /profile route here\n\nconst PORT = 3000;\napp.listen(PORT, () => {\n  console.log(`Server running on port ${PORT}`);\n});",
+        "expectedOutcome": "The protected route should respond with a success message and user data when a valid token is provided.",
+        "successCriteria": [
+          "GET request to /profile with a valid Authorization header returns a 200 status and user data."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've made progress, but ensure the Authorization header is correctly formatted as 'Bearer <token>' and the token is valid.",
+        "feedbackWrong": "The test didn't pass. Check that the token is valid, the Authorization header is correctly set, and the middleware logic is properly implemented.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "GET",
+            "/profile",
+            "Authorization",
+            "Bearer",
+            "token"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import Express and create the basic server",
+        "id": "step1"
+      },
+      {
+        "label": "Add middleware to parse JSON request bodies",
+        "id": "step2"
+      },
+      {
+        "label": "Create a mock user database array",
+        "id": "step3"
+      },
+      {
+        "label": "Create a login route handler",
+        "id": "step4"
+      },
+      {
+        "label": "Create the authentication middleware function",
+        "id": "step5"
+      },
+      {
+        "label": "Add authentication logic to the middleware",
+        "id": "step6"
+      },
+      {
+        "label": "Handle missing or invalid tokens in middleware",
+        "id": "step7"
+      },
+      {
+        "label": "Create a protected route that uses the middleware",
+        "id": "step8"
+      },
+      {
+        "label": "Test the login route to get a token",
+        "id": "step9"
+      },
+      {
+        "label": "Test the protected route with the token",
+        "id": "step10"
+      }
+    ]
+  },
+  "source": "content"
+}

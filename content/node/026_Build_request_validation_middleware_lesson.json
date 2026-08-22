@@ -1,0 +1,325 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-node-26",
+    "track": "node",
+    "lessonNum": 26,
+    "title": "Build request validation middleware",
+    "shortName": "P26",
+    "intro": {
+      "tag": "LESSON #26",
+      "title": "Build request validation middleware",
+      "body": "In this lesson, you will build a request validation middleware for a Node.js server to ensure incoming data is correct before processing. You will learn how to use the Express.js framework to create middleware functions that check request bodies, query parameters, or headers. The core concept involves validating user input against defined rules, such as required fields or data types, to prevent errors and improve security. You will use JavaScript functions, conditional logic, and Express's request-response cycle to implement this. By the end, you'll have a reusable middleware that can validate requests and return helpful error messages.",
+      "usecase": "Request validation middleware is essential in any Node.js application that accepts user input through APIs, such as user registration forms, payment processing systems, or data submission endpoints in dashboards. For example, when a user submits a shipping address in an e-commerce checkout form, validation middleware ensures the address fields are properly formatted before processing the order. In a social media platform, it validates profile update requests to prevent malformed data from corrupting user profiles. This pattern prevents security vulnerabilities, maintains data integrity, and provides clear error feedback to users through structured API responses."
+    },
+    "objectives": [
+      "Construct a validation middleware function that intercepts incoming HTTP requests",
+      "Apply validation rules to request body data using a validation library",
+      "Implement error handling to return appropriate HTTP responses for invalid data",
+      "Integrate validation middleware into an Express.js application route",
+      "Configure middleware to validate specific request parameters or query strings",
+      "Manipulate request objects to pass validated data to subsequent handlers",
+      "Initialize a validation schema for structured request data validation"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 9",
+        "title": "Import required Node.js modules",
+        "instruction": "Import the express module using require() syntax.",
+        "hint": "Use const express = require('express'); to import the Express framework.",
+        "analogousExample": "// Importing a module in Node.js\nconst fs = require('fs');",
+        "seedCode": "// Import the express module here\n",
+        "expectedOutcome": "You will have the express module available to create an Express application.",
+        "successCriteria": [
+          "The express module is imported using require('express')."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're using the correct require() syntax to import the express module.",
+        "feedbackWrong": "That doesn't look right. Remember to use const express = require('express'); to import the Express framework.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "require",
+            "'express'",
+            "express"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 9",
+        "title": "Create a basic Express server",
+        "instruction": "Initialize an Express app and set up a basic server that listens on port 3000.",
+        "hint": "Use the imported express module to create an app instance, then call app.listen() with port 3000 and a callback function.",
+        "analogousExample": "// Similar: basic server setup\nconst app = express();\napp.listen(3000, () => {\n  console.log('Server running on port 3000');\n});",
+        "seedCode": "// Import the express module here\nconst express = require('express');\n\n// Initialize Express app and start server here",
+        "expectedOutcome": "A running Express server that logs a message when started.",
+        "successCriteria": [
+          "Express app is initialized and configured to listen on port 3000 with a callback function."
+        ],
+        "feedbackCorrect": "Great! You've successfully set up a basic Express server.",
+        "feedbackPartial": "You're close. Make sure you've both initialized the Express app and called app.listen() with port 3000 and a callback.",
+        "feedbackWrong": "The server setup is incomplete. Check that you've initialized the Express app and started listening on port 3000.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "express()",
+            "app.listen",
+            "3000",
+            "callback"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 9",
+        "title": "Add a test route without validation",
+        "instruction": "Create a POST route at '/register' that accepts user data. The route should respond with a JSON message confirming the data was received.",
+        "hint": "Use app.post() to define a POST route. The route handler should accept req and res parameters, and use res.json() to send a response.",
+        "analogousExample": "// Example: A simple POST route\napp.post('/submit', (req, res) => {\n  res.json({ message: 'Data received' });\n});",
+        "seedCode": "// Import the express module here\nconst express = require('express');\n\n// Initialize Express app and start server here\nconst app = express();\nconst PORT = 3000;\n\napp.use(express.json());\n\n// Add your POST route for '/register' here\n\napp.listen(PORT, () => {\n  console.log(`Server running on port ${PORT}`);\n});",
+        "expectedOutcome": "A POST route at '/register' is defined that will accept incoming user data and respond with a JSON confirmation.",
+        "successCriteria": [
+          "The code includes a POST route at '/register' that uses res.json() to send a response."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you've defined a POST route at '/register' that sends a JSON response. Check that you're using app.post() and res.json().",
+        "feedbackWrong": "The route isn't properly defined. You need to create a POST route at '/register' that accepts requests and sends a JSON response. Review the example and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "app.post(\"/register\"",
+            "res.json"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 9",
+        "title": "Define validation rules as a function",
+        "instruction": "Create a function named validateUserData that takes a request body object as a parameter and checks if it has required fields (username and email).",
+        "hint": "Define the function after your imports and before your routes. Use an if statement to check if the body contains both required fields.",
+        "analogousExample": "// Example of a validation function\nfunction validateUserData(body) {\n  if (!body.username || !body.email) {\n    return false;\n  }\n  return true;\n}",
+        "seedCode": "const express = require('express');\n\nconst app = express();\nconst PORT = 3000;\n\napp.use(express.json());\n\n// Create your validateUserData function here\n\napp.listen(PORT, () => {\n  console.log(`Server running on port ${PORT}`);\n});",
+        "expectedOutcome": "A validateUserData function that validates the presence of username and email fields in the request body.",
+        "successCriteria": [
+          "The validateUserData function is defined, takes a body parameter, and returns true only when both username and email are present."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've created a validation function, but it might not check both fields correctly. Make sure it validates both username and email.",
+        "feedbackWrong": "The validation function is missing or doesn't check for the required fields. Create a function named validateUserData that validates username and email presence.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "validateUserData",
+            "function",
+            "body",
+            "username",
+            "email"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 9",
+        "title": "Convert validation function to middleware format",
+        "instruction": "Modify the validateUserData function to follow the Express middleware pattern by adding req, res, and next parameters.",
+        "hint": "Express middleware functions take three parameters: request, response, and next. Add these parameters to your function signature.",
+        "analogousExample": "// Example middleware function\nfunction exampleMiddleware(req, res, next) {\n  // Middleware logic here\n  next();\n}",
+        "seedCode": "const express = require('express');\n\nconst app = express();\nconst PORT = 3000;\n\napp.use(express.json());\n\n// Create your validateUserData function here\nfunction validateUserData() {\n  // Validation logic will go here\n}\n\napp.listen(PORT, () => {\n  console.log(`Server running on port ${PORT}`);\n});",
+        "expectedOutcome": "The validateUserData function should now have the three standard middleware parameters: req, res, and next.",
+        "successCriteria": [
+          "validateUserData function has req, res, and next parameters in its signature"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure you've added all three parameters: req, res, and next to the function signature.",
+        "feedbackWrong": "The function still needs to be modified to follow the Express middleware pattern with req, res, and next parameters.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "validateUserData",
+            "req",
+            "res",
+            "next"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 9",
+        "title": "Add validation middleware to the route",
+        "instruction": "Apply the validateUserData middleware to the '/register' POST route.",
+        "hint": "In Express, you can pass middleware functions as arguments to route handlers before the final route callback.",
+        "analogousExample": "// Example: applying middleware to a route\napp.post('/login', authenticateUser, (req, res) => {\n  res.send('Logged in!');\n});",
+        "seedCode": "const express = require('express');\n\nconst app = express();\nconst PORT = 3000;\n\napp.use(express.json());\n\n// Create your validateUserData function here\nfunction validateUserData() {\n  // Validation logic will go here\n}\n\n// Add the validateUserData middleware to the '/register' POST route\n\napp.listen(PORT, () => {\n  console.log(`Server running on port ${PORT}`);\n});",
+        "expectedOutcome": "The '/register' POST route will now use the validateUserData middleware before processing the request.",
+        "successCriteria": [
+          "The '/register' POST route includes validateUserData as middleware."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure validateUserData is passed as middleware to the '/register' POST route.",
+        "feedbackWrong": "The middleware wasn't applied correctly. Check the route definition.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "app.post",
+            "'/register'",
+            "validateUserData"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 9",
+        "title": "Implement validation error handling",
+        "instruction": "Inside the validateUserData function, add logic to check if the request body has a 'name' property. If it doesn't exist, send a 400 response with a JSON error message and return to stop further execution.",
+        "hint": "Use an if statement to check if req.body.name is falsy. If it is, call res.status(400).json({ error: 'Name is required' }) and then return.",
+        "analogousExample": "// Example: middleware that validates presence of a field\nfunction validateEmail(req, res, next) {\n  if (!req.body.email) {\n    return res.status(400).json({ error: 'Email is required' });\n  }\n  next();\n}",
+        "seedCode": "const express = require('express');\n\nconst app = express();\nconst PORT = 3000;\n\napp.use(express.json());\n\n// Create your validateUserData function here\nfunction validateUserData(req, res, next) {\n  // Add validation logic here\n}\n\n// Add the validateUserData middleware to the '/register' POST route\n\napp.listen(PORT, () => {\n  console.log(`Server running on port ${PORT}`);\n});",
+        "expectedOutcome": "The validateUserData function will now properly handle missing 'name' field by sending a 400 error response.",
+        "successCriteria": [
+          "validateUserData function contains an if statement that checks req.body.name and sends a 400 response with JSON error when validation fails"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your validation logic includes both the status code and JSON response. Check that you're using res.status(400).json() and returning after sending the error.",
+        "feedbackWrong": "The validation error handling isn't quite right. Remember to check if req.body.name exists, send a 400 status with JSON error message, and return to stop execution.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "if",
+            "req.body.name",
+            "res.status(400)",
+            "json",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 9",
+        "title": "Test the validation middleware",
+        "instruction": "Test your '/register' route by sending a POST request with valid user data using curl or Postman.",
+        "hint": "Make sure your request includes a JSON body with 'name' and 'email' fields that meet the validation rules.",
+        "analogousExample": "// Example curl command for testing\n// curl -X POST -H \"Content-Type: application/json\" -d '{\"name\":\"John\",\"email\":\"john@example.com\"}' http://localhost:3000/register",
+        "seedCode": "const express = require('express');\n\nconst app = express();\nconst PORT = 3000;\n\napp.use(express.json());\n\n// Create your validateUserData function here\nfunction validateUserData(req, res, next) {\n  // Add validation logic here\n}\n\n// Add the validateUserData middleware to the '/register' POST route\n\napp.listen(PORT, () => {\n  console.log(`Server running on port ${PORT}`);\n});",
+        "expectedOutcome": "You should receive a successful response (like 'User registered successfully') when sending valid data.",
+        "successCriteria": [
+          "The '/register' route responds correctly to a POST request with valid JSON data containing 'name' and 'email'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Your request was sent, but check that the JSON body includes both 'name' and 'email' fields with proper values.",
+        "feedbackWrong": "The test didn't work as expected. Make sure your server is running and you're sending a POST request to '/register' with the correct JSON format.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "POST",
+            "/register",
+            "valid",
+            "JSON",
+            "name",
+            "email"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 9",
+        "title": "Apply reusable middleware to multiple routes",
+        "instruction": "Create a new POST route '/login' and apply your validateUserData middleware with different validation rules.",
+        "hint": "Add a new app.post() route for '/login' and pass validateUserData as middleware before the route handler.",
+        "analogousExample": "// Similar: applying middleware to another route\napp.post('/profile', validateUserData, (req, res) => {\n  res.json({ message: 'Profile updated' });\n});",
+        "seedCode": "const express = require('express');\n\nconst app = express();\nconst PORT = 3000;\n\napp.use(express.json());\n\n// Create your validateUserData function here\nfunction validateUserData(req, res, next) {\n  // Add validation logic here\n}\n\n// Add the validateUserData middleware to the '/register' POST route\n\n// Create a new '/login' route with validation middleware\n\napp.listen(PORT, () => {\n  console.log(`Server running on port ${PORT}`);\n});",
+        "expectedOutcome": "The server will have two routes using the same validation middleware with different validation logic.",
+        "successCriteria": [
+          "A POST route for '/login' is created with validateUserData middleware applied."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added the route, but make sure validateUserData is included as middleware before the route handler.",
+        "feedbackWrong": "The '/login' route isn't properly set up with the validation middleware.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "app.post",
+            "'/login'",
+            "validateUserData"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import required Node.js modules",
+        "id": "step1"
+      },
+      {
+        "label": "Create a basic Express server",
+        "id": "step2"
+      },
+      {
+        "label": "Add a test route without validation",
+        "id": "step3"
+      },
+      {
+        "label": "Define validation rules as a function",
+        "id": "step4"
+      },
+      {
+        "label": "Convert validation function to middleware format",
+        "id": "step5"
+      },
+      {
+        "label": "Add validation middleware to the route",
+        "id": "step6"
+      },
+      {
+        "label": "Implement validation error handling",
+        "id": "step7"
+      },
+      {
+        "label": "Test the validation middleware",
+        "id": "step8"
+      },
+      {
+        "label": "Apply reusable middleware to multiple routes",
+        "id": "step9"
+      }
+    ]
+  },
+  "source": "content"
+}

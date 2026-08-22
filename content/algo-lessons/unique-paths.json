@@ -1,0 +1,895 @@
+{
+  "id": "unique-paths",
+  "title": "Unique paths",
+  "pattern": "dynamic-programming",
+  "difficulty": "medium",
+  "language": "javascript",
+  "status": "draft",
+  "flow": [
+    {
+      "stepId": "title",
+      "mentorSays": "At the end of this lesson, you will be able to:\n\n1. Understand what the Unique Paths lesson asks for\n2. Use dynamic programming to count paths in a grid\n3. Build the solution by filling a 2D DP table\n4. Implement the solution step by step in your chosen language",
+      "action": "continue",
+      "next": "lesson-illustration"
+    },
+    {
+      "stepId": "lesson-illustration",
+      "mentorSays": "Unique Paths is a classic 2D dynamic programming lesson.\n\nPROBLEM:\nRobot starts at top-left of m x n grid.\nRobot can only move RIGHT or DOWN.\nHow many unique paths to bottom-right?\n\nExample: 3x3 grid (m=3, n=3)\n\n[S][ ][ ]\n[ ][ ][ ]\n[ ][ ][E]\n\nS = Start (0,0)\nE = End (2,2)\n\nPOSSIBLE PATHS:\n1. Right → Right → Down → Down\n2. Right → Down → Right → Down\n3. Right → Down → Down → Right\n4. Down → Right → Right → Down\n5. Down → Right → Down → Right\n6. Down → Down → Right → Right\n\nANSWER: 6 unique paths\n\nBRUTE FORCE (RECURSIVE):\nCount all possible paths by trying each move.\n\ndef uniquePaths(m, n, i=0, j=0):\n    # Reached destination?\n    if i == m-1 and j == n-1:\n        return 1\n    \n    # Out of bounds?\n    if i >= m or j >= n:\n        return 0\n    \n    # Try both moves and sum results\n    return uniquePaths(m, n, i+1, j) + uniquePaths(m, n, i, j+1)\n\nTIME: O(2^(m+n)) - exponential! Too slow!\n\nDYNAMIC PROGRAMMING APPROACH:\n\nObservation: Overlapping subproblems!\n- To reach (2,2), we need paths to (1,2) and (2,1)\n- To reach (1,2), we need paths to (0,2) and (1,1)\n- Same subproblems computed multiple times!\n\nUse DP table to cache results.\n\nDP TABLE CONSTRUCTION:\n\nInitialize:\ndp[0][0] = 1 (starting position)\n\nFirst row (can only go right):\ndp[0][0] = 1\ndp[0][1] = 1\ndp[0][2] = 1\n\nFirst column (can only go down):\ndp[0][0] = 1\ndp[1][0] = 1\ndp[2][0] = 1\n\nFill rest using recurrence:\ndp[i][j] = dp[i-1][j] + dp[i][j-1]\n\nStep-by-step for 3x3:\n\n     j=0  j=1  j=2\ni=0   1    1    1\ni=1   1    ?    ?\ni=2   1    ?    ?\n\ndp[1][1] = dp[0][1] + dp[1][0] = 1 + 1 = 2\n\n     j=0  j=1  j=2\ni=0   1    1    1\ni=1   1    2    ?\ni=2   1    ?    ?\n\ndp[1][2] = dp[0][2] + dp[1][1] = 1 + 2 = 3\n\n     j=0  j=1  j=2\ni=0   1    1    1\ni=1   1    2    3\ni=2   1    ?    ?\n\ndp[2][1] = dp[1][1] + dp[2][0] = 2 + 1 = 3\n\n     j=0  j=1  j=2\ni=0   1    1    1\ni=1   1    2    3\ni=2   1    3    ?\n\ndp[2][2] = dp[1][2] + dp[2][1] = 3 + 3 = 6\n\n     j=0  j=1  j=2\ni=0   1    1    1\ni=1   1    2    3\ni=2   1    3    6\n\nANSWER: dp[2][2] = 6 ✓\n\nRECURRENCE RELATION:\ndp[i][j] = dp[i-1][j] + dp[i][j-1]\n\nMeaning:\nPaths to (i,j) = Paths from above + Paths from left\n\nBASE CASES:\ndp[0][j] = 1 for all j (top row)\ndp[i][0] = 1 for all i (left column)\n\nANOTHER EXAMPLE: 7x3 grid (m=7, n=3)\n\n     j=0  j=1  j=2\ni=0   1    1    1\ni=1   1    2    3\ni=2   1    3    6\ni=3   1    4    10\ni=4   1    5    15\ni=5   1    6    21\ni=6   1    7    28\n\nANSWER: dp[6][2] = 28 unique paths\n\nTIME COMPLEXITY: O(m × n)\nWe fill each cell once.\n\nSPACE COMPLEXITY: O(m × n)\nWe need the entire DP table.\n\nSPACE OPTIMIZATION (BONUS):\nWe only need the previous row!\n\nSpace: O(m × n) → O(n)\n\nInstead of 2D table, use 1D array:\ndp[j] = paths to column j in current row\n\nUpdate in place:\ndp[j] = dp[j] + dp[j-1]\n\nThis reduces space from O(m × n) to O(n)!\n\nCOMPARISON:\nRecursive: O(2^(m+n)) time, O(m+n) space (call stack)\nDP Table: O(m × n) time, O(m × n) space\nDP Optimized: O(m × n) time, O(n) space\n\nDP is MUCH faster for large grids!",
+      "example": "m = 3, n = 7\n\nGrid: 3 rows × 7 columns\nStart: (0,0)\nEnd: (2,6)\n\nFind number of unique paths:\nAnswer: 28\n\nAnother example:\nm = 3, n = 3\n\nAnswer: 6\n\nAnother example:\nm = 1, n = 1\n\nAnswer: 1",
+      "action": "continue",
+      "next": "thinking-challenge"
+    },
+    {
+      "stepId": "thinking-challenge",
+      "mentorSays": "Now that you understand what the lesson wants, here's the real question:\n\nHow would YOU count the unique paths?\n\nThink about it for a moment. What approach feels natural to you?",
+      "choices": [
+        {
+          "label": "Use dynamic programming with a 2D table",
+          "next": "explore-dp"
+        },
+        {
+          "label": "Try all possible paths using recursion",
+          "next": "explore-recursion"
+        },
+        {
+          "label": "Use a mathematical formula (combinations)",
+          "next": "explore-math"
+        }
+      ]
+    },
+    {
+      "stepId": "explore-recursion",
+      "mentorSays": "That's a straightforward approach! You're thinking: \"I'll recursively try all paths and count them.\"\n\nThis works! However, it's exponential time complexity due to overlapping subproblems.\n\nWould you like to learn the dynamic programming approach which is O(m×n) time?",
+      "action": "continue",
+      "next": "explore-dp"
+    },
+    {
+      "stepId": "explore-math",
+      "mentorSays": "Great thinking! You can use combinations: C(m+n-2, m-1) = (m+n-2)! / ((m-1)! × (n-1)!).\n\nHowever, for learning purposes, let's use dynamic programming which is more intuitive and builds lesson-solving skills!\n\nLet's learn the DP approach!",
+      "action": "continue",
+      "next": "explore-dp"
+    },
+    {
+      "stepId": "explore-dp",
+      "mentorSays": "Excellent choice! Dynamic programming is efficient and intuitive. Here's the core idea:\n\n1. **DP Table**: dp[i][j] = number of unique paths to reach cell (i,j)\n2. **Base Cases**:\n   - dp[0][0] = 1 (one way to be at start)\n   - First row: dp[0][j] = 1 (only way is moving right)\n   - First column: dp[i][0] = 1 (only way is moving down)\n3. **Recurrence**: For other cells:\n   - dp[i][j] = dp[i-1][j] + dp[i][j-1]\n   - (paths from top + paths from left)\n4. **Result**: dp[m-1][n-1] (bottom-right corner)\n\nLet's trace with m=3, n=3:\n\n- **Row 0**: [1, 1, 1]\n- **Row 1**: [1, 2, 3]\n  - dp[1][1] = dp[0][1] + dp[1][0] = 1 + 1 = 2\n  - dp[1][2] = dp[0][2] + dp[1][1] = 1 + 2 = 3\n- **Row 2**: [1, 3, 6]\n  - dp[2][1] = dp[1][1] + dp[2][0] = 2 + 1 = 3\n  - dp[2][2] = dp[1][2] + dp[2][1] = 3 + 3 = 6 ✓\n\nAnswer: 6\n\nThis is O(m×n) time and O(m×n) space! Now let's code it step by step.",
+      "action": "continue",
+      "next": "language-selection"
+    },
+    {
+      "stepId": "language-selection",
+      "mentorSays": "Great! Now let's code this solution. Which programming language would you like to use?",
+      "choices": [
+        {
+          "label": "JavaScript",
+          "next": "variable-check-js"
+        },
+        {
+          "label": "Python",
+          "next": "variable-check-python"
+        },
+        {
+          "label": "Java",
+          "next": "variable-check-java"
+        },
+        {
+          "label": "C++",
+          "next": "variable-check-cpp"
+        },
+        {
+          "label": "TypeScript",
+          "next": "variable-check-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-check-js",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-js"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-js",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'dp' or 'grid') and put data inside it.\n\nFor example, 'let dp = [];' creates a variable that stores an empty array.",
+      "example": "let dp = [];\n\nNow the variable refers to an empty array",
+      "action": "continue",
+      "next": "function-check-js"
+    },
+    {
+      "stepId": "function-check-js",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "array-check-js"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-js",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "function add(a, b) {\n  return a + b;\n}\n\nadd(3, 5) returns 8",
+      "action": "continue",
+      "next": "array-check-js"
+    },
+    {
+      "stepId": "array-check-js",
+      "mentorSays": "Before we start coding, let me ask: Do you know what an array is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know arrays",
+          "next": "grid-navigation-check-js"
+        },
+        {
+          "label": "No, explain arrays",
+          "next": "array-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "grid-navigation-check-js",
+      "mentorSays": "Do you understand grid navigation constraints?",
+      "choices": [
+        {
+          "label": "Yes, I know grid-navigation",
+          "next": "path-counting-dp-check-js"
+        },
+        {
+          "label": "No, explain grid-navigation",
+          "next": "grid-navigation-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "path-counting-dp-check-js",
+      "mentorSays": "Do you understand how DP counts paths?",
+      "choices": [
+        {
+          "label": "Yes, I know path-counting-dp",
+          "next": "coding-start-js"
+        },
+        {
+          "label": "No, explain path-counting-dp",
+          "next": "path-counting-dp-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "path-counting-dp-explanation-js",
+      "mentorSays": "To count paths to a cell, add paths from cells that can reach it. dp[i][j] = number of paths to reach cell (i,j). Base cases: dp[0][0] = 1 (starting position), dp[0][j] = 1 (top row - only one way), dp[i][0] = 1 (left column - only one way). Recurrence: dp[i][j] = dp[i-1][j] + dp[i][j-1]. Why? Cell (i,j) can be reached from: Cell above: (i-1, j), Cell to left: (i, j-1). Total paths = sum of both!\n\n// To count paths to a cell, add paths from cells that can reach it.\n\n// dp[i][j] = number of paths to reach cell (i,j)\n\n// Base cases:\n// - dp[0][0] = 1 (starting position)\n// - dp[0][j] = 1 (top row - only one way)\n// - dp[i][0] = 1 (left column - only one way)\n\n// Recurrence:\n// dp[i][j] = dp[i-1][j] + dp[i][j-1]\n\n// Why? Cell (i,j) can be reached from:\n// - Cell above: (i-1, j)\n// - Cell to left: (i, j-1)\n\n// Total paths = sum of both!\n\nGot it?",
+      "example": "// To count paths to a cell, add paths from cells that can reach it.\n\n// dp[i][j] = number of paths to reach cell (i,j)\n\n// Base cases:\n// - dp[0][0] = 1 (starting position)\n// - dp[0][j] = 1 (top row - only one way)\n// - dp[i][0] = 1 (left column - only one way)\n\n// Recurrence:\n// dp[i][j] = dp[i-1][j] + dp[i][j-1]\n\n// Why? Cell (i,j) can be reached from:\n// - Cell above: (i-1, j)\n// - Cell to left: (i, j-1)\n\n// Total paths = sum of both!",
+      "action": "continue",
+      "next": "coding-start-js"
+    },
+    {
+      "stepId": "grid-navigation-explanation-js",
+      "mentorSays": "In grid lessons, movement is often restricted. For this lesson: Start at grid[0][0] (top-left), Goal: reach grid[m-1][n-1] (bottom-right), Allowed moves: RIGHT or DOWN only. From any cell (i,j), you can go to: (i, j+1) - move RIGHT, (i+1, j) - move DOWN. You CANNOT move left or up!\n\n// Grid navigation constraints:\n// Start at grid[0][0] (top-left)\n// Goal: reach grid[m-1][n-1] (bottom-right)\n// Allowed moves: RIGHT or DOWN only\n\n// From any cell (i,j), you can go to:\n// - (i, j+1) - move RIGHT\n// - (i+1, j) - move DOWN\n\n// Example: 3x3 grid\n// [S][ ][ ]\n// [ ][ ][ ]\n// [ ][ ][E]\n\n// You CANNOT move left or up!\n\nGot it?",
+      "example": "// Grid navigation constraints:\n// Start at grid[0][0] (top-left)\n// Goal: reach grid[m-1][n-1] (bottom-right)\n// Allowed moves: RIGHT or DOWN only\n\n// From any cell (i,j), you can go to:\n// - (i, j+1) - move RIGHT\n// - (i+1, j) - move DOWN\n\n// Example: 3x3 grid\n// [S][ ][ ]\n// [ ][ ][ ]\n// [ ][ ][E]\n\n// You CANNOT move left or up!",
+      "action": "continue",
+      "next": "coding-start-js"
+    },
+    {
+      "stepId": "array-explanation-js",
+      "mentorSays": "An array is like a list of items that keeps them in order. Each item has a position number called an 'index'. Array indices start counting from 0.",
+      "example": "arr = [1, 2, 3]\n\narr[0] = 1\narr[1] = 2\narr[2] = 3",
+      "action": "continue",
+      "next": "coding-start-js"
+    },
+    {
+      "stepId": "coding-start-js",
+      "mentorSays": "Perfect! Let's implement unique paths using dynamic programming in JavaScript.",
+      "example": "function uniquePaths(m, n) {\n  // Your code here\n}",
+      "action": "continue",
+      "next": "coding-init-js"
+    },
+    {
+      "stepId": "coding-init-js",
+      "mentorSays": "First, create a 2D DP table with m rows and n columns, initialized to 0.",
+      "example": "function uniquePaths(m, n) {\n  // Create 2D DP table\n  const dp = Array(m).fill(null).map(() => Array(n).fill(0));",
+      "action": "continue",
+      "next": "coding-base-js"
+    },
+    {
+      "stepId": "coding-base-js",
+      "mentorSays": "Now, set the base cases: first row and first column should all be 1 (only one way to reach them).",
+      "example": "function uniquePaths(m, n) {\n  const dp = Array(m).fill(null).map(() => Array(n).fill(0));\n  \n  // Base case: first row and first column are all 1\n  for (let i = 0; i < m; i++) {\n    dp[i][0] = 1;\n  }\n  for (let j = 0; j < n; j++) {\n    dp[0][j] = 1;\n  }",
+      "action": "continue",
+      "next": "coding-initialize-grid-js"
+    },
+    {
+      "stepId": "coding-initialize-grid-js",
+      "mentorSays": "Let's initialize the 2D DP table with base cases.\n\nBase cases:\n- dp[0][0] = 1 (starting position)\n- First row: dp[0][j] = 1 for all j (can only go right)\n- First column: dp[i][0] = 1 for all i (can only go down)\n\nThese form the foundation of our DP table!",
+      "example": "// Initialize 2D DP table\nlet dp = Array(m).fill(null).map(() => Array(n).fill(0));\n\n// Base cases:\ndp[0][0] = 1;\nfor (let j = 1; j < n; j++) dp[0][j] = 1;  // First row\nfor (let i = 1; i < m; i++) dp[i][0] = 1;  // First column",
+      "action": "continue",
+      "next": "coding-fill-js"
+    },
+    {
+      "stepId": "coding-fill-js",
+      "mentorSays": "Now, fill the rest of the table: for each cell (i,j), the number of paths is the sum of paths from top (i-1,j) and left (i,j-1).",
+      "example": "function uniquePaths(m, n) {\n  const dp = Array(m).fill(null).map(() => Array(n).fill(0));\n  \n  for (let i = 0; i < m; i++) {\n    dp[i][0] = 1;\n  }\n  for (let j = 0; j < n; j++) {\n    dp[0][j] = 1;\n  }\n  \n  // Fill the rest of the table\n  for (let i = 1; i < m; i++) {\n    for (let j = 1; j < n; j++) {\n      dp[i][j] = dp[i-1][j] + dp[i][j-1];\n    }\n  }",
+      "action": "continue",
+      "next": "coding-fill-dp-table-js"
+    },
+    {
+      "stepId": "coding-fill-dp-table-js",
+      "mentorSays": "Now let's fill the DP table row by row using the recurrence relation.\n\nFor each cell (i,j) where i > 0 and j > 0:\n- dp[i][j] = dp[i-1][j] + dp[i][j-1]\n- This means: paths to (i,j) = paths from above + paths from left\n\nWe fill the table systematically from top-left to bottom-right!",
+      "example": "// Fill DP table row by row\nfor (let i = 1; i < m; i++) {\n  for (let j = 1; j < n; j++) {\n    dp[i][j] = dp[i-1][j] + dp[i][j-1];\n  }\n}\n\n// dp[i][j] = paths from above + paths from left",
+      "action": "continue",
+      "next": "coding-return-js"
+    },
+    {
+      "stepId": "coding-return-js",
+      "mentorSays": "Finally, return dp[m-1][n-1], which contains the number of unique paths to the bottom-right corner.",
+      "example": "function uniquePaths(m, n) {\n  const dp = Array(m).fill(null).map(() => Array(n).fill(0));\n  \n  for (let i = 0; i < m; i++) {\n    dp[i][0] = 1;\n  }\n  for (let j = 0; j < n; j++) {\n    dp[0][j] = 1;\n  }\n  \n  for (let i = 1; i < m; i++) {\n    for (let j = 1; j < n; j++) {\n      dp[i][j] = dp[i-1][j] + dp[i][j-1];\n    }\n  }\n  \n  return dp[m-1][n-1];\n}",
+      "action": "continue",
+      "next": "test-code-js"
+    },
+    {
+      "stepId": "test-code-js",
+      "mentorSays": "Perfect! Now test your code with the example we used earlier:\n\nm = 3, n = 7\n\nAfter calling uniquePaths(3, 7), it should return:\n28\n\nTry it in your IDE or code editor!",
+      "example": "Test input:\nm = 3, n = 7\n\nAfter uniquePaths(3, 7):\n28",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-python",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-python"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-python",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'dp' or 'grid') and put data inside it.\n\nFor example, 'dp = []' creates a variable that stores an empty list.",
+      "example": "dp = []\n\nNow the variable refers to an empty list",
+      "action": "continue",
+      "next": "function-check-python"
+    },
+    {
+      "stepId": "function-check-python",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "array-check-python"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-python",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "def add(a, b):\n    return a + b\n\nadd(3, 5) returns 8",
+      "action": "continue",
+      "next": "array-check-python"
+    },
+    {
+      "stepId": "array-check-python",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a list is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know lists",
+          "next": "grid-navigation-check-python"
+        },
+        {
+          "label": "No, explain lists",
+          "next": "array-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "grid-navigation-check-python",
+      "mentorSays": "Do you understand grid navigation constraints?",
+      "choices": [
+        {
+          "label": "Yes, I know grid-navigation",
+          "next": "path-counting-dp-check-python"
+        },
+        {
+          "label": "No, explain grid-navigation",
+          "next": "grid-navigation-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "path-counting-dp-check-python",
+      "mentorSays": "Do you understand how DP counts paths?",
+      "choices": [
+        {
+          "label": "Yes, I know path-counting-dp",
+          "next": "coding-start-python"
+        },
+        {
+          "label": "No, explain path-counting-dp",
+          "next": "path-counting-dp-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "path-counting-dp-explanation-python",
+      "mentorSays": "To count paths to a cell, add paths from cells that can reach it. dp[i][j] = number of paths to reach cell (i,j). Base cases: dp[0][0] = 1 (starting position), dp[0][j] = 1 (top row - only one way), dp[i][0] = 1 (left column - only one way). Recurrence: dp[i][j] = dp[i-1][j] + dp[i][j-1]. Why? Cell (i,j) can be reached from: Cell above: (i-1, j), Cell to left: (i, j-1). Total paths = sum of both!\n\n# To count paths to a cell, add paths from cells that can reach it.\n\n# dp[i][j] = number of paths to reach cell (i,j)\n\n# Base cases:\n# - dp[0][0] = 1 (starting position)\n# - dp[0][j] = 1 (top row - only one way)\n# - dp[i][0] = 1 (left column - only one way)\n\n# Recurrence:\n# dp[i][j] = dp[i-1][j] + dp[i][j-1]\n\n# Why? Cell (i,j) can be reached from:\n# - Cell above: (i-1, j)\n# - Cell to left: (i, j-1)\n\n# Total paths = sum of both!\n\nGot it?",
+      "example": "# To count paths to a cell, add paths from cells that can reach it.\n\n# dp[i][j] = number of paths to reach cell (i,j)\n\n# Base cases:\n# - dp[0][0] = 1 (starting position)\n# - dp[0][j] = 1 (top row - only one way)\n# - dp[i][0] = 1 (left column - only one way)\n\n# Recurrence:\n# dp[i][j] = dp[i-1][j] + dp[i][j-1]\n\n# Why? Cell (i,j) can be reached from:\n# - Cell above: (i-1, j)\n# - Cell to left: (i, j-1)\n\n# Total paths = sum of both!",
+      "action": "continue",
+      "next": "coding-start-python"
+    },
+    {
+      "stepId": "grid-navigation-explanation-python",
+      "mentorSays": "In grid lessons, movement is often restricted. For this lesson: Start at grid[0][0] (top-left), Goal: reach grid[m-1][n-1] (bottom-right), Allowed moves: RIGHT or DOWN only. From any cell (i,j), you can go to: (i, j+1) - move RIGHT, (i+1, j) - move DOWN. You CANNOT move left or up!\n\n# Grid navigation constraints:\n# Start at grid[0][0] (top-left)\n# Goal: reach grid[m-1][n-1] (bottom-right)\n# Allowed moves: RIGHT or DOWN only\n\n# From any cell (i,j), you can go to:\n# - (i, j+1) - move RIGHT\n# - (i+1, j) - move DOWN\n\n# Example: 3x3 grid\n# [S][ ][ ]\n# [ ][ ][ ]\n# [ ][ ][E]\n\n# You CANNOT move left or up!\n\nGot it?",
+      "example": "# Grid navigation constraints:\n# Start at grid[0][0] (top-left)\n# Goal: reach grid[m-1][n-1] (bottom-right)\n# Allowed moves: RIGHT or DOWN only\n\n# From any cell (i,j), you can go to:\n# - (i, j+1) - move RIGHT\n# - (i+1, j) - move DOWN\n\n# Example: 3x3 grid\n# [S][ ][ ]\n# [ ][ ][ ]\n# [ ][ ][E]\n\n# You CANNOT move left or up!",
+      "action": "continue",
+      "next": "coding-start-python"
+    },
+    {
+      "stepId": "array-explanation-python",
+      "mentorSays": "A list is like an array - a collection of items that keeps them in order. Each item has a position number called an 'index'. List indices start counting from 0.",
+      "example": "arr = [1, 2, 3]\n\narr[0] = 1\narr[1] = 2\narr[2] = 3",
+      "action": "continue",
+      "next": "coding-start-python"
+    },
+    {
+      "stepId": "coding-start-python",
+      "mentorSays": "Perfect! Let's implement unique paths using dynamic programming in Python.",
+      "example": "def unique_paths(m, n):\n    # Your code here\n    pass",
+      "action": "continue",
+      "next": "coding-init-python"
+    },
+    {
+      "stepId": "coding-init-python",
+      "mentorSays": "First, create a 2D DP table with m rows and n columns, initialized to 0.",
+      "example": "def unique_paths(m, n):\n    # Create 2D DP table\n    dp = [[0] * n for _ in range(m)]",
+      "action": "continue",
+      "next": "coding-base-python"
+    },
+    {
+      "stepId": "coding-base-python",
+      "mentorSays": "Now, set the base cases: first row and first column should all be 1 (only one way to reach them).",
+      "example": "def unique_paths(m, n):\n    dp = [[0] * n for _ in range(m)]\n    \n    # Base case: first row and first column are all 1\n    for i in range(m):\n        dp[i][0] = 1\n    for j in range(n):\n        dp[0][j] = 1",
+      "action": "continue",
+      "next": "coding-initialize-grid-python"
+    },
+    {
+      "stepId": "coding-initialize-grid-python",
+      "mentorSays": "Let's initialize the 2D DP table with base cases.\n\nBase cases:\n- dp[0][0] = 1 (starting position)\n- First row: dp[0][j] = 1 for all j (can only go right)\n- First column: dp[i][0] = 1 for all i (can only go down)\n\nThese form the foundation of our DP table!",
+      "example": "// Initialize 2D DP table\nlet dp = Array(m).fill(null).map(() => Array(n).fill(0));\n\n// Base cases:\ndp[0][0] = 1;\nfor (let j = 1; j < n; j++) dp[0][j] = 1;  // First row\nfor (let i = 1; i < m; i++) dp[i][0] = 1;  // First column",
+      "action": "continue",
+      "next": "coding-fill-python"
+    },
+    {
+      "stepId": "coding-fill-python",
+      "mentorSays": "Now, fill the rest of the table: for each cell (i,j), the number of paths is the sum of paths from top (i-1,j) and left (i,j-1).",
+      "example": "def unique_paths(m, n):\n    dp = [[0] * n for _ in range(m)]\n    \n    for i in range(m):\n        dp[i][0] = 1\n    for j in range(n):\n        dp[0][j] = 1\n    \n    # Fill the rest of the table\n    for i in range(1, m):\n        for j in range(1, n):\n            dp[i][j] = dp[i-1][j] + dp[i][j-1]",
+      "action": "continue",
+      "next": "coding-fill-dp-table-python"
+    },
+    {
+      "stepId": "coding-fill-dp-table-python",
+      "mentorSays": "Now let's fill the DP table row by row using the recurrence relation.\n\nFor each cell (i,j) where i > 0 and j > 0:\n- dp[i][j] = dp[i-1][j] + dp[i][j-1]\n- This means: paths to (i,j) = paths from above + paths from left\n\nWe fill the table systematically from top-left to bottom-right!",
+      "example": "// Fill DP table row by row\nfor (let i = 1; i < m; i++) {\n  for (let j = 1; j < n; j++) {\n    dp[i][j] = dp[i-1][j] + dp[i][j-1];\n  }\n}\n\n// dp[i][j] = paths from above + paths from left",
+      "action": "continue",
+      "next": "coding-return-python"
+    },
+    {
+      "stepId": "coding-return-python",
+      "mentorSays": "Finally, return dp[m-1][n-1], which contains the number of unique paths to the bottom-right corner.",
+      "example": "def unique_paths(m, n):\n    dp = [[0] * n for _ in range(m)]\n    \n    for i in range(m):\n        dp[i][0] = 1\n    for j in range(n):\n        dp[0][j] = 1\n    \n    for i in range(1, m):\n        for j in range(1, n):\n            dp[i][j] = dp[i-1][j] + dp[i][j-1]\n    \n    return dp[m-1][n-1]",
+      "action": "continue",
+      "next": "test-code-python"
+    },
+    {
+      "stepId": "test-code-python",
+      "mentorSays": "Perfect! Now test your code with the example we used earlier:\n\nm = 3, n = 7\n\nAfter calling unique_paths(3, 7), it should return:\n28\n\nTry it in your IDE or code editor!",
+      "example": "Test input:\nm = 3, n = 7\n\nAfter unique_paths(3, 7):\n28",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-java",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-java"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-java",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'dp' or 'grid') and put data inside it.\n\nFor example, 'int[][] dp = new int[m][n];' creates a variable that stores a 2D array.",
+      "example": "int[][] dp = new int[m][n];\n\nNow the variable refers to a 2D array",
+      "action": "continue",
+      "next": "function-check-java"
+    },
+    {
+      "stepId": "function-check-java",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a method is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know methods",
+          "next": "array-check-java"
+        },
+        {
+          "label": "No, explain methods",
+          "next": "function-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-java",
+      "mentorSays": "A method is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "public int add(int a, int b) {\n    return a + b;\n}\n\nadd(3, 5) returns 8",
+      "action": "continue",
+      "next": "array-check-java"
+    },
+    {
+      "stepId": "array-check-java",
+      "mentorSays": "Before we start coding, let me ask: Do you know what an array is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know arrays",
+          "next": "grid-navigation-check-java"
+        },
+        {
+          "label": "No, explain arrays",
+          "next": "array-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "grid-navigation-check-java",
+      "mentorSays": "Do you understand grid navigation constraints?",
+      "choices": [
+        {
+          "label": "Yes, I know grid-navigation",
+          "next": "path-counting-dp-check-java"
+        },
+        {
+          "label": "No, explain grid-navigation",
+          "next": "grid-navigation-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "path-counting-dp-check-java",
+      "mentorSays": "Do you understand how DP counts paths?",
+      "choices": [
+        {
+          "label": "Yes, I know path-counting-dp",
+          "next": "coding-start-java"
+        },
+        {
+          "label": "No, explain path-counting-dp",
+          "next": "path-counting-dp-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "path-counting-dp-explanation-java",
+      "mentorSays": "To count paths to a cell, add paths from cells that can reach it. dp[i][j] = number of paths to reach cell (i,j). Base cases: dp[0][0] = 1 (starting position), dp[0][j] = 1 (top row - only one way), dp[i][0] = 1 (left column - only one way). Recurrence: dp[i][j] = dp[i-1][j] + dp[i][j-1]. Why? Cell (i,j) can be reached from: Cell above: (i-1, j), Cell to left: (i, j-1). Total paths = sum of both!\n\n// To count paths to a cell, add paths from cells that can reach it.\n\n// dp[i][j] = number of paths to reach cell (i,j)\n\n// Base cases:\n// - dp[0][0] = 1 (starting position)\n// - dp[0][j] = 1 (top row - only one way)\n// - dp[i][0] = 1 (left column - only one way)\n\n// Recurrence:\n// dp[i][j] = dp[i-1][j] + dp[i][j-1]\n\n// Why? Cell (i,j) can be reached from:\n// - Cell above: (i-1, j)\n// - Cell to left: (i, j-1)\n\n// Total paths = sum of both!\n\nGot it?",
+      "example": "// To count paths to a cell, add paths from cells that can reach it.\n\n// dp[i][j] = number of paths to reach cell (i,j)\n\n// Base cases:\n// - dp[0][0] = 1 (starting position)\n// - dp[0][j] = 1 (top row - only one way)\n// - dp[i][0] = 1 (left column - only one way)\n\n// Recurrence:\n// dp[i][j] = dp[i-1][j] + dp[i][j-1]\n\n// Why? Cell (i,j) can be reached from:\n// - Cell above: (i-1, j)\n// - Cell to left: (i, j-1)\n\n// Total paths = sum of both!",
+      "action": "continue",
+      "next": "coding-start-java"
+    },
+    {
+      "stepId": "grid-navigation-explanation-java",
+      "mentorSays": "In grid lessons, movement is often restricted. For this lesson: Start at grid[0][0] (top-left), Goal: reach grid[m-1][n-1] (bottom-right), Allowed moves: RIGHT or DOWN only. From any cell (i,j), you can go to: (i, j+1) - move RIGHT, (i+1, j) - move DOWN. You CANNOT move left or up!\n\n// Grid navigation constraints:\n// Start at grid[0][0] (top-left)\n// Goal: reach grid[m-1][n-1] (bottom-right)\n// Allowed moves: RIGHT or DOWN only\n\n// From any cell (i,j), you can go to:\n// - (i, j+1) - move RIGHT\n// - (i+1, j) - move DOWN\n\n// Example: 3x3 grid\n// [S][ ][ ]\n// [ ][ ][ ]\n// [ ][ ][E]\n\n// You CANNOT move left or up!\n\nGot it?",
+      "example": "// Grid navigation constraints:\n// Start at grid[0][0] (top-left)\n// Goal: reach grid[m-1][n-1] (bottom-right)\n// Allowed moves: RIGHT or DOWN only\n\n// From any cell (i,j), you can go to:\n// - (i, j+1) - move RIGHT\n// - (i+1, j) - move DOWN\n\n// Example: 3x3 grid\n// [S][ ][ ]\n// [ ][ ][ ]\n// [ ][ ][E]\n\n// You CANNOT move left or up!",
+      "action": "continue",
+      "next": "coding-start-java"
+    },
+    {
+      "stepId": "array-explanation-java",
+      "mentorSays": "An array is like a list of items that keeps them in order. Each item has a position number called an 'index'. Array indices start counting from 0.",
+      "example": "int[] arr = {1, 2, 3};\n\narr[0] = 1\narr[1] = 2\narr[2] = 3",
+      "action": "continue",
+      "next": "coding-start-java"
+    },
+    {
+      "stepId": "coding-start-java",
+      "mentorSays": "Perfect! Let's implement unique paths using dynamic programming in Java.",
+      "example": "public int uniquePaths(int m, int n) {\n    // Your code here\n}",
+      "action": "continue",
+      "next": "coding-init-java"
+    },
+    {
+      "stepId": "coding-init-java",
+      "mentorSays": "First, create a 2D DP table with m rows and n columns, initialized to 0.",
+      "example": "public int uniquePaths(int m, int n) {\n    // Create 2D DP table\n    int[][] dp = new int[m][n];",
+      "action": "continue",
+      "next": "coding-base-java"
+    },
+    {
+      "stepId": "coding-base-java",
+      "mentorSays": "Now, set the base cases: first row and first column should all be 1 (only one way to reach them).",
+      "example": "public int uniquePaths(int m, int n) {\n    int[][] dp = new int[m][n];\n    \n    // Base case: first row and first column are all 1\n    for (int i = 0; i < m; i++) {\n        dp[i][0] = 1;\n    }\n    for (int j = 0; j < n; j++) {\n        dp[0][j] = 1;\n    }",
+      "action": "continue",
+      "next": "coding-initialize-grid-java"
+    },
+    {
+      "stepId": "coding-initialize-grid-java",
+      "mentorSays": "Let's initialize the 2D DP table with base cases.\n\nBase cases:\n- dp[0][0] = 1 (starting position)\n- First row: dp[0][j] = 1 for all j (can only go right)\n- First column: dp[i][0] = 1 for all i (can only go down)\n\nThese form the foundation of our DP table!",
+      "example": "// Initialize 2D DP table\nlet dp = Array(m).fill(null).map(() => Array(n).fill(0));\n\n// Base cases:\ndp[0][0] = 1;\nfor (let j = 1; j < n; j++) dp[0][j] = 1;  // First row\nfor (let i = 1; i < m; i++) dp[i][0] = 1;  // First column",
+      "action": "continue",
+      "next": "coding-fill-java"
+    },
+    {
+      "stepId": "coding-fill-java",
+      "mentorSays": "Now, fill the rest of the table: for each cell (i,j), the number of paths is the sum of paths from top (i-1,j) and left (i,j-1).",
+      "example": "public int uniquePaths(int m, int n) {\n    int[][] dp = new int[m][n];\n    \n    for (int i = 0; i < m; i++) {\n        dp[i][0] = 1;\n    }\n    for (int j = 0; j < n; j++) {\n        dp[0][j] = 1;\n    }\n    \n    // Fill the rest of the table\n    for (int i = 1; i < m; i++) {\n        for (int j = 1; j < n; j++) {\n            dp[i][j] = dp[i-1][j] + dp[i][j-1];\n        }\n    }",
+      "action": "continue",
+      "next": "coding-fill-dp-table-java"
+    },
+    {
+      "stepId": "coding-fill-dp-table-java",
+      "mentorSays": "Now let's fill the DP table row by row using the recurrence relation.\n\nFor each cell (i,j) where i > 0 and j > 0:\n- dp[i][j] = dp[i-1][j] + dp[i][j-1]\n- This means: paths to (i,j) = paths from above + paths from left\n\nWe fill the table systematically from top-left to bottom-right!",
+      "example": "// Fill DP table row by row\nfor (let i = 1; i < m; i++) {\n  for (let j = 1; j < n; j++) {\n    dp[i][j] = dp[i-1][j] + dp[i][j-1];\n  }\n}\n\n// dp[i][j] = paths from above + paths from left",
+      "action": "continue",
+      "next": "coding-return-java"
+    },
+    {
+      "stepId": "coding-return-java",
+      "mentorSays": "Finally, return dp[m-1][n-1], which contains the number of unique paths to the bottom-right corner.",
+      "example": "public int uniquePaths(int m, int n) {\n    int[][] dp = new int[m][n];\n    \n    for (int i = 0; i < m; i++) {\n        dp[i][0] = 1;\n    }\n    for (int j = 0; j < n; j++) {\n        dp[0][j] = 1;\n    }\n    \n    for (int i = 1; i < m; i++) {\n        for (int j = 1; j < n; j++) {\n            dp[i][j] = dp[i-1][j] + dp[i][j-1];\n        }\n    }\n    \n    return dp[m-1][n-1];\n}",
+      "action": "continue",
+      "next": "test-code-java"
+    },
+    {
+      "stepId": "test-code-java",
+      "mentorSays": "Perfect! Now test your code with the example we used earlier:\n\nm = 3, n = 7\n\nAfter calling uniquePaths(3, 7), it should return:\n28\n\nTry it in your IDE or code editor!",
+      "example": "Test input:\nm = 3, n = 7\n\nAfter uniquePaths(3, 7):\n28",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-cpp",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-cpp"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-cpp",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'dp' or 'grid') and put data inside it.\n\nFor example, 'vector<vector<int>> dp(m, vector<int>(n, 0));' creates a variable that stores a 2D vector.",
+      "example": "vector<vector<int>> dp(m, vector<int>(n, 0));\n\nNow the variable refers to a 2D vector",
+      "action": "continue",
+      "next": "function-check-cpp"
+    },
+    {
+      "stepId": "function-check-cpp",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "array-check-cpp"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-cpp",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "int add(int a, int b) {\n    return a + b;\n}\n\nadd(3, 5) returns 8",
+      "action": "continue",
+      "next": "array-check-cpp"
+    },
+    {
+      "stepId": "array-check-cpp",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a vector is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know vectors",
+          "next": "grid-navigation-check-cpp"
+        },
+        {
+          "label": "No, explain vectors",
+          "next": "array-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "grid-navigation-check-cpp",
+      "mentorSays": "Do you understand grid navigation constraints?",
+      "choices": [
+        {
+          "label": "Yes, I know grid-navigation",
+          "next": "path-counting-dp-check-cpp"
+        },
+        {
+          "label": "No, explain grid-navigation",
+          "next": "grid-navigation-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "path-counting-dp-check-cpp",
+      "mentorSays": "Do you understand how DP counts paths?",
+      "choices": [
+        {
+          "label": "Yes, I know path-counting-dp",
+          "next": "coding-start-cpp"
+        },
+        {
+          "label": "No, explain path-counting-dp",
+          "next": "path-counting-dp-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "path-counting-dp-explanation-cpp",
+      "mentorSays": "To count paths to a cell, add paths from cells that can reach it. dp[i][j] = number of paths to reach cell (i,j). Base cases: dp[0][0] = 1 (starting position), dp[0][j] = 1 (top row - only one way), dp[i][0] = 1 (left column - only one way). Recurrence: dp[i][j] = dp[i-1][j] + dp[i][j-1]. Why? Cell (i,j) can be reached from: Cell above: (i-1, j), Cell to left: (i, j-1). Total paths = sum of both!\n\n// To count paths to a cell, add paths from cells that can reach it.\n\n// dp[i][j] = number of paths to reach cell (i,j)\n\n// Base cases:\n// - dp[0][0] = 1 (starting position)\n// - dp[0][j] = 1 (top row - only one way)\n// - dp[i][0] = 1 (left column - only one way)\n\n// Recurrence:\n// dp[i][j] = dp[i-1][j] + dp[i][j-1]\n\n// Why? Cell (i,j) can be reached from:\n// - Cell above: (i-1, j)\n// - Cell to left: (i, j-1)\n\n// Total paths = sum of both!\n\nGot it?",
+      "example": "// To count paths to a cell, add paths from cells that can reach it.\n\n// dp[i][j] = number of paths to reach cell (i,j)\n\n// Base cases:\n// - dp[0][0] = 1 (starting position)\n// - dp[0][j] = 1 (top row - only one way)\n// - dp[i][0] = 1 (left column - only one way)\n\n// Recurrence:\n// dp[i][j] = dp[i-1][j] + dp[i][j-1]\n\n// Why? Cell (i,j) can be reached from:\n// - Cell above: (i-1, j)\n// - Cell to left: (i, j-1)\n\n// Total paths = sum of both!",
+      "action": "continue",
+      "next": "coding-start-cpp"
+    },
+    {
+      "stepId": "grid-navigation-explanation-cpp",
+      "mentorSays": "In grid lessons, movement is often restricted. For this lesson: Start at grid[0][0] (top-left), Goal: reach grid[m-1][n-1] (bottom-right), Allowed moves: RIGHT or DOWN only. From any cell (i,j), you can go to: (i, j+1) - move RIGHT, (i+1, j) - move DOWN. You CANNOT move left or up!\n\n// Grid navigation constraints:\n// Start at grid[0][0] (top-left)\n// Goal: reach grid[m-1][n-1] (bottom-right)\n// Allowed moves: RIGHT or DOWN only\n\n// From any cell (i,j), you can go to:\n// - (i, j+1) - move RIGHT\n// - (i+1, j) - move DOWN\n\n// Example: 3x3 grid\n// [S][ ][ ]\n// [ ][ ][ ]\n// [ ][ ][E]\n\n// You CANNOT move left or up!\n\nGot it?",
+      "example": "// Grid navigation constraints:\n// Start at grid[0][0] (top-left)\n// Goal: reach grid[m-1][n-1] (bottom-right)\n// Allowed moves: RIGHT or DOWN only\n\n// From any cell (i,j), you can go to:\n// - (i, j+1) - move RIGHT\n// - (i+1, j) - move DOWN\n\n// Example: 3x3 grid\n// [S][ ][ ]\n// [ ][ ][ ]\n// [ ][ ][E]\n\n// You CANNOT move left or up!",
+      "action": "continue",
+      "next": "coding-start-cpp"
+    },
+    {
+      "stepId": "array-explanation-cpp",
+      "mentorSays": "A vector is like an array - a collection of items that keeps them in order. Each item has a position number called an 'index'. Vector indices start counting from 0.",
+      "example": "vector<int> arr = {1, 2, 3};\n\narr[0] = 1\narr[1] = 2\narr[2] = 3",
+      "action": "continue",
+      "next": "coding-start-cpp"
+    },
+    {
+      "stepId": "coding-start-cpp",
+      "mentorSays": "Perfect! Let's implement unique paths using dynamic programming in C++.",
+      "example": "int uniquePaths(int m, int n) {\n    // Your code here\n}",
+      "action": "continue",
+      "next": "coding-init-cpp"
+    },
+    {
+      "stepId": "coding-init-cpp",
+      "mentorSays": "First, create a 2D DP table with m rows and n columns, initialized to 0.",
+      "example": "int uniquePaths(int m, int n) {\n    // Create 2D DP table\n    vector<vector<int>> dp(m, vector<int>(n, 0));",
+      "action": "continue",
+      "next": "coding-base-cpp"
+    },
+    {
+      "stepId": "coding-base-cpp",
+      "mentorSays": "Now, set the base cases: first row and first column should all be 1 (only one way to reach them).",
+      "example": "int uniquePaths(int m, int n) {\n    vector<vector<int>> dp(m, vector<int>(n, 0));\n    \n    // Base case: first row and first column are all 1\n    for (int i = 0; i < m; i++) {\n        dp[i][0] = 1;\n    }\n    for (int j = 0; j < n; j++) {\n        dp[0][j] = 1;\n    }",
+      "action": "continue",
+      "next": "coding-initialize-grid-cpp"
+    },
+    {
+      "stepId": "coding-initialize-grid-cpp",
+      "mentorSays": "Let's initialize the 2D DP table with base cases.\n\nBase cases:\n- dp[0][0] = 1 (starting position)\n- First row: dp[0][j] = 1 for all j (can only go right)\n- First column: dp[i][0] = 1 for all i (can only go down)\n\nThese form the foundation of our DP table!",
+      "example": "// Initialize 2D DP table\nlet dp = Array(m).fill(null).map(() => Array(n).fill(0));\n\n// Base cases:\ndp[0][0] = 1;\nfor (let j = 1; j < n; j++) dp[0][j] = 1;  // First row\nfor (let i = 1; i < m; i++) dp[i][0] = 1;  // First column",
+      "action": "continue",
+      "next": "coding-fill-cpp"
+    },
+    {
+      "stepId": "coding-fill-cpp",
+      "mentorSays": "Now, fill the rest of the table: for each cell (i,j), the number of paths is the sum of paths from top (i-1,j) and left (i,j-1).",
+      "example": "int uniquePaths(int m, int n) {\n    vector<vector<int>> dp(m, vector<int>(n, 0));\n    \n    for (int i = 0; i < m; i++) {\n        dp[i][0] = 1;\n    }\n    for (int j = 0; j < n; j++) {\n        dp[0][j] = 1;\n    }\n    \n    // Fill the rest of the table\n    for (int i = 1; i < m; i++) {\n        for (int j = 1; j < n; j++) {\n            dp[i][j] = dp[i-1][j] + dp[i][j-1];\n        }\n    }",
+      "action": "continue",
+      "next": "coding-fill-dp-table-cpp"
+    },
+    {
+      "stepId": "coding-fill-dp-table-cpp",
+      "mentorSays": "Now let's fill the DP table row by row using the recurrence relation.\n\nFor each cell (i,j) where i > 0 and j > 0:\n- dp[i][j] = dp[i-1][j] + dp[i][j-1]\n- This means: paths to (i,j) = paths from above + paths from left\n\nWe fill the table systematically from top-left to bottom-right!",
+      "example": "// Fill DP table row by row\nfor (let i = 1; i < m; i++) {\n  for (let j = 1; j < n; j++) {\n    dp[i][j] = dp[i-1][j] + dp[i][j-1];\n  }\n}\n\n// dp[i][j] = paths from above + paths from left",
+      "action": "continue",
+      "next": "coding-return-cpp"
+    },
+    {
+      "stepId": "coding-return-cpp",
+      "mentorSays": "Finally, return dp[m-1][n-1], which contains the number of unique paths to the bottom-right corner.",
+      "example": "int uniquePaths(int m, int n) {\n    vector<vector<int>> dp(m, vector<int>(n, 0));\n    \n    for (int i = 0; i < m; i++) {\n        dp[i][0] = 1;\n    }\n    for (int j = 0; j < n; j++) {\n        dp[0][j] = 1;\n    }\n    \n    for (int i = 1; i < m; i++) {\n        for (int j = 1; j < n; j++) {\n            dp[i][j] = dp[i-1][j] + dp[i][j-1];\n        }\n    }\n    \n    return dp[m-1][n-1];\n}",
+      "action": "continue",
+      "next": "test-code-cpp"
+    },
+    {
+      "stepId": "test-code-cpp",
+      "mentorSays": "Perfect! Now test your code with the example we used earlier:\n\nm = 3, n = 7\n\nAfter calling uniquePaths(3, 7), it should return:\n28\n\nTry it in your IDE or code editor!",
+      "example": "Test input:\nm = 3, n = 7\n\nAfter uniquePaths(3, 7):\n28",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-ts",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-ts"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-ts",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'dp' or 'grid') and put data inside it.\n\nFor example, 'let dp: number[][] = [];' creates a variable that stores an empty 2D array.",
+      "example": "let dp: number[][] = [];\n\nNow the variable refers to an empty 2D array",
+      "action": "continue",
+      "next": "function-check-ts"
+    },
+    {
+      "stepId": "function-check-ts",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "array-check-ts"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-ts",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "function add(a: number, b: number): number {\n  return a + b;\n}\n\nadd(3, 5) returns 8",
+      "action": "continue",
+      "next": "array-check-ts"
+    },
+    {
+      "stepId": "array-check-ts",
+      "mentorSays": "Before we start coding, let me ask: Do you know what an array is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know arrays",
+          "next": "grid-navigation-check-ts"
+        },
+        {
+          "label": "No, explain arrays",
+          "next": "array-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "grid-navigation-check-ts",
+      "mentorSays": "Do you understand grid navigation constraints?",
+      "choices": [
+        {
+          "label": "Yes, I know grid-navigation",
+          "next": "path-counting-dp-check-ts"
+        },
+        {
+          "label": "No, explain grid-navigation",
+          "next": "grid-navigation-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "path-counting-dp-check-ts",
+      "mentorSays": "Do you understand how DP counts paths?",
+      "choices": [
+        {
+          "label": "Yes, I know path-counting-dp",
+          "next": "coding-start-ts"
+        },
+        {
+          "label": "No, explain path-counting-dp",
+          "next": "path-counting-dp-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "path-counting-dp-explanation-ts",
+      "mentorSays": "To count paths to a cell, add paths from cells that can reach it. dp[i][j] = number of paths to reach cell (i,j). Base cases: dp[0][0] = 1 (starting position), dp[0][j] = 1 (top row - only one way), dp[i][0] = 1 (left column - only one way). Recurrence: dp[i][j] = dp[i-1][j] + dp[i][j-1]. Why? Cell (i,j) can be reached from: Cell above: (i-1, j), Cell to left: (i, j-1). Total paths = sum of both!\n\n// To count paths to a cell, add paths from cells that can reach it.\n\n// dp[i][j] = number of paths to reach cell (i,j)\n\n// Base cases:\n// - dp[0][0] = 1 (starting position)\n// - dp[0][j] = 1 (top row - only one way)\n// - dp[i][0] = 1 (left column - only one way)\n\n// Recurrence:\n// dp[i][j] = dp[i-1][j] + dp[i][j-1]\n\n// Why? Cell (i,j) can be reached from:\n// - Cell above: (i-1, j)\n// - Cell to left: (i, j-1)\n\n// Total paths = sum of both!\n\nGot it?",
+      "example": "// To count paths to a cell, add paths from cells that can reach it.\n\n// dp[i][j] = number of paths to reach cell (i,j)\n\n// Base cases:\n// - dp[0][0] = 1 (starting position)\n// - dp[0][j] = 1 (top row - only one way)\n// - dp[i][0] = 1 (left column - only one way)\n\n// Recurrence:\n// dp[i][j] = dp[i-1][j] + dp[i][j-1]\n\n// Why? Cell (i,j) can be reached from:\n// - Cell above: (i-1, j)\n// - Cell to left: (i, j-1)\n\n// Total paths = sum of both!",
+      "action": "continue",
+      "next": "coding-start-ts"
+    },
+    {
+      "stepId": "grid-navigation-explanation-ts",
+      "mentorSays": "In grid lessons, movement is often restricted. For this lesson: Start at grid[0][0] (top-left), Goal: reach grid[m-1][n-1] (bottom-right), Allowed moves: RIGHT or DOWN only. From any cell (i,j), you can go to: (i, j+1) - move RIGHT, (i+1, j) - move DOWN. You CANNOT move left or up!\n\n// Grid navigation constraints:\n// Start at grid[0][0] (top-left)\n// Goal: reach grid[m-1][n-1] (bottom-right)\n// Allowed moves: RIGHT or DOWN only\n\n// From any cell (i,j), you can go to:\n// - (i, j+1) - move RIGHT\n// - (i+1, j) - move DOWN\n\n// Example: 3x3 grid\n// [S][ ][ ]\n// [ ][ ][ ]\n// [ ][ ][E]\n\n// You CANNOT move left or up!\n\nGot it?",
+      "example": "// Grid navigation constraints:\n// Start at grid[0][0] (top-left)\n// Goal: reach grid[m-1][n-1] (bottom-right)\n// Allowed moves: RIGHT or DOWN only\n\n// From any cell (i,j), you can go to:\n// - (i, j+1) - move RIGHT\n// - (i+1, j) - move DOWN\n\n// Example: 3x3 grid\n// [S][ ][ ]\n// [ ][ ][ ]\n// [ ][ ][E]\n\n// You CANNOT move left or up!",
+      "action": "continue",
+      "next": "coding-start-ts"
+    },
+    {
+      "stepId": "array-explanation-ts",
+      "mentorSays": "An array is like a list of items that keeps them in order. Each item has a position number called an 'index'. Array indices start counting from 0.",
+      "example": "arr: number[] = [1, 2, 3]\n\narr[0] = 1\narr[1] = 2\narr[2] = 3",
+      "action": "continue",
+      "next": "coding-start-ts"
+    },
+    {
+      "stepId": "coding-start-ts",
+      "mentorSays": "Perfect! Let's implement unique paths using dynamic programming in TypeScript.",
+      "example": "function uniquePaths(m: number, n: number): number {\n  // Your code here\n}",
+      "action": "continue",
+      "next": "coding-init-ts"
+    },
+    {
+      "stepId": "coding-init-ts",
+      "mentorSays": "First, create a 2D DP table with m rows and n columns, initialized to 0.",
+      "example": "function uniquePaths(m: number, n: number): number {\n  // Create 2D DP table\n  const dp: number[][] = Array(m).fill(null).map(() => Array(n).fill(0));",
+      "action": "continue",
+      "next": "coding-base-ts"
+    },
+    {
+      "stepId": "coding-base-ts",
+      "mentorSays": "Now, set the base cases: first row and first column should all be 1 (only one way to reach them).",
+      "example": "function uniquePaths(m: number, n: number): number {\n  const dp: number[][] = Array(m).fill(null).map(() => Array(n).fill(0));\n  \n  // Base case: first row and first column are all 1\n  for (let i = 0; i < m; i++) {\n    dp[i][0] = 1;\n  }\n  for (let j = 0; j < n; j++) {\n    dp[0][j] = 1;\n  }",
+      "action": "continue",
+      "next": "coding-initialize-grid-ts"
+    },
+    {
+      "stepId": "coding-initialize-grid-ts",
+      "mentorSays": "Let's initialize the 2D DP table with base cases.\n\nBase cases:\n- dp[0][0] = 1 (starting position)\n- First row: dp[0][j] = 1 for all j (can only go right)\n- First column: dp[i][0] = 1 for all i (can only go down)\n\nThese form the foundation of our DP table!",
+      "example": "// Initialize 2D DP table\nlet dp = Array(m).fill(null).map(() => Array(n).fill(0));\n\n// Base cases:\ndp[0][0] = 1;\nfor (let j = 1; j < n; j++) dp[0][j] = 1;  // First row\nfor (let i = 1; i < m; i++) dp[i][0] = 1;  // First column",
+      "action": "continue",
+      "next": "coding-fill-ts"
+    },
+    {
+      "stepId": "coding-fill-ts",
+      "mentorSays": "Now, fill the rest of the table: for each cell (i,j), the number of paths is the sum of paths from top (i-1,j) and left (i,j-1).",
+      "example": "function uniquePaths(m: number, n: number): number {\n  const dp: number[][] = Array(m).fill(null).map(() => Array(n).fill(0));\n  \n  for (let i = 0; i < m; i++) {\n    dp[i][0] = 1;\n  }\n  for (let j = 0; j < n; j++) {\n    dp[0][j] = 1;\n  }\n  \n  // Fill the rest of the table\n  for (let i = 1; i < m; i++) {\n    for (let j = 1; j < n; j++) {\n      dp[i][j] = dp[i-1][j] + dp[i][j-1];\n    }\n  }",
+      "action": "continue",
+      "next": "coding-fill-dp-table-ts"
+    },
+    {
+      "stepId": "coding-fill-dp-table-ts",
+      "mentorSays": "Now let's fill the DP table row by row using the recurrence relation.\n\nFor each cell (i,j) where i > 0 and j > 0:\n- dp[i][j] = dp[i-1][j] + dp[i][j-1]\n- This means: paths to (i,j) = paths from above + paths from left\n\nWe fill the table systematically from top-left to bottom-right!",
+      "example": "// Fill DP table row by row\nfor (let i = 1; i < m; i++) {\n  for (let j = 1; j < n; j++) {\n    dp[i][j] = dp[i-1][j] + dp[i][j-1];\n  }\n}\n\n// dp[i][j] = paths from above + paths from left",
+      "action": "continue",
+      "next": "coding-return-ts"
+    },
+    {
+      "stepId": "coding-return-ts",
+      "mentorSays": "Finally, return dp[m-1][n-1], which contains the number of unique paths to the bottom-right corner.",
+      "example": "function uniquePaths(m: number, n: number): number {\n  const dp: number[][] = Array(m).fill(null).map(() => Array(n).fill(0));\n  \n  for (let i = 0; i < m; i++) {\n    dp[i][0] = 1;\n  }\n  for (let j = 0; j < n; j++) {\n    dp[0][j] = 1;\n  }\n  \n  for (let i = 1; i < m; i++) {\n    for (let j = 1; j < n; j++) {\n      dp[i][j] = dp[i-1][j] + dp[i][j-1];\n    }\n  }\n  \n  return dp[m-1][n-1];\n}",
+      "action": "continue",
+      "next": "test-code-ts"
+    },
+    {
+      "stepId": "test-code-ts",
+      "mentorSays": "Perfect! Now test your code with the example we used earlier:\n\nm = 3, n = 7\n\nAfter calling uniquePaths(3, 7), it should return:\n28\n\nTry it in your IDE or code editor!",
+      "example": "Test input:\nm = 3, n = 7\n\nAfter uniquePaths(3, 7):\n28",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "final",
+      "mentorSays": "🎉 Well done! You've learned unique paths using dynamic programming. You understand how to build a 2D DP table and fill it based on paths from top and left!\n\nThis is O(m×n) time and O(m×n) space - excellent for grid path lessons! Keep practicing!",
+      "action": "continue"
+    }
+  ]
+}

@@ -1,0 +1,331 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-node-92",
+    "track": "node",
+    "lessonNum": 92,
+    "title": "Build retry with jitter utility for upstream calls",
+    "shortName": "P92",
+    "intro": {
+      "tag": "LESSON #92",
+      "title": "Build retry with jitter utility for upstream calls",
+      "body": "In this lesson, you will build a utility function that retries failed API calls to upstream services, adding random jitter to prevent overwhelming the server. You'll learn how to implement retry logic using loops and delays, and introduce jitter by generating random wait times. The main technologies involved are JavaScript's async/await, setTimeout for delays, and Math.random for jitter. This beginner-friendly project will help you create more resilient Node.js applications that handle network failures gracefully.",
+      "usecase": "When your Node.js service makes API calls to external services like payment gateways, third-party APIs, or databases, network issues or temporary service overloads can cause failures. Adding retry logic with jitter helps your application gracefully handle these transient failures by automatically retrying failed requests with randomized delays between attempts. This prevents retry storms and reduces load on the upstream service, making your application more resilient in production environments like e-commerce checkout flows, data synchronization services, or microservice communication layers."
+    },
+    "objectives": [
+      "Implement a basic retry mechanism with exponential backoff for failed API calls",
+      "Configure jitter parameters to randomize delay intervals between retry attempts",
+      "Construct a reusable utility function that encapsulates retry-with-jitter logic",
+      "Integrate the retry utility with a simulated upstream service call",
+      "Manipulate retry configuration options such as maximum attempts and base delay",
+      "Initialize and control retry behavior through configurable parameters",
+      "Apply error handling patterns to manage different failure scenarios during retries"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 9",
+        "title": "Import required Node.js modules",
+        "instruction": "Import the 'https' and 'util' modules from Node.js core.",
+        "hint": "Use the 'require' statement to import Node.js built-in modules. Both modules are available globally in Node.js.",
+        "analogousExample": "// Example: importing Node.js modules\nconst fs = require('fs');\nconst path = require('path');",
+        "seedCode": "// Import the 'https' and 'util' modules here\n",
+        "expectedOutcome": "The 'https' and 'util' modules are imported and ready to use for making HTTP requests and promisifying functions.",
+        "successCriteria": [
+          "The 'https' and 'util' modules are imported using require statements."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've imported one module, but both 'https' and 'util' are needed. Make sure to import both using separate require statements.",
+        "feedbackWrong": "The imports are missing or incorrect. You need to import both 'https' and 'util' modules using require statements.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "require('https')",
+            "require('util')"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 9",
+        "title": "Create the retryWithJitter function skeleton",
+        "instruction": "Define a function named retryWithJitter that accepts four parameters: url, options, maxRetries, and baseDelay. The function should return a promise.",
+        "hint": "You can use either a function declaration or arrow function. Remember to include the parameters in parentheses and return a promise (e.g., return new Promise(...)).",
+        "analogousExample": "// Example function structure\nfunction fetchWithRetry(url, retries, delay) {\n    return new Promise((resolve, reject) => {\n        // Implementation goes here\n    });\n}",
+        "seedCode": "// Import the 'https' and 'util' modules here\n\n// Define the retryWithJitter function here",
+        "expectedOutcome": "A function named retryWithJitter is defined with the correct parameters and returns a promise.",
+        "successCriteria": [
+          "The retryWithJitter function is defined with url, options, maxRetries, and baseDelay parameters and returns a promise."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure your function has all four parameters (url, options, maxRetries, baseDelay) and returns a promise.",
+        "feedbackWrong": "The function definition is missing required elements. Check that you have the correct function name, parameters, and promise return.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "retryWithJitter",
+            "url",
+            "options",
+            "maxRetries",
+            "baseDelay",
+            "return",
+            "Promise"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 9",
+        "title": "Implement the exponential backoff calculation",
+        "instruction": "Inside the retryWithJitter function, create a helper function called calculateDelay that takes retryCount and baseDelay as parameters and returns the exponential backoff delay using the formula 2^retryCount * baseDelay.",
+        "hint": "The helper function should be defined inside retryWithJitter. Use Math.pow(2, retryCount) or the exponentiation operator (**) to calculate 2^retryCount, then multiply by baseDelay.",
+        "analogousExample": "// Similar: a helper function for exponential calculation\nfunction calculateExponential(base, exponent) {\n    return Math.pow(base, exponent);\n}",
+        "seedCode": "// Import the 'https' and 'util' modules here\n\n// Define the retryWithJitter function here\nfunction retryWithJitter() {\n    // Add calculateDelay helper function here\n}",
+        "expectedOutcome": "A calculateDelay helper function is defined inside retryWithJitter, correctly implementing the exponential backoff formula.",
+        "successCriteria": [
+          "The calculateDelay function exists, takes retryCount and baseDelay parameters, and returns 2^retryCount * baseDelay."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've created a helper function, but check the formula. It should be 2^retryCount * baseDelay.",
+        "feedbackWrong": "The calculateDelay helper function is missing or incorrect. It should take retryCount and baseDelay and return the exponential backoff delay.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "calculateDelay",
+            "retryCount",
+            "baseDelay",
+            "Math.pow",
+            "*",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 9",
+        "title": "Add jitter to the delay calculation",
+        "instruction": "Inside the calculateDelay function, modify the delay calculation to add random jitter by multiplying the base delay by a random factor between 0.5 and 1.5.",
+        "hint": "Use Math.random() to generate a random number between 0 and 1, then scale it to the desired range and multiply it with the base delay.",
+        "analogousExample": "// Adding jitter to a delay calculation\nfunction calculateDelayWithJitter(baseDelay) {\n    const jitterFactor = 0.5 + Math.random(); // Random between 0.5 and 1.5\n    return baseDelay * jitterFactor;\n}",
+        "seedCode": "// Import the 'https' and 'util' modules here\n\n// Define the retryWithJitter function here\nfunction retryWithJitter() {\n    // Add calculateDelay helper function here\n    function calculateDelay(attempt) {\n        const baseDelay = Math.pow(2, attempt) * 100;\n        // Add jitter to the delay calculation here\n    }\n}",
+        "expectedOutcome": "The calculateDelay function now returns a delay with random jitter applied, helping to prevent the thundering herd lesson.",
+        "successCriteria": [
+          "The calculateDelay function multiplies the baseDelay by a random factor between 0.5 and 1.5."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're multiplying the baseDelay by a random factor between 0.5 and 1.5.",
+        "feedbackWrong": "The jitter calculation isn't quite right. Remember to multiply the baseDelay by a random factor between 0.5 and 1.5.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "Math.random",
+            "*",
+            "baseDelay",
+            "0.5",
+            "1.5"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 9",
+        "title": "Implement the retry loop logic",
+        "instruction": "Inside the retryWithJitter function, add a for loop that attempts the request and retries on failure up to maxRetries.",
+        "hint": "Use a for loop that iterates from 0 to maxRetries. Inside the loop, call the makeRequest helper function and handle success or failure.",
+        "analogousExample": "// Similar: retry loop structure\nfor (let i = 0; i <= maxRetries; i++) {\n    try {\n        const result = await someOperation();\n        return result;\n    } catch (error) {\n        if (i === maxRetries) throw error;\n        await delay(calculateDelay(i));\n    }\n}",
+        "seedCode": "// Import the 'https' and 'util' modules here\n\n// Define the retryWithJitter function here\nfunction retryWithJitter() {\n    // Add calculateDelay helper function here\n    function calculateDelay(attempt) {\n        const baseDelay = Math.pow(2, attempt) * 100;\n        // Add jitter to the delay calculation here\n    }\n    \n    // Create makeRequest helper function here\n    \n    // Implement the retry loop logic here\n}",
+        "expectedOutcome": "The retryWithJitter function now contains a for loop that will attempt the request multiple times with exponential backoff and jitter.",
+        "successCriteria": [
+          "A for loop is added inside retryWithJitter that iterates up to maxRetries, calls makeRequest, and handles retries on failure."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but the loop structure or error handling needs adjustment. Make sure the loop handles both success and failure cases properly.",
+        "feedbackWrong": "The retry loop logic is missing or incorrect. Review the example and ensure you've added a proper for loop inside the retryWithJitter function.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "for",
+            "maxRetries",
+            "makeRequest",
+            "try",
+            "catch"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 9",
+        "title": "Add delay between retry attempts",
+        "instruction": "Inside the retry loop in your retryWithJitter function, add a delay using setTimeout wrapped in a promise before making the next retry attempt. Wait for the calculated jittered delay.",
+        "hint": "Create a promise that resolves after the delay using setTimeout. Use the calculateDelay function to get the wait time for the current attempt.",
+        "analogousExample": "// Similar: waiting with a promise\nfunction wait(ms) {\n    return new Promise(resolve => setTimeout(resolve, ms));\n}",
+        "seedCode": "// Import the 'https' and 'util' modules here\n\n// Define the retryWithJitter function here\nfunction retryWithJitter() {\n    // Add calculateDelay helper function here\n    function calculateDelay(attempt) {\n        const baseDelay = Math.pow(2, attempt) * 100;\n        // Add jitter to the delay calculation here\n    }\n    \n    // Create makeRequest helper function here\n    \n    // Implement the retry loop logic here\n    // Add delay between retry attempts here\n}",
+        "expectedOutcome": "The retry loop will include a delay before each retry attempt, using the jittered exponential backoff calculation.",
+        "successCriteria": [
+          "The retry loop contains a promise-based delay using setTimeout that waits for the calculated jittered delay before the next retry attempt."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure you're using setTimeout wrapped in a promise and waiting for the calculated delay from the calculateDelay function.",
+        "feedbackWrong": "The delay implementation is missing or incorrect. Remember to create a promise that resolves after the calculated delay using setTimeout.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "setTimeout",
+            "Promise",
+            "calculateDelay",
+            "resolve"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 9",
+        "title": "Handle successful responses",
+        "instruction": "Inside the makeRequest helper function, add logic to return the response data when the HTTP request succeeds (status code 200-299).",
+        "hint": "Check if response.statusCode is between 200 and 299, then collect and return the response data.",
+        "analogousExample": "// Example: handling successful HTTP response\nfunction handleResponse(response) {\n    if (response.statusCode >= 200 && response.statusCode < 300) {\n        let data = '';\n        response.on('data', chunk => data += chunk);\n        response.on('end', () => {\n            return JSON.parse(data);\n        });\n    }\n}",
+        "seedCode": "// Import the 'https' and 'util' modules here\n\n// Define the retryWithJitter function here\nfunction retryWithJitter() {\n    // Add calculateDelay helper function here\n    function calculateDelay(attempt) {\n        const baseDelay = Math.pow(2, attempt) * 100;\n        // Add jitter to the delay calculation here\n    }\n    \n    // Create makeRequest helper function here\n    function makeRequest() {\n        // Add logic to handle successful responses here\n    }\n    \n    // Implement the retry loop logic here\n    // Add delay between retry attempts here\n}",
+        "expectedOutcome": "The makeRequest function will properly handle successful HTTP responses by returning the response data.",
+        "successCriteria": [
+          "The makeRequest function checks for status codes 200-299 and returns the parsed response data."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure to check the status code range and properly collect/return the response data.",
+        "feedbackWrong": "The success handling logic is missing or incorrect. Review how to check HTTP status codes and process response data.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "statusCode",
+            "200",
+            "299",
+            "on('data'",
+            "on('end'",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 9",
+        "title": "Handle final failure after all retries",
+        "instruction": "Inside the retryWithJitter function, after the retry loop, add logic to throw an error when all retry attempts have been exhausted without success.",
+        "hint": "After the loop completes without returning a successful response, you can throw a new Error with a descriptive message.",
+        "analogousExample": "// Similar: throwing an error after repeated failures\nfunction fetchWithRetry() {\n  for (let i = 0; i < 3; i++) {\n    try {\n      return makeRequest();\n    } catch (err) {\n      // retry logic\n    }\n  }\n  throw new Error('All retry attempts failed');\n}",
+        "seedCode": "// Import the 'https' and 'util' modules here\n\n// Define the retryWithJitter function here\nfunction retryWithJitter() {\n    // Add calculateDelay helper function here\n    function calculateDelay(attempt) {\n        const baseDelay = Math.pow(2, attempt) * 100;\n        // Add jitter to the delay calculation here\n    }\n    \n    // Create makeRequest helper function here\n    function makeRequest() {\n        // Add logic to handle successful responses here\n    }\n    \n    // Implement the retry loop logic here\n    // Add delay between retry attempts here\n    \n    // Handle final failure after all retries here\n}",
+        "expectedOutcome": "The retryWithJitter function should now properly handle the case where all retry attempts fail by throwing a descriptive error.",
+        "successCriteria": [
+          "An error is thrown with a descriptive message when maxRetries is reached without a successful response."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're throwing an Error object with a descriptive message about the retry failure.",
+        "feedbackWrong": "The function should throw an error when all retry attempts have been exhausted. Look at the analogous example for guidance on error handling after a retry loop.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "throw",
+            "Error",
+            "retry",
+            "failed"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 9",
+        "title": "Export the retryWithJitter function",
+        "instruction": "Export the retryWithJitter function using module.exports so it can be imported and used in other modules.",
+        "hint": "Add a module.exports statement at the end of your file to export the function.",
+        "analogousExample": "// Exporting a function for use in other files\nfunction calculateTotal() {}\nmodule.exports = calculateTotal;",
+        "seedCode": "// Import the 'https' and 'util' modules here\n\n// Define the retryWithJitter function here\nfunction retryWithJitter() {\n    // Add calculateDelay helper function here\n    function calculateDelay(attempt) {\n        const baseDelay = Math.pow(2, attempt) * 100;\n        // Add jitter to the delay calculation here\n    }\n    \n    // Create makeRequest helper function here\n    function makeRequest() {\n        // Add logic to handle successful responses here\n    }\n    \n    // Implement the retry loop logic here\n    // Add delay between retry attempts here\n    \n    // Handle final failure after all retries here\n}\n\n// Export the retryWithJitter function here",
+        "expectedOutcome": "The retryWithJitter function will be available for import in other Node.js modules.",
+        "successCriteria": [
+          "The retryWithJitter function is exported using module.exports."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close, but the export isn't quite right. Make sure you're using module.exports to export the retryWithJitter function.",
+        "feedbackWrong": "The retryWithJitter function isn't properly exported. Check that you're using module.exports to make the function available to other modules.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "module.exports",
+            "retryWithJitter"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import required Node.js modules",
+        "id": "step1"
+      },
+      {
+        "label": "Create the retryWithJitter function skeleton",
+        "id": "step2"
+      },
+      {
+        "label": "Implement the exponential backoff calculation",
+        "id": "step3"
+      },
+      {
+        "label": "Add jitter to the delay calculation",
+        "id": "step4"
+      },
+      {
+        "label": "Implement the retry loop logic",
+        "id": "step5"
+      },
+      {
+        "label": "Add delay between retry attempts",
+        "id": "step6"
+      },
+      {
+        "label": "Handle successful responses",
+        "id": "step7"
+      },
+      {
+        "label": "Handle final failure after all retries",
+        "id": "step8"
+      },
+      {
+        "label": "Export the retryWithJitter function",
+        "id": "step9"
+      }
+    ]
+  },
+  "source": "content"
+}

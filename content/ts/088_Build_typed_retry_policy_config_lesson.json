@@ -1,0 +1,328 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-ts-88",
+    "track": "ts",
+    "lessonNum": 88,
+    "title": "Build typed retry policy config",
+    "shortName": "P88",
+    "intro": {
+      "tag": "LESSON #88",
+      "title": "Build typed retry policy config",
+      "body": "In this lesson, you will build a typed configuration object for a retry policy, which defines rules like how many times an operation should retry and how long to wait between attempts. You will learn to use TypeScript's type system to ensure this configuration is always valid and correctly structured. The main constructs involved are TypeScript interfaces and optional properties. By the end, you'll have a reusable, type-safe configuration that can be used in functions that handle retrying failed operations.",
+      "usecase": "Typed retry policies are essential in production-grade applications that handle unreliable network connections or external API dependencies. You'll see this pattern in dashboard applications that fetch live data from multiple sources, where failed requests need automatic retries with configurable delays and limits. Payment processing systems use typed retry configurations to safely retry failed transactions with exponential backoff strategies. Form submissions in enterprise applications often implement retry logic with typed policies to ensure data persistence even during intermittent connectivity issues."
+    },
+    "objectives": [
+      "Implement a TypeScript interface to define a retry policy configuration",
+      "Construct a function that validates retry policy parameters against type constraints",
+      "Apply type annotations to enforce limits on retry attempts and delay intervals",
+      "Configure a retry policy object with typed properties for maximum attempts and backoff strategy",
+      "Manipulate policy settings using TypeScript's type system to ensure runtime safety",
+      "Initialize a default retry configuration with proper type definitions",
+      "Integrate the typed retry policy into a simulated API call function"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 9",
+        "title": "Import TypeScript types and utilities",
+        "instruction": "Import the TypeScript types and utilities needed for the retry policy configuration. Import the 'RetryConfig' type and the 'createRetryPolicy' function from './retry-utils'.",
+        "hint": "Use the import statement to bring in the necessary types and functions from the specified module.",
+        "analogousExample": "// Similar: importing types and functions\nimport { User, fetchUser } from './user-api';",
+        "seedCode": "// Import RetryConfig type and createRetryPolicy function from './retry-utils'",
+        "expectedOutcome": "The code will have the necessary imports for building the typed retry policy configuration.",
+        "successCriteria": [
+          "RetryConfig type and createRetryPolicy function are imported from './retry-utils'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure to import both the RetryConfig type and the createRetryPolicy function from './retry-utils'.",
+        "feedbackWrong": "import the RetryConfig type and createRetryPolicy function from the './retry-utils' module.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "RetryConfig",
+            "createRetryPolicy",
+            "from",
+            "./retry-utils"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 9",
+        "title": "Define the RetryPolicy interface",
+        "instruction": "Create a TypeScript interface named 'RetryPolicy' with typed properties for maxAttempts (number), delayMs (number), and backoffMultiplier (number).",
+        "hint": "Use the 'interface' keyword followed by the interface name and property definitions with type annotations.",
+        "analogousExample": "// Example: a simple typed interface\ninterface UserProfile {\n  name: string;\n  age: number;\n  isActive: boolean;\n}",
+        "seedCode": "// Import RetryConfig type and createRetryPolicy function from './retry-utils'\n\n// Define the RetryPolicy interface here",
+        "expectedOutcome": "A RetryPolicy interface is created with three number properties, providing a type-safe structure for retry configuration.",
+        "successCriteria": [
+          "The interface is named 'RetryPolicy' and includes maxAttempts: number, delayMs: number, and backoffMultiplier: number."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure all three properties (maxAttempts, delayMs, backoffMultiplier) are included with the 'number' type.",
+        "feedbackWrong": "The interface definition is missing or incorrect. Check that you used the 'interface' keyword and defined all required properties with type annotations.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "interface",
+            "RetryPolicy",
+            "maxAttempts",
+            "delayMs",
+            "backoffMultiplier",
+            "number"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 9",
+        "title": "Define the RetryPolicyConfig type",
+        "instruction": "Create a type alias named RetryPolicyConfig that uses TypeScript's Partial utility type to make all properties of the RetryPolicy interface optional.",
+        "hint": "Use the syntax: type RetryPolicyConfig = Partial<RetryPolicy>;",
+        "analogousExample": "// Example: Making properties optional with Partial\ninterface User {\n  name: string;\n  age: number;\n}\n\ntype UserConfig = Partial<User>;\n// UserConfig now has optional name and age properties",
+        "seedCode": "// Import RetryConfig type and createRetryPolicy function from './retry-utils'\n\n// Define the RetryPolicy interface here\n\n// Create the RetryPolicyConfig type alias",
+        "expectedOutcome": "A RetryPolicyConfig type that allows partial configuration of retry policies.",
+        "successCriteria": [
+          "The RetryPolicyConfig type alias is defined using Partial<RetryPolicy>."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're using the Partial utility type with the RetryPolicy interface.",
+        "feedbackWrong": "The RetryPolicyConfig type wasn't defined correctly. Remember to use Partial<RetryPolicy> to make all properties optional.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "type",
+            "RetryPolicyConfig",
+            "Partial",
+            "RetryPolicy"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 9",
+        "title": "Create default retry policy values",
+        "instruction": "Create a constant named 'defaultRetryPolicy' that provides default values matching the RetryPolicy interface.",
+        "hint": "Use the 'const' keyword to declare a constant. The object should have properties like 'maxRetries', 'initialDelay', and 'backoffFactor' with sensible default numbers.",
+        "analogousExample": "// Example: default configuration object\nconst defaultSettings = {\n  timeout: 5000,\n  retryCount: 3,\n  enabled: true\n};",
+        "seedCode": "// Import RetryConfig type and createRetryPolicy function from './retry-utils'\n\n// Define the RetryPolicy interface here\n\n// Create the RetryPolicyConfig type alias\n\n// Create default retry policy values here",
+        "expectedOutcome": "A constant 'defaultRetryPolicy' is defined with default values for a retry policy.",
+        "successCriteria": [
+          "The constant 'defaultRetryPolicy' exists and is an object with properties matching the RetryPolicy interface."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure the constant is properly typed and includes all required properties.",
+        "feedbackWrong": "The default retry policy constant is missing or incorrectly defined. Check the RetryPolicy interface for required properties.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "defaultRetryPolicy",
+            "const",
+            "maxRetries",
+            "initialDelay",
+            "backoffFactor"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 9",
+        "title": "Create the createRetryPolicy function signature",
+        "instruction": "Declare a function named createRetryPolicy that takes a RetryPolicyConfig parameter and returns a RetryPolicy.",
+        "hint": "Define the function with proper TypeScript parameter and return type annotations.",
+        "analogousExample": "// Similar: function with typed parameters and return\nfunction createGreeting(name: string): string {\n  return `Hello, ${name}!`;\n}",
+        "seedCode": "// Import RetryConfig type and createRetryPolicy function from './retry-utils'\n\n// Define the RetryPolicy interface here\n\n// Create the RetryPolicyConfig type alias\n\n// Create default retry policy values here\n\n// Declare the createRetryPolicy function here",
+        "expectedOutcome": "A function signature for createRetryPolicy with typed parameter and return type is added to the code.",
+        "successCriteria": [
+          "The createRetryPolicy function is declared with a RetryPolicyConfig parameter and a RetryPolicy return type."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added a function, but check that it has the correct parameter type (RetryPolicyConfig) and return type (RetryPolicy).",
+        "feedbackWrong": "The function signature is missing or incorrect. Ensure you declare a function named createRetryPolicy that takes a RetryPolicyConfig and returns a RetryPolicy.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "createRetryPolicy",
+            "RetryPolicyConfig",
+            "RetryPolicy"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 9",
+        "title": "Implement the createRetryPolicy function body",
+        "instruction": "Inside the createRetryPolicy function, implement the body to merge the user-provided config with the defaultRetryPolicy using the spread operator.",
+        "hint": "Use the spread operator (...) to combine the defaultRetryPolicy object with the user's config parameter. The function should return the merged RetryPolicy object.",
+        "analogousExample": "// Similar: merging configuration with defaults\nfunction createSettings(userSettings: Partial<Settings>) {\n    const defaultSettings = { theme: 'light', notifications: true };\n    return { ...defaultSettings, ...userSettings };\n}",
+        "seedCode": "// Import RetryConfig type and createRetryPolicy function from './retry-utils'\n\ninterface RetryPolicy {\n    maxRetries: number;\n    initialDelayMs: number;\n    backoffFactor: number;\n}\n\ntype RetryPolicyConfig = Partial<RetryPolicy>;\n\nconst defaultRetryPolicy: RetryPolicy = {\n    maxRetries: 3,\n    initialDelayMs: 1000,\n    backoffFactor: 2\n};\n\nfunction createRetryPolicy(config: RetryPolicyConfig): RetryPolicy {\n    // Implement the merge here\n}",
+        "expectedOutcome": "The createRetryPolicy function will correctly combine default values with any user-provided configuration, returning a complete RetryPolicy object.",
+        "successCriteria": [
+          "The function body uses the spread operator to merge defaultRetryPolicy with config and returns the result."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure you're using the spread operator to combine both objects and returning the merged result.",
+        "feedbackWrong": "The implementation doesn't match the expected pattern. Review how to use the spread operator to merge objects in TypeScript.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "...defaultRetryPolicy",
+            "...config",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 9",
+        "title": "Add validation logic for maxRetries",
+        "instruction": "Inside the createRetryPolicy function, add validation to ensure the maxRetries value from the merged configuration is a positive number (greater than 0).",
+        "hint": "After merging the config with defaults, check if the resulting maxRetries is less than or equal to 0, and throw an error if it is.",
+        "analogousExample": "// Example: validating a positive number\nfunction validatePositive(value: number) {\n    if (value <= 0) {\n        throw new Error('Value must be positive');\n    }\n}",
+        "seedCode": "// Import RetryConfig type and createRetryPolicy function from './retry-utils'\n\ninterface RetryPolicy {\n    maxRetries: number;\n    initialDelayMs: number;\n    backoffFactor: number;\n}\n\ntype RetryPolicyConfig = Partial<RetryPolicy>;\n\nconst defaultRetryPolicy: RetryPolicy = {\n    maxRetries: 3,\n    initialDelayMs: 1000,\n    backoffFactor: 2\n};\n\nfunction createRetryPolicy(config: RetryPolicyConfig): RetryPolicy {\n    // Implement the merge here\n    // Add validation for maxRetries\n}",
+        "expectedOutcome": "The createRetryPolicy function will now validate that maxRetries is positive before returning the policy.",
+        "successCriteria": [
+          "The function includes a check for maxRetries <= 0 and throws an error with a descriptive message."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You added validation, but make sure to check if maxRetries is less than or equal to 0 and throw an error.",
+        "feedbackWrong": "Try adding an if statement inside createRetryPolicy to validate maxRetries is positive.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "if",
+            "maxRetries",
+            "<=",
+            "0",
+            "throw",
+            "Error"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 9",
+        "title": "Create a sample usage of the retry policy",
+        "instruction": "Create a function named demonstrateRetryPolicy that calls createRetryPolicy with a custom configuration and logs the resulting policy to the console.",
+        "hint": "Define a function that creates a custom configuration object, passes it to createRetryPolicy, and logs the result using console.log.",
+        "analogousExample": "// Example of a function that demonstrates usage\nfunction demonstrateRetryPolicy() {\n    const customConfig = { maxRetries: 5, initialDelayMs: 500 };\n    const policy = createRetryPolicy(customConfig);\n    console.log('Retry policy:', policy);\n}",
+        "seedCode": "interface RetryPolicy {\n    maxRetries: number;\n    initialDelayMs: number;\n    backoffFactor: number;\n}\n\ntype RetryPolicyConfig = Partial<RetryPolicy>;\n\nconst defaultRetryPolicy: RetryPolicy = {\n    maxRetries: 3,\n    initialDelayMs: 1000,\n    backoffFactor: 2\n};\n\nfunction createRetryPolicy(config: RetryPolicyConfig): RetryPolicy {\n    // Implement the merge here\n    // Add validation for maxRetries\n    // Add validation for backoffFactor here\n}\n\n// Create a function that demonstrates usage of the retry policy",
+        "expectedOutcome": "A function named demonstrateRetryPolicy is added that creates a custom retry policy configuration and logs the merged policy.",
+        "successCriteria": [
+          "The demonstrateRetryPolicy function is defined, calls createRetryPolicy with a custom configuration, and logs the result."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the function, but make sure it calls createRetryPolicy with a custom configuration and logs the result.",
+        "feedbackWrong": "The function is missing or doesn't properly demonstrate the retry policy usage. Check that you're calling createRetryPolicy and logging the result.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "demonstrateRetryPolicy",
+            "createRetryPolicy",
+            "console.log"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 9",
+        "title": "Test the retry policy with invalid configuration",
+        "instruction": "Create a test function named testInvalidConfig that calls createRetryPolicy with an invalid configuration object (e.g., negative maxRetries) and logs the result.",
+        "hint": "Define a function that passes an object with invalid values to createRetryPolicy and logs the returned policy.",
+        "analogousExample": "// Example: testing a function with invalid input\nfunction testInvalidInput() {\n    const result = validateNumber(-5);\n    console.log('Result:', result);\n}",
+        "seedCode": "interface RetryPolicy {\n    maxRetries: number;\n    initialDelayMs: number;\n    backoffFactor: number;\n}\n\ntype RetryPolicyConfig = Partial<RetryPolicy>;\n\nconst defaultRetryPolicy: RetryPolicy = {\n    maxRetries: 3,\n    initialDelayMs: 1000,\n    backoffFactor: 2\n};\n\nfunction createRetryPolicy(config: RetryPolicyConfig): RetryPolicy {\n    // Implement the merge here\n    // Add validation for maxRetries\n    // Add validation for backoffFactor here\n}\n\n// Create a function that demonstrates usage of the retry policy\n\n// Add your testInvalidConfig function here",
+        "expectedOutcome": "A test function is created that demonstrates how invalid configuration is handled by the retry policy function.",
+        "successCriteria": [
+          "The testInvalidConfig function is defined and calls createRetryPolicy with an invalid configuration object."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've created a test function, but make sure it calls createRetryPolicy with an invalid configuration object.",
+        "feedbackWrong": "Try creating a function named testInvalidConfig that calls createRetryPolicy with invalid values (like negative maxRetries).",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "testInvalidConfig",
+            "createRetryPolicy",
+            "{"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import TypeScript types and utilities",
+        "id": "step1"
+      },
+      {
+        "label": "Define the RetryPolicy interface",
+        "id": "step2"
+      },
+      {
+        "label": "Define the RetryPolicyConfig type",
+        "id": "step3"
+      },
+      {
+        "label": "Create default retry policy values",
+        "id": "step4"
+      },
+      {
+        "label": "Create the createRetryPolicy function signature",
+        "id": "step5"
+      },
+      {
+        "label": "Implement the createRetryPolicy function body",
+        "id": "step6"
+      },
+      {
+        "label": "Add validation logic for maxRetries",
+        "id": "step7"
+      },
+      {
+        "label": "Create a sample usage of the retry policy",
+        "id": "step8"
+      },
+      {
+        "label": "Test the retry policy with invalid configuration",
+        "id": "step9"
+      }
+    ]
+  },
+  "source": "content"
+}

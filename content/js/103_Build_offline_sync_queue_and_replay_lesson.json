@@ -1,0 +1,390 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-js-103",
+    "track": "js",
+    "lessonNum": 103,
+    "title": "Build offline sync queue and replay",
+    "shortName": "P103",
+    "intro": {
+      "tag": "LESSON #103",
+      "title": "Build offline sync queue and replay",
+      "body": "In this lesson, you will build a simple offline sync queue and replay system for a to-do list app. You will learn how to store tasks locally when the app is offline and automatically sync them when the connection is restored. The core programming concept is managing application state and handling asynchronous operations. You will use JavaScript constructs like arrays, objects, and event listeners to implement this feature.",
+      "usecase": "This pattern is essential for mobile apps and progressive web applications that need to function reliably without internet connectivity. For example, field service technicians use mobile forms to submit work orders while offline in remote locations - their submissions queue up and automatically sync when connectivity returns. E-commerce apps implement this for shopping cart updates and wishlist changes, ensuring users don't lose their selections during spotty connections. Even collaborative tools like document editors use similar queues to handle simultaneous offline edits that must merge properly when users reconnect."
+    },
+    "objectives": [
+      "Construct an offline sync queue data structure to store pending operations",
+      "Initialize a service worker to detect and handle offline network conditions",
+      "Implement queue management functions to add, remove, and replay operations",
+      "Configure event listeners to capture user actions during offline periods",
+      "Integrate queue replay logic to synchronize data when connectivity is restored",
+      "Manipulate the DOM to provide visual feedback about sync status",
+      "Apply error handling to manage failed sync attempts during replay"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 11",
+        "title": "Import required modules for offline sync queue",
+        "instruction": "Create a JavaScript file and import the necessary APIs for handling offline operations and data storage. Import the IndexedDB API and the localStorage API.",
+        "hint": "Use the global objects 'indexedDB' and 'localStorage' directly since they are built into browsers. You don't need to import them from a module, but you should declare them as available globals.",
+        "analogousExample": "// Similar: declaring available browser APIs\nconst windowObject = window;\nconst documentObject = document;",
+        "seedCode": "// Import the necessary browser APIs for offline operations and data storage\n// Declare indexedDB and localStorage as available globals",
+        "expectedOutcome": "The file will be set up with declarations for the browser APIs needed to build an offline sync queue system.",
+        "successCriteria": [
+          "The file contains declarations for indexedDB and localStorage as available browser APIs."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure you've declared both indexedDB and localStorage as available browser APIs.",
+        "feedbackWrong": "The file doesn't contain the necessary declarations for browser APIs. You need to declare indexedDB and localStorage as available globals.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "indexedDB",
+            "localStorage"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 11",
+        "title": "Create the main SyncQueue class structure",
+        "instruction": "Create a SyncQueue class with a constructor that initializes an empty array property called 'queue'.",
+        "hint": "Use the 'class' keyword followed by the class name, then define a constructor method that sets 'this.queue' to an empty array.",
+        "analogousExample": "// Example: a simple class structure\nclass TaskList {\n  constructor() {\n    this.tasks = [];\n  }\n}",
+        "seedCode": "// Import the necessary browser APIs for offline operations and data storage\n// Declare indexedDB and localStorage as available globals\n\n// Create the SyncQueue class here",
+        "expectedOutcome": "A SyncQueue class is defined with a constructor that initializes a 'queue' property as an empty array.",
+        "successCriteria": [
+          "The SyncQueue class exists with a constructor that sets this.queue = []."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure the constructor properly initializes this.queue as an empty array.",
+        "feedbackWrong": "The SyncQueue class structure isn't quite right. Remember to use the class syntax and initialize this.queue in the constructor.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "class",
+            "SyncQueue",
+            "constructor",
+            "this.queue",
+            "[]"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 11",
+        "title": "Initialize the queue storage in the constructor",
+        "instruction": "Inside the SyncQueue class constructor, add a property called 'queue' and initialize it as an empty array.",
+        "hint": "You can set this.queue = [] in the constructor body.",
+        "analogousExample": "// Example: initializing an array property in a class constructor\nclass TaskList {\n  constructor() {\n    this.tasks = [];\n  }\n}",
+        "seedCode": "// Import the necessary browser APIs for offline operations and data storage\n// Declare indexedDB and localStorage as available globals\n\n// Create the SyncQueue class here\nclass SyncQueue {\n  constructor() {\n    // Initialize queue property here\n  }\n}",
+        "expectedOutcome": "The SyncQueue class will have a 'queue' property ready to store pending sync operations.",
+        "successCriteria": [
+          "The SyncQueue constructor initializes this.queue as an empty array."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're setting this.queue to an empty array inside the constructor.",
+        "feedbackWrong": "The queue property wasn't properly initialized. Check that you're setting this.queue = [] in the constructor.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "this.queue",
+            "=",
+            "[]"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 11",
+        "title": "Add an addToQueue method to store operations",
+        "instruction": "Inside the SyncQueue class, define a method named addToQueue that accepts an operation object parameter and pushes it to the queue array.",
+        "hint": "Remember to use the this keyword to access the queue property you initialized in the constructor.",
+        "analogousExample": "// Similar: a method that adds items to an array\nclass ShoppingCart {\n  constructor() {\n    this.items = [];\n  }\n  addItem(item) {\n    this.items.push(item);\n  }\n}",
+        "seedCode": "// Import the necessary browser APIs for offline operations and data storage\n// Declare indexedDB and localStorage as available globals\n\n// Create the SyncQueue class here\nclass SyncQueue {\n  constructor() {\n    // Initialize queue property here\n    this.queue = [];\n  }\n  \n  // Define addToQueue method here\n}",
+        "expectedOutcome": "The SyncQueue class will have an addToQueue method that can store operation objects in the queue array.",
+        "successCriteria": [
+          "The addToQueue method is defined with one parameter and pushes the parameter to this.queue."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your method accepts a parameter and pushes it to this.queue using the push() method.",
+        "feedbackWrong": "The addToQueue method isn't defined correctly. Check that you're using the correct method name, parameter, and pushing to this.queue.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "addToQueue",
+            "(",
+            ")",
+            "{",
+            "this.queue.push",
+            "}"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 11",
+        "title": "Create a saveQueue method to persist data",
+        "instruction": "Inside the SyncQueue class, add a saveQueue method that stores the current queue array to localStorage.",
+        "hint": "Use localStorage.setItem() with a key like 'syncQueue' and JSON.stringify() to convert the array to a string.",
+        "analogousExample": "// Example: a method that saves data\nclass DataStore {\n  saveData(data) {\n    localStorage.setItem('myData', JSON.stringify(data));\n  }\n}",
+        "seedCode": "// Import the necessary browser APIs for offline operations and data storage\n// Declare indexedDB and localStorage as available globals\n\n// Create the SyncQueue class here\nclass SyncQueue {\n  constructor() {\n    // Initialize queue property here\n    this.queue = [];\n  }\n  \n  // Define addToQueue method here\n  \n  // Add saveQueue method here\n}",
+        "expectedOutcome": "The SyncQueue class now has a saveQueue method that can persist the queue to localStorage.",
+        "successCriteria": [
+          "The saveQueue method is defined inside the SyncQueue class and uses localStorage.setItem() with JSON.stringify() to store the queue array."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added a method, but make sure it uses localStorage.setItem() and JSON.stringify() to store the queue array.",
+        "feedbackWrong": "The saveQueue method is missing or incorrect. It should be inside the SyncQueue class and store the queue to localStorage.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "saveQueue",
+            "localStorage.setItem",
+            "JSON.stringify",
+            "this.queue"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 11",
+        "title": "Add a loadQueue method to restore data",
+        "instruction": "Inside the SyncQueue class, create a method named loadQueue that retrieves the stored queue from localStorage and parses it back into an array.",
+        "hint": "Use localStorage.getItem() to retrieve the stored data, then JSON.parse() to convert it from a string back to an array. Handle the case where no data exists yet.",
+        "analogousExample": "// Example: loading stored data from localStorage\nfunction loadUserData() {\n  const stored = localStorage.getItem('user');\n  return stored ? JSON.parse(stored) : null;\n}",
+        "seedCode": "// Import the necessary browser APIs for offline operations and data storage\n// Declare indexedDB and localStorage as available globals\n\n// Create the SyncQueue class here\nclass SyncQueue {\n  constructor() {\n    // Initialize queue property here\n    this.queue = [];\n  }\n  \n  // Define addToQueue method here\n  \n  // Add saveQueue method here\n  \n  // Add loadQueue method here\n}",
+        "expectedOutcome": "The SyncQueue class will have a loadQueue method that can restore previously saved queue data from localStorage.",
+        "successCriteria": [
+          "The loadQueue method exists in the SyncQueue class, retrieves data from localStorage, parses it with JSON.parse, and returns the parsed array (or an empty array if no data exists)."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the loadQueue method, but it might be missing some key parts. Make sure it retrieves data from localStorage, parses it with JSON.parse, and returns the parsed array (or an empty array if no data exists).",
+        "feedbackWrong": "The loadQueue method isn't implemented correctly. Remember to create a method that gets data from localStorage, parses it, and returns the queue array.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "loadQueue",
+            "localStorage.getItem",
+            "JSON.parse",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 11",
+        "title": "Initialize the queue from storage in the constructor",
+        "instruction": "Inside the SyncQueue constructor, call the loadQueue method to initialize the queue from storage when a new instance is created.",
+        "hint": "After initializing this.queue as an empty array, call this.loadQueue() to load any previously saved queue data.",
+        "analogousExample": "// Similar: calling a method in a constructor\nclass ShoppingCart {\n  constructor() {\n    this.items = [];\n    this.loadFromStorage();\n  }\n  loadFromStorage() {\n    // Load saved items\n  }\n}",
+        "seedCode": "// Import the necessary browser APIs for offline operations and data storage\n// Declare indexedDB and localStorage as available globals\n\n// Create the SyncQueue class here\nclass SyncQueue {\n  constructor() {\n    // Initialize queue property here\n    this.queue = [];\n    // Call loadQueue here\n  }\n  \n  // Define addToQueue method here\n  \n  // Add saveQueue method here\n  \n  // Add loadQueue method here\n}",
+        "expectedOutcome": "The constructor will now automatically load any previously saved queue data when a SyncQueue instance is created.",
+        "successCriteria": [
+          "The constructor includes a call to this.loadQueue() after initializing this.queue."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure you're calling this.loadQueue() inside the constructor, after initializing this.queue.",
+        "feedbackWrong": "The constructor should call this.loadQueue() to load saved queue data. Try adding this.loadQueue(); after this.queue = [];",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "loadQueue",
+            "(",
+            ")",
+            "constructor"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 11",
+        "title": "Add a clearQueue method after successful sync",
+        "instruction": "Inside your SyncQueue class, add a clearQueue method that empties the queue array and clears the stored data from localStorage.",
+        "hint": "The method should set this.queue to an empty array and call localStorage.removeItem() with the appropriate key.",
+        "analogousExample": "// Example: a method that clears data\nclass DataStore {\n  clearData() {\n    this.items = [];\n    localStorage.removeItem('myItems');\n  }\n}",
+        "seedCode": "// Import the necessary browser APIs for offline operations and data storage\n// Declare indexedDB and localStorage as available globals\n\n// Create the SyncQueue class here\nclass SyncQueue {\n  constructor() {\n    // Initialize queue property here\n    this.queue = [];\n    // Call loadQueue here\n  }\n  \n  // Define addToQueue method here\n  \n  // Add saveQueue method here\n  \n  // Add loadQueue method here\n  \n  // Define processQueue method here\n  \n  // Add clearQueue method here\n}",
+        "expectedOutcome": "The SyncQueue class will have a clearQueue method that resets the queue and removes it from localStorage.",
+        "successCriteria": [
+          "The clearQueue method is defined inside the SyncQueue class, sets this.queue to an empty array, and calls localStorage.removeItem('syncQueue')."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added a clearQueue method, but it might be missing either emptying the queue array or clearing localStorage. Make sure both actions are included.",
+        "feedbackWrong": "The clearQueue method is not yet correctly implemented. It should empty the queue array and remove the data from localStorage.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "clearQueue",
+            "this.queue",
+            "[]",
+            "localStorage.removeItem",
+            "'syncQueue'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 11",
+        "title": "Create a simple UI function to demonstrate the queue",
+        "instruction": "Create a function named renderUI that returns a basic HTML structure to interact with the SyncQueue. The function should return a div element containing a heading and a paragraph to display the queue status.",
+        "hint": "Define a function that returns JSX-like HTML structure. You can use template literals or string concatenation for dynamic content.",
+        "analogousExample": "// Example: A simple UI rendering function\nfunction renderStatus() {\n  return `<div>\n    <h2>Status</h2>\n    <p>Queue is empty</p>\n  </div>`;\n}",
+        "seedCode": "// Import the necessary browser APIs for offline operations and data storage\n// Declare indexedDB and localStorage as available globals\n\n// Create the SyncQueue class here\nclass SyncQueue {\n  constructor() {\n    // Initialize queue property here\n    this.queue = [];\n    // Call loadQueue here\n  }\n  \n  // Define addToQueue method here\n  \n  // Add saveQueue method here\n  \n  // Add loadQueue method here\n  \n  // Define processQueue method here\n  \n  // Add clearQueue method here\n}\n\n// Create the renderUI function here",
+        "expectedOutcome": "A renderUI function is created that returns a div containing a heading and paragraph element to display queue status.",
+        "successCriteria": [
+          "The renderUI function exists, returns a div element containing an h2 heading and a p paragraph, and uses the queue property to display status."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure your function returns a div with both a heading and a paragraph element inside.",
+        "feedbackWrong": "The renderUI function should return a div element containing an h2 heading and a p paragraph to display queue status.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "function renderUI",
+            "return",
+            "<div>",
+            "<h2>",
+            "<p>"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 11",
+        "title": "Add event listeners to simulate offline operations",
+        "instruction": "Inside the renderUI function, add event listeners to the 'Add Operation' and 'Process Queue' buttons that call the addToQueue and processQueue methods on the syncQueue instance.",
+        "hint": "Use addEventListener on the button elements to handle click events and call the appropriate queue methods.",
+        "analogousExample": "// Adding event listeners to buttons\nconst button = document.getElementById('myButton');\nbutton.addEventListener('click', () => {\n  myFunction();\n});",
+        "seedCode": "// Import the necessary browser APIs for offline operations and data storage\n// Declare indexedDB and localStorage as available globals\n\n// Create the SyncQueue class here\nclass SyncQueue {\n  constructor() {\n    // Initialize queue property here\n    this.queue = [];\n    // Call loadQueue here\n  }\n  \n  // Define addToQueue method here\n  \n  // Add saveQueue method here\n  \n  // Add loadQueue method here\n  \n  // Define processQueue method here\n  \n  // Add clearQueue method here\n}\n\n// Create the renderUI function here\nfunction renderUI() {\n  const container = document.createElement('div');\n  container.innerHTML = `\n    <h2>Offline Sync Queue Demo</h2>\n    <button id=\"addBtn\">Add Operation</button>\n    <button id=\"processBtn\">Process Queue</button>\n    <div id=\"output\"></div>\n  `;\n  \n  const syncQueue = new SyncQueue();\n  \n  // Add event listeners here\n  \n  return container;\n}",
+        "expectedOutcome": "The UI buttons will be wired to call the queue methods when clicked.",
+        "successCriteria": [
+          "Event listeners are added to both buttons that call addToQueue and processQueue methods."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added some event listeners, but make sure both buttons are connected to their respective queue methods.",
+        "feedbackWrong": "The event listeners are missing or not properly connected to the queue methods.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "addEventListener",
+            "addToQueue",
+            "processQueue",
+            "click"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 11",
+        "title": "Initialize the application and test the sync queue",
+        "instruction": "At the end of your code, call renderUI() and append the returned container to the document body to start the application.",
+        "hint": "Use document.body.appendChild() with the result of calling renderUI() to mount the UI.",
+        "analogousExample": "// Similar: mounting a UI element\nconst app = createApp();\ndocument.body.appendChild(app);",
+        "seedCode": "// Import the necessary browser APIs for offline operations and data storage\n// Declare indexedDB and localStorage as available globals\n\n// Create the SyncQueue class here\nclass SyncQueue {\n  constructor() {\n    // Initialize queue property here\n    this.queue = [];\n    // Call loadQueue here\n  }\n  \n  // Define addToQueue method here\n  \n  // Add saveQueue method here\n  \n  // Add loadQueue method here\n  \n  // Define processQueue method here\n  \n  // Add clearQueue method here\n}\n\n// Create the renderUI function here\nfunction renderUI() {\n  const container = document.createElement('div');\n  container.innerHTML = `\n    <h2>Offline Sync Queue Demo</h2>\n    <button id=\"addBtn\">Add Operation</button>\n    <button id=\"processBtn\">Process Queue</button>\n    <div id=\"output\"></div>\n  `;\n  \n  const syncQueue = new SyncQueue();\n  \n  // Add event listeners here\n  \n  return container;\n}\n\n// Initialize the application here",
+        "expectedOutcome": "The UI container is mounted to the document body, making the demo visible and interactive.",
+        "successCriteria": [
+          "renderUI() is called and its return value is appended to document.body."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're calling renderUI() and appending the returned container to document.body.",
+        "feedbackWrong": "The application isn't properly initialized. You need to call renderUI() and mount its result to the document body.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "renderUI()",
+            "document.body.appendChild"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import required modules for offline sync queue",
+        "id": "step1"
+      },
+      {
+        "label": "Create the main SyncQueue class structure",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize the queue storage in the constructor",
+        "id": "step3"
+      },
+      {
+        "label": "Add an addToQueue method to store operations",
+        "id": "step4"
+      },
+      {
+        "label": "Create a saveQueue method to persist data",
+        "id": "step5"
+      },
+      {
+        "label": "Add a loadQueue method to restore data",
+        "id": "step6"
+      },
+      {
+        "label": "Initialize the queue from storage in the constructor",
+        "id": "step7"
+      },
+      {
+        "label": "Add a clearQueue method after successful sync",
+        "id": "step8"
+      },
+      {
+        "label": "Create a simple UI function to demonstrate the queue",
+        "id": "step9"
+      },
+      {
+        "label": "Add event listeners to simulate offline operations",
+        "id": "step10"
+      },
+      {
+        "label": "Initialize the application and test the sync queue",
+        "id": "step11"
+      }
+    ]
+  },
+  "source": "content"
+}

@@ -1,0 +1,366 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-node-63",
+    "track": "node",
+    "lessonNum": 63,
+    "title": "Build notification fan out service",
+    "shortName": "P63",
+    "intro": {
+      "tag": "LESSON #63",
+      "title": "Build notification fan out service",
+      "body": "In this lesson, you will build a notification fan-out service using Node.js. This service will receive a single notification request and distribute it to multiple users or channels, simulating a real-world scenario like sending alerts to a group. You'll learn how to handle asynchronous operations and manage multiple tasks concurrently. The main technologies involved are Node.js for the server environment and core JavaScript for logic and data handling. This project will help you understand how to scale simple notifications to reach many recipients efficiently.",
+      "usecase": "Notification fan-out services are essential in modern applications where a single event needs to trigger alerts across multiple channels. You'll see this pattern in social media platforms like Twitter or Facebook, where a new post instantly appears in followers' feeds and triggers push notifications. E-commerce sites use it to send order confirmations via email, SMS, and in-app notifications simultaneously. Customer support dashboards rely on fan-out to notify multiple agents about incoming tickets. As a developer, you'll implement these services to ensure reliable, scalable delivery of time-sensitive information across different communication methods."
+    },
+    "objectives": [
+      "Initialize a Node.js project with required dependencies for a notification service",
+      "Construct a service to send notifications via multiple channels (e.g., email, SMS)",
+      "Implement a fan-out mechanism to distribute notifications to multiple recipients",
+      "Configure a message queue to handle notification delivery asynchronously",
+      "Integrate a templating engine to customize notification content",
+      "Manipulate notification data to format it for different delivery channels",
+      "Apply error handling to manage failures in the notification pipeline"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 10",
+        "title": "Import required Node.js modules",
+        "instruction": "Import the required Node.js modules: 'http' for creating the server and 'fs' for file operations.",
+        "hint": "Use the require() function to import both modules. You'll need them to build the notification service.",
+        "analogousExample": "// Similar: importing modules in Node.js\nconst path = require('path');\nconst os = require('os');",
+        "seedCode": "// Import the required Node.js modules here",
+        "expectedOutcome": "The code will have both 'http' and 'fs' modules imported and ready to use.",
+        "successCriteria": [
+          "Both 'http' and 'fs' modules are imported using require()."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you import both 'http' and 'fs' modules.",
+        "feedbackWrong": "Check the instruction again. You need to import both 'http' and 'fs' modules using require().",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "require",
+            "http",
+            "fs"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 10",
+        "title": "Create notification data structure",
+        "instruction": "Create an array named 'notifications' to store notification objects. Each object should have 'id', 'message', and 'timestamp' properties.",
+        "hint": "Initialize an empty array, then add sample notification objects with the required properties.",
+        "analogousExample": "// Example: creating an array of user objects\nconst users = [\n  { id: 1, name: 'Alice', age: 30 },\n  { id: 2, name: 'Bob', age: 25 }\n];",
+        "seedCode": "// Import the required Node.js modules here\n\n// Create your notifications array here",
+        "expectedOutcome": "An array named 'notifications' containing at least one notification object with id, message, and timestamp properties.",
+        "successCriteria": [
+          "The 'notifications' array exists and contains objects with id, message, and timestamp properties."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've created an array, but make sure it contains objects with id, message, and timestamp properties.",
+        "feedbackWrong": "The notifications array is missing or doesn't have the correct structure. Try creating an array of objects with id, message, and timestamp properties.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "notifications",
+            "[",
+            "{",
+            "id",
+            "message",
+            "timestamp",
+            "}"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 10",
+        "title": "Initialize subscribers list",
+        "instruction": "Create an empty array named 'subscribers' to store subscriber endpoints that will receive notifications.",
+        "hint": "Declare a variable using 'const' and assign it an empty array [].",
+        "analogousExample": "// Similar: creating an empty list\nconst users = [];",
+        "seedCode": "// Import the required Node.js modules here\n\n// Create your notifications array here\n\n// Create your subscribers array here",
+        "expectedOutcome": "You will have a subscribers array ready to store endpoints for the fan-out pattern.",
+        "successCriteria": [
+          "An array named 'subscribers' is declared and initialized as empty."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure you've created an empty array named 'subscribers'.",
+        "feedbackWrong": "Check that you've created an empty array with the exact name 'subscribers'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "subscribers",
+            "[]"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 10",
+        "title": "Create helper function to add notifications",
+        "instruction": "Create a function named 'addNotification' that takes a 'message' parameter and adds a new notification object to the 'notifications' array. The notification object should have a unique ID (use Date.now() for simplicity) and a current timestamp (new Date().toISOString()).",
+        "hint": "Define a function that creates an object with id, message, and timestamp properties, then pushes it to the notifications array.",
+        "analogousExample": "// Similar: a function that adds items to an array\nfunction addItem(item) {\n  const newItem = {\n    id: Date.now(),\n    name: item,\n    createdAt: new Date().toISOString()\n  };\n  items.push(newItem);\n}",
+        "seedCode": "// Import the required Node.js modules here\n\n// Create your notifications array here\n\n// Create your subscribers array here\n\n// Create your addNotification function here",
+        "expectedOutcome": "A function named 'addNotification' that creates notification objects with unique IDs and timestamps, and adds them to the notifications array.",
+        "successCriteria": [
+          "The 'addNotification' function is defined, takes a 'message' parameter, creates a notification object with 'id' and 'timestamp' properties, and pushes it to the 'notifications' array."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your function: 1) Takes a 'message' parameter, 2) Creates an object with 'id' (using Date.now()) and 'timestamp' (using new Date().toISOString()), and 3) Pushes it to the 'notifications' array.",
+        "feedbackWrong": "Create a function named 'addNotification' that adds notification objects to the array. Each notification should have an id, message, and timestamp.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "function addNotification",
+            "message",
+            "id",
+            "timestamp",
+            "notifications.push"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 10",
+        "title": "Create helper function to add subscribers",
+        "instruction": "Create a function named 'addSubscriber' that takes a subscriber endpoint string as a parameter and adds it to the 'subscribers' array.",
+        "hint": "Define a function that pushes the new subscriber endpoint into the existing subscribers array.",
+        "analogousExample": "// Example: adding items to an array\nfunction addItem(item) {\n  items.push(item);\n}",
+        "seedCode": "// Import the required Node.js modules here\n\n// Create your notifications array here\n\n// Create your subscribers array here\n\n// Create your addNotification function here\n\n// Create your addSubscriber function here",
+        "expectedOutcome": "You'll have a function that can add new subscriber endpoints to the subscribers list.",
+        "successCriteria": [
+          "The 'addSubscriber' function is defined, takes a parameter, and pushes it to the subscribers array."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure your function takes a parameter and pushes it to the subscribers array.",
+        "feedbackWrong": "The function isn't defined correctly. Check that it adds the parameter to the subscribers array.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "addSubscriber",
+            "function",
+            "subscribers",
+            "push"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 10",
+        "title": "Create fan-out notification function",
+        "instruction": "Create a function named sendNotification that takes a notification object as a parameter and sends it to all registered subscribers using HTTP requests.",
+        "hint": "You'll need to iterate through the subscribers array and make an HTTP request for each subscriber. You can use the fetch API or a library like axios (but for simplicity, we'll use fetch).",
+        "analogousExample": "// Example of a function that sends data to multiple endpoints\nfunction sendToAll(data) {\n  endpoints.forEach(endpoint => {\n    fetch(endpoint, {\n      method: 'POST',\n      body: JSON.stringify(data),\n      headers: { 'Content-Type': 'application/json' }\n    });\n  });\n}",
+        "seedCode": "// Import the required Node.js modules here\n\n// Create your notifications array here\n\n// Create your subscribers array here\n\n// Create your addNotification function here\n\n// Create your addSubscriber function here\n\n// Create your sendNotification function here",
+        "expectedOutcome": "A function named sendNotification is created that will handle sending notifications to all subscribers.",
+        "successCriteria": [
+          "The sendNotification function is defined, takes a notification parameter, and contains logic to iterate through subscribers and make HTTP requests."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the function, but make sure it takes a notification parameter and contains the logic to send to all subscribers.",
+        "feedbackWrong": "The function is missing or doesn't match the expected structure. It should be named sendNotification and handle sending to all subscribers.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "sendNotification",
+            "function",
+            "notification",
+            "subscribers",
+            "fetch"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 10",
+        "title": "Create HTTP server structure",
+        "instruction": "Create a basic HTTP server using the http module that listens on port 3000 and logs a message when it starts.",
+        "hint": "Use http.createServer() to create a server, then call server.listen() with port 3000 and a callback function that logs a startup message.",
+        "analogousExample": "// Basic HTTP server structure\nconst http = require('http');\n\nconst server = http.createServer((req, res) => {\n  // Request handling will go here\n});\n\nserver.listen(3000, () => {\n  console.log('Server running on port 3000');\n});",
+        "seedCode": "// Import the required Node.js modules here\n\n// Create your notifications array here\n\n// Create your subscribers array here\n\n// Create your addNotification function here\n\n// Create your addSubscriber function here\n\n// Create your sendNotification function here\n\n// Create your HTTP server structure here",
+        "expectedOutcome": "A basic HTTP server is set up and ready to handle requests on port 3000.",
+        "successCriteria": [
+          "The server is created with http.createServer() and listens on port 3000 with a startup log message."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the server setup, but make sure you're using http.createServer() and calling server.listen() with port 3000 and a callback that logs a message.",
+        "feedbackWrong": "The server structure isn't complete. Remember to use the http module to create a server and make it listen on port 3000 with a startup message.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "createServer",
+            "listen",
+            "3000",
+            "console.log"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 10",
+        "title": "Implement GET endpoint for notifications",
+        "instruction": "Inside your HTTP server's request handler, add a conditional block that checks if the request method is 'GET' and the URL is '/notifications'. If true, respond with your notifications array as JSON.",
+        "hint": "Use an if statement to check req.method and req.url, then set appropriate headers and end the response with JSON.stringify(notifications).",
+        "analogousExample": "// Example: handling a GET endpoint\nif (req.method === 'GET' && req.url === '/data') {\n  res.writeHead(200, { 'Content-Type': 'application/json' });\n  res.end(JSON.stringify(dataArray));\n}",
+        "seedCode": "// Import the required Node.js modules here\n\n// Create your notifications array here\n\n// Create your subscribers array here\n\n// Create your addNotification function here\n\n// Create your addSubscriber function here\n\n// Create your sendNotification function here\n\n// Create your HTTP server structure here\nconst server = http.createServer((req, res) => {\n  // Add your GET endpoint for '/notifications' here\n});\n\nserver.listen(3000, () => {\n  console.log('Server running on port 3000');\n});",
+        "expectedOutcome": "Your server will now respond to GET requests at '/notifications' with a JSON array of all notifications.",
+        "successCriteria": [
+          "The server's request handler includes an if statement that checks for GET method and '/notifications' URL, sets Content-Type header to 'application/json', and responds with JSON.stringify(notifications)."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your if statement checks both the method and URL, sets the correct headers, and uses JSON.stringify on the notifications array.",
+        "feedbackWrong": "The GET endpoint isn't implemented correctly. Check that you're handling the request method, URL, setting headers, and returning the notifications array as JSON.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "if",
+            "req.method",
+            "'GET'",
+            "req.url",
+            "'/notifications'",
+            "res.writeHead",
+            "'application/json'",
+            "JSON.stringify",
+            "notifications"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 10",
+        "title": "Implement POST endpoint for new notifications",
+        "instruction": "Inside your server's request handler, add route handling for POST requests to '/notifications' that parses the request body, creates a new notification using your addNotification function, and triggers fan-out using your sendNotification function.",
+        "hint": "Check if the request method is 'POST' and the URL is '/notifications', then parse the incoming JSON data, create a notification object, add it to your notifications array, and send it to all subscribers.",
+        "analogousExample": "// Handling a POST request\nif (req.method === 'POST' && req.url === '/data') {\n  let body = '';\n  req.on('data', chunk => body += chunk);\n  req.on('end', () => {\n    const data = JSON.parse(body);\n    // Process data here\n    res.writeHead(201, { 'Content-Type': 'application/json' });\n    res.end(JSON.stringify({ success: true }));\n  });\n}",
+        "seedCode": "// Import the required Node.js modules here\n\n// Create your notifications array here\n\n// Create your subscribers array here\n\n// Create your addNotification function here\n\n// Create your addSubscriber function here\n\n// Create your sendNotification function here\n\n// Create your HTTP server structure here\nconst server = http.createServer((req, res) => {\n  // Add your GET endpoint for '/notifications' here\n  // Add your POST endpoint for '/notifications' here\n});\n\nserver.listen(3000, () => {\n  console.log('Server running on port 3000');\n});",
+        "expectedOutcome": "Your server will now accept POST requests to '/notifications' that create new notifications and send them to all subscribers.",
+        "successCriteria": [
+          "POST requests to '/notifications' are handled, request body is parsed, addNotification is called with the new notification data, and sendNotification is triggered to fan-out the notification."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added some POST handling, but make sure you're parsing the request body, calling addNotification, and triggering sendNotification.",
+        "feedbackWrong": "The POST endpoint isn't fully implemented. Check that you're handling the route correctly and using your helper functions.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "POST",
+            "'/notifications'",
+            "addNotification",
+            "sendNotification",
+            "req.on('data'",
+            "req.on('end'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 10",
+        "title": "Start the server and test",
+        "instruction": "Start the server on port 3000 and log a message indicating the service is running.",
+        "hint": "Call the listen method on your server instance with port 3000 and a callback function that logs a message.",
+        "analogousExample": "// Starting a basic HTTP server\nconst server = http.createServer((req, res) => {\n  res.end('Hello');\n});\n\nserver.listen(3000, () => {\n  console.log('Server running on port 3000');\n});",
+        "seedCode": "// Import the required Node.js modules here\n\n// Create your notifications array here\n\n// Create your subscribers array here\n\n// Create your addNotification function here\n\n// Create your addSubscriber function here\n\n// Create your sendNotification function here\n\n// Create your HTTP server structure here\nconst server = http.createServer((req, res) => {\n  // Add your GET endpoint for '/notifications' here\n  // Add your POST endpoint for '/notifications' here\n});\n\n// Start the server here",
+        "expectedOutcome": "The server will start and log a message to the console when it's ready to accept connections.",
+        "successCriteria": [
+          "The server is started on port 3000 with a console log message indicating it's running."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're calling the listen method on your server instance with the correct port and logging a message.",
+        "feedbackWrong": "The server isn't starting correctly. Check that you're calling listen on your server instance with port 3000 and a callback function.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "server.listen",
+            "3000",
+            "console.log"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import required Node.js modules",
+        "id": "step1"
+      },
+      {
+        "label": "Create notification data structure",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize subscribers list",
+        "id": "step3"
+      },
+      {
+        "label": "Create helper function to add notifications",
+        "id": "step4"
+      },
+      {
+        "label": "Create helper function to add subscribers",
+        "id": "step5"
+      },
+      {
+        "label": "Create fan-out notification function",
+        "id": "step6"
+      },
+      {
+        "label": "Create HTTP server structure",
+        "id": "step7"
+      },
+      {
+        "label": "Implement GET endpoint for notifications",
+        "id": "step8"
+      },
+      {
+        "label": "Implement POST endpoint for new notifications",
+        "id": "step9"
+      },
+      {
+        "label": "Start the server and test",
+        "id": "step10"
+      }
+    ]
+  },
+  "source": "content"
+}

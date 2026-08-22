@@ -1,0 +1,425 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-vue-109",
+    "track": "vue",
+    "lessonNum": 109,
+    "title": "Token Refresh with Axios Interceptor",
+    "shortName": "P109",
+    "intro": {
+      "tag": "LESSON #109",
+      "title": "Token Refresh with Axios Interceptor",
+      "body": "In this lesson, you will build a secure Vue application that automatically refreshes an expired authentication token using Axios interceptors. You will learn how to intercept HTTP requests and responses to check for token expiration and handle refresh logic seamlessly. The core programming concept involves using Axios interceptors to manage API calls and asynchronous token refresh without disrupting the user experience. You will work with Vue's composition API, Axios for HTTP requests, and JavaScript promises to implement this common real-world security pattern.",
+      "usecase": "This pattern is essential in any web application that requires persistent user authentication, such as admin dashboards, e-commerce platforms, or collaborative tools like project management software. For example, while a user is actively working in a dashboard viewing analytics or filling out a lengthy form, their access token may expire. An interceptor silently refreshes the token in the background, preventing disruptive logout modals or form submission errors. This provides a seamless, professional user experience, ensuring uninterrupted interaction with critical UI components like data tables, editors, or real-time notification panels."
+    },
+    "objectives": [
+      "Initialize an Axios instance with a base URL for API requests",
+      "Configure an Axios request interceptor to attach authorization tokens to outgoing requests",
+      "Implement an Axios response interceptor to detect expired token errors (401)",
+      "Construct a token refresh function that calls the refresh endpoint and updates stored tokens",
+      "Integrate token refresh logic into the response interceptor to retry failed requests",
+      "Control request queuing during token refresh to prevent duplicate refresh calls",
+      "Apply the configured Axios instance to Vue components for making authenticated API calls"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 12",
+        "title": "Import Vue, axios, and ref",
+        "instruction": "In the script setup section, import Vue, axios, and ref.",
+        "hint": "Use the import statement to bring in the necessary libraries and Vue's reactivity helper.",
+        "analogousExample": "// Example: importing multiple dependencies\nimport { ref } from 'vue';\nimport axios from 'axios';",
+        "seedCode": "<script setup>\n// Import Vue, axios, and ref here\n</script>\n\n<template>\n  <div>\n    <!-- Component content will go here -->\n  </div>\n</template>",
+        "expectedOutcome": "The script setup section will have import statements for Vue, axios, and ref, making them available for use in the component.",
+        "successCriteria": [
+          "Vue, axios, and ref are imported in the script setup section."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure to import all three: Vue, axios, and ref. Check your import statements.",
+        "feedbackWrong": "The imports are missing or incorrect. You need to import Vue, axios, and ref in the script setup section.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "vue",
+            "axios",
+            "ref"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 12",
+        "title": "Create the main Vue component",
+        "instruction": "Create the main Vue component using the script setup syntax. This component will be the entry point for our token refresh demonstration.",
+        "hint": "In Vue with script setup, the component is automatically created. Just ensure your template has a root element.",
+        "analogousExample": "// Example of a basic Vue component with script setup\n<script setup>\n// Component logic goes here\n</script>\n\n<template>\n  <div>\n    <h1>My Component</h1>\n  </div>\n</template>",
+        "seedCode": "<script setup>\n// Import Vue, axios, and ref here\n</script>\n\n<template>\n  <div>\n    <!-- Component content will go here -->\n  </div>\n</template>",
+        "expectedOutcome": "You'll have a basic Vue component structure ready to build upon.",
+        "successCriteria": [
+          "The component uses script setup syntax and has a template with a root div element."
+        ],
+        "feedbackCorrect": "Great! You've set up the Vue component structure correctly.",
+        "feedbackPartial": "You're close. Make sure you're using script setup and have a template with a root element.",
+        "feedbackWrong": "The component structure isn't quite right. Check that you're using script setup and have a proper template.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<script setup>",
+            "</script>",
+            "<template>",
+            "</template>",
+            "<div>",
+            "</div>"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 12",
+        "title": "Initialize reactive state for tokens",
+        "instruction": "Inside the script setup section, use the ref function to create two reactive state variables: one named accessToken and another named refreshToken. Initialize both with empty strings.",
+        "hint": "Remember that ref creates reactive references. You'll need to call ref() for each token variable.",
+        "analogousExample": "// Creating reactive state for user data\nconst username = ref('')\nconst email = ref('')",
+        "seedCode": "<script setup>\n// Import Vue, axios, and ref here\nimport { ref } from 'vue'\nimport axios from 'axios'\n\n// Initialize reactive state for tokens here\n</script>\n\n<template>\n  <div>\n    <!-- Component content will go here -->\n  </div>\n</template>",
+        "expectedOutcome": "You should have two reactive state variables defined: accessToken and refreshToken, both initialized as empty strings.",
+        "successCriteria": [
+          "Two ref variables named accessToken and refreshToken are created and initialized with empty strings."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you've created both accessToken and refreshToken variables using ref().",
+        "feedbackWrong": "Please create two reactive state variables named accessToken and refreshToken, both initialized as empty strings.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "accessToken",
+            "refreshToken",
+            "ref",
+            "''"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 12",
+        "title": "Initialize reactive state for request status",
+        "instruction": "Inside the <script setup> section, use the ref function to create a reactive state variable named requestStatus and initialize it with the string 'idle'.",
+        "hint": "You'll need to call ref() with an initial value. Remember to use the same import pattern as the tokens state.",
+        "analogousExample": "// Similar: reactive state for loading status\nconst isLoading = ref(false)",
+        "seedCode": "<script setup>\n// Import Vue, axios, and ref here\nimport { ref } from 'vue'\nimport axios from 'axios'\n\n// Initialize reactive state for tokens here\nconst accessToken = ref('')\nconst refreshToken = ref('')\n\n// Initialize reactive state for request status here\n</script>\n\n<template>\n  <div>\n    <!-- Component content will go here -->\n  </div>\n</template>",
+        "expectedOutcome": "A reactive requestStatus variable will be available to track whether API requests are idle, loading, or completed.",
+        "successCriteria": [
+          "The requestStatus variable is declared using ref() and initialized with 'idle'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're using ref() to create the reactive variable and initializing it with the string 'idle'.",
+        "feedbackWrong": "create a reactive variable named requestStatus using the ref function and set its initial value to 'idle'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "requestStatus",
+            "ref",
+            "'idle'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 12",
+        "title": "Set up axios instance with base configuration",
+        "instruction": "Create an axios instance with baseURL and Content-Type header in your script setup.",
+        "hint": "Use axios.create() to create a configured instance. Set baseURL to a placeholder API endpoint and Content-Type to 'application/json'.",
+        "analogousExample": "// Creating a configured axios instance\nconst api = axios.create({\n  baseURL: 'https://api.example.com',\n  headers: { 'Content-Type': 'application/json' }\n})",
+        "seedCode": "<script setup>\n// Import Vue, axios, and ref here\nimport { ref } from 'vue'\nimport axios from 'axios'\n\n// Initialize reactive state for tokens here\nconst accessToken = ref('')\nconst refreshToken = ref('')\n\n// Initialize reactive state for request status here\n\n// Create axios instance with base configuration here\n</script>\n\n<template>\n  <div>\n    <!-- Component content will go here -->\n  </div>\n</template>",
+        "expectedOutcome": "An axios instance named api (or similar) is created with baseURL and Content-Type header configured.",
+        "successCriteria": [
+          "axios.create() is used with baseURL and headers properties set."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure you're using axios.create() with both baseURL and headers properties configured.",
+        "feedbackWrong": "Try creating an axios instance using axios.create() with baseURL and headers configuration.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "axios.create",
+            "baseURL",
+            "headers",
+            "Content-Type"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 12",
+        "title": "Add request interceptor to attach access token",
+        "instruction": "Add a request interceptor to your axios instance that attaches the current access token to the Authorization header of outgoing requests.",
+        "hint": "Use the .interceptors.request.use() method on your axios instance. The interceptor function should modify the request config headers before the request is sent.",
+        "analogousExample": "// Adding a request interceptor to attach a token\naxiosInstance.interceptors.request.use((config) => {\n  config.headers.Authorization = `Bearer ${token.value}`\n  return config\n})",
+        "seedCode": "<script setup>\n// Import Vue, axios, and ref here\nimport { ref } from 'vue'\nimport axios from 'axios'\n\n// Initialize reactive state for tokens here\nconst accessToken = ref('')\nconst refreshToken = ref('')\n\n// Initialize reactive state for request status here\n\n// Create axios instance with base configuration here\nconst axiosInstance = axios.create({\n  baseURL: 'https://api.example.com'\n})\n\n// Add request interceptor to attach access token here\n</script>\n\n<template>\n  <div>\n    <!-- Component content will go here -->\n  </div>\n</template>",
+        "expectedOutcome": "The axios instance will have a request interceptor that automatically adds the Authorization header with the current access token value to all outgoing requests.",
+        "successCriteria": [
+          "A request interceptor is added using .interceptors.request.use() that sets config.headers.Authorization with the accessToken ref value."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your interceptor function properly modifies the config.headers.Authorization property and returns the config object.",
+        "feedbackWrong": "The request interceptor wasn't properly implemented. Check that you're using .interceptors.request.use() on your axios instance and modifying the request config headers.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "interceptors",
+            "request",
+            "use",
+            "headers",
+            "Authorization",
+            "accessToken"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 12",
+        "title": "Add response interceptor to handle token refresh",
+        "instruction": "Add a response interceptor to your axiosInstance that checks for 401 status codes and triggers a token refresh.",
+        "hint": "Use axiosInstance.interceptors.response.use() to add the interceptor. The first callback handles successful responses, the second handles errors. Check if error.response.status equals 401.",
+        "analogousExample": "// Example response interceptor structure\naxiosInstance.interceptors.response.use(\n  (response) => response,\n  async (error) => {\n    if (error.response?.status === 401) {\n      // Token refresh logic here\n    }\n    return Promise.reject(error);\n  }\n);",
+        "seedCode": "<script setup>\n// Import Vue, axios, and ref here\nimport { ref } from 'vue'\nimport axios from 'axios'\n\n// Initialize reactive state for tokens here\nconst accessToken = ref('')\nconst refreshToken = ref('')\n\n// Initialize reactive state for request status here\n\n// Create axios instance with base configuration here\nconst axiosInstance = axios.create({\n  baseURL: 'https://api.example.com'\n})\n\n// Add request interceptor to attach access token here\n\n// Add response interceptor to handle token refresh here\n</script>\n\n<template>\n  <div>\n    <!-- Component content will go here -->\n  </div>\n</template>",
+        "expectedOutcome": "The axiosInstance will have a response interceptor that detects 401 errors, though the actual refresh logic will be added in later steps.",
+        "successCriteria": [
+          "A response interceptor is added to axiosInstance that checks for 401 status codes in error responses."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added a response interceptor, but make sure it properly checks for 401 status codes using error.response?.status === 401.",
+        "feedbackWrong": "The response interceptor wasn't added correctly. Remember to use axiosInstance.interceptors.response.use() with both success and error callbacks.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "axiosInstance.interceptors.response.use",
+            "401",
+            "error.response"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 12",
+        "title": "Create token refresh function",
+        "instruction": "Create an async function named refreshAccessToken that will handle refreshing the access token using the refresh token.",
+        "hint": "Define an async function that uses axios to make a POST request to a refresh endpoint and updates the reactive accessToken state.",
+        "analogousExample": "// Example of an async function that updates reactive state\nasync function fetchData() {\n  const response = await axios.get('/api/data');\n  data.value = response.data;\n}",
+        "seedCode": "<script setup>\n// Import Vue, axios, and ref here\nimport { ref } from 'vue'\nimport axios from 'axios'\n\n// Initialize reactive state for tokens here\nconst accessToken = ref('')\nconst refreshToken = ref('')\n\n// Initialize reactive state for request status here\n\n// Create axios instance with base configuration here\nconst axiosInstance = axios.create({\n  baseURL: 'https://api.example.com'\n})\n\n// Add request interceptor to attach access token here\n\n// Add response interceptor to handle token refresh here\n\n// Create token refresh function here\n</script>\n\n<template>\n  <div>\n    <!-- Component content will go here -->\n  </div>\n</template>",
+        "expectedOutcome": "The refreshAccessToken async function is defined and ready to be called when token refresh is needed.",
+        "successCriteria": [
+          "An async function named refreshAccessToken is created that will handle the token refresh logic."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure the function is async and named refreshAccessToken.",
+        "feedbackWrong": "The function wasn't created correctly. Create an async function named refreshAccessToken that will handle token refresh.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "async",
+            "refreshAccessToken",
+            "function"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 12",
+        "title": "Create function to simulate protected API call",
+        "instruction": "Create an async function named 'fetchProtectedData' that uses the axiosInstance to make a GET request to '/protected' endpoint.",
+        "hint": "Define an async function that uses axiosInstance.get() with the endpoint path.",
+        "analogousExample": "// Example async function using axios\nasync function getUserData() {\n  return await axiosInstance.get('/user');\n}",
+        "seedCode": "<script setup>\n// Import Vue, axios, and ref here\nimport { ref } from 'vue'\nimport axios from 'axios'\n\n// Initialize reactive state for tokens here\nconst accessToken = ref('')\nconst refreshToken = ref('')\n\n// Initialize reactive state for request status here\n\n// Create axios instance with base configuration here\nconst axiosInstance = axios.create({\n  baseURL: 'https://api.example.com'\n})\n\n// Add request interceptor to attach access token here\n\n// Add response interceptor to handle token refresh here\n\n// Create token refresh function here\n\n// Create function to simulate protected API call here\n</script>\n\n<template>\n  <div>\n    <!-- Component content will go here -->\n  </div>\n</template>",
+        "expectedOutcome": "You should have an async function named fetchProtectedData that makes a GET request using axiosInstance.",
+        "successCriteria": [
+          "The fetchProtectedData function is defined as async and uses axiosInstance.get('/protected')"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've created a function, but make sure it's async and uses axiosInstance.get() with the correct endpoint.",
+        "feedbackWrong": "The function isn't defined correctly. Check that it's async and uses axiosInstance.get('/protected').",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "async",
+            "fetchProtectedData",
+            "axiosInstance.get",
+            "'/protected'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 12",
+        "title": "Add template structure with token display",
+        "instruction": "In the template section, add a heading and three paragraph elements to display the access token, refresh token, and request status values.",
+        "hint": "Use the <h1> tag for the heading and <p> tags for the paragraphs. Display the reactive values using Vue's template syntax.",
+        "analogousExample": "// Example: displaying reactive values in template\n<template>\n  <div>\n    <h1>User Profile</h1>\n    <p>Name: {{ userName }}</p>\n    <p>Email: {{ userEmail }}</p>\n  </div>\n</template>",
+        "seedCode": "<script setup>\n// Import Vue, axios, and ref here\nimport { ref } from 'vue'\nimport axios from 'axios'\n\n// Initialize reactive state for tokens here\nconst accessToken = ref('')\nconst refreshToken = ref('')\n\n// Initialize reactive state for request status here\n\n// Create axios instance with base configuration here\nconst axiosInstance = axios.create({\n  baseURL: 'https://api.example.com'\n})\n\n// Add request interceptor to attach access token here\n\n// Add response interceptor to handle token refresh here\n\n// Create token refresh function here\n\n// Create function to simulate protected API call here\n</script>\n\n<template>\n  <div>\n    <!-- Add heading and paragraphs here -->\n  </div>\n</template>",
+        "expectedOutcome": "The template will have a heading and three paragraph elements ready to display token and status values.",
+        "successCriteria": [
+          "Template contains one <h1> element and three <p> elements with appropriate text labels and Vue template syntax for displaying the reactive values."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you have all three paragraph elements and they use the correct Vue template syntax.",
+        "feedbackWrong": "The template structure is incomplete. Add a heading and three paragraph elements to display the access token, refresh token, and request status.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<h1>",
+            "<p>",
+            "{{",
+            "accessToken",
+            "refreshToken"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 12",
+        "title": "Add buttons for API calls and wire click handlers",
+        "instruction": "In the template, add two buttons: one labeled 'Make Protected API Call' that calls the protected API function when clicked, and another labeled 'Refresh Tokens' that calls the token refresh function when clicked.",
+        "hint": "Use the @click directive to attach click handlers to the buttons. The functions should be called without parentheses in the template.",
+        "analogousExample": "// Adding interactive buttons in Vue\n<button @click=\"handleLogin\">Login</button>\n<button @click=\"handleLogout\">Logout</button>",
+        "seedCode": "<script setup>\n// Import Vue, axios, and ref here\nimport { ref } from 'vue'\nimport axios from 'axios'\n\n// Initialize reactive state for tokens here\nconst accessToken = ref('')\nconst refreshToken = ref('')\n\n// Initialize reactive state for request status here\n\n// Create axios instance with base configuration here\nconst axiosInstance = axios.create({\n  baseURL: 'https://api.example.com'\n})\n\n// Add request interceptor to attach access token here\n\n// Add response interceptor to handle token refresh here\n\n// Create token refresh function here\n\n// Create function to simulate protected API call here\n</script>\n\n<template>\n  <div>\n    <!-- Add heading and paragraphs here -->\n    <!-- Add buttons for API calls and token refresh here -->\n  </div>\n</template>",
+        "expectedOutcome": "Two buttons appear in the UI: one for making protected API calls and another for refreshing tokens, both wired to their respective handler functions.",
+        "successCriteria": [
+          "Two buttons are present in the template with correct labels and @click handlers calling the appropriate functions."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added buttons, but check that both have correct labels and @click handlers pointing to the right functions.",
+        "feedbackWrong": "The buttons are missing or not properly wired. Make sure to add both buttons with @click handlers in the template.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "button",
+            "@click",
+            "Make Protected API Call",
+            "Refresh Tokens"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step12",
+        "type": "question",
+        "phase": "Step 12 of 12",
+        "title": "Add status display and error handling",
+        "instruction": "Initialize reactive state for request status using ref, with properties for loading, success, and error messages.",
+        "hint": "Create a ref object with initial values for loading (false), success (null), and error (null).",
+        "analogousExample": "// Example: reactive status object\nconst status = ref({\n  loading: false,\n  success: null,\n  error: null\n})",
+        "seedCode": "<script setup>\n// Import Vue, axios, and ref here\nimport { ref } from 'vue'\nimport axios from 'axios'\n\n// Initialize reactive state for tokens here\nconst accessToken = ref('')\nconst refreshToken = ref('')\n\n// Initialize reactive state for request status here\n\n// Create axios instance with base configuration here\nconst axiosInstance = axios.create({\n  baseURL: 'https://api.example.com'\n})\n\n// Add request interceptor to attach access token here\n\n// Add response interceptor to handle token refresh here\n\n// Create token refresh function here\n\n// Create function to simulate protected API call here\n</script>\n\n<template>\n  <div>\n    <!-- Add heading and paragraphs here -->\n    <!-- Add buttons for API calls and token refresh here -->\n  </div>\n</template>",
+        "expectedOutcome": "You'll have a reactive status object ready to track API call states.",
+        "successCriteria": [
+          "A ref object named 'status' is created with loading, success, and error properties initialized."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you create a ref object with loading, success, and error properties.",
+        "feedbackWrong": "The status state isn't set up correctly. Initialize a ref object with loading, success, and error properties.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "status",
+            "ref",
+            "loading",
+            "success",
+            "error"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import Vue, axios, and ref",
+        "id": "step1"
+      },
+      {
+        "label": "Create the main Vue component",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize reactive state for tokens",
+        "id": "step3"
+      },
+      {
+        "label": "Initialize reactive state for request status",
+        "id": "step4"
+      },
+      {
+        "label": "Set up axios instance with base configuration",
+        "id": "step5"
+      },
+      {
+        "label": "Add request interceptor to attach access token",
+        "id": "step6"
+      },
+      {
+        "label": "Add response interceptor to handle token refresh",
+        "id": "step7"
+      },
+      {
+        "label": "Create token refresh function",
+        "id": "step8"
+      },
+      {
+        "label": "Create function to simulate protected API call",
+        "id": "step9"
+      },
+      {
+        "label": "Add template structure with token display",
+        "id": "step10"
+      },
+      {
+        "label": "Add buttons for API calls and wire click handlers",
+        "id": "step11"
+      },
+      {
+        "label": "Add status display and error handling",
+        "id": "step12"
+      }
+    ]
+  },
+  "source": "content"
+}

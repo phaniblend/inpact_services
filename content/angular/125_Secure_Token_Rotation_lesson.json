@@ -1,0 +1,329 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-angular-125",
+    "track": "angular",
+    "lessonNum": 125,
+    "title": "Secure Token Rotation",
+    "shortName": "P125",
+    "intro": {
+      "tag": "LESSON #125",
+      "title": "Secure Token Rotation",
+      "body": "In this lesson, you'll build a secure Angular service that automatically refreshes authentication tokens before they expire. You'll learn how to implement token rotation using Angular's HttpClient and RxJS observables to make API calls. The core programming concept involves managing asynchronous operations and handling HTTP interceptors. You'll work with TypeScript interfaces, services, and HTTP headers to create a production-ready authentication flow.",
+      "usecase": "Secure token rotation is essential in any application that maintains user sessions, such as banking dashboards, e-commerce platforms, or healthcare portals. When users remain logged in for extended periods while performing sensitive operations like financial transactions or viewing medical records, their access tokens must be refreshed periodically without disrupting the experience. This pattern prevents unauthorized access by automatically replacing expired tokens with new ones, ensuring continuous security without requiring manual re-login. Developers implement this in authentication services to maintain seamless, secure user sessions across all protected routes and API calls."
+    },
+    "objectives": [
+      "Implement a token refresh service that manages authentication token lifecycle",
+      "Configure HTTP interceptors to automatically attach tokens to outgoing requests",
+      "Construct a token rotation mechanism that replaces expired tokens with fresh ones",
+      "Initialize secure storage for tokens using Angular's built-in services",
+      "Integrate token validation logic to check expiration before API calls",
+      "Apply error handling to manage token refresh failures gracefully",
+      "Bind token refresh events to user interface components for real-time feedback"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 9",
+        "title": "Import Angular core and HttpClient modules",
+        "instruction": "Import Component and OnInit from '@angular/core', and HttpClientModule and HttpClient from '@angular/common/http' in your TypeScript file.",
+        "hint": "Use the import keyword followed by the symbols you need from their respective Angular module packages.",
+        "analogousExample": "// Example: importing multiple symbols\nimport { Component, OnInit } from '@angular/core';\nimport { HttpClientModule, HttpClient } from '@angular/common/http';",
+        "seedCode": "// Import the required Angular modules here",
+        "expectedOutcome": "Your file will have the necessary imports for creating components and making HTTP requests.",
+        "successCriteria": [
+          "Component and OnInit are imported from '@angular/core', and HttpClientModule and HttpClient are imported from '@angular/common/http'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've imported some of the required modules, but not all. Make sure to import Component and OnInit from '@angular/core', and HttpClientModule and HttpClient from '@angular/common/http'.",
+        "feedbackWrong": "The imports are missing or incorrect. You need to import Component and OnInit from '@angular/core', and HttpClientModule and HttpClient from '@angular/common/http' to proceed with the lesson.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "Component",
+            "OnInit",
+            "@angular/core",
+            "HttpClientModule",
+            "HttpClient",
+            "@angular/common/http"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 9",
+        "title": "Create the main component class",
+        "instruction": "Create a new component class named TokenRotationComponent that implements the OnInit interface.",
+        "hint": "Use the class keyword to define the component class and add 'implements OnInit' after the class name.",
+        "analogousExample": "// Example: A basic Angular component class\nclass UserProfileComponent implements OnInit {\n  ngOnInit() {\n    // Initialization logic here\n  }\n}",
+        "seedCode": "import { Component, OnInit } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\n\n// Create the TokenRotationComponent class here\n",
+        "expectedOutcome": "You will have a TypeScript class definition for your main component that's ready for initialization logic.",
+        "successCriteria": [
+          "The TokenRotationComponent class exists and implements the OnInit interface."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure your class is named exactly 'TokenRotationComponent' and includes 'implements OnInit'.",
+        "feedbackWrong": "The component class wasn't created correctly. Check that you used the class keyword with the correct name and implemented OnInit.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "class",
+            "TokenRotationComponent",
+            "implements",
+            "OnInit"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 9",
+        "title": "Initialize component state variables",
+        "instruction": "Inside the TokenRotationComponent class, declare three properties: currentToken (string), newToken (string), and isRotating (boolean). Add appropriate TypeScript type annotations to each property.",
+        "hint": "You'll need to add these properties directly in the class body, similar to how you'd declare variables with types in TypeScript.",
+        "analogousExample": "// Example: declaring typed properties in an Angular component\nclass ExampleComponent {\n  currentValue: string = '';\n  isLoading: boolean = false;\n  data: any[] = [];\n}",
+        "seedCode": "import { Component, OnInit } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\n\n// Create the TokenRotationComponent class here\n@Component({\n  selector: 'app-token-rotation',\n  template: ''\n})\nexport class TokenRotationComponent implements OnInit {\n  // Declare currentToken, newToken, and isRotating properties here\n  \n  constructor(private http: HttpClient) {}\n  \n  ngOnInit(): void {}\n}",
+        "expectedOutcome": "The component class will have three typed properties to manage token data and rotation status.",
+        "successCriteria": [
+          "The TokenRotationComponent class contains currentToken: string, newToken: string, and isRotating: boolean properties with correct TypeScript type annotations."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've declared some properties, but not all three required ones. Make sure you have currentToken: string, newToken: string, and isRotating: boolean in your component class.",
+        "feedbackWrong": "The component doesn't have the required typed properties. You need to declare currentToken, newToken, and isRotating with appropriate TypeScript types inside the TokenRotationComponent class.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "currentToken:",
+            "newToken:",
+            "isRotating:",
+            "string",
+            "boolean"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 9",
+        "title": "Inject HttpClient service",
+        "instruction": "In the TokenRotationComponent constructor, inject the HttpClient service as a private property named 'http'.",
+        "hint": "The HttpClient should be injected via the constructor parameter and stored as a private property to make HTTP requests.",
+        "analogousExample": "// Example: injecting a service in Angular\nconstructor(private dataService: DataService) {}",
+        "seedCode": "import { Component, OnInit } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\n\n// Create the TokenRotationComponent class here\n@Component({\n  selector: 'app-token-rotation',\n  template: ''\n})\nexport class TokenRotationComponent implements OnInit {\n  // Declare currentToken, newToken, and isRotating properties here\n  \n  constructor(private http: HttpClient) {}\n  \n  ngOnInit(): void {}\n}",
+        "expectedOutcome": "The HttpClient service is properly injected and available as a private property in the component.",
+        "successCriteria": [
+          "The constructor has a private 'http' parameter of type HttpClient."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure the HttpClient is injected as a private property named 'http' in the constructor.",
+        "feedbackWrong": "The HttpClient service injection is missing or incorrect. Check that the constructor parameter is properly typed and marked as private.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "constructor",
+            "private",
+            "http",
+            "HttpClient"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 9",
+        "title": "Implement error handling in rotation method",
+        "instruction": "Inside the rotateToken method, wrap the existing HTTP request logic in a try-catch block to handle potential errors during token rotation.",
+        "hint": "Use try { ... } catch (error) { ... } syntax. Inside the catch block, set isRotating back to false and log the error.",
+        "analogousExample": "// Example: error handling in an Angular method\nrotateItem() {\n  try {\n    this.isProcessing = true;\n    // API call logic here\n    this.isProcessing = false;\n  } catch (error) {\n    this.isProcessing = false;\n    console.error('Operation failed:', error);\n  }\n}",
+        "seedCode": "import { Component, OnInit } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\n\n@Component({\n  selector: 'app-token-rotation',\n  template: ''\n})\nexport class TokenRotationComponent implements OnInit {\n  currentToken: string = '';\n  newToken: string = '';\n  isRotating: boolean = false;\n\n  constructor(private http: HttpClient) {}\n\n  ngOnInit(): void {}\n\n  rotateToken(): void {\n    this.isRotating = true;\n    this.http.post<{ token: string }>('/api/rotate-token', {}).subscribe({\n      next: (response) => {\n        this.currentToken = this.newToken;\n        this.newToken = response.token;\n        this.isRotating = false;\n      }\n    });\n  }\n}",
+        "expectedOutcome": "The rotateToken method will include error handling to gracefully manage API failures.",
+        "successCriteria": [
+          "The rotateToken method contains a try-catch block that sets isRotating to false in the catch block and logs the error."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure the try-catch block wraps the HTTP request logic and handles the error by resetting isRotating.",
+        "feedbackWrong": "The rotateToken method should include a try-catch block to handle errors. Review the example and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "try",
+            "catch",
+            "isRotating",
+            "false",
+            "console.error"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 9",
+        "title": "Create the component template structure",
+        "instruction": "In the component decorator's template property, create a container div element with the class 'token-container'.",
+        "hint": "Add the template property inside the @Component decorator with a div element containing the class attribute.",
+        "analogousExample": "// Example: Basic template structure\n@Component({\n  selector: 'app-example',\n  template: '<div class=\"container\"></div>'\n})",
+        "seedCode": "import { Component, OnInit } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\n\n@Component({\n  selector: 'app-token-rotation',\n  template: ''\n})\nexport class TokenRotationComponent implements OnInit {\n  currentToken: string = '';\n  newToken: string = '';\n  isRotating: boolean = false;\n\n  constructor(private http: HttpClient) {}\n\n  ngOnInit(): void {}\n\n  rotateToken(): void {\n    this.isRotating = true;\n    this.http.post<{ token: string }>('/api/rotate-token', {}).subscribe({\n      next: (response) => {\n        this.currentToken = this.newToken;\n        this.newToken = response.token;\n        this.isRotating = false;\n      }\n    });\n  }\n}",
+        "expectedOutcome": "The component will have a basic HTML container structure ready for adding token display elements.",
+        "successCriteria": [
+          "The template property contains a div element with class 'token-container'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you've added a div element with the correct class attribute.",
+        "feedbackWrong": "The template structure isn't quite right. Check that you've added a div element with class 'token-container' inside the template property.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "template:",
+            "'<div",
+            "class=\"token-container\"",
+            "'>"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 9",
+        "title": "Add token display elements",
+        "instruction": "Inside the component's template, add two paragraph elements to display the currentToken and newToken values.",
+        "hint": "Use Angular's interpolation syntax {{ }} to bind the component properties to the template.",
+        "analogousExample": "// Displaying state values in template\n<p>Current Value: {{ currentValue }}</p>\n<p>New Value: {{ newValue }}</p>",
+        "seedCode": "import { Component, OnInit } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\n\n@Component({\n  selector: 'app-token-rotation',\n  template: ''\n})\nexport class TokenRotationComponent implements OnInit {\n  currentToken: string = '';\n  newToken: string = '';\n  isRotating: boolean = false;\n\n  constructor(private http: HttpClient) {}\n\n  ngOnInit(): void {}\n\n  rotateToken(): void {\n    this.isRotating = true;\n    this.http.post<{ token: string }>('/api/rotate-token', {}).subscribe({\n      next: (response) => {\n        this.currentToken = this.newToken;\n        this.newToken = response.token;\n        this.isRotating = false;\n      }\n    });\n  }\n}",
+        "expectedOutcome": "The template will contain two paragraph elements that display the currentToken and newToken values using interpolation.",
+        "successCriteria": [
+          "Two paragraph elements are added to the template with interpolation for currentToken and newToken."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added some display elements, but make sure you have both paragraphs for currentToken and newToken.",
+        "feedbackWrong": "The template doesn't contain the required paragraph elements with interpolation for currentToken and newToken.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "template:",
+            "{{ currentToken }}",
+            "{{ newToken }}",
+            "<p>",
+            "</p>"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 9",
+        "title": "Add rotation button with click handler",
+        "instruction": "In the component template, add a button element with (click) event binding that calls the rotateToken() method. Set the button text to 'Rotate Token'.",
+        "hint": "Use Angular's event binding syntax (click)=\"rotateToken()\" on a <button> element.",
+        "analogousExample": "// Example: button with click handler\n<button (click)=\"handleClick()\">Click Me</button>",
+        "seedCode": "import { Component, OnInit } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\n\n@Component({\n  selector: 'app-token-rotation',\n  template: ''\n})\nexport class TokenRotationComponent implements OnInit {\n  currentToken: string = '';\n  newToken: string = '';\n  isRotating: boolean = false;\n\n  constructor(private http: HttpClient) {}\n\n  ngOnInit(): void {}\n\n  rotateToken(): void {\n    this.isRotating = true;\n    this.http.post<{ token: string }>('/api/rotate-token', {}).subscribe({\n      next: (response) => {\n        this.currentToken = this.newToken;\n        this.newToken = response.token;\n        this.isRotating = false;\n      }\n    });\n  }\n}",
+        "expectedOutcome": "The component template will include a button that triggers the token rotation method when clicked.",
+        "successCriteria": [
+          "Button element is present with (click)=\"rotateToken()\" event binding and displays 'Rotate Token' text."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You added a button, but check the event binding syntax or button text.",
+        "feedbackWrong": "The button with click handler is missing or incorrect.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<button",
+            "(click)=\"rotateToken()\"",
+            "Rotate Token"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 9",
+        "title": "Add rotation status indicator",
+        "instruction": "In the component template, add a paragraph element that displays 'Rotating token...' only when the isRotating property is true using Angular's *ngIf directive.",
+        "hint": "Use *ngIf to conditionally render the paragraph based on the isRotating boolean property.",
+        "analogousExample": "// Conditional rendering example\n<p *ngIf=\"isLoading\">Loading data...</p>",
+        "seedCode": "import { Component, OnInit } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\n\n@Component({\n  selector: 'app-token-rotation',\n  template: ''\n})\nexport class TokenRotationComponent implements OnInit {\n  currentToken: string = '';\n  newToken: string = '';\n  isRotating: boolean = false;\n\n  constructor(private http: HttpClient) {}\n\n  ngOnInit(): void {}\n\n  rotateToken(): void {\n    this.isRotating = true;\n    this.http.post<{ token: string }>('/api/rotate-token', {}).subscribe({\n      next: (response) => {\n        this.currentToken = this.newToken;\n        this.newToken = response.token;\n        this.isRotating = false;\n      }\n    });\n  }\n}",
+        "expectedOutcome": "The template will include a status indicator that appears only during token rotation operations.",
+        "successCriteria": [
+          "A paragraph element with *ngIf=\"isRotating\" is added to the template, displaying 'Rotating token...' when isRotating is true."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're using the *ngIf directive correctly and displaying the appropriate status message.",
+        "feedbackWrong": "The status indicator isn't working as expected. Check that you're using *ngIf with the isRotating property and displaying 'Rotating token...' in the paragraph.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "*ngIf=\"isRotating\"",
+            "Rotating token..."
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import Angular core and HttpClient modules",
+        "id": "step1"
+      },
+      {
+        "label": "Create the main component class",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize component state variables",
+        "id": "step3"
+      },
+      {
+        "label": "Inject HttpClient service",
+        "id": "step4"
+      },
+      {
+        "label": "Implement error handling in rotation method",
+        "id": "step5"
+      },
+      {
+        "label": "Create the component template structure",
+        "id": "step6"
+      },
+      {
+        "label": "Add token display elements",
+        "id": "step7"
+      },
+      {
+        "label": "Add rotation button with click handler",
+        "id": "step8"
+      },
+      {
+        "label": "Add rotation status indicator",
+        "id": "step9"
+      }
+    ]
+  },
+  "source": "content"
+}

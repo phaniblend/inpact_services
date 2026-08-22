@@ -1,0 +1,427 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-node-112",
+    "track": "node",
+    "lessonNum": 112,
+    "title": "Build CQRS split read write endpoints basics",
+    "shortName": "P112",
+    "intro": {
+      "tag": "LESSON #112",
+      "title": "Build CQRS split read write endpoints basics",
+      "body": "In this lesson, you will build a simple Node.js API that separates read and write operations using the CQRS (Command Query Responsibility Segregation) pattern. You will learn how to create distinct endpoints: one for handling commands (write operations) and another for handling queries (read operations). The core programming concepts involve structuring your application logic to isolate data modifications from data retrieval, improving scalability and maintainability. You will use Express.js to set up the server, define routes, and handle HTTP requests with clear separation of concerns. By the end, you'll have a basic understanding of how to implement CQRS in a Node.js application to manage different types of requests efficiently.",
+      "usecase": "The CQRS pattern is essential in modern applications where read and write operations have vastly different performance requirements. For example, in e-commerce platforms like Amazon, product listing pages (reads) need to handle millions of queries with complex filtering, while checkout processes (writes) require transactional integrity for inventory updates. Social media feeds separate read-heavy timeline displays from write operations like posting or liking content. This separation allows developers to optimize databases independently—using fast read replicas for queries and dedicated write databases for commands—ensuring scalability and responsiveness in high-traffic applications."
+    },
+    "objectives": [
+      "Construct separate Express.js routes for read and write operations",
+      "Initialize distinct data structures to isolate read and write models",
+      "Implement a write endpoint that processes and stores command data",
+      "Configure a read endpoint that retrieves data from the query model",
+      "Manipulate the application structure to enforce CQRS separation",
+      "Integrate the split endpoints into a single Node.js application",
+      "Apply CQRS principles by updating the write model to synchronize with the read model"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 12",
+        "title": "Import required Node.js modules",
+        "instruction": "Import the http module and the url module using the require() function.",
+        "hint": "Use require('module-name') to import Node.js built-in modules. The http module helps create HTTP servers, and the url module helps parse URLs.",
+        "analogousExample": "// Example: importing built-in modules\nconst fs = require('fs');\nconst path = require('path');",
+        "seedCode": "// Import the http and url modules here",
+        "expectedOutcome": "The http and url modules are imported and ready to use for building the server.",
+        "successCriteria": [
+          "The http and url modules are imported using require()."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure to import both the http and url modules using require().",
+        "feedbackWrong": "The imports are missing or incorrect. Use require('http') and require('url') to import the modules.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "require('http')",
+            "require('url')"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 12",
+        "title": "Initialize in-memory data store",
+        "instruction": "Create an array to store items and a counter variable for generating unique IDs.",
+        "hint": "Initialize an empty array and a numeric variable. Place them after the imports.",
+        "analogousExample": "// Example: simple data store\nlet items = [];\nlet nextId = 1;",
+        "seedCode": "// Import the http and url modules here\n\n// Create an array to store items and a counter for IDs here",
+        "expectedOutcome": "You'll have a data structure ready to hold items and generate unique IDs.",
+        "successCriteria": [
+          "An empty array named 'items' and a numeric variable named 'nextId' are declared."
+        ],
+        "feedbackCorrect": "Great! You've set up the in-memory data store.",
+        "feedbackPartial": "You're close. Make sure you have both an array for items and a counter variable.",
+        "feedbackWrong": "Check the instruction: you need to create an array and a counter variable.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "items",
+            "nextId"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 12",
+        "title": "Create helper function to parse request body",
+        "instruction": "Create a function named parseRequestBody that takes a request object as a parameter and returns a promise that resolves with the parsed JSON body.",
+        "hint": "You'll need to read the request data in chunks, collect it, and then parse it as JSON. Use the request's 'data' and 'end' events.",
+        "analogousExample": "// Similar: a function that reads and parses data\nfunction parseRequestBody(req) {\n  return new Promise((resolve, reject) => {\n    let body = '';\n    req.on('data', chunk => body += chunk);\n    req.on('end', () => {\n      try {\n        resolve(JSON.parse(body));\n      } catch (error) {\n        reject(error);\n      }\n    });\n    req.on('error', reject);\n  });\n}",
+        "seedCode": "// Import the http and url modules here\n\n// Create an array to store items and a counter for IDs here\n\n// Create the parseRequestBody function here",
+        "expectedOutcome": "A reusable function that can parse JSON from incoming HTTP requests.",
+        "successCriteria": [
+          "The parseRequestBody function is defined, takes a request parameter, returns a promise, and handles reading and parsing JSON."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your function returns a promise and properly handles the request events.",
+        "feedbackWrong": "The function doesn't seem to parse the request body correctly. Review how to read data from the request stream and parse JSON.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "parseRequestBody",
+            "function",
+            "Promise",
+            "JSON.parse",
+            "req.on"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 12",
+        "title": "Create write endpoint handler for adding items",
+        "instruction": "Create a function named handleAddItem that takes a request and response object as parameters and handles POST requests to add new items to the data store.",
+        "hint": "Define a function that checks if the request method is POST, parses the request body, creates a new item object with an ID and the parsed data, pushes it to the items array, and sends a JSON response.",
+        "analogousExample": "// Similar: a function that handles adding data\nfunction handleAddItem(req, res) {\n  // Implementation here\n}",
+        "seedCode": "// Import the http and url modules here\n\n// Create an array to store items and a counter for IDs here\n\n// Create the parseRequestBody function here\n\n// Create the handleAddItem function here",
+        "expectedOutcome": "A function named handleAddItem is created that will handle POST requests to add items to the in-memory store.",
+        "successCriteria": [
+          "The handleAddItem function is defined with req and res parameters and contains logic for handling POST requests."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started creating the handler function, but make sure it's named handleAddItem and accepts both req and res parameters.",
+        "feedbackWrong": "The function isn't properly defined. Create a function named handleAddItem that takes req and res parameters to handle POST requests.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "function",
+            "handleAddItem",
+            "req",
+            "res",
+            "POST"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 12",
+        "title": "Create read endpoint handler for fetching all items",
+        "instruction": "Create a function named handleGetItems that returns all items from the data store as a JSON response.",
+        "hint": "Define a function that takes request and response objects, sets the response header to 'application/json', and sends the items array as JSON.",
+        "analogousExample": "// Example: A function that returns data\nfunction handleGetItems(req, res) {\n  res.writeHead(200, { 'Content-Type': 'application/json' });\n  res.end(JSON.stringify(items));\n}",
+        "seedCode": "// Import the http and url modules here\n\n// Create an array to store items and a counter for IDs here\n\n// Create the parseRequestBody function here\n\n// Create the handleAddItem function here\n\n// Create the handleGetItems function here",
+        "expectedOutcome": "A handleGetItems function is defined that will handle GET requests by returning all items from the data store.",
+        "successCriteria": [
+          "The handleGetItems function is created, sets the correct Content-Type header, and returns the items array as JSON."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've created the function, but make sure it sets the Content-Type header to 'application/json' and returns the items array using JSON.stringify.",
+        "feedbackWrong": "The function is missing or incorrect. Remember to create a function named handleGetItems that takes req and res parameters, sets the response header, and sends the items array as JSON.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "handleGetItems",
+            "JSON.stringify",
+            "application/json",
+            "items"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 12",
+        "title": "Create read endpoint handler for fetching single item",
+        "instruction": "Create a function named handleGetItem that takes request and response objects as parameters and handles GET requests to fetch a single item by ID from the URL.",
+        "hint": "Extract the ID from the URL path, find the matching item in the items array, and send the item as JSON if found, or a 404 error if not found.",
+        "analogousExample": "// Example: function that handles a specific resource request\nfunction handleGetItem(req, res) {\n  const id = parseInt(req.url.split('/').pop());\n  const item = items.find(item => item.id === id);\n  if (item) {\n    res.writeHead(200, { 'Content-Type': 'application/json' });\n    res.end(JSON.stringify(item));\n  } else {\n    res.writeHead(404, { 'Content-Type': 'application/json' });\n    res.end(JSON.stringify({ error: 'Item not found' }));\n  }\n}",
+        "seedCode": "// Import the http and url modules here\n\n// Create an array to store items and a counter for IDs here\n\n// Create the parseRequestBody function here\n\n// Create the handleAddItem function here\n\n// Create the handleGetItems function here\n\n// Create the handleGetItem function here",
+        "expectedOutcome": "A handleGetItem function is added that can retrieve a single item by ID from the in-memory store.",
+        "successCriteria": [
+          "The handleGetItem function is defined, extracts an ID from the URL, finds the matching item, and returns appropriate JSON responses for success and error cases."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the function, but make sure it extracts the ID from the URL, finds the item, and handles both success (200) and not-found (404) cases with proper JSON responses.",
+        "feedbackWrong": "The function is missing or incomplete. Review the example: handleGetItem should parse the ID from the URL, search the items array, and send appropriate JSON responses.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "handleGetItem",
+            "req",
+            "res",
+            "parseInt",
+            "find",
+            "writeHead",
+            "JSON.stringify"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 12",
+        "title": "Create write endpoint handler for updating items",
+        "instruction": "Create a function named handleUpdateItem that takes request and response parameters and handles updating an existing item in the data store.",
+        "hint": "The function should parse the request body, find the item by ID, update its properties, and send a JSON response.",
+        "analogousExample": "// Similar: a function that updates data\nfunction handleUpdateItem(req, res) {\n  // Parse body, find item, update, respond\n}",
+        "seedCode": "// Import the http and url modules here\n\n// Create an array to store items and a counter for IDs here\n\n// Create the parseRequestBody function here\n\n// Create the handleAddItem function here\n\n// Create the handleGetItems function here\n\n// Create the handleGetItem function here\n\n// Create the handleUpdateItem function here",
+        "expectedOutcome": "A handleUpdateItem function is defined that will handle PUT requests to update items.",
+        "successCriteria": [
+          "The handleUpdateItem function is created with request and response parameters and contains logic for updating items."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the function, but make sure it's named handleUpdateItem and takes both request and response parameters.",
+        "feedbackWrong": "The update handler function is not properly defined. Create a function named handleUpdateItem that takes request and response parameters.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "handleUpdateItem",
+            "function",
+            "req",
+            "res"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 12",
+        "title": "Create write endpoint handler for deleting items",
+        "instruction": "Create a function named handleDeleteItem that handles DELETE requests to remove items from the data store.",
+        "hint": "The function should take request and response objects as parameters, extract the item ID from the URL, find the item index in the items array, and remove it if found.",
+        "analogousExample": "// Similar: a function that removes an item from an array\nfunction removeItem(items, id) {\n  const index = items.findIndex(item => item.id === id);\n  if (index !== -1) {\n    items.splice(index, 1);\n    return true;\n  }\n  return false;\n}",
+        "seedCode": "// Import the http and url modules here\n\n// Create an array to store items and a counter for IDs here\n\n// Create the parseRequestBody function here\n\n// Create the handleAddItem function here\n\n// Create the handleGetItems function here\n\n// Create the handleGetItem function here\n\n// Create the handleUpdateItem function here\n\n// Create the handleDeleteItem function here",
+        "expectedOutcome": "A handleDeleteItem function that processes DELETE requests and removes items from the in-memory store.",
+        "successCriteria": [
+          "The handleDeleteItem function is defined and handles DELETE requests by extracting the ID from the URL and removing the matching item from the items array."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the function, but make sure it extracts the ID from the URL, finds the item in the array, and removes it with proper response handling.",
+        "feedbackWrong": "The function is missing or doesn't properly handle DELETE requests. Review how to extract URL parameters and manipulate arrays in JavaScript.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "handleDeleteItem",
+            "DELETE",
+            "id",
+            "findIndex",
+            "splice"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 12",
+        "title": "Create main request router function",
+        "instruction": "Create a function named handleRequest that takes request and response objects as parameters, examines the request method and URL, and routes to the correct handler function.",
+        "hint": "Inside the function, use if/else or switch statements to check request.method and request.url, then call the appropriate handler function you created earlier.",
+        "analogousExample": "// Example of a routing function\nfunction handleRequest(req, res) {\n  if (req.method === 'GET' && req.url === '/items') {\n    handleGetItems(req, res);\n  } else if (req.method === 'POST' && req.url === '/items') {\n    handleAddItem(req, res);\n  } else {\n    res.writeHead(404);\n    res.end('Not found');\n  }\n}",
+        "seedCode": "// Import the http and url modules here\n\n// Create an array to store items and a counter for IDs here\n\n// Create the parseRequestBody function here\n\n// Create the handleAddItem function here\n\n// Create the handleGetItems function here\n\n// Create the handleGetItem function here\n\n// Create the handleUpdateItem function here\n\n// Create the handleDeleteItem function here\n\n// Create the handleRequest function here",
+        "expectedOutcome": "You will have a handleRequest function that can route incoming HTTP requests to the appropriate handler functions based on the request method and URL path.",
+        "successCriteria": [
+          "The handleRequest function is defined, takes req and res parameters, and contains logic to route requests to the correct handler functions."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the handleRequest function, but it needs to examine both the request method and URL to route to the correct handlers. Make sure you're calling the handler functions you created earlier.",
+        "feedbackWrong": "The handleRequest function is missing or doesn't properly route requests. Remember to check both request.method and request.url, then call the appropriate handler function.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "function handleRequest",
+            "req",
+            "res",
+            "request.method",
+            "request.url",
+            "handleAddItem",
+            "handleGetItems",
+            "handleGetItem",
+            "handleUpdateItem",
+            "handleDeleteItem"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 12",
+        "title": "Create HTTP server with request handling",
+        "instruction": "Create the HTTP server instance using the http module's createServer method, passing your handleRequest function as the request handler.",
+        "hint": "Call http.createServer() with your router function as the argument, then assign it to a constant variable.",
+        "analogousExample": "// Creating a basic HTTP server\nconst server = http.createServer((req, res) => {\n  res.end('Hello');\n});",
+        "seedCode": "// Import the http and url modules here\n\n// Create an array to store items and a counter for IDs here\n\n// Create the parseRequestBody function here\n\n// Create the handleAddItem function here\n\n// Create the handleGetItems function here\n\n// Create the handleGetItem function here\n\n// Create the handleUpdateItem function here\n\n// Create the handleDeleteItem function here\n\n// Create the handleRequest function here\n\n// Create the HTTP server instance here",
+        "expectedOutcome": "The server instance is created and configured to use your handleRequest function for routing all incoming requests.",
+        "successCriteria": [
+          "An HTTP server instance is created using http.createServer() with handleRequest as the request handler."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're calling http.createServer() and passing your handleRequest function as the argument.",
+        "feedbackWrong": "The server instance wasn't created correctly. Remember to use http.createServer() with your handleRequest function as the request handler.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "createServer",
+            "handleRequest"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 12",
+        "title": "Configure server to listen on a port",
+        "instruction": "Call the server's listen method to start it on port 3000 and log a startup message to the console.",
+        "hint": "Use server.listen(3000, () => { console.log(...) }) to make the server accessible.",
+        "analogousExample": "// Starting a server on a specific port\nconst server = http.createServer();\nserver.listen(3000, () => {\n  console.log('Server running at http://localhost:3000');\n});",
+        "seedCode": "// Import the http and url modules here\n\n// Create an array to store items and a counter for IDs here\n\n// Create the parseRequestBody function here\n\n// Create the handleAddItem function here\n\n// Create the handleGetItems function here\n\n// Create the handleGetItem function here\n\n// Create the handleUpdateItem function here\n\n// Create the handleDeleteItem function here\n\n// Create the handleRequest function here\n\n// Create the HTTP server instance here\n\n// Start the server on port 3000 here",
+        "expectedOutcome": "The server will be configured to listen for incoming requests on port 3000 and log a confirmation message when started.",
+        "successCriteria": [
+          "The server.listen method is called with port 3000 and a callback that logs a startup message."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the server, but make sure to include a callback function that logs a startup message.",
+        "feedbackWrong": "The server isn't configured to listen yet. Use server.listen with port 3000 and a callback.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "server.listen",
+            "3000",
+            "console.log"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step12",
+        "type": "question",
+        "phase": "Step 12 of 12",
+        "title": "Add error handling for the server",
+        "instruction": "Add an error event listener to the server to handle common errors like address already in use.",
+        "hint": "Use the server.on('error', ...) method to listen for error events and handle them appropriately.",
+        "analogousExample": "// Example: basic server error handling\nserver.on('error', (error) => {\n  if (error.code === 'EADDRINUSE') {\n    console.error('Port already in use');\n  } else {\n    console.error('Server error:', error);\n  }\n});",
+        "seedCode": "// Import the http and url modules here\n\n// Create an array to store items and a counter for IDs here\n\n// Create the parseRequestBody function here\n\n// Create the handleAddItem function here\n\n// Create the handleGetItems function here\n\n// Create the handleGetItem function here\n\n// Create the handleUpdateItem function here\n\n// Create the handleDeleteItem function here\n\n// Create the handleRequest function here\n\n// Create the HTTP server instance here\n\n// Start the server on port 3000 here\n\n// Add error event listener here",
+        "expectedOutcome": "The server will now handle errors gracefully, such as when the port is already in use.",
+        "successCriteria": [
+          "Server has an error event listener that handles at least the EADDRINUSE error."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added an error listener, but make sure it handles specific error cases like EADDRINUSE.",
+        "feedbackWrong": "The server still needs error handling. Add an error event listener to handle common server errors.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "server.on",
+            "'error'",
+            "error",
+            "EADDRINUSE"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import required Node.js modules",
+        "id": "step1"
+      },
+      {
+        "label": "Initialize in-memory data store",
+        "id": "step2"
+      },
+      {
+        "label": "Create helper function to parse request body",
+        "id": "step3"
+      },
+      {
+        "label": "Create write endpoint handler for adding items",
+        "id": "step4"
+      },
+      {
+        "label": "Create read endpoint handler for fetching all items",
+        "id": "step5"
+      },
+      {
+        "label": "Create read endpoint handler for fetching single item",
+        "id": "step6"
+      },
+      {
+        "label": "Create write endpoint handler for updating items",
+        "id": "step7"
+      },
+      {
+        "label": "Create write endpoint handler for deleting items",
+        "id": "step8"
+      },
+      {
+        "label": "Create main request router function",
+        "id": "step9"
+      },
+      {
+        "label": "Create HTTP server with request handling",
+        "id": "step10"
+      },
+      {
+        "label": "Configure server to listen on a port",
+        "id": "step11"
+      },
+      {
+        "label": "Add error handling for the server",
+        "id": "step12"
+      }
+    ]
+  },
+  "source": "content"
+}

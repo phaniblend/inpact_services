@@ -1,0 +1,353 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-node-50",
+    "track": "node",
+    "lessonNum": 50,
+    "title": "Build Redis backed session store integration",
+    "shortName": "P50",
+    "intro": {
+      "tag": "LESSON #50",
+      "title": "Build Redis backed session store integration",
+      "body": "In this lesson, you will build a Redis-backed session store to manage user sessions in a Node.js application. You will learn how to integrate Redis, an in-memory data store, to persist session data across server restarts. The core programming concept involves using the 'express-session' middleware with a custom Redis store to handle session storage. You will work with key technologies like Express, the 'connect-redis' package, and Redis itself. By the end, you will have a functional session store that enhances your app's scalability and reliability. This hands-on project will give you practical experience with session management and external data storage in Node.js.",
+      "usecase": "Redis-backed session stores are essential for modern web applications that require horizontal scaling across multiple servers. This pattern appears in e-commerce platforms where user shopping carts persist across devices, social media sites that maintain login sessions during high traffic, and banking applications that securely manage user authentication states. Developers implement this when building dashboards that show real-time user activity across server instances, or when creating forms that need to maintain user input data during server restarts. This approach ensures consistent user experiences in distributed systems where traditional server-side sessions would fail."
+    },
+    "objectives": [
+      "Initialize a Redis client connection in a Node.js application",
+      "Configure an Express session store to use Redis as its backend",
+      "Implement session data storage and retrieval operations with Redis",
+      "Integrate the Redis session store into an existing Express middleware chain",
+      "Manipulate session data through route handlers to demonstrate persistence",
+      "Apply environment variables to securely manage Redis connection details",
+      "Control session expiration and configuration using Redis store options"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 10",
+        "title": "Import required modules: express, express-session, redis, and connect-redis",
+        "instruction": "Import the express, express-session, redis, and connect-redis modules using require statements.",
+        "hint": "Use require() for each module and assign them to variables with descriptive names.",
+        "analogousExample": "// Importing modules in Node.js\nconst express = require('express');\nconst session = require('express-session');\nconst redis = require('redis');\nconst RedisStore = require('connect-redis')(session);",
+        "seedCode": "// Import required modules here",
+        "expectedOutcome": "The four modules are imported and ready to be used in your session store setup.",
+        "successCriteria": [
+          "express, express-session, redis, and connect-redis are imported using require statements."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've imported some modules, but make sure to include all four: express, express-session, redis, and connect-redis.",
+        "feedbackWrong": "The imports are missing or incorrect. You need to import express, express-session, redis, and connect-redis using require statements.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "require('express')",
+            "require('express-session')",
+            "require('redis')",
+            "require('connect-redis')"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 10",
+        "title": "Initialize Express application",
+        "instruction": "Create an Express application instance by calling express() and assign it to a constant named 'app'.",
+        "hint": "Use the imported express module to create your application instance.",
+        "analogousExample": "// Creating an Express app instance\nconst app = express();",
+        "seedCode": "const express = require('express');\nconst session = require('express-session');\nconst redis = require('redis');\nconst RedisStore = require('connect-redis')(session);\n\n// Create your Express app instance here\n",
+        "expectedOutcome": "You'll have a constant 'app' that holds your Express application instance, ready for configuration.",
+        "successCriteria": [
+          "An Express application instance is created and assigned to a constant named 'app'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're creating the Express instance correctly.",
+        "feedbackWrong": "That doesn't look right. Remember to call express() to create the application instance.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "app",
+            "=",
+            "express()"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 10",
+        "title": "Create Redis client instance",
+        "instruction": "Create a Redis client instance using redis.createClient() with default connection parameters.",
+        "hint": "Call the createClient method on the redis module you imported earlier.",
+        "analogousExample": "// Similar: creating a database connection\nconst dbClient = require('database-module').createClient();",
+        "seedCode": "const express = require('express');\nconst session = require('express-session');\nconst redis = require('redis');\nconst RedisStore = require('connect-redis')(session);\n\n// Create your Express app instance here\n\n// Create Redis client instance here",
+        "expectedOutcome": "A Redis client instance is created and ready to be configured for session storage.",
+        "successCriteria": [
+          "The Redis client is created using redis.createClient() with no arguments (default connection)."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're calling createClient() on the redis module you imported. The syntax should be redis.createClient().",
+        "feedbackWrong": "That doesn't look right. Remember to create a Redis client using the redis module's createClient() method with default connection parameters.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "redis.createClient()"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 10",
+        "title": "Initialize RedisStore with connect-redis",
+        "instruction": "Create a RedisStore instance by calling RedisStore with the session middleware and passing your Redis client as the client option.",
+        "hint": "Use the RedisStore constructor you imported earlier. Pass an object with a client property set to your Redis client instance.",
+        "analogousExample": "// Similar: creating a store instance with a client\nconst store = new RedisStore({ client: redisClient });",
+        "seedCode": "const express = require('express');\nconst session = require('express-session');\nconst redis = require('redis');\nconst RedisStore = require('connect-redis')(session);\n\nconst app = express();\n\nconst redisClient = redis.createClient();\n\n// Create RedisStore instance here",
+        "expectedOutcome": "A RedisStore instance is created and ready to be used as the session store.",
+        "successCriteria": [
+          "RedisStore instance is created with the Redis client passed as the client option."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're passing the Redis client correctly as the client option to RedisStore.",
+        "feedbackWrong": "That doesn't look right. Remember to create a RedisStore instance with your Redis client as the client option.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "RedisStore",
+            "client",
+            "redisClient"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 10",
+        "title": "Configure session middleware with Redis store",
+        "instruction": "Configure the Express session middleware to use the RedisStore instance as the session store. Add the session middleware to your Express app with appropriate configuration options.",
+        "hint": "Use app.use() with session() as the middleware. Pass an object with store, secret, and other session options.",
+        "analogousExample": "// Similar: configuring middleware with options\napp.use(session({\n  store: myStore,\n  secret: 'mySecret',\n  resave: false,\n  saveUninitialized: false\n}));",
+        "seedCode": "const express = require('express');\nconst session = require('express-session');\nconst redis = require('redis');\nconst RedisStore = require('connect-redis')(session);\n\nconst app = express();\n\nconst redisClient = redis.createClient();\n\n// Create RedisStore instance here\nconst redisStore = new RedisStore({ client: redisClient });\n\n// Configure session middleware with Redis store here",
+        "expectedOutcome": "The session middleware is configured to use RedisStore as the session store with proper options.",
+        "successCriteria": [
+          "Session middleware is added with store set to redisStore, a secret string, and resave/saveUninitialized options."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but check that all required options (store, secret, resave, saveUninitialized) are included.",
+        "feedbackWrong": "The session middleware configuration is missing or incorrect. Make sure to use app.use() with session() and pass the RedisStore instance.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "app.use",
+            "session",
+            "store:",
+            "redisStore",
+            "secret:",
+            "resave:",
+            "saveUninitialized:"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 10",
+        "title": "Apply session middleware to Express app",
+        "instruction": "Apply the configured session middleware to your Express app using app.use().",
+        "hint": "Use app.use() with the session middleware configuration you created earlier.",
+        "analogousExample": "// Example: applying middleware\napp.use(express.json());",
+        "seedCode": "const express = require('express');\nconst session = require('express-session');\nconst redis = require('redis');\nconst RedisStore = require('connect-redis')(session);\n\nconst app = express();\n\nconst redisClient = redis.createClient();\n\n// Create RedisStore instance here\nconst redisStore = new RedisStore({ client: redisClient });\n\n// Configure session middleware with Redis store here\napp.use(session({\n  store: redisStore,\n  secret: 'your-secret-key',\n  resave: false,\n  saveUninitialized: false\n}));\n\n// Apply session middleware here",
+        "expectedOutcome": "The session middleware will be integrated into the Express application, enabling session handling with Redis storage.",
+        "successCriteria": [
+          "app.use() is called with the session middleware configuration."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're using app.use() with the session middleware configuration.",
+        "feedbackWrong": "That doesn't look right. You need to apply the session middleware using app.use().",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "app.use",
+            "session"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 10",
+        "title": "Create route to set session data",
+        "instruction": "Create a GET route at '/set-session' that sets a property on req.session, such as req.session.username = 'testuser'.",
+        "hint": "Use app.get() to define the route. Inside the route handler, access req.session and assign a value to a property.",
+        "analogousExample": "// Example: Setting session data in a route\napp.get('/set-session', (req, res) => {\n  req.session.username = 'testuser';\n  res.send('Session data set');\n});",
+        "seedCode": "const express = require('express');\nconst session = require('express-session');\nconst redis = require('redis');\nconst RedisStore = require('connect-redis')(session);\n\nconst app = express();\n\nconst redisClient = redis.createClient();\n\n// Create RedisStore instance here\nconst redisStore = new RedisStore({ client: redisClient });\n\n// Configure session middleware with Redis store here\napp.use(session({\n  store: redisStore,\n  secret: 'your-secret-key',\n  resave: false,\n  saveUninitialized: false\n}));\n\n// Apply session middleware here\n\n// Create GET route to set session data here",
+        "expectedOutcome": "A GET route is defined that sets data on the session object.",
+        "successCriteria": [
+          "A GET route at '/set-session' is created that assigns a value to req.session."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've created a route, but make sure it's a GET route at '/set-session' and sets a property on req.session.",
+        "feedbackWrong": "The route is missing or incorrect. Create a GET route at '/set-session' that sets a property on req.session.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "app.get",
+            "'/set-session'",
+            "req.session",
+            "="
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 10",
+        "title": "Create route to retrieve session data",
+        "instruction": "Create a GET route at '/get-session' that reads and returns the username stored in the session. Use req.session.username to access the data and send it in the response.",
+        "hint": "Add a new app.get() route that accesses the session data from req.session and sends it back with res.send().",
+        "analogousExample": "// Example: route that reads session data\napp.get('/profile', (req, res) => {\n  const user = req.session.user;\n  res.send(`User: ${user}`);\n});",
+        "seedCode": "const express = require('express');\nconst session = require('express-session');\nconst redis = require('redis');\nconst RedisStore = require('connect-redis')(session);\n\nconst app = express();\n\nconst redisClient = redis.createClient();\n\n// Create RedisStore instance here\nconst redisStore = new RedisStore({ client: redisClient });\n\n// Configure session middleware with Redis store here\napp.use(session({\n  store: redisStore,\n  secret: 'your-secret-key',\n  resave: false,\n  saveUninitialized: false\n}));\n\n// Apply session middleware here\n\n// Create GET route to set session data here\n\n// Create GET route to retrieve session data here",
+        "expectedOutcome": "A new GET route '/get-session' that reads username from req.session and returns it in the response.",
+        "successCriteria": [
+          "Route is defined with app.get('/get-session'), accesses req.session.username, and sends it with res.send()."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your route correctly accesses req.session.username and sends it in the response. Check the route path and response format.",
+        "feedbackWrong": "The route to retrieve session data isn't working as expected. Review how to create GET routes and access session data from req.session.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "app.get",
+            "'/get-session'",
+            "req.session.username",
+            "res.send"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 10",
+        "title": "Start Express server",
+        "instruction": "Start the Express server by calling app.listen() on port 3000.",
+        "hint": "Use app.listen(3000, callback) to start the server and log a message when it's running.",
+        "analogousExample": "// Starting a server in Express\napp.listen(3000, () => {\n  console.log('Server running on port 3000');\n});",
+        "seedCode": "const express = require('express');\nconst session = require('express-session');\nconst redis = require('redis');\nconst RedisStore = require('connect-redis')(session);\n\nconst app = express();\n\nconst redisClient = redis.createClient();\n\n// Create RedisStore instance here\nconst redisStore = new RedisStore({ client: redisClient });\n\n// Configure session middleware with Redis store here\napp.use(session({\n  store: redisStore,\n  secret: 'your-secret-key',\n  resave: false,\n  saveUninitialized: false\n}));\n\n// Apply session middleware here\n\n// Create GET route to set session data here\n\n// Create GET route to retrieve session data here\n\n// Start the Express server here",
+        "expectedOutcome": "The server will start and be ready to handle requests with Redis-backed sessions.",
+        "successCriteria": [
+          "app.listen() is called with port 3000 and a callback that logs a message."
+        ],
+        "feedbackCorrect": "Great! The server is now running with Redis session support.",
+        "feedbackPartial": "You've started the server, but make sure to include a callback that logs a message.",
+        "feedbackWrong": "The server isn't started correctly. Use app.listen() with port 3000 and a callback.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "app.listen",
+            "3000",
+            "console.log"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 10",
+        "title": "Test Redis session functionality",
+        "instruction": "Add a simple test route that sets and retrieves session data in one request to verify Redis-backed sessions are working.",
+        "hint": "Create a GET route that sets a session value and returns it in the response to confirm Redis storage.",
+        "analogousExample": "// Example test route\napp.get('/test-session', (req, res) => {\n  req.session.testValue = 'Redis is working!';\n  res.send(`Session value: ${req.session.testValue}`);\n});",
+        "seedCode": "const express = require('express');\nconst session = require('express-session');\nconst redis = require('redis');\nconst RedisStore = require('connect-redis')(session);\n\nconst app = express();\n\nconst redisClient = redis.createClient();\n\n// Create RedisStore instance here\nconst redisStore = new RedisStore({ client: redisClient });\n\n// Configure session middleware with Redis store here\napp.use(session({\n  store: redisStore,\n  secret: 'your-secret-key',\n  resave: false,\n  saveUninitialized: false\n}));\n\n// Apply session middleware here\n\n// Create GET route to set session data here\n\n// Create GET route to retrieve session data here\n\n// Start the Express server here\n\n// Add test route here",
+        "expectedOutcome": "A test route is added that sets session data and returns it, allowing you to verify Redis-backed session storage works by visiting /test-session.",
+        "successCriteria": [
+          "A GET route '/test-session' is created that sets a session value and sends it in the response."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure your route sets a session value and returns it in the response to confirm Redis storage is working.",
+        "feedbackWrong": "The test route isn't quite right. Create a GET route at '/test-session' that sets req.session.testValue and sends it in the response.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "app.get",
+            "'/test-session'",
+            "req.session",
+            "res.send"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import required modules: express, express-session, redis, and connect-redis",
+        "id": "step1"
+      },
+      {
+        "label": "Initialize Express application",
+        "id": "step2"
+      },
+      {
+        "label": "Create Redis client instance",
+        "id": "step3"
+      },
+      {
+        "label": "Initialize RedisStore with connect-redis",
+        "id": "step4"
+      },
+      {
+        "label": "Configure session middleware with Redis store",
+        "id": "step5"
+      },
+      {
+        "label": "Apply session middleware to Express app",
+        "id": "step6"
+      },
+      {
+        "label": "Create route to set session data",
+        "id": "step7"
+      },
+      {
+        "label": "Create route to retrieve session data",
+        "id": "step8"
+      },
+      {
+        "label": "Start Express server",
+        "id": "step9"
+      },
+      {
+        "label": "Test Redis session functionality",
+        "id": "step10"
+      }
+    ]
+  },
+  "source": "content"
+}

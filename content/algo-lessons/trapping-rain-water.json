@@ -1,0 +1,897 @@
+{
+  "id": "trapping-rain-water",
+  "title": "Trapping Rain Water",
+  "pattern": "two-pointers",
+  "difficulty": "hard",
+  "language": "javascript",
+  "status": "draft",
+  "flow": [
+    {
+      "stepId": "title",
+      "mentorSays": "At the end of this lesson, you will be able to:\n\n1. Understand what the Trapping Rain Water lesson asks for\n2. Use two pointers to calculate trapped water efficiently\n3. Understand the key insight: water trapped = min(maxLeft, maxRight) - height[i]\n4. Track maximum heights from both sides as we traverse\n5. Implement the solution step by step in your chosen language",
+      "action": "continue",
+      "next": "lesson-illustration"
+    },
+    {
+      "stepId": "lesson-illustration",
+      "mentorSays": "Perfect! Now let's understand what the Trapping Rain Water lesson is asking.\n\n**Lesson Definition:**\nGiven an array `height` of non-negative integers representing an elevation map, calculate how much rainwater can be trapped after raining.\n\n**Key Insight:**\nFor each position `i`, the water trapped is: `min(maxLeft, maxRight) - height[i]`\n- `maxLeft` = maximum height to the left of position `i`\n- `maxRight` = maximum height to the right of position `i`\n- Water can only be trapped if there are taller bars on both sides\n\n**Example 1:** height = [0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1]\n\nLet's calculate water at each position:\n- Index 0 (h=0): maxLeft=0, maxRight=3, min(0,3)=0, water=0-0=0\n- Index 1 (h=1): maxLeft=1, maxRight=3, min(1,3)=1, water=1-1=0\n- Index 2 (h=0): maxLeft=1, maxRight=3, min(1,3)=1, water=1-0=1 ✓\n- Index 3 (h=2): maxLeft=2, maxRight=3, min(2,3)=2, water=2-2=0\n- Index 4 (h=1): maxLeft=2, maxRight=3, min(2,3)=2, water=2-1=1 ✓\n- Index 5 (h=0): maxLeft=2, maxRight=3, min(2,3)=2, water=2-0=2 ✓\n- Index 6 (h=1): maxLeft=2, maxRight=3, min(2,3)=2, water=2-1=1 ✓\n- Index 7 (h=3): maxLeft=3, maxRight=2, min(3,2)=2, water=2-3=0 (negative, so 0)\n- Index 8 (h=2): maxLeft=3, maxRight=2, min(3,2)=2, water=2-2=0\n- Index 9 (h=1): maxLeft=3, maxRight=2, min(3,2)=2, water=2-1=1 ✓\n- Index 10 (h=2): maxLeft=3, maxRight=1, min(3,1)=1, water=1-2=0 (negative, so 0)\n- Index 11 (h=1): maxLeft=3, maxRight=1, min(3,1)=1, water=1-1=0\n\nTotal water trapped: 0+0+1+0+1+2+1+0+0+1+0+0 = 6 ✓\n\n**Example 2:** height = [4, 2, 0, 3, 2, 5]\n\n- Index 0 (h=4): maxLeft=4, maxRight=5, min(4,5)=4, water=4-4=0\n- Index 1 (h=2): maxLeft=4, maxRight=5, min(4,5)=4, water=4-2=2 ✓\n- Index 2 (h=0): maxLeft=4, maxRight=5, min(4,5)=4, water=4-0=4 ✓\n- Index 3 (h=3): maxLeft=4, maxRight=5, min(4,5)=4, water=4-3=1 ✓\n- Index 4 (h=2): maxLeft=4, maxRight=5, min(4,5)=4, water=4-2=2 ✓\n- Index 5 (h=5): maxLeft=4, maxRight=5, min(4,5)=4, water=4-5=0 (negative, so 0)\n\nTotal water trapped: 0+2+4+1+2+0 = 9 ✓\n\n**Step-by-step trace for Example 1 using two pointers:**\n\nheight = [0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1]\n\n**Two Pointers Approach:**\n- Start with left=0, right=11\n- Track maxLeft and maxRight as we move pointers\n- Water at current position = min(maxLeft, maxRight) - height[current]\n- Move the pointer with smaller max value\n\n- **left=0, right=11**: maxLeft=0, maxRight=1, min(0,1)=0, water=0-0=0, total=0\n  - Move left (maxLeft < maxRight) → left=1\n- **left=1, right=11**: maxLeft=1, maxRight=1, min(1,1)=1, water=1-1=0, total=0\n  - Move left → left=2\n- **left=2, right=11**: maxLeft=1, maxRight=1, min(1,1)=1, water=1-0=1, total=1\n  - Move left → left=3\n- **left=3, right=11**: maxLeft=2, maxRight=1, min(2,1)=1, water=1-2=0, total=1\n  - Move right (maxRight < maxLeft) → right=10\n- Continue until left > right\n- **Total = 6** ✓\n\n**What makes this tricky:**\n1. Understanding that water trapped depends on the minimum of max heights on both sides\n2. The two-pointer approach: move the pointer with smaller max value\n3. Water can only be trapped if there are taller bars on both sides\n4. Edge cases: no water if array is empty or all bars are same height\n\n**Common pitfalls:**\n- Calculating maxLeft and maxRight for each position separately (O(n²) instead of O(n))\n- Not understanding why we move the pointer with smaller max value\n- Forgetting to handle negative water values (set to 0)\n- Off-by-one errors when calculating trapped water",
+      "example": "Example 1:\nheight = [0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1]\n\nWater at each position:\nIndex 2: min(1,3)-0 = 1\nIndex 4: min(2,3)-1 = 1\nIndex 5: min(2,3)-0 = 2\nIndex 6: min(2,3)-1 = 1\nIndex 9: min(3,2)-1 = 1\n\nTotal: 6\n\nExample 2:\nheight = [4, 2, 0, 3, 2, 5]\n\nWater at each position:\nIndex 1: min(4,5)-2 = 2\nIndex 2: min(4,5)-0 = 4\nIndex 3: min(4,5)-3 = 1\nIndex 4: min(4,5)-2 = 2\n\nTotal: 9",
+      "action": "continue",
+      "next": "thinking-challenge"
+    },
+    {
+      "stepId": "thinking-challenge",
+      "mentorSays": "Now that you understand what the lesson wants, here's the real question:\n\nHow would YOU calculate how much rainwater can be trapped?\n\nThink about it for a moment. What approach feels natural to you?",
+      "choices": [
+        {
+          "label": "Use two pointers, track maxLeft and maxRight, move pointer with smaller max",
+          "next": "explore-two-pointers"
+        },
+        {
+          "label": "For each position, calculate maxLeft and maxRight separately",
+          "next": "explore-brute-force"
+        },
+        {
+          "label": "Use a stack to track decreasing heights",
+          "next": "explore-stack"
+        }
+      ]
+    },
+    {
+      "stepId": "explore-brute-force",
+      "mentorSays": "That's a straightforward approach! You're thinking: \"For each position i, I'll find the maximum height to the left and right, then calculate trapped water.\"\n\nFor height = [0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1]:\n- At index 2: maxLeft = max(0,1) = 1, maxRight = max(2,1,0,1,3,2,1,2,1) = 3\n  - Water = min(1,3) - 0 = 1 ✓\n- At index 4: maxLeft = max(0,1,0,2) = 2, maxRight = max(0,1,3,2,1,2,1) = 3\n  - Water = min(2,3) - 1 = 1 ✓\n- ... and so on\n\nThis works! However, it takes O(n²) time because for each position, we scan left and right.\n\nThere's a more efficient O(n) approach using two pointers. Would you like to learn that?",
+      "action": "continue",
+      "next": "explore-two-pointers"
+    },
+    {
+      "stepId": "explore-stack",
+      "mentorSays": "That's a creative approach! You're thinking: \"I'll use a stack to track decreasing heights and calculate trapped water when I find a taller bar.\"\n\nThis works and is O(n) time! However, the two-pointer approach is simpler and equally efficient.\n\nThere's a cleaner O(n) approach using two pointers that tracks maxLeft and maxRight as we traverse. Would you like to learn that?",
+      "action": "continue",
+      "next": "explore-two-pointers"
+    },
+    {
+      "stepId": "explore-two-pointers",
+      "mentorSays": "Excellent choice! The two-pointer approach is both efficient and elegant. Here's the core idea:\n\n**The Algorithm:**\n1. **Initialize**: left = 0, right = array.length - 1, maxLeft = 0, maxRight = 0, water = 0\n2. **While left < right**:\n   - If height[left] < height[right]:\n     - If height[left] >= maxLeft: update maxLeft\n     - Else: add water += maxLeft - height[left]\n     - Move left pointer right\n   - Else:\n     - If height[right] >= maxRight: update maxRight\n     - Else: add water += maxRight - height[right]\n     - Move right pointer left\n3. **Return water**\n\n**Why it works:**\n- We process the side with the smaller height first\n- We know that the water level is limited by the smaller of maxLeft and maxRight\n- By moving the pointer with smaller height, we ensure we're always processing positions where we know the limiting factor\n\n**Key insight:** We move the pointer with smaller height because:\n- If height[left] < height[right], we know maxRight >= height[right] >= height[left]\n- So the water at left is limited by maxLeft (the smaller of the two)\n- We can safely calculate water at left and move it forward\n\nLet's trace with height = [0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1]:\n\n- **left=0, right=11**: height[0]=0 < height[11]=1, maxLeft=0, water=0-0=0, left=1\n- **left=1, right=11**: height[1]=1 < height[11]=1, maxLeft=1, water=0, left=2\n- **left=2, right=11**: height[2]=0 < height[11]=1, maxLeft=1, water=1-0=1, total=1, left=3\n- **left=3, right=11**: height[3]=2 > height[11]=1, maxRight=1, water=0, right=10\n- Continue until left > right\n- **Total = 6** ✓\n\nThis is O(n) time and O(1) space! Now let's code it step by step.",
+      "action": "continue",
+      "next": "language-selection"
+    },
+    {
+      "stepId": "language-selection",
+      "mentorSays": "Great! Now let's code this solution. Which programming language would you like to use?",
+      "choices": [
+        {
+          "label": "JavaScript",
+          "next": "variable-check-js"
+        },
+        {
+          "label": "Python",
+          "next": "variable-check-python"
+        },
+        {
+          "label": "Java",
+          "next": "variable-check-java"
+        },
+        {
+          "label": "C++",
+          "next": "variable-check-cpp"
+        },
+        {
+          "label": "TypeScript",
+          "next": "variable-check-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-check-js",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-js"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-js",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'left' or 'water') and put data inside it.\n\nFor example, 'let left = 0;' creates a variable that stores the number 0. Later, you can use that variable name to refer to it.",
+      "example": "let left = 0;\nlet right = height.length - 1;\nlet maxLeft = 0;\nlet maxRight = 0;\nlet water = 0;\n\nNow these variables store values\nWe can use them to track our pointers and calculate trapped water",
+      "action": "continue",
+      "next": "function-check-js"
+    },
+    {
+      "stepId": "function-check-js",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-js"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-js",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.\n\nThink of it like a recipe: you provide ingredients (parameters), the function does the work, and gives you a result (return value).",
+      "example": "function add(a, b) {\n  return a + b;\n}\n\nadd(3, 5) returns 8\nadd(10, 20) returns 30",
+      "action": "continue",
+      "next": "parameter-check-js"
+    },
+    {
+      "stepId": "parameter-check-js",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "array-check-js"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-js",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'function trap(height)', the 'height' is a parameter - it's a placeholder that will receive an actual array when you call the function.\n\nWhen you call 'trap([0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1])', the array goes into 'height'.",
+      "example": "function trap(height) {\n  // 'height' is a parameter\n}\n\n// When we call it:\ntrap([0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1]);\n// The array goes into 'height'",
+      "action": "continue",
+      "next": "array-check-js"
+    },
+    {
+      "stepId": "array-check-js",
+      "mentorSays": "To solve this lesson, we'll need to work with arrays. Do you know what an array is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know arrays",
+          "next": "loop-check-js"
+        },
+        {
+          "label": "No, explain arrays",
+          "next": "array-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "array-explanation-js",
+      "mentorSays": "An array is like a list of items that keeps them in order. Each item has a position number called an 'index'. Array indices start counting from 0, not 1.\n\nFor example, height = [0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1] means:\n- height[0] = 0 (first element, index 0)\n- height[1] = 1 (second element, index 1)\n- height[2] = 0 (third element, index 2)\n- height[3] = 2 (fourth element, index 3)\n- ... and so on",
+      "example": "let height = [0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1];\n\nheight[0] = 0\nheight[1] = 1\nheight[2] = 0\nheight[3] = 2\nheight[4] = 1",
+      "action": "continue",
+      "next": "loop-check-js"
+    },
+    {
+      "stepId": "loop-check-js",
+      "mentorSays": "To solve this lesson, we'll need to use loops. Do you know what a loop is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know loops",
+          "next": "coding-start-js"
+        },
+        {
+          "label": "No, explain loops",
+          "next": "loop-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "loop-explanation-js",
+      "mentorSays": "A loop lets you repeat code multiple times. A 'while' loop runs code while a condition is true.\n\nFor example, 'while (left < right)' means: keep going while left is less than right.",
+      "example": "while (left < right) {\n    // This code runs while the condition is true\n    // We'll calculate trapped water here\n}",
+      "action": "continue",
+      "next": "coding-start-js"
+    },
+    {
+      "stepId": "coding-start-js",
+      "mentorSays": "Perfect! Let's implement the trapping rain water solution in JavaScript. We'll create a function that takes an array of heights and returns the total trapped water.",
+      "example": "function trap(height) {\n  \n}",
+      "action": "continue",
+      "next": "coding-init-vars-js"
+    },
+    {
+      "stepId": "coding-init-vars-js",
+      "mentorSays": "First, let's initialize our variables: left and right pointers, maxLeft and maxRight to track maximum heights, and water to accumulate the total.",
+      "example": "function trap(height) {\n  let left = 0;\n  let right = height.length - 1;\n  let maxLeft = 0;\n  let maxRight = 0;\n  let water = 0;\n}",
+      "action": "continue",
+      "next": "coding-while-loop-js"
+    },
+    {
+      "stepId": "coding-while-loop-js",
+      "mentorSays": "Now, create a while loop that continues while left is less than right. This will process all positions.",
+      "example": "function trap(height) {\n  let left = 0;\n  let right = height.length - 1;\n  let maxLeft = 0;\n  let maxRight = 0;\n  let water = 0;\n  \n  // Process all positions\n  while (left < right) {\n    \n  }\n}",
+      "action": "continue",
+      "next": "coding-compare-heights-js"
+    },
+    {
+      "stepId": "coding-compare-heights-js",
+      "mentorSays": "Inside the loop, compare heights at left and right. We'll process the side with the smaller height first.",
+      "example": "function trap(height) {\n  let left = 0;\n  let right = height.length - 1;\n  let maxLeft = 0;\n  let maxRight = 0;\n  let water = 0;\n  \n  while (left < right) {\n    // Compare heights and process smaller side\n    if (height[left] < height[right]) {\n      // Process left side\n    } else {\n      // Process right side\n    }\n  }\n}",
+      "action": "continue",
+      "next": "coding-process-left-js"
+    },
+    {
+      "stepId": "coding-process-left-js",
+      "mentorSays": "When height[left] < height[right], process the left side. If height[left] >= maxLeft, update maxLeft. Otherwise, add trapped water (maxLeft - height[left]) and move left pointer.",
+      "example": "function trap(height) {\n  let left = 0;\n  let right = height.length - 1;\n  let maxLeft = 0;\n  let maxRight = 0;\n  let water = 0;\n  \n  while (left < right) {\n    if (height[left] < height[right]) {\n      // Process left side\n      if (height[left] >= maxLeft) {\n        maxLeft = height[left];\n      } else {\n        water += maxLeft - height[left];\n      }\n      left++;\n    } else {\n      // Process right side\n    }\n  }\n}",
+      "action": "continue",
+      "next": "coding-process-right-js"
+    },
+    {
+      "stepId": "coding-process-right-js",
+      "mentorSays": "When height[left] >= height[right], process the right side. If height[right] >= maxRight, update maxRight. Otherwise, add trapped water (maxRight - height[right]) and move right pointer.",
+      "example": "function trap(height) {\n  let left = 0;\n  let right = height.length - 1;\n  let maxLeft = 0;\n  let maxRight = 0;\n  let water = 0;\n  \n  while (left < right) {\n    if (height[left] < height[right]) {\n      if (height[left] >= maxLeft) {\n        maxLeft = height[left];\n      } else {\n        water += maxLeft - height[left];\n      }\n      left++;\n    } else {\n      // Process right side\n      if (height[right] >= maxRight) {\n        maxRight = height[right];\n      } else {\n        water += maxRight - height[right];\n      }\n      right--;\n    }\n  }\n}",
+      "action": "continue",
+      "next": "coding-return-js"
+    },
+    {
+      "stepId": "coding-return-js",
+      "mentorSays": "Finally, return the total water trapped.",
+      "example": "function trap(height) {\n  let left = 0;\n  let right = height.length - 1;\n  let maxLeft = 0;\n  let maxRight = 0;\n  let water = 0;\n  \n  while (left < right) {\n    if (height[left] < height[right]) {\n      if (height[left] >= maxLeft) {\n        maxLeft = height[left];\n      } else {\n        water += maxLeft - height[left];\n      }\n      left++;\n    } else {\n      if (height[right] >= maxRight) {\n        maxRight = height[right];\n      } else {\n        water += maxRight - height[right];\n      }\n      right--;\n    }\n  }\n  \n  return water;\n}",
+      "action": "continue",
+      "next": "test-code-js"
+    },
+    {
+      "stepId": "test-code-js",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** height = [0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1]\nExpected: 6\n\n**Test 2:** height = [4, 2, 0, 3, 2, 5]\nExpected: 9\n\n**Test 3:** height = [3, 0, 2, 0, 4]\nExpected: 7\n\n**Test 4:** height = [2, 0, 2]\nExpected: 2\n\n**Test 5:** height = [1, 1, 1, 1]\nExpected: 0 (no water trapped)\n\n**Test 6:** height = [0, 2, 0]\nExpected: 0 (no taller bar on one side)\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: [0,1,0,2,1,0,1,3,2,1,2,1] → 6\nTest 2: [4,2,0,3,2,5] → 9\nTest 3: [3,0,2,0,4] → 7\nTest 4: [2,0,2] → 2\nTest 5: [1,1,1,1] → 0\nTest 6: [0,2,0] → 0",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-python",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-python"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-python",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'left' or 'water') and put data inside it.\n\nFor example, 'left = 0' creates a variable that stores the number 0. Later, you can use that variable name to refer to it.",
+      "example": "left = 0\nright = len(height) - 1\nmax_left = 0\nmax_right = 0\nwater = 0\n\nNow these variables store values\nWe can use them to track our pointers and calculate trapped water",
+      "action": "continue",
+      "next": "function-check-python"
+    },
+    {
+      "stepId": "function-check-python",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-python"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-python",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.\n\nThink of it like a recipe: you provide ingredients (parameters), the function does the work, and gives you a result (return value).",
+      "example": "def add(a, b):\n    return a + b\n\nadd(3, 5) returns 8\nadd(10, 20) returns 30",
+      "action": "continue",
+      "next": "parameter-check-python"
+    },
+    {
+      "stepId": "parameter-check-python",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "array-check-python"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-python",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'def trap(height):', the 'height' is a parameter - it's a placeholder that will receive an actual array when you call the function.\n\nWhen you call 'trap([0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1])', the array goes into 'height'.",
+      "example": "def trap(height):\n  # 'height' is a parameter\n\n# When we call it:\ntrap([0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1])\n# The array goes into 'height'",
+      "action": "continue",
+      "next": "array-check-python"
+    },
+    {
+      "stepId": "array-check-python",
+      "mentorSays": "To solve this lesson, we'll need to work with arrays (lists in Python). Do you know what a list is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know lists",
+          "next": "loop-check-python"
+        },
+        {
+          "label": "No, explain lists",
+          "next": "array-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "array-explanation-python",
+      "mentorSays": "A list is like a list of items that keeps them in order. Each item has a position number called an 'index'. List indices start counting from 0, not 1.\n\nFor example, height = [0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1] means:\n- height[0] = 0 (first element, index 0)\n- height[1] = 1 (second element, index 1)\n- height[2] = 0 (third element, index 2)\n- height[3] = 2 (fourth element, index 3)\n- ... and so on",
+      "example": "height = [0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1]\n\nheight[0] = 0\nheight[1] = 1\nheight[2] = 0\nheight[3] = 2\nheight[4] = 1",
+      "action": "continue",
+      "next": "loop-check-python"
+    },
+    {
+      "stepId": "loop-check-python",
+      "mentorSays": "To solve this lesson, we'll need to use loops. Do you know what a loop is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know loops",
+          "next": "coding-start-python"
+        },
+        {
+          "label": "No, explain loops",
+          "next": "loop-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "loop-explanation-python",
+      "mentorSays": "A loop lets you repeat code multiple times. A 'while' loop runs code while a condition is true.\n\nFor example, 'while left < right:' means: keep going while left is less than right.",
+      "example": "while left < right:\n    # This code runs while the condition is true\n    # We'll calculate trapped water here",
+      "action": "continue",
+      "next": "coding-start-python"
+    },
+    {
+      "stepId": "coding-start-python",
+      "mentorSays": "Perfect! Let's implement the trapping rain water solution in Python. We'll create a function that takes an array of heights and returns the total trapped water.",
+      "example": "def trap(height):\n    \n    pass",
+      "action": "continue",
+      "next": "coding-init-vars-python"
+    },
+    {
+      "stepId": "coding-init-vars-python",
+      "mentorSays": "First, let's initialize our variables: left and right pointers, maxLeft and maxRight to track maximum heights, and water to accumulate the total.",
+      "example": "def trap(height):\n    left = 0\n    right = len(height) - 1\n    max_left = 0\n    max_right = 0\n    water = 0\n    \n    pass",
+      "action": "continue",
+      "next": "coding-while-loop-python"
+    },
+    {
+      "stepId": "coding-while-loop-python",
+      "mentorSays": "Now, create a while loop that continues while left is less than right. This will process all positions.",
+      "example": "def trap(height):\n    left = 0\n    right = len(height) - 1\n    max_left = 0\n    max_right = 0\n    water = 0\n    \n    # Process all positions\n    while left < right:\n        \n        pass",
+      "action": "continue",
+      "next": "coding-compare-heights-python"
+    },
+    {
+      "stepId": "coding-compare-heights-python",
+      "mentorSays": "Inside the loop, compare heights at left and right. We'll process the side with the smaller height first.",
+      "example": "def trap(height):\n    left = 0\n    right = len(height) - 1\n    max_left = 0\n    max_right = 0\n    water = 0\n    \n    while left < right:\n        # Compare heights and process smaller side\n        if height[left] < height[right]:\n            # Process left side\n            pass\n        else:\n            # Process right side\n            pass\n        \n        pass",
+      "action": "continue",
+      "next": "coding-process-left-python"
+    },
+    {
+      "stepId": "coding-process-left-python",
+      "mentorSays": "When height[left] < height[right], process the left side. If height[left] >= max_left, update max_left. Otherwise, add trapped water (max_left - height[left]) and move left pointer.",
+      "example": "def trap(height):\n    left = 0\n    right = len(height) - 1\n    max_left = 0\n    max_right = 0\n    water = 0\n    \n    while left < right:\n        if height[left] < height[right]:\n            # Process left side\n            if height[left] >= max_left:\n                max_left = height[left]\n            else:\n                water += max_left - height[left]\n            left += 1\n        else:\n            # Process right side\n            pass\n        \n        pass",
+      "action": "continue",
+      "next": "coding-process-right-python"
+    },
+    {
+      "stepId": "coding-process-right-python",
+      "mentorSays": "When height[left] >= height[right], process the right side. If height[right] >= max_right, update max_right. Otherwise, add trapped water (max_right - height[right]) and move right pointer.",
+      "example": "def trap(height):\n    left = 0\n    right = len(height) - 1\n    max_left = 0\n    max_right = 0\n    water = 0\n    \n    while left < right:\n        if height[left] < height[right]:\n            if height[left] >= max_left:\n                max_left = height[left]\n            else:\n                water += max_left - height[left]\n            left += 1\n        else:\n            # Process right side\n            if height[right] >= max_right:\n                max_right = height[right]\n            else:\n                water += max_right - height[right]\n            right -= 1\n        \n        pass",
+      "action": "continue",
+      "next": "coding-return-python"
+    },
+    {
+      "stepId": "coding-return-python",
+      "mentorSays": "Finally, return the total water trapped.",
+      "example": "def trap(height):\n    left = 0\n    right = len(height) - 1\n    max_left = 0\n    max_right = 0\n    water = 0\n    \n    while left < right:\n        if height[left] < height[right]:\n            if height[left] >= max_left:\n                max_left = height[left]\n            else:\n                water += max_left - height[left]\n            left += 1\n        else:\n            if height[right] >= max_right:\n                max_right = height[right]\n            else:\n                water += max_right - height[right]\n            right -= 1\n    \n    return water",
+      "action": "continue",
+      "next": "test-code-python"
+    },
+    {
+      "stepId": "test-code-python",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** height = [0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1]\nExpected: 6\n\n**Test 2:** height = [4, 2, 0, 3, 2, 5]\nExpected: 9\n\n**Test 3:** height = [3, 0, 2, 0, 4]\nExpected: 7\n\n**Test 4:** height = [2, 0, 2]\nExpected: 2\n\n**Test 5:** height = [1, 1, 1, 1]\nExpected: 0 (no water trapped)\n\n**Test 6:** height = [0, 2, 0]\nExpected: 0 (no taller bar on one side)\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: [0,1,0,2,1,0,1,3,2,1,2,1] → 6\nTest 2: [4,2,0,3,2,5] → 9\nTest 3: [3,0,2,0,4] → 7\nTest 4: [2,0,2] → 2\nTest 5: [1,1,1,1] → 0\nTest 6: [0,2,0] → 0",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-java",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-java"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-java",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'left' or 'water') and put data inside it.\n\nFor example, 'int left = 0;' creates a variable that stores the number 0. Later, you can use that variable name to refer to it.",
+      "example": "int left = 0;\nint right = height.length - 1;\nint maxLeft = 0;\nint maxRight = 0;\nint water = 0;\n\nNow these variables store values\nWe can use them to track our pointers and calculate trapped water",
+      "action": "continue",
+      "next": "function-check-java"
+    },
+    {
+      "stepId": "function-check-java",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a method is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know methods",
+          "next": "parameter-check-java"
+        },
+        {
+          "label": "No, explain methods",
+          "next": "function-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-java",
+      "mentorSays": "A method (Java's version of a function) is a reusable block of code. You give it inputs (called parameters), and it can return an output.\n\nThink of it like a recipe: you provide ingredients (parameters), the method does the work, and gives you a result (return value).",
+      "example": "public int add(int a, int b) {\n    return a + b;\n}\n\nadd(3, 5) returns 8\nadd(10, 20) returns 30",
+      "action": "continue",
+      "next": "parameter-check-java"
+    },
+    {
+      "stepId": "parameter-check-java",
+      "mentorSays": "When we write a method, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "array-check-java"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-java",
+      "mentorSays": "Parameters are like variables that receive values when you call the method. When you write 'public int trap(int[] height)', the 'height' is a parameter - it's a placeholder that will receive an actual array when you call the method.\n\nWhen you call 'trap(new int[]{0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1})', the array goes into 'height'.",
+      "example": "public int trap(int[] height) {\n  // 'height' is a parameter\n}\n\n// When we call it:\ntrap(new int[]{0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1});\n// The array goes into 'height'",
+      "action": "continue",
+      "next": "array-check-java"
+    },
+    {
+      "stepId": "array-check-java",
+      "mentorSays": "To solve this lesson, we'll need to work with arrays. Do you know what an array is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know arrays",
+          "next": "loop-check-java"
+        },
+        {
+          "label": "No, explain arrays",
+          "next": "array-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "array-explanation-java",
+      "mentorSays": "An array is like a list of items that keeps them in order. Each item has a position number called an 'index'. Array indices start counting from 0, not 1.\n\nFor example, int[] height = {0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1} means:\n- height[0] = 0 (first element, index 0)\n- height[1] = 1 (second element, index 1)\n- height[2] = 0 (third element, index 2)\n- height[3] = 2 (fourth element, index 3)\n- ... and so on",
+      "example": "int[] height = {0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1};\n\nheight[0] = 0\nheight[1] = 1\nheight[2] = 0\nheight[3] = 2\nheight[4] = 1",
+      "action": "continue",
+      "next": "loop-check-java"
+    },
+    {
+      "stepId": "loop-check-java",
+      "mentorSays": "To solve this lesson, we'll need to use loops. Do you know what a loop is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know loops",
+          "next": "coding-start-java"
+        },
+        {
+          "label": "No, explain loops",
+          "next": "loop-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "loop-explanation-java",
+      "mentorSays": "A loop lets you repeat code multiple times. A 'while' loop runs code while a condition is true.\n\nFor example, 'while (left < right)' means: keep going while left is less than right.",
+      "example": "while (left < right) {\n    // This code runs while the condition is true\n    // We'll calculate trapped water here\n}",
+      "action": "continue",
+      "next": "coding-start-java"
+    },
+    {
+      "stepId": "coding-start-java",
+      "mentorSays": "Perfect! Let's implement the trapping rain water solution in Java. We'll create a method that takes an array of heights and returns the total trapped water.",
+      "example": "public int trap(int[] height) {\n    \n}",
+      "action": "continue",
+      "next": "coding-init-vars-java"
+    },
+    {
+      "stepId": "coding-init-vars-java",
+      "mentorSays": "First, let's initialize our variables: left and right pointers, maxLeft and maxRight to track maximum heights, and water to accumulate the total.",
+      "example": "public int trap(int[] height) {\n    int left = 0;\n    int right = height.length - 1;\n    int maxLeft = 0;\n    int maxRight = 0;\n    int water = 0;\n}",
+      "action": "continue",
+      "next": "coding-while-loop-java"
+    },
+    {
+      "stepId": "coding-while-loop-java",
+      "mentorSays": "Now, create a while loop that continues while left is less than right. This will process all positions.",
+      "example": "public int trap(int[] height) {\n    int left = 0;\n    int right = height.length - 1;\n    int maxLeft = 0;\n    int maxRight = 0;\n    int water = 0;\n    \n    // Process all positions\n    while (left < right) {\n        \n    }\n}",
+      "action": "continue",
+      "next": "coding-compare-heights-java"
+    },
+    {
+      "stepId": "coding-compare-heights-java",
+      "mentorSays": "Inside the loop, compare heights at left and right. We'll process the side with the smaller height first.",
+      "example": "public int trap(int[] height) {\n    int left = 0;\n    int right = height.length - 1;\n    int maxLeft = 0;\n    int maxRight = 0;\n    int water = 0;\n    \n    while (left < right) {\n        // Compare heights and process smaller side\n        if (height[left] < height[right]) {\n            // Process left side\n        } else {\n            // Process right side\n        }\n    }\n}",
+      "action": "continue",
+      "next": "coding-process-left-java"
+    },
+    {
+      "stepId": "coding-process-left-java",
+      "mentorSays": "When height[left] < height[right], process the left side. If height[left] >= maxLeft, update maxLeft. Otherwise, add trapped water (maxLeft - height[left]) and move left pointer.",
+      "example": "public int trap(int[] height) {\n    int left = 0;\n    int right = height.length - 1;\n    int maxLeft = 0;\n    int maxRight = 0;\n    int water = 0;\n    \n    while (left < right) {\n        if (height[left] < height[right]) {\n            // Process left side\n            if (height[left] >= maxLeft) {\n                maxLeft = height[left];\n            } else {\n                water += maxLeft - height[left];\n            }\n            left++;\n        } else {\n            // Process right side\n        }\n    }\n}",
+      "action": "continue",
+      "next": "coding-process-right-java"
+    },
+    {
+      "stepId": "coding-process-right-java",
+      "mentorSays": "When height[left] >= height[right], process the right side. If height[right] >= maxRight, update maxRight. Otherwise, add trapped water (maxRight - height[right]) and move right pointer.",
+      "example": "public int trap(int[] height) {\n    int left = 0;\n    int right = height.length - 1;\n    int maxLeft = 0;\n    int maxRight = 0;\n    int water = 0;\n    \n    while (left < right) {\n        if (height[left] < height[right]) {\n            if (height[left] >= maxLeft) {\n                maxLeft = height[left];\n            } else {\n                water += maxLeft - height[left];\n            }\n            left++;\n        } else {\n            // Process right side\n            if (height[right] >= maxRight) {\n                maxRight = height[right];\n            } else {\n                water += maxRight - height[right];\n            }\n            right--;\n        }\n    }\n}",
+      "action": "continue",
+      "next": "coding-return-java"
+    },
+    {
+      "stepId": "coding-return-java",
+      "mentorSays": "Finally, return the total water trapped.",
+      "example": "public int trap(int[] height) {\n    int left = 0;\n    int right = height.length - 1;\n    int maxLeft = 0;\n    int maxRight = 0;\n    int water = 0;\n    \n    while (left < right) {\n        if (height[left] < height[right]) {\n            if (height[left] >= maxLeft) {\n                maxLeft = height[left];\n            } else {\n                water += maxLeft - height[left];\n            }\n            left++;\n        } else {\n            if (height[right] >= maxRight) {\n                maxRight = height[right];\n            } else {\n                water += maxRight - height[right];\n            }\n            right--;\n        }\n    }\n    \n    return water;\n}",
+      "action": "continue",
+      "next": "test-code-java"
+    },
+    {
+      "stepId": "test-code-java",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** height = [0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1]\nExpected: 6\n\n**Test 2:** height = [4, 2, 0, 3, 2, 5]\nExpected: 9\n\n**Test 3:** height = [3, 0, 2, 0, 4]\nExpected: 7\n\n**Test 4:** height = [2, 0, 2]\nExpected: 2\n\n**Test 5:** height = [1, 1, 1, 1]\nExpected: 0 (no water trapped)\n\n**Test 6:** height = [0, 2, 0]\nExpected: 0 (no taller bar on one side)\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: [0,1,0,2,1,0,1,3,2,1,2,1] → 6\nTest 2: [4,2,0,3,2,5] → 9\nTest 3: [3,0,2,0,4] → 7\nTest 4: [2,0,2] → 2\nTest 5: [1,1,1,1] → 0\nTest 6: [0,2,0] → 0",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-cpp",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-cpp"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-cpp",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'left' or 'water') and put data inside it.\n\nFor example, 'int left = 0;' creates a variable that stores the number 0. Later, you can use that variable name to refer to it.",
+      "example": "int left = 0;\nint right = height.size() - 1;\nint maxLeft = 0;\nint maxRight = 0;\nint water = 0;\n\nNow these variables store values\nWe can use them to track our pointers and calculate trapped water",
+      "action": "continue",
+      "next": "function-check-cpp"
+    },
+    {
+      "stepId": "function-check-cpp",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-cpp"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-cpp",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.\n\nThink of it like a recipe: you provide ingredients (parameters), the function does the work, and gives you a result (return value).",
+      "example": "int add(int a, int b) {\n    return a + b;\n}\n\nadd(3, 5) returns 8\nadd(10, 20) returns 30",
+      "action": "continue",
+      "next": "parameter-check-cpp"
+    },
+    {
+      "stepId": "parameter-check-cpp",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "array-check-cpp"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-cpp",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'int trap(vector<int>& height)', the 'height' is a parameter - it's a placeholder that will receive an actual array when you call the function.\n\nWhen you call 'trap(heightArray)', the array goes into 'height'.",
+      "example": "int trap(vector<int>& height) {\n  // 'height' is a parameter\n}\n\n// When we call it:\ntrap(heightArray);\n// The array goes into 'height'",
+      "action": "continue",
+      "next": "array-check-cpp"
+    },
+    {
+      "stepId": "array-check-cpp",
+      "mentorSays": "To solve this lesson, we'll need to work with arrays (vectors in C++). Do you know what a vector is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know vectors",
+          "next": "loop-check-cpp"
+        },
+        {
+          "label": "No, explain vectors",
+          "next": "array-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "array-explanation-cpp",
+      "mentorSays": "A vector is like a list of items that keeps them in order. Each item has a position number called an 'index'. Vector indices start counting from 0, not 1.\n\nFor example, vector<int> height = {0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1} means:\n- height[0] = 0 (first element, index 0)\n- height[1] = 1 (second element, index 1)\n- height[2] = 0 (third element, index 2)\n- height[3] = 2 (fourth element, index 3)\n- ... and so on",
+      "example": "vector<int> height = {0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1};\n\nheight[0] = 0\nheight[1] = 1\nheight[2] = 0\nheight[3] = 2\nheight[4] = 1",
+      "action": "continue",
+      "next": "loop-check-cpp"
+    },
+    {
+      "stepId": "loop-check-cpp",
+      "mentorSays": "To solve this lesson, we'll need to use loops. Do you know what a loop is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know loops",
+          "next": "coding-start-cpp"
+        },
+        {
+          "label": "No, explain loops",
+          "next": "loop-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "loop-explanation-cpp",
+      "mentorSays": "A loop lets you repeat code multiple times. A 'while' loop runs code while a condition is true.\n\nFor example, 'while (left < right)' means: keep going while left is less than right.",
+      "example": "while (left < right) {\n    // This code runs while the condition is true\n    // We'll calculate trapped water here\n}",
+      "action": "continue",
+      "next": "coding-start-cpp"
+    },
+    {
+      "stepId": "coding-start-cpp",
+      "mentorSays": "Perfect! Let's implement the trapping rain water solution in C++. We'll create a function that takes an array of heights and returns the total trapped water.",
+      "example": "int trap(vector<int>& height) {\n    \n}",
+      "action": "continue",
+      "next": "coding-init-vars-cpp"
+    },
+    {
+      "stepId": "coding-init-vars-cpp",
+      "mentorSays": "First, let's initialize our variables: left and right pointers, maxLeft and maxRight to track maximum heights, and water to accumulate the total.",
+      "example": "int trap(vector<int>& height) {\n    int left = 0;\n    int right = height.size() - 1;\n    int maxLeft = 0;\n    int maxRight = 0;\n    int water = 0;\n}",
+      "action": "continue",
+      "next": "coding-while-loop-cpp"
+    },
+    {
+      "stepId": "coding-while-loop-cpp",
+      "mentorSays": "Now, create a while loop that continues while left is less than right. This will process all positions.",
+      "example": "int trap(vector<int>& height) {\n    int left = 0;\n    int right = height.size() - 1;\n    int maxLeft = 0;\n    int maxRight = 0;\n    int water = 0;\n    \n    // Process all positions\n    while (left < right) {\n        \n    }\n}",
+      "action": "continue",
+      "next": "coding-compare-heights-cpp"
+    },
+    {
+      "stepId": "coding-compare-heights-cpp",
+      "mentorSays": "Inside the loop, compare heights at left and right. We'll process the side with the smaller height first.",
+      "example": "int trap(vector<int>& height) {\n    int left = 0;\n    int right = height.size() - 1;\n    int maxLeft = 0;\n    int maxRight = 0;\n    int water = 0;\n    \n    while (left < right) {\n        // Compare heights and process smaller side\n        if (height[left] < height[right]) {\n            // Process left side\n        } else {\n            // Process right side\n        }\n    }\n}",
+      "action": "continue",
+      "next": "coding-process-left-cpp"
+    },
+    {
+      "stepId": "coding-process-left-cpp",
+      "mentorSays": "When height[left] < height[right], process the left side. If height[left] >= maxLeft, update maxLeft. Otherwise, add trapped water (maxLeft - height[left]) and move left pointer.",
+      "example": "int trap(vector<int>& height) {\n    int left = 0;\n    int right = height.size() - 1;\n    int maxLeft = 0;\n    int maxRight = 0;\n    int water = 0;\n    \n    while (left < right) {\n        if (height[left] < height[right]) {\n            // Process left side\n            if (height[left] >= maxLeft) {\n                maxLeft = height[left];\n            } else {\n                water += maxLeft - height[left];\n            }\n            left++;\n        } else {\n            // Process right side\n        }\n    }\n}",
+      "action": "continue",
+      "next": "coding-process-right-cpp"
+    },
+    {
+      "stepId": "coding-process-right-cpp",
+      "mentorSays": "When height[left] >= height[right], process the right side. If height[right] >= maxRight, update maxRight. Otherwise, add trapped water (maxRight - height[right]) and move right pointer.",
+      "example": "int trap(vector<int>& height) {\n    int left = 0;\n    int right = height.size() - 1;\n    int maxLeft = 0;\n    int maxRight = 0;\n    int water = 0;\n    \n    while (left < right) {\n        if (height[left] < height[right]) {\n            if (height[left] >= maxLeft) {\n                maxLeft = height[left];\n            } else {\n                water += maxLeft - height[left];\n            }\n            left++;\n        } else {\n            // Process right side\n            if (height[right] >= maxRight) {\n                maxRight = height[right];\n            } else {\n                water += maxRight - height[right];\n            }\n            right--;\n        }\n    }\n}",
+      "action": "continue",
+      "next": "coding-return-cpp"
+    },
+    {
+      "stepId": "coding-return-cpp",
+      "mentorSays": "Finally, return the total water trapped.",
+      "example": "int trap(vector<int>& height) {\n    int left = 0;\n    int right = height.size() - 1;\n    int maxLeft = 0;\n    int maxRight = 0;\n    int water = 0;\n    \n    while (left < right) {\n        if (height[left] < height[right]) {\n            if (height[left] >= maxLeft) {\n                maxLeft = height[left];\n            } else {\n                water += maxLeft - height[left];\n            }\n            left++;\n        } else {\n            if (height[right] >= maxRight) {\n                maxRight = height[right];\n            } else {\n                water += maxRight - height[right];\n            }\n            right--;\n        }\n    }\n    \n    return water;\n}",
+      "action": "continue",
+      "next": "test-code-cpp"
+    },
+    {
+      "stepId": "test-code-cpp",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** height = [0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1]\nExpected: 6\n\n**Test 2:** height = [4, 2, 0, 3, 2, 5]\nExpected: 9\n\n**Test 3:** height = [3, 0, 2, 0, 4]\nExpected: 7\n\n**Test 4:** height = [2, 0, 2]\nExpected: 2\n\n**Test 5:** height = [1, 1, 1, 1]\nExpected: 0 (no water trapped)\n\n**Test 6:** height = [0, 2, 0]\nExpected: 0 (no taller bar on one side)\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: [0,1,0,2,1,0,1,3,2,1,2,1] → 6\nTest 2: [4,2,0,3,2,5] → 9\nTest 3: [3,0,2,0,4] → 7\nTest 4: [2,0,2] → 2\nTest 5: [1,1,1,1] → 0\nTest 6: [0,2,0] → 0",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-ts",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-ts"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-ts",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'left' or 'water') and put data inside it.\n\nFor example, 'let left: number = 0;' creates a variable that stores the number 0. Later, you can use that variable name to refer to it.",
+      "example": "let left: number = 0;\nlet right: number = height.length - 1;\nlet maxLeft: number = 0;\nlet maxRight: number = 0;\nlet water: number = 0;\n\nNow these variables store values\nWe can use them to track our pointers and calculate trapped water",
+      "action": "continue",
+      "next": "function-check-ts"
+    },
+    {
+      "stepId": "function-check-ts",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-ts"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-ts",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.\n\nThink of it like a recipe: you provide ingredients (parameters), the function does the work, and gives you a result (return value).",
+      "example": "function add(a: number, b: number): number {\n  return a + b;\n}\n\nadd(3, 5) returns 8\nadd(10, 20) returns 30",
+      "action": "continue",
+      "next": "parameter-check-ts"
+    },
+    {
+      "stepId": "parameter-check-ts",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "array-check-ts"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-ts",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'function trap(height: number[]): number', the 'height' is a parameter - it's a placeholder that will receive an actual array when you call the function.\n\nWhen you call 'trap([0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1])', the array goes into 'height'.",
+      "example": "function trap(height: number[]): number {\n  // 'height' is a parameter\n}\n\n// When we call it:\ntrap([0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1]);\n// The array goes into 'height'",
+      "action": "continue",
+      "next": "array-check-ts"
+    },
+    {
+      "stepId": "array-check-ts",
+      "mentorSays": "To solve this lesson, we'll need to work with arrays. Do you know what an array is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know arrays",
+          "next": "loop-check-ts"
+        },
+        {
+          "label": "No, explain arrays",
+          "next": "array-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "array-explanation-ts",
+      "mentorSays": "An array is like a list of items that keeps them in order. Each item has a position number called an 'index'. Array indices start counting from 0, not 1.\n\nFor example, let height: number[] = [0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1] means:\n- height[0] = 0 (first element, index 0)\n- height[1] = 1 (second element, index 1)\n- height[2] = 0 (third element, index 2)\n- height[3] = 2 (fourth element, index 3)\n- ... and so on",
+      "example": "let height: number[] = [0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1];\n\nheight[0] = 0\nheight[1] = 1\nheight[2] = 0\nheight[3] = 2\nheight[4] = 1",
+      "action": "continue",
+      "next": "loop-check-ts"
+    },
+    {
+      "stepId": "loop-check-ts",
+      "mentorSays": "To solve this lesson, we'll need to use loops. Do you know what a loop is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know loops",
+          "next": "coding-start-ts"
+        },
+        {
+          "label": "No, explain loops",
+          "next": "loop-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "loop-explanation-ts",
+      "mentorSays": "A loop lets you repeat code multiple times. A 'while' loop runs code while a condition is true.\n\nFor example, 'while (left < right)' means: keep going while left is less than right.",
+      "example": "while (left < right) {\n    // This code runs while the condition is true\n    // We'll calculate trapped water here\n}",
+      "action": "continue",
+      "next": "coding-start-ts"
+    },
+    {
+      "stepId": "coding-start-ts",
+      "mentorSays": "Perfect! Let's implement the trapping rain water solution in TypeScript. We'll create a function that takes an array of heights and returns the total trapped water.",
+      "example": "function trap(height: number[]): number {\n  \n}",
+      "action": "continue",
+      "next": "coding-init-vars-ts"
+    },
+    {
+      "stepId": "coding-init-vars-ts",
+      "mentorSays": "First, let's initialize our variables: left and right pointers, maxLeft and maxRight to track maximum heights, and water to accumulate the total.",
+      "example": "function trap(height: number[]): number {\n  let left: number = 0;\n  let right: number = height.length - 1;\n  let maxLeft: number = 0;\n  let maxRight: number = 0;\n  let water: number = 0;\n}",
+      "action": "continue",
+      "next": "coding-while-loop-ts"
+    },
+    {
+      "stepId": "coding-while-loop-ts",
+      "mentorSays": "Now, create a while loop that continues while left is less than right. This will process all positions.",
+      "example": "function trap(height: number[]): number {\n  let left: number = 0;\n  let right: number = height.length - 1;\n  let maxLeft: number = 0;\n  let maxRight: number = 0;\n  let water: number = 0;\n  \n  // Process all positions\n  while (left < right) {\n    \n  }\n}",
+      "action": "continue",
+      "next": "coding-compare-heights-ts"
+    },
+    {
+      "stepId": "coding-compare-heights-ts",
+      "mentorSays": "Inside the loop, compare heights at left and right. We'll process the side with the smaller height first.",
+      "example": "function trap(height: number[]): number {\n  let left: number = 0;\n  let right: number = height.length - 1;\n  let maxLeft: number = 0;\n  let maxRight: number = 0;\n  let water: number = 0;\n  \n  while (left < right) {\n    // Compare heights and process smaller side\n    if (height[left] < height[right]) {\n      // Process left side\n    } else {\n      // Process right side\n    }\n  }\n}",
+      "action": "continue",
+      "next": "coding-process-left-ts"
+    },
+    {
+      "stepId": "coding-process-left-ts",
+      "mentorSays": "When height[left] < height[right], process the left side. If height[left] >= maxLeft, update maxLeft. Otherwise, add trapped water (maxLeft - height[left]) and move left pointer.",
+      "example": "function trap(height: number[]): number {\n  let left: number = 0;\n  let right: number = height.length - 1;\n  let maxLeft: number = 0;\n  let maxRight: number = 0;\n  let water: number = 0;\n  \n  while (left < right) {\n    if (height[left] < height[right]) {\n      // Process left side\n      if (height[left] >= maxLeft) {\n        maxLeft = height[left];\n      } else {\n        water += maxLeft - height[left];\n      }\n      left++;\n    } else {\n      // Process right side\n    }\n  }\n}",
+      "action": "continue",
+      "next": "coding-process-right-ts"
+    },
+    {
+      "stepId": "coding-process-right-ts",
+      "mentorSays": "When height[left] >= height[right], process the right side. If height[right] >= maxRight, update maxRight. Otherwise, add trapped water (maxRight - height[right]) and move right pointer.",
+      "example": "function trap(height: number[]): number {\n  let left: number = 0;\n  let right: number = height.length - 1;\n  let maxLeft: number = 0;\n  let maxRight: number = 0;\n  let water: number = 0;\n  \n  while (left < right) {\n    if (height[left] < height[right]) {\n      if (height[left] >= maxLeft) {\n        maxLeft = height[left];\n      } else {\n        water += maxLeft - height[left];\n      }\n      left++;\n    } else {\n      // Process right side\n      if (height[right] >= maxRight) {\n        maxRight = height[right];\n      } else {\n        water += maxRight - height[right];\n      }\n      right--;\n    }\n  }\n}",
+      "action": "continue",
+      "next": "coding-return-ts"
+    },
+    {
+      "stepId": "coding-return-ts",
+      "mentorSays": "Finally, return the total water trapped.",
+      "example": "function trap(height: number[]): number {\n  let left: number = 0;\n  let right: number = height.length - 1;\n  let maxLeft: number = 0;\n  let maxRight: number = 0;\n  let water: number = 0;\n  \n  while (left < right) {\n    if (height[left] < height[right]) {\n      if (height[left] >= maxLeft) {\n        maxLeft = height[left];\n      } else {\n        water += maxLeft - height[left];\n      }\n      left++;\n    } else {\n      if (height[right] >= maxRight) {\n        maxRight = height[right];\n      } else {\n        water += maxRight - height[right];\n      }\n      right--;\n    }\n  }\n  \n  return water;\n}",
+      "action": "continue",
+      "next": "test-code-ts"
+    },
+    {
+      "stepId": "test-code-ts",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** height = [0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1]\nExpected: 6\n\n**Test 2:** height = [4, 2, 0, 3, 2, 5]\nExpected: 9\n\n**Test 3:** height = [3, 0, 2, 0, 4]\nExpected: 7\n\n**Test 4:** height = [2, 0, 2]\nExpected: 2\n\n**Test 5:** height = [1, 1, 1, 1]\nExpected: 0 (no water trapped)\n\n**Test 6:** height = [0, 2, 0]\nExpected: 0 (no taller bar on one side)\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: [0,1,0,2,1,0,1,3,2,1,2,1] → 6\nTest 2: [4,2,0,3,2,5] → 9\nTest 3: [3,0,2,0,4] → 7\nTest 4: [2,0,2] → 2\nTest 5: [1,1,1,1] → 0\nTest 6: [0,2,0] → 0",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "final",
+      "mentorSays": "🎉 Well done! You've learned to think through the Trapping Rain Water lesson. You understand what the lesson asks for, how to use two pointers to calculate trapped water efficiently, and why moving the pointer with smaller height is optimal.\n\n**Key Takeaways:**\n1. **Key Formula**: Water trapped at position i = min(maxLeft, maxRight) - height[i]\n2. **Two Pointers Approach**: Start from both ends, track maxLeft and maxRight as we traverse\n3. **Greedy Strategy**: Process the side with smaller height first, because we know the limiting factor\n4. **Why it works**: When height[left] < height[right], we know maxRight >= height[right] >= height[left], so water at left is limited by maxLeft\n\n**Time Complexity**: O(n) - we traverse the array once with two pointers\n**Space Complexity**: O(1) - we only use a constant amount of extra space\n\n**What to practice next:**\n- Container With Most Water (similar two-pointer lesson)\n- Product of Array Except Self (related array manipulation)\n- Best Time to Buy and Sell Stock (similar pattern)\n\nThis kind of thinking—using two pointers with greedy strategy—is essential for solving many array lessons. Keep practicing!",
+      "action": "continue"
+    }
+  ]
+}
+
+

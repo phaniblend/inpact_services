@@ -1,0 +1,885 @@
+{
+  "id": "find-all-anagrams",
+  "title": "Find all anagrams in string",
+  "pattern": "sliding-window",
+  "difficulty": "medium",
+  "language": "javascript",
+  "status": "draft",
+  "flow": [
+    {
+      "stepId": "title",
+      "mentorSays": "At the end of this lesson, you will be able to:\n\n1. Understand what the Find All Anagrams lesson asks for\n2. Use a sliding window with hash maps to track character frequencies\n3. Compare character counts to find anagram matches\n4. Implement the solution step by step in your chosen language",
+      "action": "continue",
+      "next": "lesson-illustration"
+    },
+    {
+      "stepId": "lesson-illustration",
+      "mentorSays": "Let's understand what we're looking for.\n\nWHAT IS AN ANAGRAM?\nAn anagram is a word formed by rearranging letters of another word.\n- 'listen' and 'silent' are anagrams (same letters, different order)\n- 'abc' and 'bca' are anagrams\n- 'abc' and 'def' are NOT anagrams (different letters)\n\nTHE PROBLEM:\nGiven a string s and a pattern p, find all starting positions where p's anagrams appear in s.\n\nEXAMPLE 1:\ns = 'cbaebabacd'\np = 'abc'\n\nLet's check each position:\n- Position 0: 'cba' - Is this an anagram of 'abc'? YES! (c, b, a = a, b, c) ✓\n- Position 1: 'bae' - Is this an anagram of 'abc'? NO (has 'e') ✗\n- Position 2: 'aeb' - Is this an anagram of 'abc'? NO (has 'e') ✗\n- Position 3: 'eba' - Is this an anagram of 'abc'? NO (has 'e') ✗\n- Position 4: 'bab' - Is this an anagram of 'abc'? NO (has 2 b's) ✗\n- Position 5: 'aba' - Is this an anagram of 'abc'? NO (has 2 a's) ✗\n- Position 6: 'bac' - Is this an anagram of 'abc'? YES! (b, a, c = a, b, c) ✓\n- Position 7: 'acd' - Not enough characters left\n- Position 8: 'cd' - Not enough characters left\n\nAnswer: [0, 6]\n\nEXAMPLE 2:\ns = 'abab'\np = 'ab'\n\n- Position 0: 'ab' - anagram of 'ab'? YES! ✓\n- Position 1: 'ba' - anagram of 'ab'? YES! ✓\n- Position 2: 'ab' - anagram of 'ab'? YES! ✓\n\nAnswer: [0, 1, 2]\n\nWHY IS THIS TRICKY?\n- We need to check EVERY position in s\n- Each check requires comparing character counts\n- Naive approach: check every substring = O(n * m * 26) - slow!\n- Smart approach: Use sliding window = O(n) - fast!\n\nWHAT MAKES IT A SLIDING WINDOW PROBLEM?\n- We're looking at substrings of fixed length (p.length)\n- We slide this 'window' across the string s\n- Instead of recounting characters each time, we update the count by:\n  - Removing the character that left the window\n  - Adding the character that entered the window\n\nThis is classic sliding window!",
+      "example": "s = \"cbaebabacd\"\np = \"abc\"\n\nVisual representation:\n[ c b a ] e b a b a c d  ← Window at index 0: \"cba\" ✓\nc [ b a e ] b a b a c d  ← Window at index 1: \"bae\" ✗\nc b [ a e b ] a b a c d  ← Window at index 2: \"aeb\" ✗\n...\nc b a e b a [ b a c ] d  ← Window at index 6: \"bac\" ✓\n\nAnswer: [0, 6]",
+      "action": "continue",
+      "next": "thinking-challenge"
+    },
+    {
+      "stepId": "thinking-challenge",
+      "mentorSays": "Now that you understand what the lesson wants, here's the real question:\n\nHow would YOU find all anagrams in a string?\n\nThink about it for a moment. What approach feels natural to you?",
+      "choices": [
+        {
+          "label": "Use a sliding window with hash maps to compare character frequencies",
+          "next": "explore-sliding-window"
+        },
+        {
+          "label": "Check all possible substrings and compare character frequencies",
+          "next": "explore-brute-force"
+        },
+        {
+          "label": "Sort each substring and compare with sorted p",
+          "next": "explore-sort"
+        }
+      ]
+    },
+    {
+      "stepId": "explore-brute-force",
+      "mentorSays": "That's a straightforward approach! You're thinking: \"I'll check all possible substrings of length len(p) and see if they're anagrams of p.\"\n\nThis works! However, it's O(n × m) time complexity where n is length of s and m is length of p, if we compare frequencies naively.\n\nWould you like to learn the sliding window approach which is more efficient?",
+      "action": "continue",
+      "next": "explore-sliding-window"
+    },
+    {
+      "stepId": "explore-sort",
+      "mentorSays": "That's a clever approach! You're thinking: \"If I sort each substring and compare with sorted p, I can find anagrams.\"\n\nFor \"cba\" and \"abc\":\n- Sorted: \"abc\" and \"abc\" → same! ✓\n\nThis works! However, sorting each substring takes O(m log m) time, making overall O(n × m log m) time.\n\nWould you like to learn the sliding window approach which is O(n) time?",
+      "action": "continue",
+      "next": "explore-sliding-window"
+    },
+    {
+      "stepId": "explore-sliding-window",
+      "mentorSays": "Excellent choice! The sliding window approach is efficient and elegant. Here's the core idea:\n\n1. **Count p frequencies**: Create a hash map counting character frequencies in p\n2. **Sliding window**: Use a window of size len(p) in s\n3. **Track window frequencies**: Count character frequencies in the current window\n4. **Compare**: If window frequencies match p frequencies, it's an anagram!\n5. **Slide**: Move the window one position at a time\n\nLet's trace this with s = \"cbaebabacd\", p = \"abc\":\n\n- **Count p**: pCount = {a:1, b:1, c:1}\n- **Window at index 0**: \"cba\"\n  - sCount = {c:1, b:1, a:1}\n  - Matches pCount! ✓ → Add index 0\n- **Window at index 1**: \"bae\"\n  - sCount = {b:1, a:1, e:1}\n  - Doesn't match (has 'e' instead of 'c') ✗\n- **Window at index 6**: \"bac\"\n  - sCount = {b:1, a:1, c:1}\n  - Matches pCount! ✓ → Add index 6\n\nAnswer: [0, 6]\n\nThis is O(n) time! Now let's code it step by step.",
+      "action": "continue",
+      "next": "language-selection"
+    },
+    {
+      "stepId": "language-selection",
+      "mentorSays": "Great! Now let's code this solution. Which programming language would you like to use?",
+      "choices": [
+        {
+          "label": "JavaScript",
+          "next": "variable-check-js"
+        },
+        {
+          "label": "Python",
+          "next": "variable-check-python"
+        },
+        {
+          "label": "Java",
+          "next": "variable-check-java"
+        },
+        {
+          "label": "C++",
+          "next": "variable-check-cpp"
+        },
+        {
+          "label": "TypeScript",
+          "next": "variable-check-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-check-js",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-js"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-js",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'pCount' or 'result') and put data inside it.\n\nFor example, 'let pCount = {};' creates a variable that stores an empty object (hash map).",
+      "example": "let pCount = {};\nlet result = [];\n\nNow the variables refer to their values",
+      "action": "continue",
+      "next": "function-check-js"
+    },
+    {
+      "stepId": "function-check-js",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "string-check-js"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "string-check-js",
+      "mentorSays": "Do you understand how to work with strings and characters in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know strings",
+          "next": "array-check-js"
+        },
+        {
+          "label": "No, explain strings",
+          "next": "string-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "string-explanation-js",
+      "mentorSays": "In JavaScript, you can access individual characters in a string:\n\nlet word = 'listen';\nlet firstChar = word[0];  // 'l'\nlet secondChar = word[1]; // 'i'\n\n// Loop through all characters:\nfor (let i = 0; i < word.length; i++) {\n  console.log(word[i]);\n}\n\nFor anagrams, we need to count how many times each character appears.\n\nGot it?",
+      "action": "continue",
+      "next": "array-check-js"
+    },
+    {
+      "stepId": "array-check-js",
+      "mentorSays": "To solve this lesson, we'll use arrays/lists to store results. Do you understand how arrays work in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know arrays",
+          "next": "hashmap-check-js"
+        },
+        {
+          "label": "No, explain arrays",
+          "next": "array-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "array-explanation-js",
+      "mentorSays": "An array (or list) stores multiple values in order. We'll use it to store the starting indices where anagrams are found:\n\nlet result = [];\nresult.push(0);  // Add index 0\nresult.push(6);  // Add index 6\n// result = [0, 6]\n\nGot it?",
+      "action": "continue",
+      "next": "hashmap-check-js"
+    },
+    {
+      "stepId": "function-explanation-js",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "function findAnagrams(s, p) {\n  return [];\n}\n\nfindAnagrams(\"cbaebabacd\", \"abc\") returns [0, 6]",
+      "action": "continue",
+      "next": "string-check-js"
+    },
+    {
+      "stepId": "hashmap-check-js",
+      "mentorSays": "To solve this efficiently, we'll use hash maps (objects) to track character frequencies. Do you know what a hash map is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know hash maps",
+          "next": "coding-start-js"
+        },
+        {
+          "label": "No, explain hash maps",
+          "next": "hashmap-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "hashmap-explanation-js",
+      "mentorSays": "A hash map stores key-value pairs. You can quickly look up values by their keys. In JavaScript, you can use objects to create hash maps.",
+      "example": "let pCount = {};\npCount['a'] = 1;\nlet value = pCount['a'];  // returns 1",
+      "action": "continue",
+      "next": "coding-start-js"
+    },
+    {
+      "stepId": "coding-start-js",
+      "mentorSays": "Perfect! Let's implement the find all anagrams solution in JavaScript.",
+      "example": "function findAnagrams(s, p) {\n  \n}",
+      "action": "continue",
+      "next": "coding-count-p-js"
+    },
+    {
+      "stepId": "coding-count-p-js",
+      "mentorSays": "First, count character frequencies in p.",
+      "example": "function findAnagrams(s, p) {\n  const pCount = {};\n  \n  // Count character frequencies in p\n  for (let i = 0; i < p.length; i++) {\n    const char = p[i];\n    pCount[char] = (pCount[char] || 0) + 1;\n  }\n}",
+      "action": "continue",
+      "next": "coding-init-js"
+    },
+    {
+      "stepId": "coding-init-js",
+      "mentorSays": "Initialize variables: result array, window size, and sCount for tracking window frequencies.",
+      "example": "function findAnagrams(s, p) {\n  const pCount = {};\n  \n  for (let i = 0; i < p.length; i++) {\n    const char = p[i];\n    pCount[char] = (pCount[char] || 0) + 1;\n  }\n  \n  const result = [];\n  const windowSize = p.length;\n  const sCount = {};\n}",
+      "action": "continue",
+      "next": "coding-window-js"
+    },
+    {
+      "stepId": "coding-window-js",
+      "mentorSays": "Now, create the first window and count its character frequencies.",
+      "example": "function findAnagrams(s, p) {\n  const pCount = {};\n  \n  for (let i = 0; i < p.length; i++) {\n    const char = p[i];\n    pCount[char] = (pCount[char] || 0) + 1;\n  }\n  \n  const result = [];\n  const windowSize = p.length;\n  const sCount = {};\n  \n  // Count frequencies in first window\n  for (let i = 0; i < windowSize; i++) {\n    const char = s[i];\n    sCount[char] = (sCount[char] || 0) + 1;\n  }\n}",
+      "action": "continue",
+      "next": "coding-check-match-js"
+    },
+    {
+      "stepId": "coding-check-match-js",
+      "mentorSays": "Check if the first window matches p frequencies. We'll create a helper function to compare counts.",
+      "example": "function findAnagrams(s, p) {\n  const pCount = {};\n  \n  for (let i = 0; i < p.length; i++) {\n    const char = p[i];\n    pCount[char] = (pCount[char] || 0) + 1;\n  }\n  \n  const result = [];\n  const windowSize = p.length;\n  const sCount = {};\n  \n  for (let i = 0; i < windowSize; i++) {\n    const char = s[i];\n    sCount[char] = (sCount[char] || 0) + 1;\n  }\n  \n  // Check if first window matches\n  let matches = true;\n  for (let char in pCount) {\n    if (sCount[char] !== pCount[char]) {\n      matches = false;\n      break;\n    }\n  }\n  if (matches) {\n    result.push(0);\n  }\n}",
+      "action": "continue",
+      "next": "coding-slide-js"
+    },
+    {
+      "stepId": "coding-slide-js",
+      "mentorSays": "Now slide the window: remove leftmost character, add rightmost character, and check if frequencies match.",
+      "example": "function findAnagrams(s, p) {\n  const pCount = {};\n  \n  for (let i = 0; i < p.length; i++) {\n    const char = p[i];\n    pCount[char] = (pCount[char] || 0) + 1;\n  }\n  \n  const result = [];\n  const windowSize = p.length;\n  const sCount = {};\n  \n  for (let i = 0; i < windowSize; i++) {\n    const char = s[i];\n    sCount[char] = (sCount[char] || 0) + 1;\n  }\n  \n  let matches = true;\n  for (let char in pCount) {\n    if (sCount[char] !== pCount[char]) {\n      matches = false;\n      break;\n    }\n  }\n  if (matches) {\n    result.push(0);\n  }\n  \n  // Slide window\n  for (let i = windowSize; i < s.length; i++) {\n    // Remove leftmost character\n    const leftChar = s[i - windowSize];\n    sCount[leftChar]--;\n    if (sCount[leftChar] === 0) {\n      delete sCount[leftChar];\n    }\n    \n    // Add rightmost character\n    const rightChar = s[i];\n    sCount[rightChar] = (sCount[rightChar] || 0) + 1;\n    \n    // Check if frequencies match\n    matches = true;\n    for (let char in pCount) {\n      if (sCount[char] !== pCount[char]) {\n        matches = false;\n        break;\n      }\n    }\n    if (matches) {\n      result.push(i - windowSize + 1);\n    }\n  }\n}",
+      "action": "continue",
+      "next": "coding-return-js"
+    },
+    {
+      "stepId": "coding-return-js",
+      "mentorSays": "Finally, return the result array.",
+      "example": "function findAnagrams(s, p) {\n  const pCount = {};\n  \n  for (let i = 0; i < p.length; i++) {\n    const char = p[i];\n    pCount[char] = (pCount[char] || 0) + 1;\n  }\n  \n  const result = [];\n  const windowSize = p.length;\n  const sCount = {};\n  \n  for (let i = 0; i < windowSize; i++) {\n    const char = s[i];\n    sCount[char] = (sCount[char] || 0) + 1;\n  }\n  \n  let matches = true;\n  for (let char in pCount) {\n    if (sCount[char] !== pCount[char]) {\n      matches = false;\n      break;\n    }\n  }\n  if (matches) {\n    result.push(0);\n  }\n  \n  for (let i = windowSize; i < s.length; i++) {\n    const leftChar = s[i - windowSize];\n    sCount[leftChar]--;\n    if (sCount[leftChar] === 0) {\n      delete sCount[leftChar];\n    }\n    \n    const rightChar = s[i];\n    sCount[rightChar] = (sCount[rightChar] || 0) + 1;\n    \n    matches = true;\n    for (let char in pCount) {\n      if (sCount[char] !== pCount[char]) {\n        matches = false;\n        break;\n      }\n    }\n    if (matches) {\n      result.push(i - windowSize + 1);\n    }\n  }\n  \n  return result;\n}",
+      "action": "continue",
+      "next": "test-code-js"
+    },
+    {
+      "stepId": "test-code-js",
+      "mentorSays": "Perfect! Test with s = \"cbaebabacd\", p = \"abc\". Expected: [0, 6].",
+      "example": "Test input:\ns = \"cbaebabacd\"\np = \"abc\"\n\nExpected output: [0, 6]\n\nBecause anagrams of \"abc\" appear at indices 0 (\"cba\") and 6 (\"bac\").",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-python",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-python"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-python",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'p_count' or 'result') and put data inside it.\n\nFor example, 'p_count = {}' creates a variable that stores an empty dictionary (hash map).",
+      "example": "p_count = {}\nresult = []\n\nNow the variables refer to their values",
+      "action": "continue",
+      "next": "function-check-python"
+    },
+    {
+      "stepId": "function-check-python",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "string-check-python"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "string-check-python",
+      "mentorSays": "Do you understand how to work with strings and characters in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know strings",
+          "next": "array-check-python"
+        },
+        {
+          "label": "No, explain strings",
+          "next": "string-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "string-explanation-python",
+      "mentorSays": "In Python, you can access individual characters in a string:\n\nword = 'listen'\nfirst_char = word[0]  # 'l'\nsecond_char = word[1]  # 'i'\n\n# Loop through all characters:\nfor i in range(len(word)):\n    print(word[i])\n\nFor anagrams, we need to count how many times each character appears.\n\nGot it?",
+      "action": "continue",
+      "next": "array-check-python"
+    },
+    {
+      "stepId": "array-check-python",
+      "mentorSays": "To solve this lesson, we'll use arrays/lists to store results. Do you understand how arrays work in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know arrays",
+          "next": "hashmap-check-python"
+        },
+        {
+          "label": "No, explain arrays",
+          "next": "array-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "array-explanation-python",
+      "mentorSays": "An array (or list) stores multiple values in order. We'll use it to store the starting indices where anagrams are found:\n\nresult = []\nresult.append(0)  # Add index 0\nresult.append(6)  # Add index 6\n# result = [0, 6]\n\nGot it?",
+      "action": "continue",
+      "next": "hashmap-check-python"
+    },
+    {
+      "stepId": "function-explanation-python",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "def find_anagrams(s, p):\n    return []\n\nfind_anagrams(\"cbaebabacd\", \"abc\") returns [0, 6]",
+      "action": "continue",
+      "next": "string-check-python"
+    },
+    {
+      "stepId": "hashmap-check-python",
+      "mentorSays": "To solve this efficiently, we'll use dictionaries (hash maps) to track character frequencies. Do you know what a dictionary is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know dictionaries",
+          "next": "coding-start-python"
+        },
+        {
+          "label": "No, explain dictionaries",
+          "next": "hashmap-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "hashmap-explanation-python",
+      "mentorSays": "A dictionary stores key-value pairs. You can quickly look up values by their keys. In Python, you can use dictionaries to create hash maps.",
+      "example": "p_count = {}\np_count['a'] = 1\nvalue = p_count['a']  # returns 1",
+      "action": "continue",
+      "next": "coding-start-python"
+    },
+    {
+      "stepId": "coding-start-python",
+      "mentorSays": "Perfect! Let's implement the find all anagrams solution in Python.",
+      "example": "def find_anagrams(s, p):\n    \n    pass",
+      "action": "continue",
+      "next": "coding-count-p-python"
+    },
+    {
+      "stepId": "coding-count-p-python",
+      "mentorSays": "First, count character frequencies in p.",
+      "example": "def find_anagrams(s, p):\n    p_count = {}\n    \n    # Count character frequencies in p\n    for char in p:\n        p_count[char] = p_count.get(char, 0) + 1\n    \n    pass",
+      "action": "continue",
+      "next": "coding-init-python"
+    },
+    {
+      "stepId": "coding-init-python",
+      "mentorSays": "Initialize variables: result list, window size, and s_count for tracking window frequencies.",
+      "example": "def find_anagrams(s, p):\n    p_count = {}\n    \n    for char in p:\n        p_count[char] = p_count.get(char, 0) + 1\n    \n    result = []\n    window_size = len(p)\n    s_count = {}\n    \n    pass",
+      "action": "continue",
+      "next": "coding-window-python"
+    },
+    {
+      "stepId": "coding-window-python",
+      "mentorSays": "Now, create the first window and count its character frequencies.",
+      "example": "def find_anagrams(s, p):\n    p_count = {}\n    \n    for char in p:\n        p_count[char] = p_count.get(char, 0) + 1\n    \n    result = []\n    window_size = len(p)\n    s_count = {}\n    \n    # Count frequencies in first window\n    for i in range(window_size):\n        char = s[i]\n        s_count[char] = s_count.get(char, 0) + 1\n    \n    pass",
+      "action": "continue",
+      "next": "coding-check-match-python"
+    },
+    {
+      "stepId": "coding-check-match-python",
+      "mentorSays": "Check if the first window matches p frequencies.",
+      "example": "def find_anagrams(s, p):\n    p_count = {}\n    \n    for char in p:\n        p_count[char] = p_count.get(char, 0) + 1\n    \n    result = []\n    window_size = len(p)\n    s_count = {}\n    \n    for i in range(window_size):\n        char = s[i]\n        s_count[char] = s_count.get(char, 0) + 1\n    \n    # Check if first window matches\n    if s_count == p_count:\n        result.append(0)\n    \n    pass",
+      "action": "continue",
+      "next": "coding-slide-python"
+    },
+    {
+      "stepId": "coding-slide-python",
+      "mentorSays": "Now slide the window: remove leftmost character, add rightmost character, and check if frequencies match.",
+      "example": "def find_anagrams(s, p):\n    p_count = {}\n    \n    for char in p:\n        p_count[char] = p_count.get(char, 0) + 1\n    \n    result = []\n    window_size = len(p)\n    s_count = {}\n    \n    for i in range(window_size):\n        char = s[i]\n        s_count[char] = s_count.get(char, 0) + 1\n    \n    if s_count == p_count:\n        result.append(0)\n    \n    # Slide window\n    for i in range(window_size, len(s)):\n        # Remove leftmost character\n        left_char = s[i - window_size]\n        s_count[left_char] -= 1\n        if s_count[left_char] == 0:\n            del s_count[left_char]\n        \n        # Add rightmost character\n        right_char = s[i]\n        s_count[right_char] = s_count.get(right_char, 0) + 1\n        \n        # Check if frequencies match\n        if s_count == p_count:\n            result.append(i - window_size + 1)\n    \n    pass",
+      "action": "continue",
+      "next": "coding-return-python"
+    },
+    {
+      "stepId": "coding-return-python",
+      "mentorSays": "Finally, return the result list.",
+      "example": "def find_anagrams(s, p):\n    p_count = {}\n    \n    for char in p:\n        p_count[char] = p_count.get(char, 0) + 1\n    \n    result = []\n    window_size = len(p)\n    s_count = {}\n    \n    for i in range(window_size):\n        char = s[i]\n        s_count[char] = s_count.get(char, 0) + 1\n    \n    if s_count == p_count:\n        result.append(0)\n    \n    for i in range(window_size, len(s)):\n        left_char = s[i - window_size]\n        s_count[left_char] -= 1\n        if s_count[left_char] == 0:\n            del s_count[left_char]\n        \n        right_char = s[i]\n        s_count[right_char] = s_count.get(right_char, 0) + 1\n        \n        if s_count == p_count:\n            result.append(i - window_size + 1)\n    \n    return result",
+      "action": "continue",
+      "next": "test-code-python"
+    },
+    {
+      "stepId": "test-code-python",
+      "mentorSays": "Perfect! Test with s = \"cbaebabacd\", p = \"abc\". Expected: [0, 6].",
+      "example": "Test input:\ns = \"cbaebabacd\"\np = \"abc\"\n\nExpected output: [0, 6]\n\nBecause anagrams of \"abc\" appear at indices 0 (\"cba\") and 6 (\"bac\").",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-java",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-java"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-java",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'pCount' or 'result') and put data inside it.\n\nFor example, 'Map<Character, Integer> pCount = new HashMap<>();' creates a variable that stores a hash map.",
+      "example": "Map<Character, Integer> pCount = new HashMap<>();\nList<Integer> result = new ArrayList<>();\n\nNow the variables refer to their values",
+      "action": "continue",
+      "next": "function-check-java"
+    },
+    {
+      "stepId": "function-check-java",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a method is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know methods",
+          "next": "string-check-java"
+        },
+        {
+          "label": "No, explain methods",
+          "next": "function-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "string-check-java",
+      "mentorSays": "Do you understand how to work with strings and characters in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know strings",
+          "next": "array-check-java"
+        },
+        {
+          "label": "No, explain strings",
+          "next": "string-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "string-explanation-java",
+      "mentorSays": "In Java, you can access individual characters in a string:\n\nString word = \"listen\";\nchar firstChar = word.charAt(0);  // 'l'\nchar secondChar = word.charAt(1); // 'i'\n\n// Loop through all characters:\nfor (int i = 0; i < word.length(); i++) {\n    System.out.println(word.charAt(i));\n}\n\nFor anagrams, we need to count how many times each character appears.\n\nGot it?",
+      "action": "continue",
+      "next": "array-check-java"
+    },
+    {
+      "stepId": "array-check-java",
+      "mentorSays": "To solve this lesson, we'll use arrays/lists to store results. Do you understand how arrays work in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know arrays",
+          "next": "hashmap-check-java"
+        },
+        {
+          "label": "No, explain arrays",
+          "next": "array-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "array-explanation-java",
+      "mentorSays": "An array (or list) stores multiple values in order. We'll use it to store the starting indices where anagrams are found:\n\nList<Integer> result = new ArrayList<>();\nresult.add(0);  // Add index 0\nresult.add(6);  // Add index 6\n// result = [0, 6]\n\nGot it?",
+      "action": "continue",
+      "next": "hashmap-check-java"
+    },
+    {
+      "stepId": "function-explanation-java",
+      "mentorSays": "A method (Java's version of a function) is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "public List<Integer> findAnagrams(String s, String p) {\n    return new ArrayList<>();\n}\n\nfindAnagrams(\"cbaebabacd\", \"abc\") returns [0, 6]",
+      "action": "continue",
+      "next": "string-check-java"
+    },
+    {
+      "stepId": "hashmap-check-java",
+      "mentorSays": "To solve this efficiently, we'll use HashMaps to track character frequencies. Do you know what a HashMap is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know HashMaps",
+          "next": "coding-start-java"
+        },
+        {
+          "label": "No, explain HashMaps",
+          "next": "hashmap-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "hashmap-explanation-java",
+      "mentorSays": "A HashMap stores key-value pairs. You can quickly look up values by their keys. In Java, you can use HashMap to create hash maps.",
+      "example": "Map<Character, Integer> pCount = new HashMap<>();\npCount.put('a', 1);\nint value = pCount.get('a');  // returns 1",
+      "action": "continue",
+      "next": "coding-start-java"
+    },
+    {
+      "stepId": "coding-start-java",
+      "mentorSays": "Perfect! Let's implement the find all anagrams solution in Java.",
+      "example": "import java.util.*;\n\npublic List<Integer> findAnagrams(String s, String p) {\n    \n}",
+      "action": "continue",
+      "next": "coding-count-p-java"
+    },
+    {
+      "stepId": "coding-count-p-java",
+      "mentorSays": "First, count character frequencies in p.",
+      "example": "import java.util.*;\n\npublic List<Integer> findAnagrams(String s, String p) {\n    Map<Character, Integer> pCount = new HashMap<>();\n    \n    // Count character frequencies in p\n    for (int i = 0; i < p.length(); i++) {\n        char c = p.charAt(i);\n        pCount.put(c, pCount.getOrDefault(c, 0) + 1);\n    }\n}",
+      "action": "continue",
+      "next": "coding-init-java"
+    },
+    {
+      "stepId": "coding-init-java",
+      "mentorSays": "Initialize variables: result list, window size, and sCount for tracking window frequencies.",
+      "example": "import java.util.*;\n\npublic List<Integer> findAnagrams(String s, String p) {\n    Map<Character, Integer> pCount = new HashMap<>();\n    \n    for (int i = 0; i < p.length(); i++) {\n        char c = p.charAt(i);\n        pCount.put(c, pCount.getOrDefault(c, 0) + 1);\n    }\n    \n    List<Integer> result = new ArrayList<>();\n    int windowSize = p.length();\n    Map<Character, Integer> sCount = new HashMap<>();\n}",
+      "action": "continue",
+      "next": "coding-window-java"
+    },
+    {
+      "stepId": "coding-window-java",
+      "mentorSays": "Now, create the first window and count its character frequencies.",
+      "example": "import java.util.*;\n\npublic List<Integer> findAnagrams(String s, String p) {\n    Map<Character, Integer> pCount = new HashMap<>();\n    \n    for (int i = 0; i < p.length(); i++) {\n        char c = p.charAt(i);\n        pCount.put(c, pCount.getOrDefault(c, 0) + 1);\n    }\n    \n    List<Integer> result = new ArrayList<>();\n    int windowSize = p.length();\n    Map<Character, Integer> sCount = new HashMap<>();\n    \n    // Count frequencies in first window\n    for (int i = 0; i < windowSize; i++) {\n        char c = s.charAt(i);\n        sCount.put(c, sCount.getOrDefault(c, 0) + 1);\n    }\n}",
+      "action": "continue",
+      "next": "coding-check-match-java"
+    },
+    {
+      "stepId": "coding-check-match-java",
+      "mentorSays": "Check if the first window matches p frequencies.",
+      "example": "import java.util.*;\n\npublic List<Integer> findAnagrams(String s, String p) {\n    Map<Character, Integer> pCount = new HashMap<>();\n    \n    for (int i = 0; i < p.length(); i++) {\n        char c = p.charAt(i);\n        pCount.put(c, pCount.getOrDefault(c, 0) + 1);\n    }\n    \n    List<Integer> result = new ArrayList<>();\n    int windowSize = p.length();\n    Map<Character, Integer> sCount = new HashMap<>();\n    \n    for (int i = 0; i < windowSize; i++) {\n        char c = s.charAt(i);\n        sCount.put(c, sCount.getOrDefault(c, 0) + 1);\n    }\n    \n    // Check if first window matches\n    if (sCount.equals(pCount)) {\n        result.add(0);\n    }\n}",
+      "action": "continue",
+      "next": "coding-slide-java"
+    },
+    {
+      "stepId": "coding-slide-java",
+      "mentorSays": "Now slide the window: remove leftmost character, add rightmost character, and check if frequencies match.",
+      "example": "import java.util.*;\n\npublic List<Integer> findAnagrams(String s, String p) {\n    Map<Character, Integer> pCount = new HashMap<>();\n    \n    for (int i = 0; i < p.length(); i++) {\n        char c = p.charAt(i);\n        pCount.put(c, pCount.getOrDefault(c, 0) + 1);\n    }\n    \n    List<Integer> result = new ArrayList<>();\n    int windowSize = p.length();\n    Map<Character, Integer> sCount = new HashMap<>();\n    \n    for (int i = 0; i < windowSize; i++) {\n        char c = s.charAt(i);\n        sCount.put(c, sCount.getOrDefault(c, 0) + 1);\n    }\n    \n    if (sCount.equals(pCount)) {\n        result.add(0);\n    }\n    \n    // Slide window\n    for (int i = windowSize; i < s.length(); i++) {\n        // Remove leftmost character\n        char leftChar = s.charAt(i - windowSize);\n        sCount.put(leftChar, sCount.get(leftChar) - 1);\n        if (sCount.get(leftChar) == 0) {\n            sCount.remove(leftChar);\n        }\n        \n        // Add rightmost character\n        char rightChar = s.charAt(i);\n        sCount.put(rightChar, sCount.getOrDefault(rightChar, 0) + 1);\n        \n        // Check if frequencies match\n        if (sCount.equals(pCount)) {\n            result.add(i - windowSize + 1);\n        }\n    }\n}",
+      "action": "continue",
+      "next": "coding-return-java"
+    },
+    {
+      "stepId": "coding-return-java",
+      "mentorSays": "Finally, return the result list.",
+      "example": "import java.util.*;\n\npublic List<Integer> findAnagrams(String s, String p) {\n    Map<Character, Integer> pCount = new HashMap<>();\n    \n    for (int i = 0; i < p.length(); i++) {\n        char c = p.charAt(i);\n        pCount.put(c, pCount.getOrDefault(c, 0) + 1);\n    }\n    \n    List<Integer> result = new ArrayList<>();\n    int windowSize = p.length();\n    Map<Character, Integer> sCount = new HashMap<>();\n    \n    for (int i = 0; i < windowSize; i++) {\n        char c = s.charAt(i);\n        sCount.put(c, sCount.getOrDefault(c, 0) + 1);\n    }\n    \n    if (sCount.equals(pCount)) {\n        result.add(0);\n    }\n    \n    for (int i = windowSize; i < s.length(); i++) {\n        char leftChar = s.charAt(i - windowSize);\n        sCount.put(leftChar, sCount.get(leftChar) - 1);\n        if (sCount.get(leftChar) == 0) {\n            sCount.remove(leftChar);\n        }\n        \n        char rightChar = s.charAt(i);\n        sCount.put(rightChar, sCount.getOrDefault(rightChar, 0) + 1);\n        \n        if (sCount.equals(pCount)) {\n            result.add(i - windowSize + 1);\n        }\n    }\n    \n    return result;\n}",
+      "action": "continue",
+      "next": "test-code-java"
+    },
+    {
+      "stepId": "test-code-java",
+      "mentorSays": "Perfect! Test with s = \"cbaebabacd\", p = \"abc\". Expected: [0, 6].",
+      "example": "Test input:\ns = \"cbaebabacd\"\np = \"abc\"\n\nExpected output: [0, 6]\n\nBecause anagrams of \"abc\" appear at indices 0 (\"cba\") and 6 (\"bac\").",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-cpp",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-cpp"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-cpp",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'pCount' or 'result') and put data inside it.\n\nFor example, 'unordered_map<char, int> pCount;' creates a variable that stores a hash map.",
+      "example": "unordered_map<char, int> pCount;\nvector<int> result;\n\nNow the variables refer to their values",
+      "action": "continue",
+      "next": "function-check-cpp"
+    },
+    {
+      "stepId": "function-check-cpp",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "string-check-cpp"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "string-check-cpp",
+      "mentorSays": "Do you understand how to work with strings and characters in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know strings",
+          "next": "array-check-cpp"
+        },
+        {
+          "label": "No, explain strings",
+          "next": "string-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "string-explanation-cpp",
+      "mentorSays": "In C++, you can access individual characters in a string:\n\nstring word = \"listen\";\nchar firstChar = word[0];  // 'l'\nchar secondChar = word[1]; // 'i'\n\n// Loop through all characters:\nfor (int i = 0; i < word.size(); i++) {\n    cout << word[i];\n}\n\nFor anagrams, we need to count how many times each character appears.\n\nGot it?",
+      "action": "continue",
+      "next": "array-check-cpp"
+    },
+    {
+      "stepId": "array-check-cpp",
+      "mentorSays": "To solve this lesson, we'll use arrays/lists to store results. Do you understand how arrays work in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know arrays",
+          "next": "hashmap-check-cpp"
+        },
+        {
+          "label": "No, explain arrays",
+          "next": "array-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "array-explanation-cpp",
+      "mentorSays": "An array (or list) stores multiple values in order. We'll use it to store the starting indices where anagrams are found:\n\nvector<int> result;\nresult.push_back(0);  // Add index 0\nresult.push_back(6);  // Add index 6\n// result = [0, 6]\n\nGot it?",
+      "action": "continue",
+      "next": "hashmap-check-cpp"
+    },
+    {
+      "stepId": "function-explanation-cpp",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "vector<int> findAnagrams(string s, string p) {\n    return {};\n}\n\nfindAnagrams(\"cbaebabacd\", \"abc\") returns [0, 6]",
+      "action": "continue",
+      "next": "string-check-cpp"
+    },
+    {
+      "stepId": "hashmap-check-cpp",
+      "mentorSays": "To solve this efficiently, we'll use unordered_maps to track character frequencies. Do you know what an unordered_map is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know unordered_maps",
+          "next": "coding-start-cpp"
+        },
+        {
+          "label": "No, explain unordered_maps",
+          "next": "hashmap-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "hashmap-explanation-cpp",
+      "mentorSays": "An unordered_map stores key-value pairs. You can quickly look up values by their keys. In C++, you can use unordered_map to create hash maps.",
+      "example": "unordered_map<char, int> pCount;\npCount['a'] = 1;\nint value = pCount['a'];  // returns 1",
+      "action": "continue",
+      "next": "coding-start-cpp"
+    },
+    {
+      "stepId": "coding-start-cpp",
+      "mentorSays": "Perfect! Let's implement the find all anagrams solution in C++.",
+      "example": "#include <unordered_map>\n#include <vector>\n#include <string>\n\nvector<int> findAnagrams(string s, string p) {\n    \n}",
+      "action": "continue",
+      "next": "coding-count-p-cpp"
+    },
+    {
+      "stepId": "coding-count-p-cpp",
+      "mentorSays": "First, count character frequencies in p.",
+      "example": "#include <unordered_map>\n#include <vector>\n#include <string>\n\nvector<int> findAnagrams(string s, string p) {\n    unordered_map<char, int> pCount;\n    \n    // Count character frequencies in p\n    for (int i = 0; i < p.length(); i++) {\n        pCount[p[i]]++;\n    }\n}",
+      "action": "continue",
+      "next": "coding-init-cpp"
+    },
+    {
+      "stepId": "coding-init-cpp",
+      "mentorSays": "Initialize variables: result vector, window size, and sCount for tracking window frequencies.",
+      "example": "#include <unordered_map>\n#include <vector>\n#include <string>\n\nvector<int> findAnagrams(string s, string p) {\n    unordered_map<char, int> pCount;\n    \n    for (int i = 0; i < p.length(); i++) {\n        pCount[p[i]]++;\n    }\n    \n    vector<int> result;\n    int windowSize = p.length();\n    unordered_map<char, int> sCount;\n}",
+      "action": "continue",
+      "next": "coding-window-cpp"
+    },
+    {
+      "stepId": "coding-window-cpp",
+      "mentorSays": "Now, create the first window and count its character frequencies.",
+      "example": "#include <unordered_map>\n#include <vector>\n#include <string>\n\nvector<int> findAnagrams(string s, string p) {\n    unordered_map<char, int> pCount;\n    \n    for (int i = 0; i < p.length(); i++) {\n        pCount[p[i]]++;\n    }\n    \n    vector<int> result;\n    int windowSize = p.length();\n    unordered_map<char, int> sCount;\n    \n    // Count frequencies in first window\n    for (int i = 0; i < windowSize; i++) {\n        sCount[s[i]]++;\n    }\n}",
+      "action": "continue",
+      "next": "coding-check-match-cpp"
+    },
+    {
+      "stepId": "coding-check-match-cpp",
+      "mentorSays": "Check if the first window matches p frequencies. We need to compare the maps.",
+      "example": "#include <unordered_map>\n#include <vector>\n#include <string>\n\nvector<int> findAnagrams(string s, string p) {\n    unordered_map<char, int> pCount;\n    \n    for (int i = 0; i < p.length(); i++) {\n        pCount[p[i]]++;\n    }\n    \n    vector<int> result;\n    int windowSize = p.length();\n    unordered_map<char, int> sCount;\n    \n    for (int i = 0; i < windowSize; i++) {\n        sCount[s[i]]++;\n    }\n    \n    // Check if first window matches\n    bool matches = true;\n    if (sCount.size() != pCount.size()) {\n        matches = false;\n    } else {\n        for (auto& pair : pCount) {\n            if (sCount[pair.first] != pair.second) {\n                matches = false;\n                break;\n            }\n        }\n    }\n    if (matches) {\n        result.push_back(0);\n    }\n}",
+      "action": "continue",
+      "next": "coding-slide-cpp"
+    },
+    {
+      "stepId": "coding-slide-cpp",
+      "mentorSays": "Now slide the window: remove leftmost character, add rightmost character, and check if frequencies match.",
+      "example": "#include <unordered_map>\n#include <vector>\n#include <string>\n\nvector<int> findAnagrams(string s, string p) {\n    unordered_map<char, int> pCount;\n    \n    for (int i = 0; i < p.length(); i++) {\n        pCount[p[i]]++;\n    }\n    \n    vector<int> result;\n    int windowSize = p.length();\n    unordered_map<char, int> sCount;\n    \n    for (int i = 0; i < windowSize; i++) {\n        sCount[s[i]]++;\n    }\n    \n    bool matches = true;\n    if (sCount.size() != pCount.size()) {\n        matches = false;\n    } else {\n        for (auto& pair : pCount) {\n            if (sCount[pair.first] != pair.second) {\n                matches = false;\n                break;\n            }\n        }\n    }\n    if (matches) {\n        result.push_back(0);\n    }\n    \n    // Slide window\n    for (int i = windowSize; i < s.length(); i++) {\n        // Remove leftmost character\n        sCount[s[i - windowSize]]--;\n        if (sCount[s[i - windowSize]] == 0) {\n            sCount.erase(s[i - windowSize]);\n        }\n        \n        // Add rightmost character\n        sCount[s[i]]++;\n        \n        // Check if frequencies match\n        matches = true;\n        if (sCount.size() != pCount.size()) {\n            matches = false;\n        } else {\n            for (auto& pair : pCount) {\n                if (sCount[pair.first] != pair.second) {\n                    matches = false;\n                    break;\n                }\n            }\n        }\n        if (matches) {\n            result.push_back(i - windowSize + 1);\n        }\n    }\n}",
+      "action": "continue",
+      "next": "coding-return-cpp"
+    },
+    {
+      "stepId": "coding-return-cpp",
+      "mentorSays": "Finally, return the result vector.",
+      "example": "#include <unordered_map>\n#include <vector>\n#include <string>\n\nvector<int> findAnagrams(string s, string p) {\n    unordered_map<char, int> pCount;\n    \n    for (int i = 0; i < p.length(); i++) {\n        pCount[p[i]]++;\n    }\n    \n    vector<int> result;\n    int windowSize = p.length();\n    unordered_map<char, int> sCount;\n    \n    for (int i = 0; i < windowSize; i++) {\n        sCount[s[i]]++;\n    }\n    \n    bool matches = true;\n    if (sCount.size() != pCount.size()) {\n        matches = false;\n    } else {\n        for (auto& pair : pCount) {\n            if (sCount[pair.first] != pair.second) {\n                matches = false;\n                break;\n            }\n        }\n    }\n    if (matches) {\n        result.push_back(0);\n    }\n    \n    for (int i = windowSize; i < s.length(); i++) {\n        sCount[s[i - windowSize]]--;\n        if (sCount[s[i - windowSize]] == 0) {\n            sCount.erase(s[i - windowSize]);\n        }\n        \n        sCount[s[i]]++;\n        \n        matches = true;\n        if (sCount.size() != pCount.size()) {\n            matches = false;\n        } else {\n            for (auto& pair : pCount) {\n                if (sCount[pair.first] != pair.second) {\n                    matches = false;\n                    break;\n                }\n            }\n        }\n        if (matches) {\n            result.push_back(i - windowSize + 1);\n        }\n    }\n    \n    return result;\n}",
+      "action": "continue",
+      "next": "test-code-cpp"
+    },
+    {
+      "stepId": "test-code-cpp",
+      "mentorSays": "Perfect! Test with s = \"cbaebabacd\", p = \"abc\". Expected: [0, 6].",
+      "example": "Test input:\ns = \"cbaebabacd\"\np = \"abc\"\n\nExpected output: [0, 6]\n\nBecause anagrams of \"abc\" appear at indices 0 (\"cba\") and 6 (\"bac\").",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-ts",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-ts"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-ts",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'pCount' or 'result') and put data inside it.\n\nFor example, 'let pCount: { [key: string]: number } = {};' creates a variable that stores an object (hash map).",
+      "example": "let pCount: { [key: string]: number } = {};\nlet result: number[] = [];\n\nNow the variables refer to their values",
+      "action": "continue",
+      "next": "function-check-ts"
+    },
+    {
+      "stepId": "function-check-ts",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "string-check-ts"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "string-check-ts",
+      "mentorSays": "Do you understand how to work with strings and characters in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know strings",
+          "next": "array-check-ts"
+        },
+        {
+          "label": "No, explain strings",
+          "next": "string-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "string-explanation-ts",
+      "mentorSays": "In TypeScript, you can access individual characters in a string:\n\nlet word: string = 'listen';\nlet firstChar = word[0];  // 'l'\nlet secondChar = word[1]; // 'i'\n\n// Loop through all characters:\nfor (let i = 0; i < word.length; i++) {\n  console.log(word[i]);\n}\n\nFor anagrams, we need to count how many times each character appears.\n\nGot it?",
+      "action": "continue",
+      "next": "array-check-ts"
+    },
+    {
+      "stepId": "array-check-ts",
+      "mentorSays": "To solve this lesson, we'll use arrays/lists to store results. Do you understand how arrays work in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know arrays",
+          "next": "hashmap-check-ts"
+        },
+        {
+          "label": "No, explain arrays",
+          "next": "array-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "array-explanation-ts",
+      "mentorSays": "An array (or list) stores multiple values in order. We'll use it to store the starting indices where anagrams are found:\n\nlet result: number[] = [];\nresult.push(0);  // Add index 0\nresult.push(6);  // Add index 6\n// result = [0, 6]\n\nGot it?",
+      "action": "continue",
+      "next": "hashmap-check-ts"
+    },
+    {
+      "stepId": "function-explanation-ts",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "function findAnagrams(s: string, p: string): number[] {\n    return [];\n}\n\nfindAnagrams(\"cbaebabacd\", \"abc\") returns [0, 6]",
+      "action": "continue",
+      "next": "string-check-ts"
+    },
+    {
+      "stepId": "hashmap-check-ts",
+      "mentorSays": "To solve this efficiently, we'll use objects (hash maps) to track character frequencies. Do you know what a hash map is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know hash maps",
+          "next": "coding-start-ts"
+        },
+        {
+          "label": "No, explain hash maps",
+          "next": "hashmap-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "hashmap-explanation-ts",
+      "mentorSays": "A hash map stores key-value pairs. You can quickly look up values by their keys. In TypeScript, you can use objects to create hash maps.",
+      "example": "let pCount: { [key: string]: number } = {};\npCount['a'] = 1;\nlet value = pCount['a'];  // returns 1",
+      "action": "continue",
+      "next": "coding-start-ts"
+    },
+    {
+      "stepId": "coding-start-ts",
+      "mentorSays": "Perfect! Let's implement the find all anagrams solution in TypeScript.",
+      "example": "function findAnagrams(s: string, p: string): number[] {\n  \n}",
+      "action": "continue",
+      "next": "coding-count-p-ts"
+    },
+    {
+      "stepId": "coding-count-p-ts",
+      "mentorSays": "First, count character frequencies in p.",
+      "example": "function findAnagrams(s: string, p: string): number[] {\n  const pCount: { [key: string]: number } = {};\n  \n  // Count character frequencies in p\n  for (let i = 0; i < p.length; i++) {\n    const char = p[i];\n    pCount[char] = (pCount[char] || 0) + 1;\n  }\n}",
+      "action": "continue",
+      "next": "coding-init-ts"
+    },
+    {
+      "stepId": "coding-init-ts",
+      "mentorSays": "Initialize variables: result array, window size, and sCount for tracking window frequencies.",
+      "example": "function findAnagrams(s: string, p: string): number[] {\n  const pCount: { [key: string]: number } = {};\n  \n  for (let i = 0; i < p.length; i++) {\n    const char = p[i];\n    pCount[char] = (pCount[char] || 0) + 1;\n  }\n  \n  const result: number[] = [];\n  const windowSize = p.length;\n  const sCount: { [key: string]: number } = {};\n}",
+      "action": "continue",
+      "next": "coding-window-ts"
+    },
+    {
+      "stepId": "coding-window-ts",
+      "mentorSays": "Now, create the first window and count its character frequencies.",
+      "example": "function findAnagrams(s: string, p: string): number[] {\n  const pCount: { [key: string]: number } = {};\n  \n  for (let i = 0; i < p.length; i++) {\n    const char = p[i];\n    pCount[char] = (pCount[char] || 0) + 1;\n  }\n  \n  const result: number[] = [];\n  const windowSize = p.length;\n  const sCount: { [key: string]: number } = {};\n  \n  // Count frequencies in first window\n  for (let i = 0; i < windowSize; i++) {\n    const char = s[i];\n    sCount[char] = (sCount[char] || 0) + 1;\n  }\n}",
+      "action": "continue",
+      "next": "coding-check-match-ts"
+    },
+    {
+      "stepId": "coding-check-match-ts",
+      "mentorSays": "Check if the first window matches p frequencies.",
+      "example": "function findAnagrams(s: string, p: string): number[] {\n  const pCount: { [key: string]: number } = {};\n  \n  for (let i = 0; i < p.length; i++) {\n    const char = p[i];\n    pCount[char] = (pCount[char] || 0) + 1;\n  }\n  \n  const result: number[] = [];\n  const windowSize = p.length;\n  const sCount: { [key: string]: number } = {};\n  \n  for (let i = 0; i < windowSize; i++) {\n    const char = s[i];\n    sCount[char] = (sCount[char] || 0) + 1;\n  }\n  \n  // Check if first window matches\n  let matches = true;\n  for (let char in pCount) {\n    if (sCount[char] !== pCount[char]) {\n      matches = false;\n      break;\n    }\n  }\n  if (matches) {\n    result.push(0);\n  }\n}",
+      "action": "continue",
+      "next": "coding-slide-ts"
+    },
+    {
+      "stepId": "coding-slide-ts",
+      "mentorSays": "Now slide the window: remove leftmost character, add rightmost character, and check if frequencies match.",
+      "example": "function findAnagrams(s: string, p: string): number[] {\n  const pCount: { [key: string]: number } = {};\n  \n  for (let i = 0; i < p.length; i++) {\n    const char = p[i];\n    pCount[char] = (pCount[char] || 0) + 1;\n  }\n  \n  const result: number[] = [];\n  const windowSize = p.length;\n  const sCount: { [key: string]: number } = {};\n  \n  for (let i = 0; i < windowSize; i++) {\n    const char = s[i];\n    sCount[char] = (sCount[char] || 0) + 1;\n  }\n  \n  let matches = true;\n  for (let char in pCount) {\n    if (sCount[char] !== pCount[char]) {\n      matches = false;\n      break;\n    }\n  }\n  if (matches) {\n    result.push(0);\n  }\n  \n  // Slide window\n  for (let i = windowSize; i < s.length; i++) {\n    // Remove leftmost character\n    const leftChar = s[i - windowSize];\n    sCount[leftChar]--;\n    if (sCount[leftChar] === 0) {\n      delete sCount[leftChar];\n    }\n    \n    // Add rightmost character\n    const rightChar = s[i];\n    sCount[rightChar] = (sCount[rightChar] || 0) + 1;\n    \n    // Check if frequencies match\n    matches = true;\n    for (let char in pCount) {\n      if (sCount[char] !== pCount[char]) {\n        matches = false;\n        break;\n      }\n    }\n    if (matches) {\n      result.push(i - windowSize + 1);\n    }\n  }\n}",
+      "action": "continue",
+      "next": "coding-return-ts"
+    },
+    {
+      "stepId": "coding-return-ts",
+      "mentorSays": "Finally, return the result array.",
+      "example": "function findAnagrams(s: string, p: string): number[] {\n  const pCount: { [key: string]: number } = {};\n  \n  for (let i = 0; i < p.length; i++) {\n    const char = p[i];\n    pCount[char] = (pCount[char] || 0) + 1;\n  }\n  \n  const result: number[] = [];\n  const windowSize = p.length;\n  const sCount: { [key: string]: number } = {};\n  \n  for (let i = 0; i < windowSize; i++) {\n    const char = s[i];\n    sCount[char] = (sCount[char] || 0) + 1;\n  }\n  \n  let matches = true;\n  for (let char in pCount) {\n    if (sCount[char] !== pCount[char]) {\n      matches = false;\n      break;\n    }\n  }\n  if (matches) {\n    result.push(0);\n  }\n  \n  for (let i = windowSize; i < s.length; i++) {\n    const leftChar = s[i - windowSize];\n    sCount[leftChar]--;\n    if (sCount[leftChar] === 0) {\n      delete sCount[leftChar];\n    }\n    \n    const rightChar = s[i];\n    sCount[rightChar] = (sCount[rightChar] || 0) + 1;\n    \n    matches = true;\n    for (let char in pCount) {\n      if (sCount[char] !== pCount[char]) {\n        matches = false;\n        break;\n      }\n    }\n    if (matches) {\n      result.push(i - windowSize + 1);\n    }\n  }\n  \n  return result;\n}",
+      "action": "continue",
+      "next": "test-code-ts"
+    },
+    {
+      "stepId": "test-code-ts",
+      "mentorSays": "Perfect! Test with s = \"cbaebabacd\", p = \"abc\". Expected: [0, 6].",
+      "example": "Test input:\ns = \"cbaebabacd\"\np = \"abc\"\n\nExpected output: [0, 6]\n\nBecause anagrams of \"abc\" appear at indices 0 (\"cba\") and 6 (\"bac\").",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "final",
+      "mentorSays": "🎉 Well done! You've learned to think through the Find All Anagrams lesson. You understand what the lesson asks for, how to use sliding windows with hash maps to track character frequencies, and how to compare frequencies to find anagram matches.\n\nThis kind of thinking—using sliding windows with hash maps—is essential for solving many string lessons. Keep practicing!",
+      "action": "continue"
+    }
+  ]
+}

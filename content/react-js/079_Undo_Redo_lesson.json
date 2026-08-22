@@ -1,0 +1,367 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-react-js-79",
+    "track": "react-js",
+    "lessonNum": 79,
+    "title": "Undo/Redo",
+    "shortName": "P79",
+    "intro": {
+      "tag": "LESSON #79",
+      "title": "Undo/Redo",
+      "body": "In this lesson, you'll build a simple text editor with undo and redo functionality. You'll learn how to manage state changes over time using arrays to store history. The main technologies involved are React's useState hook for state management and event handlers for user interactions. By the end, you'll understand how to implement a basic undo/redo system that tracks and navigates through previous states.",
+      "usecase": "The undo/redo pattern is essential in any interactive application where users can make changes they might want to reverse or reapply. You'll see this in text editors like Google Docs for editing text, in design tools like Figma for adjusting visual elements, and in complex form-based dashboards where users modify filters or data entries. As a developer, implementing this feature prevents user frustration by giving them control over their actions, enhancing the overall usability and professionalism of your application."
+    },
+    "objectives": [
+      "Implement a state management system to track changes in a React component",
+      "Construct functions to handle undo and redo operations",
+      "Bind user interface controls to the undo and redo functionality",
+      "Manipulate component state to restore previous values during undo/redo",
+      "Initialize and maintain a history stack for tracking state changes",
+      "Render visual feedback indicating undo/redo availability",
+      "Integrate keyboard shortcuts for undo (Ctrl+Z) and redo (Ctrl+Y) operations"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 10",
+        "title": "Import React and useState",
+        "instruction": "Import React and useState from 'react'.",
+        "hint": "Use the import statement to bring in React and the useState hook from the 'react' package.",
+        "analogousExample": "// Example: importing React and a hook\nimport React, { useState } from 'react';",
+        "seedCode": "// Import React and useState from 'react' here",
+        "expectedOutcome": "You'll have React and useState available to use in your component.",
+        "successCriteria": [
+          "React and useState are imported from 'react'."
+        ],
+        "feedbackCorrect": "Great! You've successfully imported React and useState.",
+        "feedbackPartial": "You're close. Make sure you're importing both React and useState from 'react'.",
+        "feedbackWrong": "That's not quite right. You need to import React and useState from 'react'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "React",
+            "useState",
+            "'react'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 10",
+        "title": "Create the main App component",
+        "instruction": "Create a functional component named App that returns an empty fragment.",
+        "hint": "You can use either a function declaration or an arrow function. The component should return an empty fragment using <> and </>.",
+        "analogousExample": "// Example of a component returning an empty fragment\nfunction App() {\n  return <> </>;\n}",
+        "seedCode": "import React, { useState } from 'react';\n\n// Create the App component here",
+        "expectedOutcome": "The App component is defined and returns an empty fragment.",
+        "successCriteria": [
+          "App component is created and returns an empty fragment."
+        ],
+        "feedbackCorrect": "Great! You've created the App component structure.",
+        "feedbackPartial": "You're close. Make sure the component is named App and returns an empty fragment.",
+        "feedbackWrong": "The component isn't defined correctly. Check that it's named App and returns an empty fragment.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "App",
+            "return",
+            "<>",
+            "</>"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 10",
+        "title": "Initialize state for current value",
+        "instruction": "Inside your App component, use useState to create a state variable named 'value' and initialize it to 0.",
+        "hint": "Call useState with the initial value 0 and destructure the returned array into 'value' and 'setValue'.",
+        "analogousExample": "// Example of initializing state with a number\nconst [count, setCount] = useState(0);",
+        "seedCode": "import React, { useState } from 'react';\n\n// Create the App component here\nconst App = () => {\n  // Initialize state for value here\n  \n  return null;\n};",
+        "expectedOutcome": "The component will have a state variable 'value' that starts at 0, ready to track the current value for the undo/redo functionality.",
+        "successCriteria": [
+          "The useState hook is called with initial value 0, and the destructured array includes 'value' and 'setValue'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're using useState with 0 as the initial value and destructuring the array into 'value' and 'setValue'.",
+        "feedbackWrong": "call useState(0) inside the component and destructure the returned array.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "useState",
+            "0",
+            "value",
+            "setValue"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 10",
+        "title": "Define handler to update value",
+        "instruction": "Inside the App component, create a function named 'updateValue' that takes a parameter 'newValue'. Inside the function, update the 'value' state with the new value, add the new value to the 'history' array, and update the 'historyIndex' to point to the new last position in history.",
+        "hint": "Remember to use the setter functions for your state variables: setValue, setHistory, and setHistoryIndex. When updating history, you can create a new array that includes all previous history items plus the new value.",
+        "analogousExample": "// Example of a function that updates state and history\nfunction updateScore(newScore) {\n  setScore(newScore);\n  setHistory(prevHistory => [...prevHistory, newScore]);\n  setHistoryIndex(prevIndex => prevIndex + 1);\n}",
+        "seedCode": "import React, { useState } from 'react';\n\n// Create the App component here\nconst App = () => {\n  // Initialize state for value here\n  const [value, setValue] = useState('');\n  \n  // Initialize state for history and history index here\n  const [history, setHistory] = useState([]);\n  const [historyIndex, setHistoryIndex] = useState(-1);\n  \n  // Create updateValue function here\n  \n  return null;\n};",
+        "expectedOutcome": "You will have an updateValue function that properly updates the current value and maintains the history array with the new value, advancing the history index.",
+        "successCriteria": [
+          "The updateValue function is defined, takes a newValue parameter, updates the value state, adds the new value to history, and updates historyIndex to the new last index."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've created the updateValue function, but it's missing some required logic. Make sure it updates all three state variables: value, history, and historyIndex.",
+        "feedbackWrong": "The updateValue function is not properly defined or doesn't update the state variables correctly. Review the instructions and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "updateValue",
+            "newValue",
+            "setValue",
+            "setHistory",
+            "setHistoryIndex",
+            "history",
+            "historyIndex"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 10",
+        "title": "Define undo handler",
+        "instruction": "Create a function named 'handleUndo' inside your component that moves backward in history when possible. The function should check if there's a previous state in history, decrement the history index, and update the current value from history.",
+        "hint": "Check if historyIndex is greater than 0, then decrement it and set the value from the history array at the new index.",
+        "analogousExample": "// Example: a function that moves to previous item\nfunction goBack() {\n  if (currentIndex > 0) {\n    setCurrentIndex(currentIndex - 1);\n    setCurrentItem(items[currentIndex - 1]);\n  }\n}",
+        "seedCode": "import React, { useState } from 'react';\n\n// Create the App component here\nconst App = () => {\n  // Initialize state for value here\n  const [value, setValue] = useState('');\n  \n  // Initialize state for history and history index here\n  const [history, setHistory] = useState([]);\n  const [historyIndex, setHistoryIndex] = useState(-1);\n  \n  // Create updateValue function here\n  \n  // Create handleUndo function here\n  \n  return null;\n};",
+        "expectedOutcome": "A function named handleUndo is defined inside the component that properly implements undo logic.",
+        "successCriteria": [
+          "The handleUndo function exists, checks if undo is possible, decrements historyIndex, and updates value from the history array."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the undo handler, but make sure it checks if undo is possible and updates both the history index and current value.",
+        "feedbackWrong": "The undo handler isn't quite right. Remember to check if historyIndex > 0, decrement it, and set the value from history at the new index.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "handleUndo",
+            "historyIndex",
+            "setHistoryIndex",
+            "setValue",
+            "history"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 10",
+        "title": "Define redo handler",
+        "instruction": "Create a function named 'handleRedo' that increments the 'historyIndex' if there are future states in the history,",
+        "hint": "Check if historyIndex is less than history.length - 1 before incrementing. Then use setHistoryIndex and setValue with the updated index and corresponding history value.",
+        "analogousExample": "// Similar: a function that moves forward in an array\nfunction nextItem(items, currentIndex) {\n  if (currentIndex < items.length - 1) {\n    const newIndex = currentIndex + 1;\n    return items[newIndex];\n  }\n  return null;\n}",
+        "seedCode": "import React, { useState } from 'react';\n\n// Create the App component here\nconst App = () => {\n  // Initialize state for value here\n  const [value, setValue] = useState('');\n  \n  // Initialize state for history and history index here\n  const [history, setHistory] = useState([]);\n  const [historyIndex, setHistoryIndex] = useState(-1);\n  \n  // Create updateValue function here\n  \n  // Create handleUndo function here\n  \n  // Create handleRedo function here\n  \n  return null;\n};",
+        "expectedOutcome": "A handleRedo function that safely moves forward in the history array and updates the current value.",
+        "successCriteria": [
+          "The handleRedo function is defined, checks if redo is possible, increments historyIndex, and updates value from the history array."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the redo handler, but make sure it checks if redo is possible (historyIndex < history.length - 1) and updates both historyIndex and value correctly.",
+        "feedbackWrong": "The redo handler isn't quite right. Remember to check if there are future states before incrementing the index, then update both the index and the current value.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "handleRedo",
+            "historyIndex",
+            "history.length",
+            "setHistoryIndex",
+            "setValue"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 10",
+        "title": "updates 'value' from the history array at the",
+        "instruction": "updates 'value' from the history array at the new index.",
+        "hint": "Check if historyIndex is less than history.length - 1 before incrementing. Then use setHistoryIndex and setValue with the updated index and corresponding history value.",
+        "analogousExample": "// Similar: a function that moves forward in an array\nfunction nextItem(items, currentIndex) {\n  if (currentIndex < items.length - 1) {\n    const newIndex = currentIndex + 1;\n    return items[newIndex];\n  }\n  return null;\n}",
+        "seedCode": "import React, { useState } from 'react';\n\n// Create the App component here\nconst App = () => {\n  // Initialize state for value here\n  const [value, setValue] = useState('');\n  \n  // Initialize state for history and history index here\n  const [history, setHistory] = useState([]);\n  const [historyIndex, setHistoryIndex] = useState(-1);\n  \n  // Create updateValue function here\n  \n  // Create handleUndo function here\n  \n  // Create handleRedo function here\n  \n  return null;\n};",
+        "expectedOutcome": "",
+        "successCriteria": [
+          "Complete the step as instructed."
+        ],
+        "feedbackCorrect": "Great! Step completed.",
+        "feedbackPartial": "Review the instruction and try again.",
+        "feedbackWrong": "Check the instruction and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "handleRedo",
+            "historyIndex",
+            "history.length",
+            "setHistoryIndex",
+            "setValue"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 10",
+        "title": "Add display for current value and history",
+        "instruction": "Inside your component's return statement, add a <div> containing a paragraph that displays the current value, a paragraph that shows the history array, and a paragraph that shows the current history index.",
+        "hint": "Use JSX to render three separate <p> elements inside a <div>. Display the state variables using curly braces: {value}, {history}, and {historyIndex}.",
+        "analogousExample": "// Example: displaying state values in JSX\n<div>\n  <p>Current value: {value}</p>\n  <p>History: {history}</p>\n  <p>History index: {historyIndex}</p>\n</div>",
+        "seedCode": "import React, { useState } from 'react';\n\n// Create the App component here\nconst App = () => {\n  // Initialize state for value here\n  const [value, setValue] = useState('');\n  \n  // Initialize state for history and history index here\n  const [history, setHistory] = useState([]);\n  const [historyIndex, setHistoryIndex] = useState(-1);\n  \n  // Create updateValue function here\n  \n  // Create handleUndo function here\n  \n  // Create handleRedo function here\n  \n  return (\n    <div>\n      {/* Add display for current value and history here */}\n    </div>\n  );\n};",
+        "expectedOutcome": "The UI will show the current value, history array, and history index when the component renders.",
+        "successCriteria": [
+          "The return statement contains a <div> with three <p> elements displaying {value}, {history}, and {historyIndex}."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you have all three paragraphs showing the value, history array, and history index.",
+        "feedbackWrong": "Check that you've added a <div> containing three <p> elements that display the state variables using curly braces.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<div>",
+            "<p>",
+            "{value}",
+            "{history}",
+            "{historyIndex}"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 10",
+        "title": "Add increment and decrement buttons with onClick handlers",
+        "instruction": "Inside the return statement of your App component, add two buttons: one with label 'Increment' that calls updateValue with a higher number, and one with label 'Decrement' that calls updateValue with a lower number. Use onClick handlers to call updateValue with appropriate values.",
+        "hint": "Create two <button> elements. For the increment button, you might call updateValue(value + 1). For decrement, call updateValue(value - 1).",
+        "analogousExample": "// Example: buttons that modify a value\n<button onClick={() => updateValue(5)}>Set to 5</button>\n<button onClick={() => updateValue(10)}>Set to 10</button>",
+        "seedCode": "import React, { useState } from 'react';\n\n// Create the App component here\nconst App = () => {\n  // Initialize state for value here\n  const [value, setValue] = useState('');\n  \n  // Initialize state for history and history index here\n  const [history, setHistory] = useState([]);\n  const [historyIndex, setHistoryIndex] = useState(-1);\n  \n  // Create updateValue function here\n  const updateValue = (newValue) => {\n    // Implementation will be added later\n  };\n  \n  // Create handleUndo function here\n  const handleUndo = () => {\n    // Implementation will be added later\n  };\n  \n  // Create handleRedo function here\n  const handleRedo = () => {\n    // Implementation will be added later\n  };\n  \n  return (\n    <div>\n      {/* Add display for current value and history here */}\n      {/* Add increment and decrement buttons here */}\n    </div>\n  );\n};",
+        "expectedOutcome": "Two buttons appear in the UI: one labeled 'Increment' and one labeled 'Decrement', both wired to call the updateValue function with appropriate values.",
+        "successCriteria": [
+          "Two <button> elements are added inside the return statement, each with onClick handlers that call updateValue with appropriate values (e.g., value + 1 for increment, value - 1 for decrement)."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added some buttons, but make sure you have both increment and decrement buttons, and that they properly call updateValue with appropriate values.",
+        "feedbackWrong": "The buttons aren't properly set up. Check that you have two buttons with onClick handlers that call updateValue with appropriate values.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<button",
+            "onClick",
+            "updateValue",
+            "Increment",
+            "Decrement"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 10",
+        "title": "Add undo and redo buttons with onClick handlers",
+        "instruction": "Add two buttons to your component: one for undo and one for redo. Wire their onClick handlers to the existing handleUndo and handleRedo functions respectively, and add disabled attributes to each button based on whether undo or redo is possible (historyIndex > 0 for undo, historyIndex < history.length - 1 for redo).",
+        "hint": "Place the buttons after the increment/decrement buttons. Use the existing handleUndo and handleRedo functions for onClick. The disabled attribute should be a boolean expression.",
+        "analogousExample": "// Example: navigation buttons with disabled states\n<button onClick={handlePrev} disabled={!canGoPrev}>Previous</button>\n<button onClick={handleNext} disabled={!canGoNext}>Next</button>",
+        "seedCode": "import React, { useState } from 'react';\n\n// Create the App component here\nconst App = () => {\n  // Initialize state for value here\n  const [value, setValue] = useState('');\n  \n  // Initialize state for history and history index here\n  const [history, setHistory] = useState([]);\n  const [historyIndex, setHistoryIndex] = useState(-1);\n  \n  // Create updateValue function here\n  const updateValue = (newValue) => {\n    // Implementation will be added later\n  };\n  \n  // Create handleUndo function here\n  const handleUndo = () => {\n    // Implementation will be added later\n  };\n  \n  // Create handleRedo function here\n  const handleRedo = () => {\n    // Implementation will be added later\n  };\n  \n  return (\n    <div>\n      {/* Add display for current value and history here */}\n      {/* Add increment and decrement buttons here */}\n      {/* Add undo and redo buttons here */}\n    </div>\n  );\n};",
+        "expectedOutcome": "Two new buttons appear in the UI: 'Undo' and 'Redo'. They are wired to the correct handlers and become disabled when there's no history to undo/redo.",
+        "successCriteria": [
+          "The component includes an 'Undo' button with onClick={handleUndo} and disabled={historyIndex <= 0}, and a 'Redo' button with onClick={handleRedo} and disabled={historyIndex >= history.length - 1}."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You added the buttons, but check the disabled conditions or onClick handlers. The undo button should be disabled when historyIndex is 0 or less, and redo when historyIndex is at the end of history.",
+        "feedbackWrong": "The undo and redo buttons are missing or incorrectly implemented. Make sure to add both buttons with onClick handlers and disabled attributes based on historyIndex and history length.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<button",
+            "onClick={handleUndo}",
+            "disabled={historyIndex",
+            "onClick={handleRedo}",
+            "disabled={historyIndex"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import React and useState",
+        "id": "step1"
+      },
+      {
+        "label": "Create the main App component",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize state for current value",
+        "id": "step3"
+      },
+      {
+        "label": "Define handler to update value",
+        "id": "step4"
+      },
+      {
+        "label": "Define undo handler",
+        "id": "step5"
+      },
+      {
+        "label": "Define redo handler",
+        "id": "step6"
+      },
+      {
+        "label": "updates 'value' from the history array at the",
+        "id": "step7"
+      },
+      {
+        "label": "Add display for current value and history",
+        "id": "step8"
+      },
+      {
+        "label": "Add increment and decrement buttons with onClick handlers",
+        "id": "step9"
+      },
+      {
+        "label": "Add undo and redo buttons with onClick handlers",
+        "id": "step10"
+      }
+    ]
+  },
+  "source": "content"
+}

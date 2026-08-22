@@ -1,0 +1,328 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-vue-84",
+    "track": "vue",
+    "lessonNum": 84,
+    "title": "Memoization Strategy",
+    "shortName": "P84",
+    "intro": {
+      "tag": "LESSON #84",
+      "title": "Memoization Strategy",
+      "body": "In this lesson, you will build a simple Vue app that demonstrates memoization by creating a function to calculate the factorial of a number. You will learn how memoization works as a performance optimization technique that caches the results of expensive function calls to avoid redundant calculations. The main technologies involved are Vue's reactive state with ref, computed properties, and JavaScript functions with closures for caching. By the end, you'll understand how to implement a basic memoization strategy to make your applications faster and more efficient.",
+      "usecase": "Memoization is essential in Vue applications where expensive computations need to be cached for performance. You'll see this pattern in dashboard components that filter and aggregate large datasets, where recalculating metrics on every render would cause lag. It's also crucial in data visualization components like charts and graphs that process complex datasets, and in search interfaces with real-time filtering across thousands of items. By memoizing these computations, you ensure smooth user interactions while maintaining accurate, up-to-date results."
+    },
+    "objectives": [
+      "Implement a computed property to memoize derived data in a Vue component",
+      "Apply the memoization strategy to optimize expensive calculations in a reactive context",
+      "Construct a memoized function using Vue's `computed` API to cache results based on dependencies",
+      "Configure a watcher to trigger memoized recomputation only when specific reactive data changes",
+      "Update component state and observe how memoized values prevent unnecessary recalculations",
+      "Bind memoized computed properties to template expressions for efficient rendering",
+      "Integrate memoization with component methods to separate calculation logic from reactive effects"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 9",
+        "title": "Import Vue and ref from Vue",
+        "instruction": "Import Vue and the ref function from the 'vue' package.",
+        "hint": "Use the import statement to bring in Vue and ref from the Vue library.",
+        "analogousExample": "// Importing from a library\nimport { createApp, ref } from 'vue'",
+        "seedCode": "// Import Vue and ref here",
+        "expectedOutcome": "The Vue library and ref function are imported and ready to use.",
+        "successCriteria": [
+          "Vue and ref are imported from 'vue'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're importing both Vue and ref from the 'vue' package.",
+        "feedbackWrong": "The import statement is missing or incorrect. You need to import both Vue and ref from the 'vue' package.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "vue",
+            "ref",
+            "from",
+            "'vue'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 9",
+        "title": "Create the main Vue component",
+        "instruction": "Create a Vue component named 'MemoizationDemo' using the <script setup> syntax and a <template> section that returns a single <div> element.",
+        "hint": "Use the <script setup> syntax to define your component. Inside the template, add a <div> element as the root container.",
+        "analogousExample": "// Example Vue component structure\n<script setup>\n// Component logic goes here\n</script>\n\n<template>\n  <div>\n    <!-- Content will go here -->\n  </div>\n</template>",
+        "seedCode": "<script setup>\nimport { ref } from 'vue';\n</script>\n\n<template>\n  <div>\n    <!-- Content will go here -->\n  </div>\n</template>",
+        "expectedOutcome": "A Vue component named 'MemoizationDemo' is created with proper <script setup> and <template> sections, ready for implementing memoization features.",
+        "successCriteria": [
+          "The component uses <script setup> syntax, has a template with a root <div> element, and is ready for further implementation."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you have both the <script setup> section and a <template> with a root <div> element.",
+        "feedbackWrong": "The component structure isn't quite right. Remember to use <script setup> for the logic and <template> for the HTML structure with a root <div>.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<script setup>",
+            "</script>",
+            "<template>",
+            "<div>",
+            "</div>",
+            "</template>"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 9",
+        "title": "Initialize state for expensive calculation",
+        "instruction": "Inside the <script setup> section, declare a reactive state variable named 'inputValue' using ref and initialize it with the number 1.",
+        "hint": "Use the ref function imported earlier to create a reactive reference. The syntax is: const variableName = ref(initialValue).",
+        "analogousExample": "// Creating reactive state for a counter\nconst count = ref(0);",
+        "seedCode": "<script setup>\nimport { ref } from 'vue';\n\n// Declare inputValue state here\n</script>\n\n<template>\n  <div>\n    <!-- Content will go here -->\n  </div>\n</template>",
+        "expectedOutcome": "The component will have a reactive state variable 'inputValue' initialized to 1, ready to be used as input for expensive calculations.",
+        "successCriteria": [
+          "A reactive state variable named 'inputValue' is declared using ref and initialized with the value 1."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you've declared 'inputValue' using ref() and initialized it with the number 1.",
+        "feedbackWrong": "The state variable wasn't properly initialized. Remember to use ref(1) to create a reactive reference named 'inputValue'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "inputValue",
+            "ref",
+            "1"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 9",
+        "title": "Initialize state for calculation result",
+        "instruction": "In the script section, use ref to create a reactive state variable named 'result' to store the calculation result.",
+        "hint": "Declare a new ref variable called 'result' with an initial value of null or 0.",
+        "analogousExample": "// Similar: another reactive state variable\nconst count = ref(0);",
+        "seedCode": "<script setup>\nimport { ref } from 'vue';\n\n// Declare inputValue state here\n</script>\n\n<template>\n  <div>\n    <!-- Content will go here -->\n  </div>\n</template>",
+        "expectedOutcome": "The component will have two reactive state variables: one for input and one for the calculation result.",
+        "successCriteria": [
+          "A 'result' variable is declared using ref with an initial value."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you've declared 'result' using ref with an initial value.",
+        "feedbackWrong": "The 'result' state variable wasn't properly initialized. Check that you used ref() with an initial value.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "result",
+            "ref"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 9",
+        "title": "Define expensive calculation function",
+        "instruction": "Inside the <script setup> section, create a function named expensiveCalculation that takes a parameter 'n' and returns the sum of numbers from 1 to n.",
+        "hint": "Write a function that uses a loop to add numbers from 1 to n. This will simulate a computationally heavy operation.",
+        "analogousExample": "// Example of a function that performs calculation\nfunction sumNumbers(n) {\n  let total = 0;\n  for (let i = 1; i <= n; i++) {\n    total += i;\n  }\n  return total;\n}",
+        "seedCode": "<script setup>\nimport { ref } from 'vue';\n\n// Declare inputValue state here\n\n// Define expensive calculation function here\n</script>\n\n<template>\n  <div>\n    <!-- Content will go here -->\n  </div>\n</template>",
+        "expectedOutcome": "A function named expensiveCalculation is created that calculates the sum of numbers from 1 to n.",
+        "successCriteria": [
+          "The expensiveCalculation function is defined with a parameter 'n' and returns the sum using a loop."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure your function takes a parameter 'n' and returns the sum of numbers from 1 to n.",
+        "feedbackWrong": "The function isn't defined correctly. Create a function named expensiveCalculation that calculates the sum of numbers from 1 to n.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "expensiveCalculation",
+            "function",
+            "n",
+            "sum",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 9",
+        "title": "Define memoized calculation function",
+        "instruction": "Create a memoized version of your expensive calculation function that uses a cache object to store previous results.",
+        "hint": "Define a new function that checks a cache object before performing the expensive calculation. If the input exists in the cache, return the cached result; otherwise, calculate, store in cache, and return the result.",
+        "analogousExample": "// Similar: memoized function with cache\nfunction memoizedSquare(num) {\n  if (!memoizedSquare.cache) {\n    memoizedSquare.cache = {};\n  }\n  if (memoizedSquare.cache[num] !== undefined) {\n    return memoizedSquare.cache[num];\n  }\n  const result = num * num;\n  memoizedSquare.cache[num] = result;\n  return result;\n}",
+        "seedCode": "<script setup>\nimport { ref } from 'vue';\n\nconst inputValue = ref(0);\nconst result = ref(0);\nconst count = ref(0);\n\nfunction expensiveCalculation(n) {\n  count.value++;\n  // Simulate expensive operation\n  let sum = 0;\n  for (let i = 0; i < n * 1000000; i++) {\n    sum += Math.random();\n  }\n  return sum;\n}\n\n// Define memoized calculation function here\n</script>\n\n<template>\n  <div>\n    <!-- Content will go here -->\n  </div>\n</template>",
+        "expectedOutcome": "A memoized version of the expensive calculation function that uses caching to avoid redundant computations.",
+        "successCriteria": [
+          "The memoized function exists, uses a cache object, checks the cache before calculating, stores new results in the cache, and returns the cached result when available."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the memoized function, but it's missing some key elements. Make sure to include: 1) A cache object, 2) Cache check before calculation, 3) Storage of new results in cache, 4) Return of cached results when available.",
+        "feedbackWrong": "The memoized function isn't properly implemented. Review the memoization pattern: create a function that checks a cache before performing expensive calculations, stores new results, and returns cached results when possible.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "function",
+            "memoized",
+            "cache",
+            "if",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 9",
+        "title": "Add input field for calculation parameter",
+        "instruction": "In the template section, add an input field that is bound to the 'inputValue' state using v-model. Include a label that says 'Enter a number:' before the input.",
+        "hint": "Use the v-model directive to create a two-way binding between the input field and the inputValue ref. Place the input inside the existing div.",
+        "analogousExample": "<!-- Example: binding an input to a ref -->\n<label>Enter your name:</label>\n<input v-model=\"name\" type=\"text\">",
+        "seedCode": "<script setup>\nimport { ref } from 'vue';\n\nconst inputValue = ref(0);\nconst result = ref(0);\nconst count = ref(0);\n\nfunction expensiveCalculation(n) {\n  count.value++;\n  // Simulate expensive operation\n  let sum = 0;\n  for (let i = 0; i < n * 1000000; i++) {\n    sum += Math.random();\n  }\n  return sum;\n}\n\n// Define memoized calculation function here\n</script>\n\n<template>\n  <div>\n    <!-- Add input field with v-model here -->\n  </div>\n</template>",
+        "expectedOutcome": "The template now includes an input field that updates the 'inputValue' state when the user types.",
+        "successCriteria": [
+          "An input element with v-model=\"inputValue\" is present in the template, preceded by a label."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You added an input field, but it may be missing the v-model binding or the label. Check that the input uses v-model=\"inputValue\" and has a label.",
+        "feedbackWrong": "The input field is not correctly bound to the state. Make sure to use v-model=\"inputValue\" on the input element.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "v-model=\"inputValue\"",
+            "<input",
+            "<label"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 9",
+        "title": "Add buttons for regular and memoized calculations",
+        "instruction": "Add two button elements inside the template's div: one that triggers the expensiveCalculation function and another that triggers the memoized calculation function. Use the @click directive for event handling.",
+        "hint": "Create two <button> elements with descriptive text like 'Calculate Expensive' and 'Calculate Memoized'. Use @click to call the respective functions with inputValue.value as the argument.",
+        "analogousExample": "// Adding buttons with click handlers\n<button @click=\"handleClick\">Click me</button>\n<button @click=\"anotherFunction(value)\">Do something</button>",
+        "seedCode": "<script setup>\nimport { ref } from 'vue';\n\nconst inputValue = ref(0);\nconst result = ref(0);\nconst count = ref(0);\n\nfunction expensiveCalculation(n) {\n  count.value++;\n  // Simulate expensive operation\n  let sum = 0;\n  for (let i = 0; i < n * 1000000; i++) {\n    sum += Math.random();\n  }\n  return sum;\n}\n\n// Define memoized calculation function here\n</script>\n\n<template>\n  <div>\n    <!-- Add input field with v-model here -->\n    <!-- Add two buttons here -->\n  </div>\n</template>",
+        "expectedOutcome": "Two buttons appear in the UI: one for regular calculation and one for memoized calculation.",
+        "successCriteria": [
+          "Two button elements are added inside the template's div, each with @click handlers that call the appropriate calculation functions."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You added at least one button, but both regular and memoized calculation buttons are needed.",
+        "feedbackWrong": "No buttons were added. Add two button elements with @click handlers inside the template's div.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<button",
+            "@click",
+            "expensiveCalculation",
+            "memoized"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 9",
+        "title": "Display calculation results and count",
+        "instruction": "In the template, add a paragraph element to display the calculation result and another paragraph to display the calculation count.",
+        "hint": "Use double curly braces {{ }} to display reactive values from your script. You can reference result.value and count.value.",
+        "analogousExample": "// Displaying reactive values in Vue template\n<p>Result: {{ result }}</p>\n<p>Count: {{ count }}</p>",
+        "seedCode": "<script setup>\nimport { ref } from 'vue';\n\nconst inputValue = ref(0);\nconst result = ref(0);\nconst count = ref(0);\n\nfunction expensiveCalculation(n) {\n  count.value++;\n  // Simulate expensive operation\n  let sum = 0;\n  for (let i = 0; i < n * 1000000; i++) {\n    sum += Math.random();\n  }\n  return sum;\n}\n\n// Define memoized calculation function here\n</script>\n\n<template>\n  <div>\n    <!-- Add input field with v-model here -->\n    <!-- Add two buttons here -->\n    <!-- Add paragraphs to display result and count here -->\n  </div>\n</template>",
+        "expectedOutcome": "The UI will show the current calculation result and the number of times calculations have been performed.",
+        "successCriteria": [
+          "Two paragraph elements are added to the template, one displaying result.value and another displaying count.value."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added some display elements, but make sure you have both paragraphs: one for the result and one for the count. Both should use double curly braces to display the reactive values.",
+        "feedbackWrong": "The template doesn't yet display the calculation results and count. Add two paragraph elements inside the template to show result.value and count.value.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<p>",
+            "{{",
+            "result",
+            "count",
+            "</p>"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import Vue and ref from Vue",
+        "id": "step1"
+      },
+      {
+        "label": "Create the main Vue component",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize state for expensive calculation",
+        "id": "step3"
+      },
+      {
+        "label": "Initialize state for calculation result",
+        "id": "step4"
+      },
+      {
+        "label": "Define expensive calculation function",
+        "id": "step5"
+      },
+      {
+        "label": "Define memoized calculation function",
+        "id": "step6"
+      },
+      {
+        "label": "Add input field for calculation parameter",
+        "id": "step7"
+      },
+      {
+        "label": "Add buttons for regular and memoized calculations",
+        "id": "step8"
+      },
+      {
+        "label": "Display calculation results and count",
+        "id": "step9"
+      }
+    ]
+  },
+  "source": "content"
+}

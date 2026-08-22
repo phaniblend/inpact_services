@@ -1,0 +1,328 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-node-67",
+    "track": "node",
+    "lessonNum": 67,
+    "title": "Build dead letter queue handling",
+    "shortName": "P67",
+    "intro": {
+      "tag": "LESSON #67",
+      "title": "Build dead letter queue handling",
+      "body": "In this lesson, you will build a dead letter queue (DLQ) handler in Node.js to manage failed messages from a message queue. You will learn how to implement error handling to detect processing failures and route those messages to a separate queue for later analysis. The core programming concept involves using asynchronous operations and conditional logic to control message flow. You will work with JavaScript constructs like async/await, try-catch blocks, and queue management libraries. By the end, you'll have a functional DLQ system that improves application reliability by isolating problematic messages.",
+      "usecase": "Dead letter queue handling is essential in production systems like e-commerce platforms where payment processing messages might fail due to expired cards or inventory issues. In logistics dashboards, failed shipment tracking updates are moved to DLQs for manual review and retry. Financial services use DLQs to isolate failed transaction alerts that need investigation before reprocessing. This pattern ensures critical business operations continue while problematic messages are quarantined for debugging."
+    },
+    "objectives": [
+      "Implement a dead letter queue consumer that processes failed messages",
+      "Configure message routing rules to redirect failed messages to a dead letter queue",
+      "Construct error handling logic to detect and categorize message processing failures",
+      "Initialize dead letter queue monitoring to track failed message patterns",
+      "Integrate dead letter queue handling with existing message processing workflows",
+      "Manipulate message properties to include failure metadata before routing to dead letter queue",
+      "Apply retry strategies before routing messages to the dead letter queue"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 9",
+        "title": "Import required Node.js modules",
+        "instruction": "Import the 'fs' module for file system operations and the 'path' module for path manipulation.",
+        "hint": "Use the CommonJS require() syntax to import both modules at the top of your file.",
+        "analogousExample": "// Example: importing Node.js modules\nconst fs = require('fs');\nconst path = require('path');",
+        "seedCode": "// Import the required modules here\n",
+        "expectedOutcome": "Your file will have the fs and path modules available for use in the dead letter queue implementation.",
+        "successCriteria": [
+          "The fs and path modules are imported using require() statements."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've imported one module, but remember to import both 'fs' and 'path' as specified in the instruction.",
+        "feedbackWrong": "The required modules aren't imported correctly. Make sure to use require() to import both 'fs' and 'path' modules.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "require('fs')",
+            "require('path')"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 9",
+        "title": "Create main application structure",
+        "instruction": "Create a main function named 'processMessages' that will serve as the entry point for handling message processing. The function should be empty for now.",
+        "hint": "Define a function using either 'function processMessages() {}' or 'const processMessages = () => {}'.",
+        "analogousExample": "// Example: a basic function structure\nfunction handleRequest() {\n  // Function body will be added later\n}",
+        "seedCode": "// Import the required modules here\n\n// Create the main application function here",
+        "expectedOutcome": "A function named 'processMessages' is defined in the code.",
+        "successCriteria": [
+          "The code contains a function declaration or arrow function named 'processMessages' with an empty body."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure you've defined a function named 'processMessages' (either with function declaration or arrow function).",
+        "feedbackWrong": "The function 'processMessages' is not defined correctly. Please create a function with that exact name.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "processMessages",
+            "function",
+            "{"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 9",
+        "title": "Define message queue simulation",
+        "instruction": "Inside your main application function, create a constant named 'messageQueue' and assign it an array with three sample message strings.",
+        "hint": "Use the 'const' keyword and array literal syntax with strings like 'Message 1', 'Message 2', etc.",
+        "analogousExample": "// Example: creating an array of items\nconst items = ['item1', 'item2', 'item3'];",
+        "seedCode": "// Import the required modules here\n\n// Create the main application function here\nfunction main() {\n  // Create your message queue array here\n}",
+        "expectedOutcome": "You'll have a 'messageQueue' array variable containing three sample messages inside your main function.",
+        "successCriteria": [
+          "The code contains a 'messageQueue' constant with an array of three string values."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you've created a constant named 'messageQueue' with exactly three string values in an array.",
+        "feedbackWrong": "That doesn't match what we need. Create a constant called 'messageQueue' with an array containing three sample message strings.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "messageQueue",
+            "const",
+            "["
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 9",
+        "title": "Initialize dead letter queue storage",
+        "instruction": "Inside the main function, create a variable named 'deadLetterQueue' to store failed messages. Initialize it as an empty array.",
+        "hint": "You can declare a variable using 'const' or 'let' and assign it an empty array [].",
+        "analogousExample": "// Similar: creating a storage array\nconst failedItems = [];",
+        "seedCode": "// Import the required modules here\n\n// Create the main application function here\nfunction main() {\n  // Create your message queue array here\n  \n  // Initialize dead letter queue storage here\n}",
+        "expectedOutcome": "The deadLetterQueue variable is declared and initialized as an empty array within the main function.",
+        "successCriteria": [
+          "The deadLetterQueue variable exists inside the main function and is set to an empty array."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure you've declared a variable named 'deadLetterQueue' and initialized it as an empty array inside the main function.",
+        "feedbackWrong": "The dead letter queue storage wasn't properly initialized. Create a variable named 'deadLetterQueue' and set it to an empty array within the main function.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "deadLetterQueue",
+            "[]"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 9",
+        "title": "Create message processing function",
+        "instruction": "Inside the main function, create a function named processMessage that takes a message object as a parameter and simulates processing it.",
+        "hint": "Define a function that will handle each message from your queue. You can use a function declaration or arrow function.",
+        "analogousExample": "// Example: a function that processes an order\nfunction processOrder(order) {\n  console.log(`Processing order: ${order.id}`);\n  // Simulate processing logic here\n}",
+        "seedCode": "// Import the required modules here\n\n// Create the main application function here\nfunction main() {\n  // Create your message queue array here\n  \n  // Initialize dead letter queue storage here\n  \n  // Create message processing function here\n}",
+        "expectedOutcome": "You'll have a processMessage function defined inside main, ready to simulate message processing.",
+        "successCriteria": [
+          "The processMessage function is defined inside main and accepts a message parameter."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure processMessage is defined inside the main function and takes a message parameter.",
+        "feedbackWrong": "The processMessage function should be defined inside main with a message parameter. Check your syntax.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "processMessage",
+            "function",
+            "message"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 9",
+        "title": "Add failure detection logic",
+        "instruction": "Inside the message processing function, add conditional logic to detect failed message processing based on message content or simulated errors. For example, check if a message contains an error flag or if processing fails after a certain number of retries.",
+        "hint": "You can simulate failure by checking if a message property (like 'hasError') is true, or by tracking retry counts. Use an if statement to detect these failure conditions.",
+        "analogousExample": "// Example: failure detection in a processing function\nfunction processItem(item) {\n  if (item.isCorrupted || item.retryCount > 3) {\n    console.log('Item processing failed');\n    return false;\n  }\n  return true;\n}",
+        "seedCode": "// Import the required modules here\n\n// Create the main application function here\nfunction main() {\n  // Create your message queue array here\n  \n  // Initialize dead letter queue storage here\n  \n  // Create message processing function here\n  function processMessage(message) {\n    // Add failure detection logic here\n  }\n}",
+        "expectedOutcome": "The message processing function now includes conditional logic to detect when message processing fails, which is essential for identifying messages that should be moved to the dead letter queue.",
+        "successCriteria": [
+          "The processMessage function contains conditional logic (if statement) that checks for failure conditions such as error flags or retry limits."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added some logic, but make sure you're checking for specific failure conditions like error flags or retry limits. Add an if statement that detects when processing should fail.",
+        "feedbackWrong": "The failure detection logic is missing or incorrect. Inside processMessage, add conditional logic to detect failed message processing based on message content or simulated errors.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "if",
+            "processMessage",
+            "message",
+            "error",
+            "retry",
+            "fail"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 9",
+        "title": "Create dead letter queue handler",
+        "instruction": "Define a function named 'moveToDeadLetterQueue' that takes a failed message as a parameter and pushes it to the dead letter queue storage.",
+        "hint": "Inside the main function, create a new function that accepts a message parameter and uses the deadLetterQueue array's push method to add the message.",
+        "analogousExample": "// Example: a function that adds items to a collection\nfunction addToCollection(item) {\n  collection.push(item);\n}",
+        "seedCode": "// Import the required modules here\n\n// Create the main application function here\nfunction main() {\n  // Create your message queue array here\n  \n  // Initialize dead letter queue storage here\n  \n  // Create message processing function here\n  function processMessage(message) {\n    // Add failure detection logic here\n  }\n  \n  // Define dead letter queue handler here\n}",
+        "expectedOutcome": "A function named 'moveToDeadLetterQueue' is defined inside the main function, ready to handle failed messages by moving them to the dead letter queue.",
+        "successCriteria": [
+          "The 'moveToDeadLetterQueue' function is defined with a message parameter and pushes the message to the deadLetterQueue array."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've defined a function, but make sure it's named 'moveToDeadLetterQueue', accepts a message parameter, and pushes to the deadLetterQueue array.",
+        "feedbackWrong": "The dead letter queue handler function is not properly defined. It should be named 'moveToDeadLetterQueue', take a message parameter, and push to the deadLetterQueue array.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "moveToDeadLetterQueue",
+            "message",
+            "deadLetterQueue",
+            "push"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 9",
+        "title": "Implement retry logic for failed messages",
+        "instruction": "Inside the processMessage function, add a retry counter and logic to retry processing up to 3 times before moving the message to the dead letter queue.",
+        "hint": "You can add a retryCount property to the message object or track retries separately. Use a loop or conditional checks to attempt processing multiple times.",
+        "analogousExample": "// Similar: retry logic for an operation\nfunction processWithRetry(data, maxRetries) {\n  let retries = 0;\n  while (retries < maxRetries) {\n    try {\n      return performOperation(data);\n    } catch (error) {\n      retries++;\n      if (retries === maxRetries) {\n        moveToDeadLetterQueue(data, error);\n      }\n    }\n  }\n}",
+        "seedCode": "// Import the required modules here\n\n// Create the main application function here\nfunction main() {\n  // Create your message queue array here\n  \n  // Initialize dead letter queue storage here\n  \n  // Create message processing function here\n  function processMessage(message) {\n    // Add failure detection logic here\n    // Add retry logic here\n  }\n  \n  // Define dead letter queue handler here\n}",
+        "expectedOutcome": "The processMessage function will now include retry logic that attempts to process messages multiple times before sending them to the dead letter queue.",
+        "successCriteria": [
+          "The processMessage function contains retry logic with a maximum retry limit (e.g., 3 attempts) and properly moves messages to the dead letter queue after retries are exhausted."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added some retry logic, but make sure it has a clear maximum retry limit and properly moves messages to the dead letter queue when retries are exhausted.",
+        "feedbackWrong": "The retry logic appears to be missing or incomplete. Remember to add a retry counter and logic to attempt processing multiple times before moving messages to the dead letter queue.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "retry",
+            "processMessage",
+            "while",
+            "for",
+            "if",
+            "dead letter queue",
+            "3",
+            "maxRetries",
+            "attempt"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 9",
+        "title": "Add main execution flow",
+        "instruction": "Inside the main function, add code that processes messages from the queue, handles failures, and persists dead letter queue messages to demonstrate the complete workflow.",
+        "hint": "You'll need to call your existing functions in sequence: process messages, handle failures with retries, and persist any dead letter messages.",
+        "analogousExample": "// Example of a complete workflow\nfunction runWorkflow() {\n  const messages = ['msg1', 'msg2'];\n  messages.forEach(msg => processMessage(msg));\n  handleFailures();\n  persistDeadLetters();\n}",
+        "seedCode": "// Import the required modules here\n\n// Create the main application function here\nfunction main() {\n  // Create your message queue array here\n  \n  // Initialize dead letter queue storage here\n  \n  // Create message processing function here\n  function processMessage(message) {\n    // Add failure detection logic here\n    // Add retry logic here\n  }\n  \n  // Define dead letter queue handler here\n  \n  // Create dead letter queue persistence function here\n  \n  // Add main execution flow here\n}",
+        "expectedOutcome": "The main function will now contain a complete workflow that processes messages, handles failures with retries, and persists dead letter queue messages.",
+        "successCriteria": [
+          "The main function includes code that processes messages, handles failures, and persists dead letter queue messages in a logical sequence."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your execution flow includes all three components: processing messages, handling failures with retries, and persisting dead letter messages.",
+        "feedbackWrong": "The execution flow is missing or incomplete. Review the lesson to understand how to connect message processing, failure handling, and dead letter persistence.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "processMessage",
+            "retry",
+            "persist",
+            "deadLetter",
+            "queue",
+            "main"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import required Node.js modules",
+        "id": "step1"
+      },
+      {
+        "label": "Create main application structure",
+        "id": "step2"
+      },
+      {
+        "label": "Define message queue simulation",
+        "id": "step3"
+      },
+      {
+        "label": "Initialize dead letter queue storage",
+        "id": "step4"
+      },
+      {
+        "label": "Create message processing function",
+        "id": "step5"
+      },
+      {
+        "label": "Add failure detection logic",
+        "id": "step6"
+      },
+      {
+        "label": "Create dead letter queue handler",
+        "id": "step7"
+      },
+      {
+        "label": "Implement retry logic for failed messages",
+        "id": "step8"
+      },
+      {
+        "label": "Add main execution flow",
+        "id": "step9"
+      }
+    ]
+  },
+  "source": "content"
+}

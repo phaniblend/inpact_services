@@ -1,0 +1,393 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-angular-42",
+    "track": "angular",
+    "lessonNum": 42,
+    "title": "usePrevious",
+    "shortName": "P42",
+    "intro": {
+      "tag": "LESSON #42",
+      "title": "usePrevious",
+      "body": "In this lesson, you will build a custom hook called usePrevious in Angular to track and display the previous value of a state variable. You will learn the core concept of using a ref to persist a value across component re-renders without triggering updates. The main technologies involved are Angular's framework with TypeScript, using signals for state management and the effect function for side effects. By the end, you will understand how to capture a value before it changes and apply this pattern in your own projects.",
+      "usecase": "The usePrevious pattern is essential in Angular applications where you need to track value changes over time. In dashboard components, it helps detect when a metric's value crosses a threshold to trigger visual alerts or notifications. Form validation benefits from comparing current and previous field values to show meaningful change-based error messages. Interactive data tables use it to preserve previous filter states, enabling undo functionality or showing what data changed after filtering."
+    },
+    "objectives": [
+      "Implement a custom hook that tracks and returns the previous value of a state variable",
+      "Apply the usePrevious hook to monitor changes in component state or props",
+      "Initialize and update the previous value reference within the hook's effect",
+      "Integrate the usePrevious hook into functional components to access prior values",
+      "Render component output that displays both current and previous values",
+      "Manipulate the hook's return value to conditionally trigger side effects",
+      "Configure the hook to handle different data types including primitives and objects"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 10",
+        "title": "Import Component and OnInit from @angular/core",
+        "instruction": "Import Component and OnInit from '@angular/core'.",
+        "hint": "Use the import statement with curly braces to import multiple symbols from the Angular core module.",
+        "analogousExample": "// Importing from a module\nimport { Component, OnInit } from '@angular/core';",
+        "seedCode": {
+          "App.tsx": "// Import Component and OnInit from '@angular/core'",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "The Angular core dependencies are imported and ready for use in the component.",
+        "successCriteria": [
+          "Component and OnInit are imported from '@angular/core'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're importing both Component and OnInit from '@angular/core'.",
+        "feedbackWrong": "That's not quite right. You need to import both Component and OnInit from the Angular core module.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "Component",
+            "OnInit",
+            "@angular/core"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 10",
+        "title": "Create the AppComponent class with OnInit",
+        "instruction": "Create the AppComponent class that implements the OnInit interface.",
+        "hint": "Use the 'export class' syntax and add 'implements OnInit' after the class name.",
+        "analogousExample": "// Example: a class implementing an interface\nexport class UserComponent implements OnInit {\n  ngOnInit() {}\n}",
+        "seedCode": {
+          "App.tsx": "import { Component, OnInit } from '@angular/core';\n\n// Create the AppComponent class that implements OnInit",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "The AppComponent class is defined and implements the OnInit interface.",
+        "successCriteria": [
+          "AppComponent class exists and implements OnInit."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure the class implements OnInit and is exported.",
+        "feedbackWrong": "Check the syntax: 'export class AppComponent implements OnInit {}'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "export",
+            "class",
+            "AppComponent",
+            "implements",
+            "OnInit"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 10",
+        "title": "Add currentValue and previousValue properties",
+        "instruction": "Inside the AppComponent class, add two properties: currentValue of type number initialized to 0, and previousValue of type number | undefined initialized to undefined.",
+        "hint": "Use TypeScript property syntax with type annotations and initial values in the class body.",
+        "analogousExample": "// Example: class properties with types and initial values\nclass ExampleComponent {\n  count: number = 0;\n  previousCount: number | undefined = undefined;\n}",
+        "seedCode": {
+          "App.tsx": "import { Component, OnInit } from '@angular/core';\n\n@Component({\n  selector: 'app-root',\n  templateUrl: './app.component.html',\n  styleUrls: ['./app.component.css']\n})\nexport class AppComponent implements OnInit {\n  // Add currentValue and previousValue properties here\n  \n  ngOnInit() {\n    // Initialization logic will go here\n  }\n}",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "The component class will have two typed properties to track current and previous numeric values.",
+        "successCriteria": [
+          "AppComponent has currentValue: number = 0 and previousValue: number | undefined = undefined properties defined."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure both properties have the correct types and initial values.",
+        "feedbackWrong": "The properties aren't defined correctly. Check that you've added currentValue and previousValue with the specified types and initial values.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "currentValue:",
+            "number",
+            "=",
+            "0",
+            "previousValue:",
+            "number",
+            "undefined",
+            "="
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 10",
+        "title": "Initialize currentValue in ngOnInit",
+        "instruction": "Inside the ngOnInit method, set currentValue to an initial value of 0.",
+        "hint": "Use this.currentValue = 0; inside the ngOnInit method body.",
+        "analogousExample": "// Setting initial state in ngOnInit\nngOnInit() {\n  this.count = 0;\n}",
+        "seedCode": {
+          "App.tsx": "import { Component, OnInit } from '@angular/core';\n\n@Component({\n  selector: 'app-root',\n  templateUrl: './app.component.html',\n  styleUrls: ['./app.component.css']\n})\nexport class AppComponent implements OnInit {\n  // Add currentValue and previousValue properties here\n  \n  ngOnInit() {\n    // Set currentValue to 0 here\n  }\n}",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "The ngOnInit method will initialize currentValue to 0 when the component loads.",
+        "successCriteria": [
+          "currentValue is set to 0 inside the ngOnInit method."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're setting this.currentValue = 0 inside the ngOnInit method.",
+        "feedbackWrong": "The ngOnInit method should contain this.currentValue = 0; to initialize the value.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "this.currentValue",
+            "=",
+            "0",
+            "ngOnInit"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 10",
+        "title": "Create updateValue method to change currentValue",
+        "instruction": "Inside the AppComponent class, create a method named updateValue that takes a number parameter and sets currentValue to that number.",
+        "hint": "Define a method with the signature updateValue(newValue: number) and assign newValue to this.currentValue.",
+        "analogousExample": "// Example: a method that updates a property\nclass ExampleComponent {\n  value = 0;\n  \n  setValue(newVal: number) {\n    this.value = newVal;\n  }\n}",
+        "seedCode": {
+          "App.tsx": "import { Component, OnInit } from '@angular/core';\n\n@Component({\n  selector: 'app-root',\n  templateUrl: './app.component.html',\n  styleUrls: ['./app.component.css']\n})\nexport class AppComponent implements OnInit {\n  currentValue: number;\n  previousValue: number;\n  \n  ngOnInit() {\n    this.currentValue = 0;\n  }\n  \n  // Create the updateValue method here\n}",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "The AppComponent will have an updateValue method that can change the currentValue property.",
+        "successCriteria": [
+          "The updateValue method is defined with a number parameter and assigns it to this.currentValue."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your updateValue method takes a number parameter and assigns it to this.currentValue.",
+        "feedbackWrong": "The updateValue method isn't defined correctly. It should be a method inside the AppComponent class that updates currentValue with a new number value.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "updateValue",
+            "newValue",
+            "number",
+            "this.currentValue"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 10",
+        "title": "Implement usePrevious logic in updateValue",
+        "instruction": "Inside the updateValue method, store the current value of currentValue into previousValue before updating currentValue to a new random number.",
+        "hint": "Assign this.previousValue = this.currentValue before changing this.currentValue.",
+        "analogousExample": "// Similar: saving previous state before update\nupdateScore(newScore: number) {\n  this.previousScore = this.currentScore;\n  this.currentScore = newScore;\n}",
+        "seedCode": {
+          "App.tsx": "import { Component, OnInit } from '@angular/core';\n\n@Component({\n  selector: 'app-root',\n  templateUrl: './app.component.html',\n  styleUrls: ['./app.component.css']\n})\nexport class AppComponent implements OnInit {\n  currentValue: number;\n  previousValue: number;\n  \n  ngOnInit() {\n    this.currentValue = 0;\n  }\n  \n  updateValue() {\n    // Store currentValue into previousValue before updating currentValue\n  }\n}",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "The updateValue method now implements the core usePrevious pattern by preserving the previous value before updating the current value.",
+        "successCriteria": [
+          "The updateValue method correctly assigns this.previousValue = this.currentValue before updating this.currentValue."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're saving the current value to previousValue BEFORE changing currentValue.",
+        "feedbackWrong": "Check the order of operations. You need to save currentValue to previousValue first, then update currentValue.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "previousValue",
+            "currentValue",
+            "="
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 10",
+        "title": "Add template structure with display elements",
+        "instruction": "Add a template with elements to display current and previous values. In the component's template, create a <div> container with two <p> elements: one showing the current value and one showing the previous value.",
+        "hint": "Use Angular's template syntax with double curly braces {{ }} to display the component properties.",
+        "analogousExample": "// Displaying component properties in template\n@Component({\n  selector: 'app-example',\n  template: `<div>\n    <p>Current: {{ currentValue }}</p>\n    <p>Previous: {{ previousValue }}</p>\n  </div>`\n})",
+        "seedCode": {
+          "App.tsx": "import { Component, OnInit } from '@angular/core';\n\n@Component({\n  selector: 'app-root',\n  templateUrl: './app.component.html',\n  styleUrls: ['./app.component.css']\n})\nexport class AppComponent implements OnInit {\n  currentValue: number;\n  previousValue: number;\n  \n  ngOnInit() {\n    this.currentValue = 0;\n  }\n  \n  updateValue() {\n    // Store currentValue into previousValue before updating currentValue\n  }\n}",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "The component now has a template structure with two paragraph elements that will display the current and previous values when rendered.",
+        "successCriteria": [
+          "Template contains a <div> with two <p> elements using {{ currentValue }} and {{ previousValue }} interpolation"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you have both paragraph elements with the correct property bindings.",
+        "feedbackWrong": "The template structure is missing or incomplete. Add a <div> with two <p> elements showing {{ currentValue }} and {{ previousValue }}.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<div>",
+            "<p>",
+            "{{ currentValue }}",
+            "{{ previousValue }}"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 10",
+        "title": "Display currentValue in the template",
+        "instruction": "In the template, use interpolation to display the currentValue property inside a paragraph element.",
+        "hint": "Use double curly braces {{ }} to bind the component property to the template.",
+        "analogousExample": "<!-- Example: displaying a property in Angular template -->\n<p>Current value: {{ currentValue }}</p>",
+        "seedCode": {
+          "App.tsx": "import { Component, OnInit } from '@angular/core';\n\n@Component({\n  selector: 'app-root',\n  templateUrl: './app.component.html',\n  styleUrls: ['./app.component.css']\n})\nexport class AppComponent implements OnInit {\n  currentValue: number;\n  previousValue: number;\n  \n  ngOnInit() {\n    this.currentValue = 0;\n  }\n  \n  updateValue() {\n    // Store currentValue into previousValue before updating currentValue\n  }\n}\n\n<!-- app.component.html -->\n<!-- Add a paragraph here to display currentValue -->",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "The template will show the currentValue (initially 0) in a paragraph.",
+        "successCriteria": [
+          "The template contains a paragraph element with interpolation that displays currentValue."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're using interpolation syntax {{ }} and referencing currentValue correctly.",
+        "feedbackWrong": "The template doesn't display currentValue. Remember to use interpolation with double curly braces.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "{{",
+            "currentValue",
+            "}}",
+            "<p>",
+            "</p>"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 10",
+        "title": "Display previousValue in the template",
+        "instruction": "In the template, add a paragraph below the existing one that displays the previousValue using interpolation.",
+        "hint": "Use the same interpolation syntax as for currentValue, but reference the previousValue property.",
+        "analogousExample": "<!-- Displaying a property in Angular template -->\n<p>Previous value: {{ previousValue }}</p>",
+        "seedCode": {
+          "App.tsx": "import { Component, OnInit } from '@angular/core';\n\n@Component({\n  selector: 'app-root',\n  templateUrl: './app.component.html',\n  styleUrls: ['./app.component.css']\n})\nexport class AppComponent implements OnInit {\n  currentValue: number;\n  previousValue: number;\n  \n  ngOnInit() {\n    this.currentValue = 0;\n  }\n  \n  updateValue() {\n    // Store currentValue into previousValue before updating currentValue\n  }\n}\n\n<!-- app.component.html -->\n<p>Current value: {{ currentValue }}</p>\n<!-- Add a paragraph here to display previousValue -->",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "The template will show both current and previous values when rendered.",
+        "successCriteria": [
+          "A paragraph element with interpolation for previousValue is added to the template."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added a paragraph, but make sure it uses interpolation to display previousValue.",
+        "feedbackWrong": "The template should include a paragraph that displays previousValue using interpolation.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "previousValue",
+            "{{",
+            "}}",
+            "<p>",
+            "</p>"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 10",
+        "title": "Add button and wire click to updateValue",
+        "instruction": "In the template, add a button element with a click event bound to the updateValue method.",
+        "hint": "Use Angular's event binding syntax: (click)=\"updateValue()\" inside a button tag.",
+        "analogousExample": "<!-- Example: button with click handler -->\n<button (click)=\"handleClick()\">Click me</button>",
+        "seedCode": {
+          "App.tsx": "import { Component, OnInit } from '@angular/core';\n\n@Component({\n  selector: 'app-root',\n  templateUrl: './app.component.html',\n  styleUrls: ['./app.component.css']\n})\nexport class AppComponent implements OnInit {\n  currentValue: number;\n  previousValue: number;\n  \n  ngOnInit() {\n    this.currentValue = 0;\n  }\n  \n  updateValue() {\n    // Store currentValue into previousValue before updating currentValue\n  }\n}\n\n<!-- app.component.html -->\n<p>Current value: {{ currentValue }}</p>\n<p>Previous value: {{ previousValue }}</p>\n<!-- Add a button here with click event bound to updateValue -->",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "A button appears in the UI that, when clicked, will trigger the updateValue method.",
+        "successCriteria": [
+          "The template contains a <button> element with (click)=\"updateValue()\" attribute."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You added a button, but make sure it has the correct click event binding: (click)=\"updateValue()\".",
+        "feedbackWrong": "The button is missing or doesn't have the correct click event binding. Add a <button> with (click)=\"updateValue()\".",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<button",
+            "(click)=\"updateValue()\""
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import Component and OnInit from @angular/core",
+        "id": "step1"
+      },
+      {
+        "label": "Create the AppComponent class with OnInit",
+        "id": "step2"
+      },
+      {
+        "label": "Add currentValue and previousValue properties",
+        "id": "step3"
+      },
+      {
+        "label": "Initialize currentValue in ngOnInit",
+        "id": "step4"
+      },
+      {
+        "label": "Create updateValue method to change currentValue",
+        "id": "step5"
+      },
+      {
+        "label": "Implement usePrevious logic in updateValue",
+        "id": "step6"
+      },
+      {
+        "label": "Add template structure with display elements",
+        "id": "step7"
+      },
+      {
+        "label": "Display currentValue in the template",
+        "id": "step8"
+      },
+      {
+        "label": "Display previousValue in the template",
+        "id": "step9"
+      },
+      {
+        "label": "Add button and wire click to updateValue",
+        "id": "step10"
+      }
+    ],
+    "answerShape": "multi-file"
+  },
+  "source": "content"
+}

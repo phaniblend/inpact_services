@@ -1,0 +1,251 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-node-29",
+    "track": "node",
+    "lessonNum": 29,
+    "title": "Build correlation ID middleware",
+    "shortName": "P29",
+    "intro": {
+      "tag": "LESSON #29",
+      "title": "Build correlation ID middleware",
+      "body": "In this lesson, you will build a correlation ID middleware for a Node.js Express application. You will learn how to generate a unique identifier for each incoming HTTP request and attach it to the request object for tracking purposes. The core programming concept involves middleware functions, which intercept and process requests in a pipeline. You will use key technologies like Express.js, the `uuid` library for ID generation, and HTTP headers. By the end, you'll have a functional middleware that logs correlation IDs to help debug and trace requests across services.",
+      "usecase": "Correlation IDs are essential in distributed systems like microservices architectures, where a single user request might trigger multiple services. In e-commerce platforms, when a customer places an order, correlation IDs help track the request through inventory checks, payment processing, and shipping services. This allows developers to trace errors across service boundaries in monitoring dashboards like Datadog or New Relic. Without correlation IDs, debugging production issues would be like finding a needle in a haystack across dozens of interconnected services."
+    },
+    "objectives": [
+      "Implement a middleware function that generates a unique correlation ID for incoming HTTP requests",
+      "Apply the correlation ID to the request object for use in subsequent middleware and route handlers",
+      "Configure the middleware to check for existing correlation IDs in request headers and reuse them when present",
+      "Integrate the correlation ID middleware into an Express application using app.use()",
+      "Manipulate response headers to include the correlation ID for client-side tracking",
+      "Construct a logging mechanism that includes the correlation ID in all log entries for request tracing",
+      "Initialize a test endpoint that demonstrates the correlation ID flow through the middleware chain"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 7",
+        "title": "Import required Node.js modules",
+        "instruction": "At the top of your middleware file, import the crypto module and the uuid package (v4).",
+        "hint": "Use the require() function to import Node.js built-in modules and npm packages.",
+        "analogousExample": "// Importing modules in Node.js\nconst fs = require('fs');\nconst path = require('path');",
+        "seedCode": "// Import crypto and uuid here\n\n// Your middleware code will go below",
+        "expectedOutcome": "The crypto module and uuid package are imported and ready to use for generating correlation IDs.",
+        "successCriteria": [
+          "crypto and uuid are imported using require() statements."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're importing both modules: crypto (built-in) and uuid (npm package).",
+        "feedbackWrong": "import two modules: crypto (Node.js built-in) and uuid (npm package). Use require() statements at the top of your file.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "require('crypto')",
+            "require('uuid')"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 7",
+        "title": "Create the middleware function structure",
+        "instruction": "Define a function named correlationIdMiddleware that takes three parameters: req, res, and next.",
+        "hint": "Create a function with the exact name correlationIdMiddleware that accepts three parameters in order.",
+        "analogousExample": "// Similar: middleware function signature\nfunction myMiddleware(req, res, next) {\n  // middleware logic here\n}",
+        "seedCode": "// Import crypto and uuid here\n\n// Your middleware code will go below\n\n// Define correlationIdMiddleware function here",
+        "expectedOutcome": "A function named correlationIdMiddleware is created with the correct parameter signature.",
+        "successCriteria": [
+          "Function correlationIdMiddleware is defined with req, res, and next parameters."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure the function is named exactly correlationIdMiddleware and takes three parameters: req, res, and next.",
+        "feedbackWrong": "The function isn't defined correctly. Check the name and parameter order.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "correlationIdMiddleware",
+            "req",
+            "res",
+            "next"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 7",
+        "title": "Check for existing correlation ID in request headers",
+        "instruction": "Inside the correlationIdMiddleware function, check if the incoming request has a 'x-correlation-id' header.",
+        "hint": "Access request headers using req.headers and check if 'x-correlation-id' exists.",
+        "analogousExample": "// Example: checking for a specific header\nfunction checkAuthHeader(req) {\n  if (req.headers['authorization']) {\n    console.log('Auth header found');\n  }\n}",
+        "seedCode": "// Import crypto and uuid here\n\n// Your middleware code will go below\n\n// Define correlationIdMiddleware function here\nfunction correlationIdMiddleware(req, res, next) {\n  // Check if 'x-correlation-id' header exists\n}",
+        "expectedOutcome": "The middleware function now includes logic to check for an existing correlation ID in the request headers.",
+        "successCriteria": [
+          "The correlationIdMiddleware function contains a conditional check for the 'x-correlation-id' header in req.headers."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're checking specifically for the 'x-correlation-id' header in the request headers object.",
+        "feedbackWrong": "The header check is missing or incorrect. Remember to access req.headers and check for the 'x-correlation-id' key.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "req.headers",
+            "x-correlation-id",
+            "if"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 7",
+        "title": "Store the correlation ID in the request object",
+        "instruction": "Inside your correlationIdMiddleware function, attach the correlationId variable to the request object as req.correlationId.",
+        "hint": "You can assign the correlationId value to a property on the req object. This makes it available for other middleware and route handlers.",
+        "analogousExample": "// Example: attaching data to request object\nfunction attachUser(req, res, next) {\n  req.user = { id: 123, name: 'Alice' };\n  next();\n}",
+        "seedCode": "// Import crypto and uuid here\n\n// Your middleware code will go below\n\n// Define correlationIdMiddleware function here\nfunction correlationIdMiddleware(req, res, next) {\n  // Check if 'x-correlation-id' header exists\n  const correlationId = req.headers['x-correlation-id'];\n  \n  // Generate a new correlation ID if none exists\n  \n  // Store the correlation ID in the request object\n}",
+        "expectedOutcome": "The correlation ID value is attached to the request object so it can be accessed later in the request lifecycle.",
+        "successCriteria": [
+          "The req.correlationId property is assigned the correlationId value."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure you're assigning the correlationId variable to req.correlationId inside the middleware function.",
+        "feedbackWrong": "The correlation ID needs to be stored on the request object. Try adding req.correlationId = correlationId; inside your middleware function.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "req.correlationId",
+            "correlationId"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 7",
+        "title": "Export the middleware function",
+        "instruction": "Export the correlationIdMiddleware function using module.exports so it can be imported in other files.",
+        "hint": "Use module.exports to make your function available outside this file. This is the standard CommonJS export pattern in Node.js.",
+        "analogousExample": "// Exporting a function in Node.js\nfunction logger() {\n  console.log('Logging...');\n}\n\nmodule.exports = logger;",
+        "seedCode": "// Import crypto and uuid here\n\n// Your middleware code will go below\n\n// Define correlationIdMiddleware function here\nfunction correlationIdMiddleware(req, res, next) {\n  // Check if 'x-correlation-id' header exists\n  const correlationId = req.headers['x-correlation-id'];\n  \n  // Generate a new correlation ID if none exists\n  \n  // Store the correlation ID in the request object\n  \n  // Set the correlation ID in response headers\n  \n  // Call next() here\n}\n\n// Export the middleware function here",
+        "expectedOutcome": "The middleware function is exported and ready to be imported and used in an Express application.",
+        "successCriteria": [
+          "The correlationIdMiddleware function is exported using module.exports."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're using module.exports to export the correlationIdMiddleware function.",
+        "feedbackWrong": "The export is missing or incorrect. Use module.exports to export the correlationIdMiddleware function.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "module.exports",
+            "correlationIdMiddleware"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 7",
+        "title": "Import the middleware in your main app file",
+        "instruction": "In your main Express app file (e.g., app.js or index.js), import the correlationIdMiddleware using require().",
+        "hint": "Use require() with the correct path to the middleware file. If the middleware is in the same directory, use './correlationIdMiddleware'.",
+        "analogousExample": "// Similar: importing a custom module\nconst myMiddleware = require('./myMiddleware');",
+        "seedCode": "const express = require('express');\nconst app = express();\n\n// Import correlationIdMiddleware here\n\n// Use middleware here\n\napp.listen(3000, () => {\n  console.log('Server running on port 3000');\n});",
+        "expectedOutcome": "The correlationIdMiddleware is successfully imported into the main app file, ready to be used as middleware.",
+        "successCriteria": [
+          "correlationIdMiddleware is imported using require() with the correct path."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure the import uses require() and the correct path to the middleware file.",
+        "feedbackWrong": "The import is missing or incorrect. Use require() to import correlationIdMiddleware from its file.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "require",
+            "correlationIdMiddleware"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 7",
+        "title": "Use the middleware in your Express app",
+        "instruction": "Add the correlationIdMiddleware to your Express app using app.use() before your routes.",
+        "hint": "Call app.use() with correlationIdMiddleware as the argument. Place it after the import comment and before any route definitions.",
+        "analogousExample": "// Similar: using middleware in Express\napp.use(express.json());",
+        "seedCode": "const express = require('express');\nconst app = express();\n\n// Import correlationIdMiddleware here\n\n// Use middleware here\napp.use(correlationIdMiddleware);\n\napp.listen(3000, () => {\n  console.log('Server running on port 3000');\n});",
+        "expectedOutcome": "The correlationIdMiddleware is now applied globally to all routes in your Express app.",
+        "successCriteria": [
+          "app.use(correlationIdMiddleware) is added before the app.listen call."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're using app.use() with correlationIdMiddleware as the argument, placed before app.listen().",
+        "feedbackWrong": "The middleware isn't properly applied. Use app.use(correlationIdMiddleware) to add it globally.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "app.use",
+            "correlationIdMiddleware"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import required Node.js modules",
+        "id": "step1"
+      },
+      {
+        "label": "Create the middleware function structure",
+        "id": "step2"
+      },
+      {
+        "label": "Check for existing correlation ID in request headers",
+        "id": "step3"
+      },
+      {
+        "label": "Store the correlation ID in the request object",
+        "id": "step4"
+      },
+      {
+        "label": "Export the middleware function",
+        "id": "step5"
+      },
+      {
+        "label": "Import the middleware in your main app file",
+        "id": "step6"
+      },
+      {
+        "label": "Use the middleware in your Express app",
+        "id": "step7"
+      }
+    ]
+  },
+  "source": "content"
+}

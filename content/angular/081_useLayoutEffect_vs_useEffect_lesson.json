@@ -1,0 +1,418 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-angular-81",
+    "track": "angular",
+    "lessonNum": 81,
+    "title": "useLayoutEffect vs useEffect",
+    "shortName": "P81",
+    "intro": {
+      "tag": "LESSON #81",
+      "title": "useLayoutEffect vs useEffect",
+      "body": "In this lesson, you will build a simple Angular component that demonstrates the difference between the `useLayoutEffect` and `useEffect` hooks by controlling a DOM element's style. You will learn the core concept of how these hooks manage side effects in relation to the browser's paint cycle. The main technologies involved are Angular's component structure, TypeScript, and the `@angular/core` library for lifecycle hooks. By the end, you'll understand when to use each hook to avoid visual flickers and ensure proper UI updates.",
+      "usecase": "In real-world Angular applications, understanding the timing difference between lifecycle hooks is crucial when building interactive UI components that require precise DOM measurements. For example, when implementing a dynamic dashboard with resizable panels, you need to calculate element dimensions after DOM updates but before the browser paints to prevent visual flickering. This pattern appears in custom form controls that auto-adjust their height based on content, modals that need to position themselves relative to other elements, or data visualization components that must synchronize their rendering with layout changes. Mastering these timing considerations helps developers create polished, professional interfaces without jarring visual artifacts."
+    },
+    "objectives": [
+      "Implement useEffect to manage side effects in functional components",
+      "Apply useLayoutEffect to synchronously update the DOM before painting",
+      "Construct components that demonstrate the visual difference between useEffect and useLayoutEffect",
+      "Configure dependency arrays to control when effects execute",
+      "Manipulate DOM elements within useLayoutEffect to prevent layout flicker",
+      "Initialize state variables that trigger layout-dependent side effects",
+      "Render components that showcase the execution timing of both hooks"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 12",
+        "title": "Import Component, OnInit, AfterViewInit, and ElementRef from Angular core",
+        "instruction": "Import Component, OnInit, AfterViewInit, and ElementRef from '@angular/core'.",
+        "hint": "Use the import statement with curly braces to import multiple symbols from the Angular core module.",
+        "analogousExample": "// Importing multiple Angular core features\nimport { Component, OnInit } from '@angular/core';",
+        "seedCode": "// Import Component, OnInit, AfterViewInit, and ElementRef from '@angular/core'\n",
+        "expectedOutcome": "The Angular core features needed for lifecycle hooks and DOM access are imported.",
+        "successCriteria": [
+          "Component, OnInit, AfterViewInit, and ElementRef are imported from '@angular/core'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure to import all four symbols: Component, OnInit, AfterViewInit, and ElementRef.",
+        "feedbackWrong": "Check your import statement. You need to import Component, OnInit, AfterViewInit, and ElementRef from '@angular/core'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "Component",
+            "OnInit",
+            "AfterViewInit",
+            "ElementRef",
+            "@angular/core"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 12",
+        "title": "Create the main component class with proper Angular decorator",
+        "instruction": "Create a component class named EffectDemoComponent with the @Component decorator. Include an empty template and styles array.",
+        "hint": "Use the imported Component decorator to define your component class. The template can be empty for now.",
+        "analogousExample": "// Example component structure\n@Component({\n  selector: 'app-example',\n  template: '',\n  styles: []\n})\nexport class ExampleComponent {}",
+        "seedCode": "// Import Component, OnInit, AfterViewInit, and ElementRef from '@angular/core'\nimport { Component, OnInit, AfterViewInit, ElementRef } from '@angular/core';\n\n// Create the EffectDemoComponent class with @Component decorator here",
+        "expectedOutcome": "A component class named EffectDemoComponent is created with the @Component decorator, empty template, and styles array.",
+        "successCriteria": [
+          "EffectDemoComponent class is defined with @Component decorator containing selector, empty template string, and empty styles array."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you've included the @Component decorator with selector, template, and styles properties.",
+        "feedbackWrong": "The component class isn't properly defined. Check that you used the @Component decorator with the required properties.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "@Component",
+            "EffectDemoComponent",
+            "template",
+            "styles"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 12",
+        "title": "Initialize component state properties",
+        "instruction": "Inside the EffectDemoComponent class, declare and initialize two properties: 'message' as a string with an initial value of 'Initial message', and 'counter' as a number starting at 0.",
+        "hint": "Add these properties directly in the class body, using TypeScript type annotations.",
+        "analogousExample": "// Example: declaring class properties\nclass ExampleComponent {\n  message: string = 'Hello';\n  count: number = 0;\n}",
+        "seedCode": "import { Component, OnInit, AfterViewInit, ElementRef } from '@angular/core';\n\n@Component({\n  selector: 'app-effect-demo',\n  template: '',\n  styleUrls: []\n})\nexport class EffectDemoComponent implements OnInit, AfterViewInit {\n  // Declare and initialize message and counter properties here\n\n  constructor(private elementRef: ElementRef) {}\n\n  ngOnInit() {}\n\n  ngAfterViewInit() {}\n}",
+        "expectedOutcome": "The component class now has two reactive properties that can be used to demonstrate effects.",
+        "successCriteria": [
+          "The EffectDemoComponent class contains 'message: string = \"Initial message\"' and 'counter: number = 0' properties."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure both properties are declared with proper TypeScript types and initial values.",
+        "feedbackWrong": "The component properties aren't properly initialized. Check that you've added both 'message' and 'counter' with their types and initial values.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "message:",
+            "string",
+            "\"Initial message\"",
+            "counter:",
+            "number",
+            "0"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 12",
+        "title": "Implement ngOnInit lifecycle hook",
+        "instruction": "Inside the EffectDemoComponent class, implement the ngOnInit method to set the initial message property to 'Component initialized with ngOnInit' when the component initializes.",
+        "hint": "The ngOnInit method is called once after Angular initializes the component's data-bound properties. Inside the method, assign the new string value to this.message.",
+        "analogousExample": "// Example of implementing ngOnInit\nngOnInit() {\n  this.message = 'Component is ready';\n}",
+        "seedCode": "import { Component, OnInit, AfterViewInit, ElementRef } from '@angular/core';\n\n@Component({\n  selector: 'app-effect-demo',\n  template: '',\n  styleUrls: []\n})\nexport class EffectDemoComponent implements OnInit, AfterViewInit {\n  // Declare and initialize message and counter properties here\n\n  constructor(private elementRef: ElementRef) {}\n\n  ngOnInit() {\n    // Set initial message here\n  }\n\n  ngAfterViewInit() {}\n}",
+        "expectedOutcome": "The ngOnInit method will be implemented to initialize the component's message property when the component first loads.",
+        "successCriteria": [
+          "The ngOnInit method is implemented and sets this.message to 'Component initialized with ngOnInit'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added the ngOnInit method, but make sure it sets this.message to exactly 'Component initialized with ngOnInit'.",
+        "feedbackWrong": "The ngOnInit method is missing or doesn't set the message property correctly. Remember to assign the string value to this.message inside the method.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "ngOnInit",
+            "this.message",
+            "'Component initialized with ngOnInit'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 12",
+        "title": "Implement ngAfterViewInit lifecycle hook",
+        "instruction": "Inside the ngAfterViewInit method, add code to access the component's native element and modify its text content to demonstrate DOM access after view initialization.",
+        "hint": "Use this.elementRef.nativeElement to get the DOM element, then set its textContent property to a message like 'View initialized! DOM is ready.'",
+        "analogousExample": "// Example: accessing DOM in ngAfterViewInit\nngAfterViewInit() {\n  const element = this.elementRef.nativeElement;\n  element.textContent = 'View is fully initialized';\n}",
+        "seedCode": "import { Component, OnInit, AfterViewInit, ElementRef } from '@angular/core';\n\n@Component({\n  selector: 'app-effect-demo',\n  template: '',\n  styleUrls: []\n})\nexport class EffectDemoComponent implements OnInit, AfterViewInit {\n  // Declare and initialize message and counter properties here\n\n  constructor(private elementRef: ElementRef) {}\n\n  ngOnInit() {\n    // Set initial message here\n  }\n\n  ngAfterViewInit() {\n    // Access DOM element and modify its text content here\n  }\n}",
+        "expectedOutcome": "The ngAfterViewInit method will contain code that accesses the component's DOM element and changes its text content, demonstrating Angular's equivalent to React's useLayoutEffect for DOM manipulation after view initialization.",
+        "successCriteria": [
+          "ngAfterViewInit method is implemented with code that uses this.elementRef.nativeElement to access the DOM and modifies its textContent property."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added the ngAfterViewInit method, but make sure to include code that actually accesses the DOM element and modifies its content using this.elementRef.nativeElement.",
+        "feedbackWrong": "The ngAfterViewInit method is not implemented correctly. It should contain code that accesses the DOM element via this.elementRef.nativeElement and modifies its textContent property.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "ngAfterViewInit",
+            "elementRef",
+            "nativeElement",
+            "textContent"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 12",
+        "title": "Create a method to update the counter",
+        "instruction": "In the EffectDemoComponent class, create a method named incrementCounter that increments the counter property by 1.",
+        "hint": "Define a method inside the class using the syntax incrementCounter() { ... } and update the counter property using this.counter++.",
+        "analogousExample": "// Example: a method that increments a value\nincrementScore() {\n  this.score++;\n}",
+        "seedCode": "import { Component, OnInit, AfterViewInit, ElementRef } from '@angular/core';\n\n@Component({\n  selector: 'app-effect-demo',\n  template: '',\n  styleUrls: []\n})\nexport class EffectDemoComponent implements OnInit, AfterViewInit {\n  // Declare and initialize message and counter properties here\n\n  constructor(private elementRef: ElementRef) {}\n\n  ngOnInit() {\n    // Set initial message here\n  }\n\n  ngAfterViewInit() {\n    // Access DOM element and modify its text content here\n  }\n\n  // Add incrementCounter method here\n}",
+        "expectedOutcome": "The component will have a method that can be called to increase the counter value.",
+        "successCriteria": [
+          "The incrementCounter method is defined and correctly increments the counter property."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've created a method, but make sure it increments the counter property by 1. Check that you're using this.counter++ inside the method body.",
+        "feedbackWrong": "The incrementCounter method is missing or doesn't increment the counter. Create a method named incrementCounter that increases the counter property by 1.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "incrementCounter",
+            "this.counter++",
+            "method"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 12",
+        "title": "Create a method to reset the counter",
+        "instruction": "In the EffectDemoComponent class, add a method named resetCounter that sets the counter property to 0.",
+        "hint": "Define a method inside the class with the name resetCounter and assign 0 to this.counter.",
+        "analogousExample": "// Example: a method that resets a value\nresetValue() {\n  this.value = 0;\n}",
+        "seedCode": "import { Component, OnInit, AfterViewInit, ElementRef } from '@angular/core';\n\n@Component({\n  selector: 'app-effect-demo',\n  template: '',\n  styleUrls: []\n})\nexport class EffectDemoComponent implements OnInit, AfterViewInit {\n  // Declare and initialize message and counter properties here\n\n  constructor(private elementRef: ElementRef) {}\n\n  ngOnInit() {\n    // Set initial message here\n  }\n\n  ngAfterViewInit() {\n    // Access DOM element and modify its text content here\n  }\n\n  // Add incrementCounter method here\n\n  // Add resetCounter method here\n}",
+        "expectedOutcome": "The component will have a resetCounter method that resets the counter to 0.",
+        "successCriteria": [
+          "The resetCounter method is defined and sets this.counter to 0."
+        ],
+        "feedbackCorrect": "Great! You've successfully added the resetCounter method.",
+        "feedbackPartial": "You've added a method, but make sure it's named resetCounter and sets this.counter to 0.",
+        "feedbackWrong": "The resetCounter method is not correctly defined. Check the method name and that it sets this.counter to 0.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "resetCounter",
+            "this.counter",
+            "0"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 12",
+        "title": "Add the main container structure to the template",
+        "instruction": "Add a main div container to the component's template property in the @Component decorator. This div will serve as the root element for our UI.",
+        "hint": "In the @Component decorator, update the template property to include a div element.",
+        "analogousExample": "// Adding a container div to a component template\n@Component({\n  selector: 'app-example',\n  template: '<div>Content goes here</div>'\n})",
+        "seedCode": "import { Component, OnInit, AfterViewInit, ElementRef } from '@angular/core';\n\n@Component({\n  selector: 'app-effect-demo',\n  template: '',\n  styleUrls: []\n})\nexport class EffectDemoComponent implements OnInit, AfterViewInit {\n  // Declare and initialize message and counter properties here\n\n  constructor(private elementRef: ElementRef) {}\n\n  ngOnInit() {\n    // Set initial message here\n  }\n\n  ngAfterViewInit() {\n    // Access DOM element and modify its text content here\n  }\n\n  // Add incrementCounter method here\n\n  // Add resetCounter method here\n}",
+        "expectedOutcome": "The component's template now contains a div element as the root container.",
+        "successCriteria": [
+          "The @Component decorator's template property includes a div element."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you've added a div element inside the template property of the @Component decorator.",
+        "feedbackWrong": "The template property should contain a div element. Check that you've added it correctly within the @Component decorator.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "template",
+            "'<div>",
+            "</div>'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 12",
+        "title": "Display the message property in the template",
+        "instruction": "Add a paragraph element to the template that displays the message property using interpolation.",
+        "hint": "Use double curly braces {{ }} to bind the message property value inside the paragraph element.",
+        "analogousExample": "// Displaying a property in Angular template\n<p>{{ greeting }}</p>",
+        "seedCode": "import { Component, OnInit, AfterViewInit, ElementRef } from '@angular/core';\n\n@Component({\n  selector: 'app-effect-demo',\n  template: '',\n  styleUrls: []\n})\nexport class EffectDemoComponent implements OnInit, AfterViewInit {\n  // Declare and initialize message and counter properties here\n\n  constructor(private elementRef: ElementRef) {}\n\n  ngOnInit() {\n    // Set initial message here\n  }\n\n  ngAfterViewInit() {\n    // Access DOM element and modify its text content here\n  }\n\n  // Add incrementCounter method here\n\n  // Add resetCounter method here\n}",
+        "expectedOutcome": "The template will contain a paragraph element that displays the value of the message property.",
+        "successCriteria": [
+          "A paragraph element (<p>) is added to the template",
+          "The paragraph uses interpolation {{ message }} to display the message property"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure you've added a paragraph element with interpolation syntax {{ message }}.",
+        "feedbackWrong": "The template doesn't yet display the message property. Add a paragraph element with interpolation to show the message value.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<p>",
+            "{{",
+            "message",
+            "}}"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 12",
+        "title": "Display the counter value in the template",
+        "instruction": "In the component's template, add a paragraph element that displays the current counter value using interpolation.",
+        "hint": "Use double curly braces {{ }} to interpolate the counter property value into the template.",
+        "analogousExample": "// Displaying a property value in Angular template\n<p>Current count: {{ counter }}</p>",
+        "seedCode": "import { Component, OnInit, AfterViewInit, ElementRef } from '@angular/core';\n\n@Component({\n  selector: 'app-effect-demo',\n  template: `\n    <div>\n      <h2>Effect Demo</h2>\n      <p>{{ message }}</p>\n      <!-- Add paragraph to display counter value here -->\n    </div>\n  `,\n  styleUrls: []\n})\nexport class EffectDemoComponent implements OnInit, AfterViewInit {\n  message: string = 'Initial message';\n  counter: number = 0;\n\n  constructor(private elementRef: ElementRef) {}\n\n  ngOnInit() {\n    this.message = 'Component initialized';\n  }\n\n  ngAfterViewInit() {\n    const element = this.elementRef.nativeElement.querySelector('h2');\n    if (element) {\n      element.textContent = 'Effect Demo - View Initialized';\n    }\n  }\n\n  incrementCounter() {\n    this.counter++;\n  }\n\n  resetCounter() {\n    this.counter = 0;\n  }\n}",
+        "expectedOutcome": "The template will show the counter value updating reactively when the counter property changes.",
+        "successCriteria": [
+          "A paragraph element with interpolation {{ counter }} is added to the template."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You added a paragraph, but make sure it uses interpolation {{ counter }} to display the counter value.",
+        "feedbackWrong": "The counter value is not being displayed. Add a paragraph element with {{ counter }} interpolation.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "{{",
+            "counter",
+            "}}"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 12",
+        "title": "Add increment button and wire it to the handler",
+        "instruction": "Add a button element inside the template's main div that calls the incrementCounter method when clicked.",
+        "hint": "Use Angular's event binding syntax (click)=\"incrementCounter()\" to connect the button click to the component method.",
+        "analogousExample": "// Adding a button with click handler\n<button (click)=\"handleClick()\">Click me</button>",
+        "seedCode": "import { Component, OnInit, AfterViewInit, ElementRef } from '@angular/core';\n\n@Component({\n  selector: 'app-effect-demo',\n  template: `\n    <div>\n      <h2>Effect Demo</h2>\n      <p>{{ message }}</p>\n      <!-- Add paragraph to display counter value here -->\n      <!-- Add increment button here -->\n    </div>\n  `,\n  styleUrls: []\n})\nexport class EffectDemoComponent implements OnInit, AfterViewInit {\n  message: string = 'Initial message';\n  counter: number = 0;\n\n  constructor(private elementRef: ElementRef) {}\n\n  ngOnInit() {\n    this.message = 'Component initialized';\n  }\n\n  ngAfterViewInit() {\n    const element = this.elementRef.nativeElement.querySelector('h2');\n    if (element) {\n      element.textContent = 'Effect Demo - View Initialized';\n    }\n  }\n\n  incrementCounter() {\n    this.counter++;\n  }\n\n  resetCounter() {\n    this.counter = 0;\n  }\n}",
+        "expectedOutcome": "A button element appears in the template that increments the counter when clicked.",
+        "successCriteria": [
+          "Button element with (click)=\"incrementCounter()\" event binding is added to the template."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You added a button, but it's missing the click event binding. Make sure to use (click)=\"incrementCounter()\".",
+        "feedbackWrong": "The button isn't properly connected to the incrementCounter method. Check Angular's event binding syntax.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<button",
+            "(click)=\"incrementCounter()\""
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step12",
+        "type": "question",
+        "phase": "Step 12 of 12",
+        "title": "Add reset button and wire it to the handler",
+        "instruction": "Add a reset button to the template that calls the resetCounter method when clicked.",
+        "hint": "Use a button element with a click event binding. The resetCounter method is already defined in the component class.",
+        "analogousExample": "// Adding a reset button\n<button (click)=\"resetCounter()\">Reset Counter</button>",
+        "seedCode": "import { Component, OnInit, AfterViewInit, ElementRef } from '@angular/core';\n\n@Component({\n  selector: 'app-effect-demo',\n  template: `\n    <div>\n      <h2>Effect Demo</h2>\n      <p>{{ message }}</p>\n      <p>Counter: {{ counter }}</p>\n      <button (click)=\"incrementCounter()\">Increment</button>\n      <!-- Add reset button here -->\n    </div>\n  `,\n  styleUrls: []\n})\nexport class EffectDemoComponent implements OnInit, AfterViewInit {\n  message: string = 'Initial message';\n  counter: number = 0;\n\n  constructor(private elementRef: ElementRef) {}\n\n  ngOnInit() {\n    this.message = 'Component initialized';\n  }\n\n  ngAfterViewInit() {\n    const element = this.elementRef.nativeElement.querySelector('h2');\n    if (element) {\n      element.textContent = 'Effect Demo - View Initialized';\n    }\n  }\n\n  incrementCounter() {\n    this.counter++;\n  }\n\n  resetCounter() {\n    this.counter = 0;\n  }\n}",
+        "expectedOutcome": "A reset button appears next to the increment button. Clicking it resets the counter to 0.",
+        "successCriteria": [
+          "The template contains a button element with (click)=\"resetCounter()\" event binding."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added a button, but make sure it calls the resetCounter method when clicked. Check the event binding syntax.",
+        "feedbackWrong": "The reset button is missing or not properly wired. Add a button with (click)=\"resetCounter()\" in the template.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "button",
+            "(click)=\"resetCounter()\""
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import Component, OnInit, AfterViewInit, and ElementRef from Angular core",
+        "id": "step1"
+      },
+      {
+        "label": "Create the main component class with proper Angular decorator",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize component state properties",
+        "id": "step3"
+      },
+      {
+        "label": "Implement ngOnInit lifecycle hook",
+        "id": "step4"
+      },
+      {
+        "label": "Implement ngAfterViewInit lifecycle hook",
+        "id": "step5"
+      },
+      {
+        "label": "Create a method to update the counter",
+        "id": "step6"
+      },
+      {
+        "label": "Create a method to reset the counter",
+        "id": "step7"
+      },
+      {
+        "label": "Add the main container structure to the template",
+        "id": "step8"
+      },
+      {
+        "label": "Display the message property in the template",
+        "id": "step9"
+      },
+      {
+        "label": "Display the counter value in the template",
+        "id": "step10"
+      },
+      {
+        "label": "Add increment button and wire it to the handler",
+        "id": "step11"
+      },
+      {
+        "label": "Add reset button and wire it to the handler",
+        "id": "step12"
+      }
+    ]
+  },
+  "source": "content"
+}

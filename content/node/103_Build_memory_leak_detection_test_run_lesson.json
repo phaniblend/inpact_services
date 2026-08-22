@@ -1,0 +1,289 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-node-103",
+    "track": "node",
+    "lessonNum": 103,
+    "title": "Build memory leak detection test run",
+    "shortName": "P103",
+    "intro": {
+      "tag": "LESSON #103",
+      "title": "Build memory leak detection test run",
+      "body": "In this lesson, you will build a test run that simulates and detects a memory leak in a Node.js application. You will learn how to create a simple server that intentionally leaks memory by adding data to an array without cleaning it up. The core concept involves understanding how memory allocation works in Node.js and using built-in tools to monitor memory usage. You will work with JavaScript arrays, HTTP servers, and the global `process` object to track memory growth over time. This hands-on exercise will help you recognize common patterns that lead to memory leaks and how to test for them effectively.",
+      "usecase": "Memory leak detection is critical for long-running Node.js applications like monitoring dashboards, API gateways, and real-time analytics systems. Developers use these techniques to ensure production servers don't gradually consume all available memory, which would cause crashes in services like e-commerce platforms or financial transaction processors. By implementing leak detection tests, teams can proactively identify issues in microservices, background job processors, or WebSocket servers before they impact users. This pattern is especially valuable for applications requiring 24/7 uptime, such as healthcare monitoring systems or IoT data aggregation services."
+    },
+    "objectives": [
+      "Initialize a Node.js project with memory monitoring dependencies",
+      "Configure a test script to simulate memory-intensive operations",
+      "Implement a memory leak detection function using process.memoryUsage()",
+      "Construct a test runner that executes leak detection at intervals",
+      "Integrate console logging to display real-time memory consumption data",
+      "Manipulate object creation patterns to intentionally trigger memory leaks",
+      "Apply cleanup mechanisms to prevent memory accumulation in test scenarios"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 8",
+        "title": "Import required Node.js modules",
+        "instruction": "Import the 'process' and 'v8' modules from Node.js core using require statements.",
+        "hint": "Use the require() function to import built-in Node.js modules. No need to install anything - these are core modules.",
+        "analogousExample": "// Example: importing core modules\nconst fs = require('fs');\nconst path = require('path');",
+        "seedCode": "// Import the required Node.js modules here\n",
+        "expectedOutcome": "The 'process' and 'v8' modules are imported and available for use in memory leak detection.",
+        "successCriteria": [
+          "Both 'process' and 'v8' modules are imported using require() statements."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure to import both 'process' and 'v8' modules.",
+        "feedbackWrong": "import both modules using require(). Check the syntax: const moduleName = require('module-name');",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "require('process')",
+            "require('v8')",
+            "const",
+            "="
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 8",
+        "title": "Create main function structure",
+        "instruction": "Create a function named 'detectMemoryLeak' that will contain our memory leak detection logic. The function should be empty for now.",
+        "hint": "You can use either a function declaration or arrow function syntax. Just make sure the function name matches exactly.",
+        "analogousExample": "// Example of a named function\nfunction processData() {\n  // Function body will go here\n}",
+        "seedCode": "// Import the required Node.js modules here\n\n// Create the detectMemoryLeak function here",
+        "expectedOutcome": "You should have a function named detectMemoryLeak defined in your code.",
+        "successCriteria": [
+          "A function named detectMemoryLeak is created with an empty body"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure you've created a function named exactly 'detectMemoryLeak'.",
+        "feedbackWrong": "The function wasn't created correctly. Please create a function named 'detectMemoryLeak'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "detectMemoryLeak",
+            "function",
+            "{"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 8",
+        "title": "Initialize memory tracking variables",
+        "instruction": "Inside the detectMemoryLeak function, declare three variables: initialMemory to store the starting memory usage, currentMemory to track ongoing measurements, and leakDetected as a boolean flag set to false.",
+        "hint": "Use const for variables that won't be reassigned and let for those that will change. Initialize leakDetected with false.",
+        "analogousExample": "// Example: initializing tracking variables\nfunction trackProgress() {\n  const startTime = Date.now();\n  let currentTime = Date.now();\n  let isComplete = false;\n}",
+        "seedCode": "// Import the required Node.js modules here\nconst os = require('os');\n\n// Create the detectMemoryLeak function here\nfunction detectMemoryLeak() {\n  // Initialize memory tracking variables here\n}",
+        "expectedOutcome": "The function will have three variables ready to track memory usage and detect leaks.",
+        "successCriteria": [
+          "Variables initialMemory, currentMemory, and leakDetected are declared inside detectMemoryLeak."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you've declared all three variables: initialMemory, currentMemory, and leakDetected.",
+        "feedbackWrong": "declare three variables inside the function to track memory usage.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "initialMemory",
+            "currentMemory",
+            "leakDetected",
+            "false"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 8",
+        "title": "Define memory measurement function",
+        "instruction": "Inside the detectMemoryLeak function, create a helper function named getMemoryUsage that returns the current heap statistics using process.memoryUsage().",
+        "hint": "Define a function that calls process.memoryUsage() and returns its result. Place it inside the detectMemoryLeak function body.",
+        "analogousExample": "// Example: a helper function that returns system info\nfunction getSystemInfo() {\n  return os.cpus();\n}",
+        "seedCode": "const os = require('os');\n\nfunction detectMemoryLeak() {\n  // Initialize memory tracking variables here\n  \n  // Create getMemoryUsage function here\n}",
+        "expectedOutcome": "A getMemoryUsage function is defined inside detectMemoryLeak that returns memory usage data.",
+        "successCriteria": [
+          "The getMemoryUsage function is defined and returns process.memoryUsage() result."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've defined a function, but make sure it returns process.memoryUsage() directly.",
+        "feedbackWrong": "The getMemoryUsage function is missing or doesn't return memory usage data correctly.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "getMemoryUsage",
+            "process.memoryUsage",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 8",
+        "title": "Implement initial memory measurement",
+        "instruction": "Inside the detectMemoryLeak function, call the getMemoryUsage function at the beginning and store its return value in a variable named 'initialMemory'.",
+        "hint": "You need to call the function you created earlier and assign its result to a variable. Place this call right after the function opening brace.",
+        "analogousExample": "// Similar: calling a function and storing its result\nfunction calculateTotal() {\n  const initialPrice = getPrice();\n  // rest of function\n}",
+        "seedCode": "const os = require('os');\n\nfunction detectMemoryLeak() {\n  // Call getMemoryUsage and store result in 'initialMemory' here\n  \n  // Initialize memory tracking variables here\n  \n  // Create getMemoryUsage function here\n}",
+        "expectedOutcome": "The detectMemoryLeak function now has an initial memory measurement stored in a variable, establishing a baseline for leak detection.",
+        "successCriteria": [
+          "The getMemoryUsage function is called and its result is stored in a variable named 'initialMemory' at the start of detectMemoryLeak."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're calling getMemoryUsage() and storing the result in a variable named 'initialMemory' at the beginning of the detectMemoryLeak function.",
+        "feedbackWrong": "The initial memory measurement isn't set up correctly. You need to call getMemoryUsage() and store its return value in a variable named 'initialMemory' at the start of the detectMemoryLeak function.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "initialMemory",
+            "getMemoryUsage()",
+            "="
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 8",
+        "title": "Implement periodic memory checks",
+        "instruction": "Inside your detectMemoryLeak function, add a setInterval call that will run every 2 seconds to check current memory usage and compare it with the initial measurement.",
+        "hint": "Use setInterval with a callback function that calls getMemoryUsage and logs the difference between current and initial memory.",
+        "analogousExample": "// Similar: periodic check with setInterval\nsetInterval(() => {\n  const currentValue = getCurrentValue();\n  console.log(`Current value: ${currentValue}`);\n}, 2000);",
+        "seedCode": "const os = require('os');\n\nfunction detectMemoryLeak() {\n  // Call getMemoryUsage and store result in 'initialMemory' here\n  \n  // Initialize memory tracking variables here\n  \n  // Create getMemoryUsage function here\n  \n  // Create artificial memory leak array here\n  let leakyArray = [];\n  \n  // Add setInterval for periodic memory checks here\n}",
+        "expectedOutcome": "Your function will now have a periodic timer that checks memory usage every 2 seconds, enabling ongoing leak detection.",
+        "successCriteria": [
+          "A setInterval call is added inside detectMemoryLeak that runs every 2000ms and logs memory usage comparisons."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your setInterval is inside detectMemoryLeak and calls getMemoryUsage to check current memory.",
+        "feedbackWrong": "The periodic check isn't set up correctly. Remember to use setInterval with a 2000ms interval inside your main function.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "setInterval",
+            "2000",
+            "getMemoryUsage"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 8",
+        "title": "Add leak detection logic",
+        "instruction": "Inside the detectMemoryLeak function, add logic to compare current memory usage with the baseline and set a leak flag if the threshold is exceeded.",
+        "hint": "You'll need to calculate the memory increase percentage and check if it exceeds a threshold (e.g., 10%). If it does, set a flag variable to indicate a leak.",
+        "analogousExample": "// Similar: checking if a value exceeds threshold\nfunction checkTemperature(currentTemp, baselineTemp) {\n  const threshold = 5;\n  const increase = currentTemp - baselineTemp;\n  const isTooHot = increase > threshold;\n  return isTooHot;\n}",
+        "seedCode": "const os = require('os');\n\nfunction detectMemoryLeak() {\n  // Call getMemoryUsage and store result in 'initialMemory' here\n  \n  // Initialize memory tracking variables here\n  \n  // Create getMemoryUsage function here\n  \n  // Create artificial memory leak array here\n  let leakyArray = [];\n  \n  // Add setInterval for periodic memory checks here\n  \n  // Add leak detection logic here\n}",
+        "expectedOutcome": "The function will include logic that calculates memory increase percentage and sets a leak flag when the threshold is exceeded.",
+        "successCriteria": [
+          "Code includes comparison logic that calculates memory increase percentage and sets a leak flag variable when threshold is exceeded."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added some comparison logic, but make sure you calculate the percentage increase and check against a specific threshold (like 10%).",
+        "feedbackWrong": "The leak detection logic appears to be missing or incorrect. You need to compare current memory with baseline and set a leak flag when the threshold is exceeded.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "currentMemory",
+            "initialMemory",
+            "percentage",
+            "threshold",
+            "leak",
+            "flag"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 8",
+        "title": "Execute and test the detection function",
+        "instruction": "Call the 'detectMemoryLeak' function to execute your complete memory leak detection system.",
+        "hint": "Add a function call to 'detectMemoryLeak()' at the end of your file, outside the function definition.",
+        "analogousExample": "// Similar: calling a function to run it\nfunction greet() {\n  console.log('Hello!');\n}\ngreet();",
+        "seedCode": "const os = require('os');\n\nfunction detectMemoryLeak() {\n  // Call getMemoryUsage and store result in 'initialMemory' here\n  \n  // Initialize memory tracking variables here\n  \n  // Create getMemoryUsage function here\n  \n  // Create artificial memory leak array here\n  let leakyArray = [];\n  \n  // Add setInterval for periodic memory checks here\n  \n  // Add leak detection logic here\n  \n  // Add console output for monitoring here\n}\n\n// Call detectMemoryLeak here",
+        "expectedOutcome": "Your memory leak detection system will run when you execute the file, producing console output that shows memory usage changes over time.",
+        "successCriteria": [
+          "The 'detectMemoryLeak' function is called to execute the complete memory leak detection system."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure you're calling the 'detectMemoryLeak' function correctly. It should be called outside the function definition, at the end of the file.",
+        "feedbackWrong": "That's not quite right. You need to call the 'detectMemoryLeak' function to execute your memory leak detection system. Add a function call at the end of your file.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "detectMemoryLeak()"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import required Node.js modules",
+        "id": "step1"
+      },
+      {
+        "label": "Create main function structure",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize memory tracking variables",
+        "id": "step3"
+      },
+      {
+        "label": "Define memory measurement function",
+        "id": "step4"
+      },
+      {
+        "label": "Implement initial memory measurement",
+        "id": "step5"
+      },
+      {
+        "label": "Implement periodic memory checks",
+        "id": "step6"
+      },
+      {
+        "label": "Add leak detection logic",
+        "id": "step7"
+      },
+      {
+        "label": "Execute and test the detection function",
+        "id": "step8"
+      }
+    ]
+  },
+  "source": "content"
+}

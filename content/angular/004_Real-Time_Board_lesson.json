@@ -1,0 +1,451 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-angular-04",
+    "track": "angular",
+    "lessonNum": 4,
+    "title": "Real-Time Board",
+    "shortName": "P04",
+    "intro": {
+      "tag": "LESSON #4",
+      "title": "Real-Time Board",
+      "body": "In this lesson, you'll build a real-time collaborative board application where multiple users can add, move, and edit sticky notes simultaneously. You'll learn how to implement WebSocket communication to enable instant data synchronization between different browser sessions, ensuring all users see changes as they happen. The project uses Angular's reactive programming with RxJS observables to handle real-time data streams, component communication through services, and dynamic DOM manipulation for drag-and-drop interactions. You'll work with Angular services to manage WebSocket connections, implement event handling for user interactions, and use Angular's change detection to update the UI automatically when data changes. By the end, you'll understand how to create responsive, multi-user applications that update in real-time without page refreshes.",
+      "usecase": "Real-time boards are essential for collaborative applications like project management tools (Trello, Asana), team communication platforms (Slack channels), and live dashboards (analytics, monitoring systems). Developers implement these patterns when building features like live comment sections, collaborative document editing, stock price displays, or multiplayer game boards where multiple users need to see updates instantly. Modern web applications rely on real-time data synchronization to keep users engaged and informed, making this a critical skill for building responsive, interactive user experiences that feel dynamic and connected."
+    },
+    "objectives": [
+      "Initialize WebSocket connections to enable real-time data communication",
+      "Implement event listeners to capture and handle board interaction events",
+      "Configure Angular services to manage real-time state synchronization",
+      "Construct dynamic board components that update based on incoming data streams",
+      "Apply reactive programming patterns to bind live data to board elements",
+      "Integrate real-time updates with Angular's change detection cycle",
+      "Manipulate board state to reflect concurrent user interactions across sessions"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 13",
+        "title": "Import Angular dependencies and WebSocket service",
+        "instruction": "Import Component, OnInit, and OnDestroy from @angular/core, and import a WebSocketService from a websocket service file.",
+        "hint": "Use the import statement to bring in the required Angular lifecycle interfaces and the Component decorator, plus create an import for the WebSocket service that will handle real-time communication.",
+        "analogousExample": "// Similar: importing multiple items from Angular core\nimport { Component, OnInit } from '@angular/core';\nimport { DataService } from './data.service';",
+        "seedCode": "// Import Angular dependencies and WebSocket service here\n",
+        "expectedOutcome": "Angular Component decorator, lifecycle hooks, and WebSocket service are imported and ready to use in the Real-Time Board component.",
+        "successCriteria": [
+          "Component, OnInit, and OnDestroy are imported from @angular/core, and WebSocketService is imported from a service file."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Good start! Make sure you've imported Component, OnInit, OnDestroy from @angular/core and the WebSocketService.",
+        "feedbackWrong": "import Component, OnInit, and OnDestroy from @angular/core, and don't forget the WebSocketService import for real-time functionality.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "Component",
+            "OnInit",
+            "OnDestroy",
+            "@angular/core",
+            "WebSocketService"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 13",
+        "title": "Create the RealTimeBoardComponent",
+        "instruction": "Create an Angular component class named RealTimeBoardComponent with the @Component decorator and basic metadata including selector and template properties.",
+        "hint": "Use the @Component decorator above the class definition and include selector and template properties in the metadata object.",
+        "analogousExample": "// Similar: basic Angular component structure\n@Component({\n  selector: 'app-example',\n  template: '<div>Example</div>'\n})\nexport class ExampleComponent {}",
+        "seedCode": "// Import Angular dependencies and WebSocket service here\n\n// Create the RealTimeBoardComponent here",
+        "expectedOutcome": "A properly structured Angular component class with @Component decorator and basic metadata is created.",
+        "successCriteria": [
+          "RealTimeBoardComponent class is defined with @Component decorator including selector and template properties."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Good start! Make sure to include both the @Component decorator and the component class definition with proper metadata.",
+        "feedbackWrong": "use the @Component decorator above your class definition and include the required metadata properties like selector and template.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "@Component",
+            "RealTimeBoardComponent",
+            "selector",
+            "template"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 13",
+        "title": "Initialize component properties and board state",
+        "instruction": "Add three properties to the RealTimeBoardComponent class: boardData as an empty array, isConnected as false, and currentUser as null.",
+        "hint": "In Angular components, class properties are declared directly inside the class body without keywords like 'let' or 'const'. Initialize each property with its starting value.",
+        "analogousExample": "// Similar: component properties\nexport class UserProfileComponent {\n  userName: string = '';\n  isLoggedIn: boolean = false;\n  userAge: number | null = null;\n}",
+        "seedCode": "// Import Angular dependencies and WebSocket service here\n\n// Create the RealTimeBoardComponent here\nexport class RealTimeBoardComponent {\n  // Add component properties here\n}",
+        "expectedOutcome": "The component will have three properties initialized to track the board state, connection status, and current user information.",
+        "successCriteria": [
+          "The component has boardData initialized as an empty array, isConnected initialized as false, and currentUser initialized as null."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Good start! Make sure you have all three properties: boardData (empty array), isConnected (false), and currentUser (null).",
+        "feedbackWrong": "add three class properties inside the component: boardData as an empty array, isConnected as false, and currentUser as null.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "boardData",
+            "isConnected",
+            "currentUser"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 13",
+        "title": "Inject WebSocket service in constructor",
+        "instruction": "Add a constructor to the RealTimeBoardComponent that injects the WebSocketService using Angular dependency injection.",
+        "hint": "Use the constructor keyword and inject the service by declaring it as a parameter with private access modifier.",
+        "analogousExample": "// Similar: injecting a service in Angular\nconstructor(private userService: UserService) {}",
+        "seedCode": "// Import Angular dependencies and WebSocket service here\n\n// Create the RealTimeBoardComponent here\nexport class RealTimeBoardComponent {\n  // Add component properties here\n  \n  // Add constructor with WebSocketService injection here\n}",
+        "expectedOutcome": "The component will have a constructor that injects the WebSocketService, making it available for real-time communication throughout the component.",
+        "successCriteria": [
+          "Constructor is added to RealTimeBoardComponent with WebSocketService injected as a private parameter"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Good start! Make sure you're using the private access modifier and the correct service name (WebSocketService).",
+        "feedbackWrong": "add a constructor that takes WebSocketService as a parameter with the private keyword for dependency injection.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "constructor",
+            "private",
+            "WebSocketService"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 13",
+        "title": "Implement ngOnInit to establish WebSocket connection",
+        "instruction": "Implement the ngOnInit lifecycle method to establish a WebSocket connection and subscribe to board updates",
+        "hint": "Add the ngOnInit method that connects to the WebSocket service and subscribes to incoming messages",
+        "analogousExample": "// Similar: component lifecycle method\nngOnInit() {\n  this.dataService.connect();\n}",
+        "seedCode": "// Import Angular dependencies and WebSocket service here\n\n// Create the RealTimeBoardComponent here\nexport class RealTimeBoardComponent {\n  // Add component properties here\n  \n  // Add constructor with WebSocketService injection here\n  \n  // Add ngOnInit method here\n}",
+        "expectedOutcome": "The component will have an ngOnInit method that establishes a WebSocket connection and subscribes to board updates when the component initializes",
+        "successCriteria": [
+          "ngOnInit method is implemented and connects to WebSocket service with subscription to board updates"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Good start! Make sure your ngOnInit method both connects to the WebSocket and subscribes to incoming board updates.",
+        "feedbackWrong": "The ngOnInit method should establish a WebSocket connection and set up subscription to board updates. Try implementing the lifecycle method with these actions.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "ngOnInit",
+            "connect",
+            "subscribe"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 13",
+        "title": "Define board update handler method",
+        "instruction": "Inside the RealTimeBoardComponent class, create a method named 'onBoardUpdate' that takes a 'data' parameter and updates the board property with the received data",
+        "hint": "Create a method that accepts incoming board data and assigns it to the component's board property to reflect real-time changes.",
+        "analogousExample": "// Similar: method that updates component state\nonDataReceived(newData: any) {\n  this.items = newData;\n}",
+        "seedCode": "// Import Angular dependencies and WebSocket service here\n\n// Create the RealTimeBoardComponent here\nexport class RealTimeBoardComponent {\n  // Add component properties here\n  \n  // Add constructor with WebSocketService injection here\n  \n  // Add ngOnInit method here\n  \n  // Add onBoardUpdate method here\n}",
+        "expectedOutcome": "A method named 'onBoardUpdate' is added to handle incoming board data and update the component's board state",
+        "successCriteria": [
+          "The onBoardUpdate method is defined with a data parameter and updates the board property"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Good start! Make sure the method takes a data parameter and updates the board property.",
+        "feedbackWrong": "The onBoardUpdate method should accept a data parameter and assign it to this.board to handle real-time updates.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "onBoardUpdate",
+            "data",
+            "this.board"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 13",
+        "title": "Define board item creation handler",
+        "instruction": "Create a method named createItem that takes a newItem parameter and adds it to the board array,",
+        "hint": "Define a method that pushes the new item to the board array and uses the WebSocket service to emit the updated board state",
+        "analogousExample": "// Similar: method that adds to array and notifies\naddTask(task: string) {\n  this.tasks.push(task);\n  this.notifyService.emit(this.tasks);\n}",
+        "seedCode": "// Import Angular dependencies and WebSocket service here\n\n// Create the RealTimeBoardComponent here\nexport class RealTimeBoardComponent {\n  // Add component properties here\n  \n  // Add constructor with WebSocketService injection here\n  \n  // Add ngOnInit method here\n  \n  // Add onBoardUpdate method here\n  \n  // Add createItem method here\n}",
+        "expectedOutcome": "The component will have a createItem method that accepts a new item parameter, adds it to the board array, and emits the updated board state through the WebSocket service",
+        "successCriteria": [
+          "createItem method is defined with newItem parameter, adds item to board array, and emits updated board via WebSocket"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Good start on the createItem method. Make sure it accepts a newItem parameter, adds it to the board array, and emits the updated board.",
+        "feedbackWrong": "The createItem method needs to accept a newItem parameter, push it to the board array, and use the WebSocket service to emit the updated board state.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "createItem",
+            "newItem",
+            "board",
+            "push",
+            "emit"
+          ],
+          "partialThreshold": 0.6,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 13",
+        "title": "emits the updated board via WebSocket",
+        "instruction": "emits the updated board via WebSocket",
+        "hint": "Define a method that pushes the new item to the board array and uses the WebSocket service to emit the updated board state",
+        "analogousExample": "// Similar: method that adds to array and notifies\naddTask(task: string) {\n  this.tasks.push(task);\n  this.notifyService.emit(this.tasks);\n}",
+        "seedCode": "// Import Angular dependencies and WebSocket service here\n\n// Create the RealTimeBoardComponent here\nexport class RealTimeBoardComponent {\n  // Add component properties here\n  \n  // Add constructor with WebSocketService injection here\n  \n  // Add ngOnInit method here\n  \n  // Add onBoardUpdate method here\n  \n  // Add createItem method here\n}",
+        "expectedOutcome": "",
+        "successCriteria": [
+          "Complete the step as instructed."
+        ],
+        "feedbackCorrect": "Great! Step completed.",
+        "feedbackPartial": "Review the instruction and try again.",
+        "feedbackWrong": "Check the instruction and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "createItem",
+            "newItem",
+            "board",
+            "push",
+            "emit"
+          ],
+          "partialThreshold": 0.6,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 13",
+        "title": "Create the component template structure",
+        "instruction": "Add a template property to the RealTimeBoardComponent that includes a board container div and a connection status display paragraph",
+        "hint": "Use template property with backticks for multi-line HTML. Include a div with class 'board-container' and a paragraph showing connection status",
+        "analogousExample": "// Similar: component with template property\nexport class MyComponent {\n  template = `<div class=\"container\"><p>Status: Connected</p></div>`;\n}",
+        "seedCode": "// Import Angular dependencies and WebSocket service here\n\n// Create the RealTimeBoardComponent here\nexport class RealTimeBoardComponent {\n  // Add component properties here\n  \n  // Add constructor with WebSocketService injection here\n  \n  // Add ngOnInit method here\n  \n  // Add onBoardUpdate method here\n  \n  // Add createItem method here\n  \n  // Add template property here\n}",
+        "expectedOutcome": "Component has a template property with HTML structure for the board interface",
+        "successCriteria": [
+          "Template property contains a board container div and connection status paragraph"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Good progress! Make sure your template includes both the board container div and connection status paragraph.",
+        "feedbackWrong": "The template needs a board container div and a paragraph for connection status. Use the template property with backticks for HTML.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "template",
+            "board-container",
+            "div",
+            "p"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.75
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 13",
+        "title": "Add board items display with ngFor",
+        "instruction": "Inside the template property, add a div element that uses *ngFor to iterate over boardItems and display each item's content in a paragraph",
+        "hint": "Use *ngFor=\"let item of boardItems\" on a div element, then add a paragraph inside that shows the item content",
+        "analogousExample": "// Similar: displaying a list of products\n<div *ngFor=\"let product of products\">\n  <p>{{product.name}}</p>\n</div>",
+        "seedCode": "// Import Angular dependencies and WebSocket service here\n\n// Create the RealTimeBoardComponent here\nexport class RealTimeBoardComponent {\n  // Add component properties here\n  \n  // Add constructor with WebSocketService injection here\n  \n  // Add ngOnInit method here\n  \n  // Add onBoardUpdate method here\n  \n  // Add createItem method here\n  \n  // Add template property here\n  template = `\n    <div class=\"board\">\n      <h2>Real-Time Board</h2>\n      <input [(ngModel)]=\"newItemContent\" placeholder=\"Add new item...\">\n      <button (click)=\"createItem()\">Add Item</button>\n      // Add div with *ngFor to display board items here\n    </div>\n  `\n}",
+        "expectedOutcome": "A div element with *ngFor directive that iterates over boardItems array and displays each item's content in a paragraph",
+        "successCriteria": [
+          "Template contains a div with *ngFor=\"let item of boardItems\" and displays item content in paragraphs"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Good start with the *ngFor directive. Make sure you're iterating over 'boardItems' and displaying the item content inside the loop.",
+        "feedbackWrong": "use *ngFor on a div element to loop through boardItems, then display each item's content in a paragraph inside that div.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "*ngFor",
+            "boardItems",
+            "item",
+            "content"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 13",
+        "title": "Add input form for creating new board items",
+        "instruction": "Add a div with *ngFor directive to display board items after the Add Item button in the template",
+        "hint": "Use *ngFor to loop through the boardItems array and display each item's content and timestamp",
+        "analogousExample": "// Similar: displaying a list with ngFor\n<div *ngFor=\"let user of users\">\n  <span>{{user.name}} - {{user.email}}</span>\n</div>",
+        "seedCode": "// Import Angular dependencies and WebSocket service here\n\n// Create the RealTimeBoardComponent here\nexport class RealTimeBoardComponent {\n  // Add component properties here\n  \n  // Add constructor with WebSocketService injection here\n  \n  // Add ngOnInit method here\n  \n  // Add onBoardUpdate method here\n  \n  // Add createItem method here\n  \n  // Add template property here\n  template = `\n    <div class=\"board\">\n      <h2>Real-Time Board</h2>\n      <input [(ngModel)]=\"newItemContent\" placeholder=\"Add new item...\">\n      <button (click)=\"createItem()\">Add Item</button>\n      // Add div with *ngFor to display board items here\n    </div>\n  `\n}",
+        "expectedOutcome": "The template will include a div with *ngFor that displays each board item's content and timestamp",
+        "successCriteria": [
+          "A div element with *ngFor=\"let item of boardItems\" is added that displays item.content and item.timestamp"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Good start! Make sure to include both the *ngFor directive and display the item content and timestamp.",
+        "feedbackWrong": "use *ngFor to loop through boardItems and display each item's properties.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "*ngFor",
+            "boardItems",
+            "item.content",
+            "item.timestamp"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step12",
+        "type": "question",
+        "phase": "Step 12 of 13",
+        "title": "Wire form submission to creation handler",
+        "instruction": "Wrap the input and button in a form element and add an ngSubmit event binding to call the createItem method when the form is submitted.",
+        "hint": "Use Angular's (ngSubmit) directive on the form element to handle form submission. This will call your createItem method when the user presses Enter or clicks the button.",
+        "analogousExample": "// Form with ngSubmit event binding\n<form (ngSubmit)=\"saveData()\">\n  <input type=\"text\" [(ngModel)]=\"data\">\n  <button type=\"submit\">Save</button>\n</form>",
+        "seedCode": "// Import Angular dependencies and WebSocket service here\n\n// Create the RealTimeBoardComponent here\nexport class RealTimeBoardComponent {\n  // Add component properties here\n  \n  // Add constructor with WebSocketService injection here\n  \n  // Add ngOnInit method here\n  \n  // Add onBoardUpdate method here\n  \n  // Add createItem method here\n  \n  // Add template property here\n  template = `\n    <div class=\"board\">\n      <h2>Real-Time Board</h2>\n      // Add form wrapper with ngSubmit binding here\n      <input [(ngModel)]=\"newItemContent\" placeholder=\"Add new item...\">\n      <button (click)=\"createItem()\">Add Item</button>\n      // Add div with *ngFor to display board items here\n    </div>\n  `\n}",
+        "expectedOutcome": "The input and button are wrapped in a form element with an (ngSubmit) event binding that calls the createItem method, enabling form submission via Enter key or button click.",
+        "successCriteria": [
+          "A form element wraps the input and button with (ngSubmit)=\"createItem()\" event binding."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Good start! Make sure to wrap both the input and button in a form element and add the (ngSubmit) event binding to call createItem.",
+        "feedbackWrong": "wrap the input and button in a form element and add (ngSubmit)=\"createItem()\" to handle form submission.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<form",
+            "(ngSubmit)",
+            "createItem"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step13",
+        "type": "question",
+        "phase": "Step 13 of 13",
+        "title": "Implement ngOnDestroy for cleanup",
+        "instruction": "Add an ngOnDestroy method to the RealTimeBoardComponent that closes the WebSocket connection when the component is destroyed",
+        "hint": "Use ngOnDestroy lifecycle hook to call this.webSocketService.close() for proper cleanup and preventing memory leaks",
+        "analogousExample": "// Similar: cleanup method in Angular\nngOnDestroy() {\n  this.subscription.unsubscribe();\n}",
+        "seedCode": "// Import Angular dependencies and WebSocket service here\n\n// Create the RealTimeBoardComponent here\nexport class RealTimeBoardComponent {\n  // Add component properties here\n  \n  // Add constructor with WebSocketService injection here\n  \n  // Add ngOnInit method here\n  \n  // Add onBoardUpdate method here\n  \n  // Add createItem method here\n  \n  // Add ngOnDestroy method here\n  \n  // Add template property here\n  template = `\n    <div class=\"board\">\n      <h2>Real-Time Board</h2>\n      // Add form wrapper with ngSubmit binding here\n      <input [(ngModel)]=\"newItemContent\" placeholder=\"Add new item...\">\n      <button (click)=\"createItem()\">Add Item</button>\n      // Add div with *ngFor to display board items here\n    </div>\n  `\n}",
+        "expectedOutcome": "The component will have an ngOnDestroy method that properly closes the WebSocket connection when the component is destroyed",
+        "successCriteria": [
+          "ngOnDestroy method is implemented and calls webSocketService.close() for cleanup"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Good start! Make sure your ngOnDestroy method calls this.webSocketService.close() to properly clean up the WebSocket connection.",
+        "feedbackWrong": "The ngOnDestroy method should close the WebSocket connection using this.webSocketService.close() to prevent memory leaks when the component is destroyed.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "ngOnDestroy",
+            "webSocketService.close"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import Angular dependencies and WebSocket service",
+        "id": "step1"
+      },
+      {
+        "label": "Create the RealTimeBoardComponent",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize component properties and board state",
+        "id": "step3"
+      },
+      {
+        "label": "Inject WebSocket service in constructor",
+        "id": "step4"
+      },
+      {
+        "label": "Implement ngOnInit to establish WebSocket connection",
+        "id": "step5"
+      },
+      {
+        "label": "Define board update handler method",
+        "id": "step6"
+      },
+      {
+        "label": "Define board item creation handler",
+        "id": "step7"
+      },
+      {
+        "label": "emits the updated board via WebSocket",
+        "id": "step8"
+      },
+      {
+        "label": "Create the component template structure",
+        "id": "step9"
+      },
+      {
+        "label": "Add board items display with ngFor",
+        "id": "step10"
+      },
+      {
+        "label": "Add input form for creating new board items",
+        "id": "step11"
+      },
+      {
+        "label": "Wire form submission to creation handler",
+        "id": "step12"
+      },
+      {
+        "label": "Implement ngOnDestroy for cleanup",
+        "id": "step13"
+      }
+    ]
+  },
+  "source": "content"
+}

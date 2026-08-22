@@ -1,0 +1,394 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-ts-84",
+    "track": "ts",
+    "lessonNum": 84,
+    "title": "Build schema to type mapper",
+    "shortName": "P84",
+    "intro": {
+      "tag": "LESSON #84",
+      "title": "Build schema to type mapper",
+      "body": "In this lesson, you will build a TypeScript utility that automatically generates TypeScript type definitions from a simple data schema object. You will learn how to use TypeScript's mapped types and conditional types to transform schema keys and values into corresponding type properties. The main constructs involved are generic types, keyof, and template literal types. By the end, you'll have a reusable type mapper that ensures your data structures are type-safe based on your schema.",
+      "usecase": "This pattern is essential when building dynamic form builders or configuration panels where schemas define UI structure and validation rules. For example, in dashboard builders like Grafana or form tools like Formik, schemas describe field types, labels, and constraints, which must be mapped to TypeScript types for type-safe data handling. Developers use schema-to-type mappers to ensure that user inputs match expected structures, preventing runtime errors in data processing. This approach is also common in API clients that generate types from OpenAPI schemas, enabling autocomplete and validation in IDEs."
+    },
+    "objectives": [
+      "Construct a TypeScript type definition from a provided schema object.",
+      "Apply mapped types to transform schema property types into TypeScript types.",
+      "Implement a generic type mapper function that accepts a schema and returns its corresponding type.",
+      "Configure the mapper to handle nested schema structures recursively.",
+      "Integrate the type mapper with a sample data object to enforce type safety.",
+      "Manipulate the schema to add optional properties and update the derived type accordingly.",
+      "Initialize a TypeScript project and configure tsconfig.json for strict type checking relevant to the mapper."
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 11",
+        "title": "Import TypeScript utilities",
+        "instruction": "Import TypeScript's built-in utility types for working with types.",
+        "hint": "Use the import statement to bring in utility types from 'typescript'.",
+        "analogousExample": "// Importing a utility type\nimport { Partial } from 'typescript';",
+        "seedCode": "// Import TypeScript utility types here",
+        "expectedOutcome": "The code will have the necessary imports to use TypeScript's built-in utility types.",
+        "successCriteria": [
+          "TypeScript utility types are imported from 'typescript'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're importing from the correct module and using the proper import syntax.",
+        "feedbackWrong": "The import statement isn't quite right. Remember to import TypeScript's utility types from the 'typescript' module.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "typescript"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 11",
+        "title": "Define a basic schema interface",
+        "instruction": "Create a TypeScript interface named 'Schema' that defines the structure of a schema object with properties and their types. The interface should have a 'properties' field that is a Record mapping string keys to string values representing types.",
+        "hint": "Use the 'interface' keyword followed by the interface name and define a 'properties' field with the type Record<string, string>.",
+        "analogousExample": "// Example: defining an interface for a configuration\ninterface Config {\n  settings: Record<string, boolean>;\n}",
+        "seedCode": "// Import TypeScript utility types here\n\n// Define your Schema interface here",
+        "expectedOutcome": "A Schema interface is created with a properties field typed as Record<string, string>.",
+        "successCriteria": [
+          "The Schema interface is defined with a 'properties' field of type Record<string, string>."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure your interface has a 'properties' field with the type Record<string, string>.",
+        "feedbackWrong": "The Schema interface is not correctly defined. It should have a 'properties' field with type Record<string, string>.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "interface",
+            "Schema",
+            "properties",
+            "Record<string, string>"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 11",
+        "title": "Create a simple type mapper function signature",
+        "instruction": "Create a function named 'mapSchemaToType' that takes a generic parameter 'S' (which extends the Schema interface) and returns a mapped type based on that schema.",
+        "hint": "Start with 'function mapSchemaToType<S extends Schema>()' or use an arrow function with the same signature. The function should return a type, not a value.",
+        "analogousExample": "// Example: generic function that returns a transformed type\nfunction transformObject<T extends object>() {\n  return {} as T;\n}",
+        "seedCode": "// Import TypeScript utility types here\n\n// Define your Schema interface here\n\n// Create your mapSchemaToType function here",
+        "expectedOutcome": "A function signature is defined that will later be used to map schema definitions to TypeScript types.",
+        "successCriteria": [
+          "The function 'mapSchemaToType' is defined with a generic parameter 'S extends Schema' and returns a mapped type."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your function has a generic parameter 'S' that extends the Schema interface and returns a type.",
+        "feedbackWrong": "The function signature doesn't match the requirements. It should take a generic parameter 'S extends Schema' and return a mapped type.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "mapSchemaToType",
+            "S",
+            "extends",
+            "Schema",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 11",
+        "title": "Implement the basic type mapper",
+        "instruction": "Inside your mapSchemaToType function, implement the function body to return a mapped type that converts each schema property to a TypeScript type.",
+        "hint": "Use a mapped type to iterate over the keys of the schema and transform each property type.",
+        "analogousExample": "// Example of a simple type transformation function\nfunction transformObject<T extends Record<string, any>>(obj: T): { [K in keyof T]: string } {\n    return {} as any;\n}",
+        "seedCode": "// Import TypeScript utility types here\n\n// Define your Schema interface here\n\n// Create your mapSchemaToType function here\nfunction mapSchemaToType<T extends Record<string, any>>(schema: T): unknown {\n    // Implement the mapped type transformation here\n}",
+        "expectedOutcome": "The function should have a proper implementation that returns a mapped type based on the schema parameter.",
+        "successCriteria": [
+          "The mapSchemaToType function returns a mapped type that transforms schema properties"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure the function returns a mapped type that transforms each property.",
+        "feedbackWrong": "The implementation doesn't match the expected pattern. Review how mapped types work in TypeScript.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "mapSchemaToType",
+            "return",
+            "{",
+            "}",
+            "[K in keyof",
+            "]",
+            ":",
+            "T[K]"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 11",
+        "title": "Add support for nested schemas",
+        "instruction": "Extend the Schema interface to support nested object schemas by making its property values accept either primitive types or other Schema objects.",
+        "hint": "Use a union type in the Schema interface to allow properties to be either primitive types (string, number, boolean) or nested Schema objects.",
+        "analogousExample": "// Example: Interface with nested structures\ninterface TreeNode {\n    value: number;\n    children?: TreeNode[]; // Recursive reference\n}\n\nfunction processNode(node: TreeNode) {\n    // Process node and its children\n    return node;\n}",
+        "seedCode": "// Import TypeScript utility types here\n\n// Define your Schema interface here\ninterface Schema {\n    [key: string]: string | number | boolean;\n}\n\n// Create your mapSchemaToType function here\nfunction mapSchemaToType<T extends Record<string, any>>(schema: T): unknown {\n    // Implement the mapped type transformation here\n}",
+        "expectedOutcome": "The Schema interface will now support nested structures, allowing property values to be either primitive types or other Schema objects.",
+        "successCriteria": [
+          "Schema interface uses a union type that includes Schema itself as a possible property type, enabling recursive/nested schemas."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but the Schema interface needs to explicitly allow Schema objects as property values. Try using a union type that includes 'Schema' itself.",
+        "feedbackWrong": "The Schema interface still only accepts primitive types. To support nested schemas, you need to modify the interface so property values can also be Schema objects.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "interface",
+            "Schema",
+            "string",
+            "number",
+            "boolean",
+            "Schema"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 11",
+        "title": "Implement array type support",
+        "instruction": "Update the Schema interface to support array types by allowing values to be arrays of strings, numbers, or booleans.",
+        "hint": "Modify the type annotation in the Schema interface to include arrays using the TypeScript syntax for array types.",
+        "analogousExample": "// Example: interface with array support\ninterface ExampleSchema {\n    tags: string[];\n    scores: number[];\n    flags: boolean[];\n}",
+        "seedCode": "// Import TypeScript utility types here\n\n// Define your Schema interface here\ninterface Schema {\n    [key: string]: string | number | boolean;\n}\n\n// Create your mapSchemaToType function here\nfunction mapSchemaToType<T extends Record<string, any>>(schema: T): unknown {\n    // Implement the mapped type transformation here\n}",
+        "expectedOutcome": "The Schema interface now supports array types for its property values.",
+        "successCriteria": [
+          "The Schema interface includes array types (string[], number[], boolean[]) in its union type."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure to include all three array types (string[], number[], boolean[]) in the union type.",
+        "feedbackWrong": "The Schema interface should allow array types. Check the union type to include string[], number[], and boolean[].",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "interface",
+            "Schema",
+            "string[]",
+            "number[]",
+            "boolean[]"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 11",
+        "title": "Create union type support",
+        "instruction": "Extend the Schema interface to allow union types by modifying the property type to accept multiple possible primitive types.",
+        "hint": "Update the interface so each property can be a union of string, number, or boolean types.",
+        "analogousExample": "// Example: interface with union type property\ninterface ExampleSchema {\n    field: string | number | boolean;\n}",
+        "seedCode": "// Import TypeScript utility types here\n\n// Define your Schema interface here\ninterface Schema {\n    [key: string]: string | number | boolean;\n}\n\n// Create your mapSchemaToType function here\nfunction mapSchemaToType<T extends Record<string, any>>(schema: T): unknown {\n    // Implement the mapped type transformation here\n}",
+        "expectedOutcome": "The Schema interface now supports union types for its properties.",
+        "successCriteria": [
+          "Schema interface property type is a union of string, number, and boolean."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure the property type in the Schema interface is a union of string, number, and boolean types.",
+        "feedbackWrong": "The Schema interface property type should be a union of string, number, and boolean types.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "interface",
+            "Schema",
+            "string",
+            "|",
+            "number",
+            "|",
+            "boolean"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 11",
+        "title": "Add optional property support",
+        "instruction": "Update the Schema interface to mark properties as optional using the '?' modifier,",
+        "hint": "Use the '?' after property names in the interface to make them optional. In the function, you can use TypeScript's Partial utility type to map the schema to a type where all properties are optional.",
+        "analogousExample": "// Example: interface with optional properties\ninterface User {\n    name: string;\n    age?: number;\n}\n\n// Example: function returning partial type\nfunction createPartial<T>(obj: T): Partial<T> {\n    return obj;\n}",
+        "seedCode": "// Import TypeScript utility types here\n\n// Define your Schema interface here\ninterface Schema {\n    [key: string]: string | number | boolean;\n}\n\n// Create your mapSchemaToType function here\nfunction mapSchemaToType<T extends Record<string, any>>(schema: T): unknown {\n    // Implement the mapped type transformation here\n}",
+        "expectedOutcome": "The Schema interface should allow optional properties, and mapSchemaToType should return a Partial<T> type to reflect optional properties in the mapped type.",
+        "successCriteria": [
+          "Schema interface uses '?' for optional properties, and mapSchemaToType returns Partial<T>."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure both the Schema interface and the mapSchemaToType function are updated to handle optional properties.",
+        "feedbackWrong": "Check that you've used the '?' modifier in the Schema interface and that mapSchemaToType returns Partial<T>.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "?",
+            "Partial"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 11",
+        "title": "modify the mapSchemaToType function to handle",
+        "instruction": "modify the mapSchemaToType function to handle optional properties by returning Partial<T>.",
+        "hint": "Use the '?' after property names in the interface to make them optional. In the function, you can use TypeScript's Partial utility type to map the schema to a type where all properties are optional.",
+        "analogousExample": "// Example: interface with optional properties\ninterface User {\n    name: string;\n    age?: number;\n}\n\n// Example: function returning partial type\nfunction createPartial<T>(obj: T): Partial<T> {\n    return obj;\n}",
+        "seedCode": "// Import TypeScript utility types here\n\n// Define your Schema interface here\ninterface Schema {\n    [key: string]: string | number | boolean;\n}\n\n// Create your mapSchemaToType function here\nfunction mapSchemaToType<T extends Record<string, any>>(schema: T): unknown {\n    // Implement the mapped type transformation here\n}",
+        "expectedOutcome": "",
+        "successCriteria": [
+          "Complete the step as instructed."
+        ],
+        "feedbackCorrect": "Great! Step completed.",
+        "feedbackPartial": "Review the instruction and try again.",
+        "feedbackWrong": "Check the instruction and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "?",
+            "Partial"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 11",
+        "title": "Create validation examples",
+        "instruction": "Create two example schemas and validate that mapSchemaToType produces correct TypeScript types by adding console.log statements.",
+        "hint": "Define two schema objects with different structures (e.g., userSchema and productSchema) and log the result of calling mapSchemaToType with each.",
+        "analogousExample": "// Example: creating and testing a function\nfunction add(a: number, b: number): number {\n    return a + b;\n}\n\nconsole.log(add(2, 3)); // logs 5\nconsole.log(add(5, 7)); // logs 12",
+        "seedCode": "// Import TypeScript utility types here\n\n// Define your Schema interface here\ninterface Schema {\n    [key: string]: string | number | boolean;\n}\n\n// Create your mapSchemaToType function here\nfunction mapSchemaToType<T extends Record<string, any>>(schema: T): unknown {\n    // Implement the mapped type transformation here\n}\n\n// Create two example schemas and validate the mapper here",
+        "expectedOutcome": "You will see the console output showing the mapped types for your example schemas, confirming the mapper works with real-world examples.",
+        "successCriteria": [
+          "Two example schemas are defined and mapSchemaToType is called with each, with results logged to the console."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure you define two schemas and call mapSchemaToType with each, logging the results.",
+        "feedbackWrong": "Try again. You need to create two example schemas and validate mapSchemaToType by logging the results.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "mapSchemaToType",
+            "console.log"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 11",
+        "title": "Export the final type mapper",
+        "instruction": "Export the Schema interface and mapSchemaToType function so they can be imported in other TypeScript modules.",
+        "hint": "Use the 'export' keyword before the interface and function declarations.",
+        "analogousExample": "// Exporting utilities for reuse\nexport interface User {\n  name: string;\n}\n\nexport function getUserName(user: User): string {\n  return user.name;\n}",
+        "seedCode": "// Import TypeScript utility types here\n\n// Define your Schema interface here\ninterface Schema {\n    [key: string]: string | number | boolean;\n}\n\n// Create your mapSchemaToType function here\nfunction mapSchemaToType<T extends Record<string, any>>(schema: T): unknown {\n    // Implement the mapped type transformation here\n}\n\n// Create two example schemas and validate the mapper here\n\n// Export the Schema interface and mapSchemaToType function here",
+        "expectedOutcome": "The Schema interface and mapSchemaToType function are exported, making them available for import in other modules.",
+        "successCriteria": [
+          "Schema interface and mapSchemaToType function are both exported using the 'export' keyword."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure both the Schema interface and mapSchemaToType function are exported.",
+        "feedbackWrong": "The exports aren't quite right. Remember to use the 'export' keyword before both the interface and function declarations.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "export",
+            "interface",
+            "Schema",
+            "function",
+            "mapSchemaToType"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import TypeScript utilities",
+        "id": "step1"
+      },
+      {
+        "label": "Define a basic schema interface",
+        "id": "step2"
+      },
+      {
+        "label": "Create a simple type mapper function signature",
+        "id": "step3"
+      },
+      {
+        "label": "Implement the basic type mapper",
+        "id": "step4"
+      },
+      {
+        "label": "Add support for nested schemas",
+        "id": "step5"
+      },
+      {
+        "label": "Implement array type support",
+        "id": "step6"
+      },
+      {
+        "label": "Create union type support",
+        "id": "step7"
+      },
+      {
+        "label": "Add optional property support",
+        "id": "step8"
+      },
+      {
+        "label": "modify the mapSchemaToType function to handle",
+        "id": "step9"
+      },
+      {
+        "label": "Create validation examples",
+        "id": "step10"
+      },
+      {
+        "label": "Export the final type mapper",
+        "id": "step11"
+      }
+    ]
+  },
+  "source": "content"
+}

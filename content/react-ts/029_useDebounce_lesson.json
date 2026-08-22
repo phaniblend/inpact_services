@@ -1,0 +1,325 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-react-ts-29",
+    "track": "react-ts",
+    "lessonNum": 29,
+    "title": "useDebounce",
+    "shortName": "P29",
+    "intro": {
+      "tag": "LESSON #29",
+      "title": "useDebounce",
+      "body": "In this lesson, you will build debounced search behavior in a React component: the UI shows what you type immediately, while a separate value updates only after you pause typing. You will implement this with useState and useEffect (and TypeScript), using setTimeout and clearTimeout so rapid keystrokes reset the timer. By the end, you will see live vs debounced values side by side — the same pattern used for search boxes and API calls that should not fire on every keypress.",
+      "usecase": "Debounced input is essential where real-time typing must not trigger work on every keystroke. E‑commerce search, dashboard filters, and username availability checks typically wait until the user pauses before fetching or validating, keeping the app responsive and reducing load on servers and clients."
+    },
+    "objectives": [
+      "Write a custom hook useDebounce<T>(value: T, delay: number): T with explicit input and return types so the abstraction solves a concrete UI lesson and exposes a reliable typed contract.",
+      "Model a useState<T> variable for the debounced value initialized to the input value so state, refs, or values keep a predictable shape as the feature evolves, and data shape and updates remain explicit throughout the lesson.",
+      "Use useEffect with a setTimeout to update the debounced state and return a clearTimeout cleanup so the pattern drives visible behavior, and the effect leaves no stale subscriptions, timers, or listeners behind.",
+      "Consume useDebounce in a search component and demonstrate that the API call fires only after the delay so the learner can connect the typed API to real screen behavior."
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 9",
+        "title": "Import React and the hooks you need",
+        "instruction": "Import React, useState, and useEffect from 'react'.",
+        "hint": "Use a single import line that pulls in React plus the hooks used for state and the debounce timer logic.",
+        "analogousExample": "// Example: importing hooks\nimport React, { useState, useEffect } from 'react';",
+        "seedCode": "// Import React and the required hooks here",
+        "expectedOutcome": "React, useState, and useEffect are imported from 'react' and ready to use.",
+        "successCriteria": [
+          "React, useState, and useEffect are imported from 'react'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Import useState and useEffect from 'react' together with React.",
+        "feedbackWrong": "You need: import React, { useState, useEffect } from 'react'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "React",
+            "useState",
+            "useEffect",
+            "'react'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 9",
+        "title": "Create the main App component with TypeScript",
+        "instruction": "Create a functional component named App that returns a JSX element. Use TypeScript typing for the component.",
+        "hint": "Define a function or arrow function called App that returns a simple JSX element like a div or fragment.",
+        "analogousExample": "// Example of a typed functional component\nfunction App(): JSX.Element {\n  return <div>Hello</div>;\n}",
+        "seedCode": "import React, { useState, useEffect } from 'react';\n\n// Create the App component here",
+        "expectedOutcome": "The App component is defined with proper TypeScript typing and returns JSX.",
+        "successCriteria": [
+          "A functional component named App is created with TypeScript typing and returns JSX."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure the component is named App, has TypeScript typing, and returns JSX.",
+        "feedbackWrong": "The component is missing or incorrect. Ensure you create a functional component named App with proper typing that returns JSX.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "App",
+            "return",
+            "JSX"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 9",
+        "title": "Initialize state for the search input value",
+        "instruction": "Inside your App component, declare a state variable named 'searchTerm' and its setter using useState. Initialize it as an empty string with TypeScript typing.",
+        "hint": "Use the useState hook you imported earlier. Remember to provide the type annotation for the state variable (string).",
+        "analogousExample": "// Example: initializing a string state\nconst [username, setUsername] = useState<string>('');",
+        "seedCode": "import React, { useState, useEffect } from 'react';\n\n// Create the App component here\nconst App = () => {\n  // Initialize searchTerm state here\n\n  return null;\n};",
+        "expectedOutcome": "The App component now has a searchTerm state variable initialized to an empty string with proper TypeScript typing.",
+        "successCriteria": [
+          "searchTerm state is declared using useState with an empty string initial value and string type annotation"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure you're using useState with an empty string initial value and specifying the string type.",
+        "feedbackWrong": "Declare a state variable named searchTerm using useState, initialized as an empty string with TypeScript typing.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "searchTerm",
+            "useState",
+            "''",
+            "string"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 9",
+        "title": "Initialize state for the debounced value",
+        "instruction": "Inside your App component, declare **`debouncedTerm`** and **`setDebouncedTerm`** with **`useState`**, initialized to an empty string and typed as **`string`**: e.g. **`const [debouncedTerm, setDebouncedTerm] = useState<string>('');`**. This holds the value that updates only after typing pauses (you will wire the delay in **`useEffect`** next).",
+        "hint": "Mirror your `searchTerm` pattern: a tuple from `useState`, generic `string`, initial value `''`.",
+        "analogousExample": "const [debouncedTerm, setDebouncedTerm] = useState<string>('');",
+        "seedCode": "import React, { useState, useEffect } from 'react';\n\nconst App = () => {\n  const [searchTerm, setSearchTerm] = useState<string>('');\n\n  // Declare debouncedTerm and setDebouncedTerm here (useState<string>(''))\n\n  return null;\n};",
+        "expectedOutcome": "The App component has a debouncedTerm state variable (and setter) ready for the debounce effect to update.",
+        "successCriteria": [
+          "debouncedTerm and setDebouncedTerm are declared with useState, empty string initial value, and string typing."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Add `const [debouncedTerm, setDebouncedTerm] = useState<string>('');` (or equivalent) after your searchTerm state.",
+        "feedbackWrong": "Declare debounced state: `const [debouncedTerm, setDebouncedTerm] = useState<string>('');` inside App.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "debouncedTerm",
+            "setDebouncedTerm",
+            "useState",
+            "string",
+            "''"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 9",
+        "title": "Implement the debounce logic with useEffect",
+        "instruction": "Add a useEffect inside App that runs when **`searchTerm`** changes: schedule **`setDebouncedTerm(searchTerm)`** (or equivalent) after **500ms** using **`setTimeout`**, and **`return`** a cleanup function that **`clearTimeout`** on the timer you created (store the timer id in a **local** `const` inside the effect, e.g. `const timerId = setTimeout(...)`).",
+        "hint": "Dependencies must include searchTerm. Cleanup runs when searchTerm changes or on unmount — always clear the pending timeout so an old timer cannot update state after a new keystroke.",
+        "analogousExample": "useEffect(() => {\n  const timerId = setTimeout(() => setDebouncedTerm(searchTerm), 500);\n  return () => clearTimeout(timerId);\n}, [searchTerm]);",
+        "seedCode": "import React, { useState, useEffect } from 'react';\n\nconst App = () => {\n  const [searchTerm, setSearchTerm] = useState<string>('');\n  const [debouncedTerm, setDebouncedTerm] = useState<string>('');\n\n  // Add useEffect for debounce logic here\n\n  return null;\n};",
+        "expectedOutcome": "A useEffect debounces updates to debouncedTerm using setTimeout, searchTerm as a dependency, and clearTimeout in the cleanup function.",
+        "successCriteria": [
+          "useEffect depends on searchTerm, uses setTimeout to call setDebouncedTerm after 500ms, and returns a cleanup that clearTimeout the scheduled timer."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Check: searchTerm in the dependency array, setTimeout → setDebouncedTerm, and return () => clearTimeout(timerId).",
+        "feedbackWrong": "You need a useEffect with [searchTerm], setTimeout(…, 500) updating debounced state, and cleanup with clearTimeout.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "useEffect",
+            "setTimeout",
+            "setDebouncedTerm",
+            "searchTerm",
+            "return",
+            "clearTimeout"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 9",
+        "title": "Create the search input handler function",
+        "instruction": "Inside your App component, create a function named 'handleSearchChange' that takes a React.ChangeEvent<HTMLInputElement> as a parameter and updates the searchTerm state with the input's current value.",
+        "hint": "Define a function that receives an event parameter, extracts event.target.value, and calls setSearchTerm with that value.",
+        "analogousExample": "// Example: typed event handler\nfunction handleInputChange(event: React.ChangeEvent<HTMLInputElement>) {\n  setInputValue(event.target.value);\n}",
+        "seedCode": "import React, { useState, useEffect } from 'react';\n\nconst App = () => {\n  const [searchTerm, setSearchTerm] = useState<string>('');\n  const [debouncedTerm, setDebouncedTerm] = useState<string>('');\n\n  useEffect(() => {\n    const timerId = setTimeout(() => {\n      setDebouncedTerm(searchTerm);\n    }, 500);\n    return () => clearTimeout(timerId);\n  }, [searchTerm]);\n\n  // Create handleSearchChange function here\n\n  return null;\n};",
+        "expectedOutcome": "A typed event handler function that updates the searchTerm state when called with an input change event.",
+        "successCriteria": [
+          "The handleSearchChange function is defined, takes a React.ChangeEvent<HTMLInputElement> parameter, and calls setSearchTerm with event.target.value."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've created a function, but check that it properly extracts the value from the event and updates the searchTerm state.",
+        "feedbackWrong": "The function isn't defined correctly. Make sure it's named handleSearchChange, accepts a React.ChangeEvent<HTMLInputElement> parameter, and calls setSearchTerm with the input value.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "handleSearchChange",
+            "event",
+            "target.value",
+            "setSearchTerm"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 9",
+        "title": "Add the search input element to the JSX",
+        "instruction": "Inside your component's return statement, add an input element with type='text', value bound to searchTerm, and onChange wired to handleSearchChange.",
+        "hint": "Use JSX syntax for the input element. The value attribute should be set to the searchTerm state variable, and the onChange event handler should call handleSearchChange.",
+        "analogousExample": "// Example: Controlled input element\n<input type=\"text\" value={inputValue} onChange={handleChange} />",
+        "seedCode": "import React, { useState, useEffect } from 'react';\n\nconst App = () => {\n  const [searchTerm, setSearchTerm] = useState<string>('');\n  const [debouncedTerm, setDebouncedTerm] = useState<string>('');\n\n  useEffect(() => {\n    const timerId = setTimeout(() => {\n      setDebouncedTerm(searchTerm);\n    }, 500);\n    return () => clearTimeout(timerId);\n  }, [searchTerm]);\n\n  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {\n    setSearchTerm(e.target.value);\n  };\n\n  return (\n    <div>\n      {/* Add your search input element here */}\n    </div>\n  );\n};",
+        "expectedOutcome": "The JSX now includes a controlled input element that updates the searchTerm state when the user types.",
+        "successCriteria": [
+          "An input element with type='text', value={searchTerm}, and onChange={handleSearchChange} is present in the return statement."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure the input element has all three required attributes: type='text', value={searchTerm}, and onChange={handleSearchChange}.",
+        "feedbackWrong": "The input element is missing or doesn't have the correct attributes. Check that you've added type='text', value={searchTerm}, and onChange={handleSearchChange}.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<input",
+            "type=\"text\"",
+            "value={searchTerm}",
+            "onChange={handleSearchChange}"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 9",
+        "title": "Display the current search term",
+        "instruction": "Inside the return statement of your component, add a paragraph element that displays the current searchTerm value.",
+        "hint": "Use JSX syntax with curly braces to embed the state value: <p>{searchTerm}</p>",
+        "analogousExample": "// Displaying a state value in JSX\n<p>{someStateValue}</p>",
+        "seedCode": "import React, { useState, useEffect } from 'react';\n\nconst App = () => {\n  const [searchTerm, setSearchTerm] = useState<string>('');\n  const [debouncedTerm, setDebouncedTerm] = useState<string>('');\n\n  useEffect(() => {\n    const timerId = setTimeout(() => {\n      setDebouncedTerm(searchTerm);\n    }, 500);\n    return () => clearTimeout(timerId);\n  }, [searchTerm]);\n\n  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {\n    setSearchTerm(e.target.value);\n  };\n\n  return (\n    <div>\n      <input\n        type=\"text\"\n        value={searchTerm}\n        onChange={handleSearchChange}\n        placeholder=\"Type to search...\"\n      />\n    </div>\n  );\n};",
+        "expectedOutcome": "A paragraph element showing the current searchTerm value appears below the search input.",
+        "successCriteria": [
+          "A <p> element with {searchTerm} inside is added to the JSX return statement."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you've added a paragraph element (<p>) that contains {searchTerm}.",
+        "feedbackWrong": "The paragraph element showing searchTerm is missing or incorrect. Check that you've added <p>{searchTerm}</p> inside the return statement.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<p>",
+            "{searchTerm}",
+            "</p>"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 9",
+        "title": "Display the debounced search term",
+        "instruction": "Add a paragraph element inside the div that displays the debouncedTerm value with a descriptive label.",
+        "hint": "Use JSX to render a paragraph (<p>) that shows the debouncedTerm state variable.",
+        "analogousExample": "// Displaying a state value in JSX\n<p>Current value: {value}</p>",
+        "seedCode": "import React, { useState, useEffect } from 'react';\n\nconst App = () => {\n  const [searchTerm, setSearchTerm] = useState<string>('');\n  const [debouncedTerm, setDebouncedTerm] = useState<string>('');\n\n  useEffect(() => {\n    const timerId = setTimeout(() => {\n      setDebouncedTerm(searchTerm);\n    }, 500);\n    return () => clearTimeout(timerId);\n  }, [searchTerm]);\n\n  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {\n    setSearchTerm(e.target.value);\n  };\n\n  return (\n    <div>\n      <input\n        type=\"text\"\n        value={searchTerm}\n        onChange={handleSearchChange}\n        placeholder=\"Type to search...\"\n      />\n      <p>{searchTerm}</p>\n    </div>\n  );\n};",
+        "expectedOutcome": "The UI will show the debounced search term updating after a 500ms delay when typing stops.",
+        "successCriteria": [
+          "A paragraph element is added that displays the debouncedTerm value with a descriptive label."
+        ],
+        "feedbackCorrect": "You're done — you now see both the live typing and the debounced value.",
+        "feedbackPartial": "You've added a paragraph, but make sure it displays the debouncedTerm value with a descriptive label like 'Debounced term:'.",
+        "feedbackWrong": "The paragraph element displaying the debouncedTerm value is missing or incorrect. Add a <p> element that shows the debouncedTerm state variable.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<p>",
+            "{debouncedTerm}",
+            "Debounced",
+            "term"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import React and the hooks you need",
+        "id": "step1"
+      },
+      {
+        "label": "Create the main App component with TypeScript",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize state for the search input value",
+        "id": "step3"
+      },
+      {
+        "label": "Initialize state for the debounced value",
+        "id": "step4"
+      },
+      {
+        "label": "Implement the debounce logic with useEffect",
+        "id": "step5"
+      },
+      {
+        "label": "Create the search input handler function",
+        "id": "step6"
+      },
+      {
+        "label": "Add the search input element to the JSX",
+        "id": "step7"
+      },
+      {
+        "label": "Display the current search term",
+        "id": "step8"
+      },
+      {
+        "label": "Display the debounced search term",
+        "id": "step9"
+      }
+    ]
+  },
+  "source": "content"
+}

@@ -1,0 +1,402 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-ts-32",
+    "track": "ts",
+    "lessonNum": 32,
+    "title": "Build typed pub sub bus",
+    "shortName": "P32",
+    "intro": {
+      "tag": "LESSON #32",
+      "title": "Build typed pub sub bus",
+      "body": "In this lesson, you will build a typed publish-subscribe (pub/sub) bus in TypeScript, a pattern that allows different parts of an application to communicate by sending and receiving messages. You'll learn how to use TypeScript's generics and type safety to ensure that events are published and subscribed to with the correct data types. The main constructs involved include interfaces for defining event types, a central bus object to manage subscriptions, and functions for publishing events and subscribing to them. By the end, you'll have a reusable, type-safe event system that prevents common runtime errors.",
+      "usecase": "A typed pub/sub bus is a foundational pattern for managing communication between decoupled components in large-scale applications. For example, in a financial dashboard, a stock price update published by a data feed service can be broadcast to multiple independent UI panels—like a chart, a ticker, and a summary widget—without them directly knowing about each other. This pattern is also essential in e-commerce sites, where adding an item to the cart (an event) needs to synchronize the cart modal, header badge, and checkout panel instantly. As a developer, implementing a typed pub/sub system ensures that events are safely structured and subscribers only receive data they expect, reducing bugs in complex, interactive UIs."
+    },
+    "objectives": [
+      "Implement a TypeScript interface to define the structure of a typed pub/sub bus.",
+      "Construct a class that initializes and manages typed event subscriptions.",
+      "Apply generic type parameters to create type-safe publish and subscribe methods.",
+      "Manipulate internal data structures to store and retrieve typed event handlers.",
+      "Integrate the pub/sub bus into a simple TypeScript module for testing.",
+      "Control the flow of typed events by publishing data to specific subscribers.",
+      "Configure the bus to handle multiple event types with distinct payloads."
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 11",
+        "title": "Import TypeScript types and interfaces",
+        "instruction": "Create a TypeScript file and define the basic type structure for our pub/sub bus by declaring an interface for subscribers and a generic type for events.",
+        "hint": "Start by creating an interface for subscriber functions and a generic type for events that will carry data.",
+        "analogousExample": "// Similar: defining types for a messaging system\ninterface MessageHandler {\n  (message: string): void;\n}\ntype MessageEvent<T> = {\n  type: string;\n  data: T;\n};",
+        "seedCode": "// Define the basic type structure for our pub/sub bus\n// Add your TypeScript types and interfaces here\n",
+        "expectedOutcome": "You should have an interface for subscriber functions and a generic type for events defined in TypeScript.",
+        "successCriteria": [
+          "An interface named Subscriber and a generic type named Event are defined with proper TypeScript syntax."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you've defined both the Subscriber interface and Event generic type with proper TypeScript syntax.",
+        "feedbackWrong": "The types aren't defined correctly. Remember to create a Subscriber interface for callback functions and an Event generic type that can carry different data types.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "interface",
+            "Subscriber",
+            "type",
+            "Event",
+            "<T>",
+            "data"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 11",
+        "title": "Define the EventHandler type",
+        "instruction": "Define a generic EventHandler type that accepts any payload type. Use TypeScript's generic syntax with a type parameter (e.g., <T>) and specify it as a function type that takes a payload of that type and returns void.",
+        "hint": "Think of EventHandler as a template for functions that handle events. The type should be something like: type EventHandler<T> = (payload: T) => void;",
+        "analogousExample": "// Example of a generic type for a function\ntype Transformer<T, U> = (input: T) => U;\n\n// For this step, define a similar generic type for event handlers",
+        "seedCode": "// Define the basic type structure for our pub/sub bus\n// Add your TypeScript types and interfaces here\n\n// Define the EventHandler type here",
+        "expectedOutcome": "You will have a generic EventHandler type that can be used to type event-handling functions with any payload type.",
+        "successCriteria": [
+          "A generic EventHandler type is defined with a type parameter and a function signature that takes a payload of that type and returns void."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your EventHandler type is generic (uses a type parameter like <T>) and defines a function that takes a payload of that type and returns void.",
+        "feedbackWrong": "The EventHandler type is not correctly defined. It should be a generic type that describes a function accepting a payload and returning void.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "type",
+            "EventHandler",
+            "<",
+            ">",
+            "payload",
+            "=>",
+            "void"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 11",
+        "title": "Define the EventMap interface",
+        "instruction": "Create an interface named EventMap that will map event names (as string keys) to their payload types (as values).",
+        "hint": "Use the 'interface' keyword followed by the interface name and curly braces. Inside, define key-value pairs where keys are strings and values are types.",
+        "analogousExample": "// Example: interface for mapping actions to handlers\ninterface ActionMap {\n  [key: string]: () => void;\n}",
+        "seedCode": "// Define the basic type structure for our pub/sub bus\n// Add your TypeScript types and interfaces here\n\n// Define the EventHandler type here\n\n// Define the EventMap interface here",
+        "expectedOutcome": "An EventMap interface is created to define the structure for event name to payload type mappings.",
+        "successCriteria": [
+          "The EventMap interface is defined with a string index signature mapping to any type."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure the interface is named EventMap and uses a string index signature.",
+        "feedbackWrong": "The EventMap interface is not correctly defined. It should be an interface with a string index signature mapping to any type.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "interface",
+            "EventMap",
+            "{",
+            "[key: string]",
+            ":",
+            "any",
+            "}"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 11",
+        "title": "Create the PubSubBus class skeleton",
+        "instruction": "Create a class named PubSubBus with a generic type parameter T that extends EventMap.",
+        "hint": "Use the class keyword followed by the class name and generic type parameter. Remember to add the constraint using the extends keyword.",
+        "analogousExample": "// Similar: a generic class with constraint\nclass Container<T extends object> {\n  // class body\n}",
+        "seedCode": "// Define the basic type structure for our pub/sub bus\n// Add your TypeScript types and interfaces here\n\n// Define the EventHandler type here\n\n// Define the EventMap interface here\n\n// Create the PubSubBus class skeleton here",
+        "expectedOutcome": "A PubSubBus class skeleton with proper generic constraint will be created.",
+        "successCriteria": [
+          "The code contains a class named PubSubBus with a generic type parameter T that extends EventMap."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure your class has the correct name and the generic type parameter properly extends EventMap.",
+        "feedbackWrong": "The class definition doesn't match the requirements. Check that you used the correct class name and generic constraint.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "class",
+            "PubSubBus",
+            "<T",
+            "extends",
+            "EventMap"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 11",
+        "title": "Initialize the handlers storage",
+        "instruction": "Inside the PubSubBus class, add a private property named 'handlers' with the type 'Map<keyof EventMap, Set<EventHandler<any>>>' and initialize it as an empty Map.",
+        "hint": "Use TypeScript's private modifier and the Map constructor to create an empty map that will store event handlers by event name.",
+        "analogousExample": "// Similar: a typed storage property in a class\nclass RecipeBook {\n  private recipes: Map<string, string[]> = new Map();\n}",
+        "seedCode": "// Define the basic type structure for our pub/sub bus\n// Add your TypeScript types and interfaces here\n\n// Define the EventHandler type here\n\n// Define the EventMap interface here\n\n// Create the PubSubBus class skeleton here\nclass PubSubBus {\n  // Add the private handlers property here\n}",
+        "expectedOutcome": "The PubSubBus class will have a properly typed private property to store event handlers, ready for the subscribe and unsubscribe methods.",
+        "successCriteria": [
+          "The PubSubBus class contains a private 'handlers' property with the correct Map type and initialization."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure the property is private, has the correct Map type with generics, and is initialized as a new Map.",
+        "feedbackWrong": "The handlers property is missing or has incorrect typing. Review the EventHandler and EventMap types to construct the proper Map type.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "private",
+            "handlers",
+            "Map<keyof EventMap, Set<EventHandler<any>>>",
+            "new Map()"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 11",
+        "title": "Implement the subscribe method",
+        "instruction": "Inside the PubSubBus class, add a public subscribe method that accepts an event name (string) and a handler function, and stores the handler in the handlers map.",
+        "hint": "The method should be generic to capture the event type. Use the EventMap interface to type the event name and handler.",
+        "analogousExample": "// Example: A generic method that adds a listener\nclass EventEmitter {\n  private listeners = new Map<string, Function>();\n  \n  subscribe<T extends string>(event: T, handler: Function) {\n    this.listeners.set(event, handler);\n  }\n}",
+        "seedCode": "// Define the basic type structure for our pub/sub bus\n// Add your TypeScript types and interfaces here\n\n// Define the EventHandler type here\n\n// Define the EventMap interface here\n\n// Create the PubSubBus class skeleton here\nclass PubSubBus {\n  // Add the private handlers property here\n  private handlers = new Map<string, Function[]>();\n  \n  // Add the subscribe method here\n}",
+        "expectedOutcome": "The PubSubBus class will have a subscribe method that can register event handlers with proper TypeScript typing.",
+        "successCriteria": [
+          "The subscribe method is defined inside the PubSubBus class, accepts an event name and handler as parameters, and adds the handler to the handlers map."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure the method is inside the class, accepts both parameters, and stores the handler in the handlers map.",
+        "feedbackWrong": "The subscribe method is missing or incorrectly implemented. Check the method signature and storage logic.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "subscribe",
+            "event",
+            "handler",
+            "handlers",
+            "set",
+            "push"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 11",
+        "title": "Implement the unsubscribe method",
+        "instruction": "Inside the PubSubBus class, add an unsubscribe method that removes a specific handler for a given event type. The method should accept an event type (string) and a handler function, find the handler in the array, and remove it.",
+        "hint": "You can use the handlers map to get the array for the event type, then filter out the handler to remove. Make sure to handle cases where the event type doesn't exist.",
+        "analogousExample": "// Similar: removing an item from an array\nfunction removeItem(arr: number[], item: number): number[] {\n  return arr.filter(i => i !== item);\n}",
+        "seedCode": "// Define the basic type structure for our pub/sub bus\n// Add your TypeScript types and interfaces here\n\n// Define the EventHandler type here\n\n// Define the EventMap interface here\n\n// Create the PubSubBus class skeleton here\nclass PubSubBus {\n  // Add the private handlers property here\n  private handlers = new Map<string, Function[]>();\n  \n  // Add the subscribe method here\n  \n  // Add the unsubscribe method here\n}",
+        "expectedOutcome": "The PubSubBus class now has an unsubscribe method that can remove a specific handler from the internal storage.",
+        "successCriteria": [
+          "The unsubscribe method is defined inside the PubSubBus class, accepts an event type and handler, and removes that handler from the handlers map."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added the unsubscribe method, but check the implementation. Make sure it properly removes the handler from the array for the given event type.",
+        "feedbackWrong": "The unsubscribe method is missing or incorrect. Remember to define it inside the class and implement the removal logic.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "unsubscribe",
+            "eventType",
+            "handler",
+            "handlers",
+            "filter",
+            "delete"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 11",
+        "title": "Implement the publish method",
+        "instruction": "Inside the PubSubBus class, implement the publish method that accepts an event name and payload,",
+        "hint": "The publish method should retrieve the handlers array for the given event name from the handlers map, then iterate through each handler and call it with the payload.",
+        "analogousExample": "// Similar: a method that calls stored functions\nclass EventEmitter {\n  private listeners = new Map<string, Function[]>();\n  \n  emit(event: string, data: any) {\n    const handlers = this.listeners.get(event);\n    if (handlers) {\n      handlers.forEach(handler => handler(data));\n    }\n  }\n}",
+        "seedCode": "// Define the basic type structure for our pub/sub bus\n// Add your TypeScript types and interfaces here\n\n// Define the EventHandler type here\n\n// Define the EventMap interface here\n\n// Create the PubSubBus class skeleton here\nclass PubSubBus {\n  // Add the private handlers property here\n  private handlers = new Map<string, Function[]>();\n  \n  // Add the subscribe method here\n  \n  // Add the unsubscribe method here\n  \n  // Implement the publish method here\n}",
+        "expectedOutcome": "The PubSubBus class will have a publish method that can trigger all handlers for a specific event with the provided payload.",
+        "successCriteria": [
+          "The publish method is implemented inside the PubSubBus class, accepts an event name and payload, retrieves handlers from the map, and calls each handler with the payload."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added a publish method, but it might be missing proper type handling or the iteration logic. Make sure it retrieves handlers from the map and calls each one with the payload.",
+        "feedbackWrong": "The publish method is not implemented correctly. Check that it's inside the PubSubBus class, accepts event and payload parameters, and calls all handlers for that event.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "publish",
+            "handlers.get",
+            "forEach",
+            "handler(payload)"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 11",
+        "title": "calls all registered handlers for that event",
+        "instruction": "calls all registered handlers for that event.",
+        "hint": "The publish method should retrieve the handlers array for the given event name from the handlers map, then iterate through each handler and call it with the payload.",
+        "analogousExample": "// Similar: a method that calls stored functions\nclass EventEmitter {\n  private listeners = new Map<string, Function[]>();\n  \n  emit(event: string, data: any) {\n    const handlers = this.listeners.get(event);\n    if (handlers) {\n      handlers.forEach(handler => handler(data));\n    }\n  }\n}",
+        "seedCode": "// Define the basic type structure for our pub/sub bus\n// Add your TypeScript types and interfaces here\n\n// Define the EventHandler type here\n\n// Define the EventMap interface here\n\n// Create the PubSubBus class skeleton here\nclass PubSubBus {\n  // Add the private handlers property here\n  private handlers = new Map<string, Function[]>();\n  \n  // Add the subscribe method here\n  \n  // Add the unsubscribe method here\n  \n  // Implement the publish method here\n}",
+        "expectedOutcome": "",
+        "successCriteria": [
+          "Complete the step as instructed."
+        ],
+        "feedbackCorrect": "Great! Step completed.",
+        "feedbackPartial": "Review the instruction and try again.",
+        "feedbackWrong": "Check the instruction and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "publish",
+            "handlers.get",
+            "forEach",
+            "handler(payload)"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 11",
+        "title": "Create a usage example interface",
+        "instruction": "Define an example EventMap interface with specific event types and payloads to demonstrate real-world usage of your typed pub/sub bus.",
+        "hint": "Create a new interface that extends or implements your generic EventMap with concrete event names and payload types.",
+        "analogousExample": "// Example: defining a concrete event map\ninterface AppEvents {\n  'user-login': { userId: string; timestamp: Date };\n  'cart-update': { cartId: string; items: number };\n  'error': { message: string; code: number };\n}",
+        "seedCode": "// Define the basic type structure for our pub/sub bus\n// Add your TypeScript types and interfaces here\n\n// Define the EventHandler type here\n\n// Define the EventMap interface here\n\n// Create the PubSubBus class skeleton here\nclass PubSubBus {\n  // Add the private handlers property here\n  private handlers = new Map<string, Function[]>();\n  \n  // Add the subscribe method here\n  \n  // Add the unsubscribe method here\n  \n  // Implement the publish method here\n}\n\n// Define your example EventMap interface here",
+        "expectedOutcome": "You will have a concrete EventMap interface with specific event names and typed payloads that demonstrates how the pub/sub bus can be used in real scenarios.",
+        "successCriteria": [
+          "An example EventMap interface is defined with at least two different event types and their corresponding payload types."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started defining an interface, but make sure it includes specific event names as keys and typed payloads as values.",
+        "feedbackWrong": "The example EventMap interface wasn't properly defined. Remember to create an interface with event names as keys and their payload types as values.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "interface",
+            "EventMap",
+            "event",
+            "payload"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 11",
+        "title": "Instantiate and use the typed pub/sub bus",
+        "instruction": "Create an instance of PubSubBus with your example EventMap interface and demonstrate usage by subscribing to an event, publishing a payload, and logging the result.",
+        "hint": "Instantiate the class with new PubSubBus<YourEventMap>(), then call subscribe with an event name and handler, and publish with matching event name and payload.",
+        "analogousExample": "// Similar: creating and using a typed instance\ninterface MyEvents {\n  'data': string;\n}\nconst bus = new PubSubBus<MyEvents>();\nbus.subscribe('data', (payload) => console.log(payload));\nbus.publish('data', 'Hello!');",
+        "seedCode": "// Define the basic type structure for our pub/sub bus\n// Add your TypeScript types and interfaces here\n\n// Define the EventHandler type here\ntype EventHandler<T> = (payload: T) => void;\n\n// Define the EventMap interface here\ninterface EventMap {\n  [event: string]: any;\n}\n\n// Create the PubSubBus class skeleton here\nclass PubSubBus<T extends EventMap> {\n  // Add the private handlers property here\n  private handlers = new Map<string, Function[]>();\n  \n  // Add the subscribe method here\n  subscribe<K extends keyof T>(event: K, handler: EventHandler<T[K]>): void {\n    const eventHandlers = this.handlers.get(event as string) || [];\n    eventHandlers.push(handler);\n    this.handlers.set(event as string, eventHandlers);\n  }\n  \n  // Add the unsubscribe method here\n  unsubscribe<K extends keyof T>(event: K, handler: EventHandler<T[K]>): void {\n    const eventHandlers = this.handlers.get(event as string);\n    if (eventHandlers) {\n      const index = eventHandlers.indexOf(handler);\n      if (index > -1) {\n        eventHandlers.splice(index, 1);\n      }\n    }\n  }\n  \n  // Implement the publish method here\n  publish<K extends keyof T>(event: K, payload: T[K]): void {\n    const eventHandlers = this.handlers.get(event as string) || [];\n    eventHandlers.forEach(handler => handler(payload));\n  }\n}\n\n// Define your example EventMap interface here\ninterface ExampleEvents {\n  'userLogin': { username: string; timestamp: number };\n  'messageSent': string;\n}\n\n// Create an instance and demonstrate usage here",
+        "expectedOutcome": "A fully typed pub/sub bus instance is created and used with proper TypeScript type checking for events and payloads.",
+        "successCriteria": [
+          "PubSubBus is instantiated with ExampleEvents type, subscribe is called with a valid event name and handler, and publish is called with matching event name and typed payload."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're using the ExampleEvents interface when creating the PubSubBus instance and that your subscribe/publish calls match the event names and payload types defined in that interface.",
+        "feedbackWrong": "The typed pub/sub bus isn't being used correctly. Check that you're creating an instance with the ExampleEvents type and calling subscribe/publish with properly typed parameters.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "new PubSubBus<ExampleEvents>",
+            "subscribe",
+            "publish"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import TypeScript types and interfaces",
+        "id": "step1"
+      },
+      {
+        "label": "Define the EventHandler type",
+        "id": "step2"
+      },
+      {
+        "label": "Define the EventMap interface",
+        "id": "step3"
+      },
+      {
+        "label": "Create the PubSubBus class skeleton",
+        "id": "step4"
+      },
+      {
+        "label": "Initialize the handlers storage",
+        "id": "step5"
+      },
+      {
+        "label": "Implement the subscribe method",
+        "id": "step6"
+      },
+      {
+        "label": "Implement the unsubscribe method",
+        "id": "step7"
+      },
+      {
+        "label": "Implement the publish method",
+        "id": "step8"
+      },
+      {
+        "label": "calls all registered handlers for that event",
+        "id": "step9"
+      },
+      {
+        "label": "Create a usage example interface",
+        "id": "step10"
+      },
+      {
+        "label": "Instantiate and use the typed pub/sub bus",
+        "id": "step11"
+      }
+    ]
+  },
+  "source": "content"
+}

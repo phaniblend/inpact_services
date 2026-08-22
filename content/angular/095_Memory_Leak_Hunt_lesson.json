@@ -1,0 +1,434 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-angular-95",
+    "track": "angular",
+    "lessonNum": 95,
+    "title": "Memory Leak Hunt",
+    "shortName": "P95",
+    "intro": {
+      "tag": "LESSON #95",
+      "title": "Memory Leak Hunt",
+      "body": "In this lesson, you will build a simple Angular application that demonstrates how memory leaks can occur and how to prevent them. You will learn the core concept of unsubscribing from Observables to release resources when a component is destroyed. The main technologies involved are Angular components, RxJS Observables, and lifecycle hooks like ngOnDestroy. By the end, you'll understand why memory leaks happen and how to write cleaner, more efficient Angular code.",
+      "usecase": "Memory leaks in Angular applications commonly occur in long-running, interactive UIs like real-time dashboards, data tables with filters, and complex single-page applications. For example, a financial dashboard that continuously streams live market data can accumulate orphaned subscriptions and event listeners if components are not properly cleaned up when navigating between views. Developers must actively hunt for these leaks to prevent gradual performance degradation and browser crashes, especially in applications with dynamic content loading, modal dialboards, or real-time chat interfaces where components are frequently created and destroyed."
+    },
+    "objectives": [
+      "Implement ngOnDestroy lifecycle hook to clean up subscriptions",
+      "Apply the async pipe in templates to automatically manage observables",
+      "Construct a service that properly unsubscribes from event emitters",
+      "Configure takeUntil operator to control observable completion",
+      "Initialize component properties with null to prevent memory retention",
+      "Manipulate DOM event listeners using Renderer2 for proper cleanup",
+      "Integrate OnDestroy interface to enforce cleanup patterns",
+      "Update component state to release references when components are destroyed"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 11",
+        "title": "Import Component, OnInit, OnDestroy, and Subscription from Angular core",
+        "instruction": "Import Component, OnInit, and OnDestroy from '@angular/core' and Subscription from 'rxjs'.",
+        "hint": "Use the import statement to bring in the necessary Angular lifecycle hooks and RxJS subscription management class.",
+        "analogousExample": "// Importing Angular core features and RxJS\nimport { Component, OnInit, OnDestroy } from '@angular/core';\nimport { Subscription } from 'rxjs';",
+        "seedCode": {
+          "App.tsx": "// Import Component, OnInit, OnDestroy from '@angular/core' and Subscription from 'rxjs'",
+          "store.ts": "// store setup",
+          "selectors.ts": "// selectors"
+        },
+        "expectedOutcome": "The necessary imports for Angular lifecycle hooks and RxJS subscription management are added to the file.",
+        "successCriteria": [
+          "Component, OnInit, and OnDestroy are imported from '@angular/core', and Subscription is imported from 'rxjs'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've imported some items, but check if you have all required imports: Component, OnInit, OnDestroy from '@angular/core' and Subscription from 'rxjs'.",
+        "feedbackWrong": "The imports are incorrect or incomplete. You need to import Component, OnInit, OnDestroy from '@angular/core' and Subscription from 'rxjs'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "Component",
+            "OnInit",
+            "OnDestroy",
+            "'@angular/core'",
+            "Subscription",
+            "'rxjs'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 11",
+        "title": "Create the MemoryLeakHuntComponent class with Component decorator",
+        "instruction": "Create the MemoryLeakHuntComponent class with the @Component decorator, including selector and template metadata.",
+        "hint": "Use the imported Component decorator and define a class that implements OnInit and OnDestroy.",
+        "analogousExample": "// Example component structure\n@Component({\n  selector: 'app-example',\n  template: '<p>Example component</p>'\n})\nexport class ExampleComponent implements OnInit, OnDestroy {\n  ngOnInit() {}\n  ngOnDestroy() {}\n}",
+        "seedCode": {
+          "App.tsx": "import { Component, OnInit, OnDestroy } from '@angular/core';\nimport { Subscription } from 'rxjs';\n\n// Create the MemoryLeakHuntComponent class with @Component decorator\n",
+          "store.ts": "// store setup",
+          "selectors.ts": "// selectors"
+        },
+        "expectedOutcome": "A component class named MemoryLeakHuntComponent is created with proper Angular decorator and lifecycle interfaces.",
+        "successCriteria": [
+          "MemoryLeakHuntComponent class exists with @Component decorator containing selector and template metadata, and implements OnInit and OnDestroy."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure your component has the @Component decorator with selector and template, and implements both OnInit and OnDestroy.",
+        "feedbackWrong": "The component structure is incomplete. Check that you have the @Component decorator with selector and template, and that the class implements OnInit and OnDestroy.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "@Component",
+            "MemoryLeakHuntComponent",
+            "selector",
+            "template",
+            "implements",
+            "OnInit",
+            "OnDestroy"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 11",
+        "title": "Implement OnInit interface and define ngOnInit method",
+        "instruction": "In the MemoryLeakHuntComponent class, implement the OnInit interface and define an empty ngOnInit method.",
+        "hint": "Add 'implements OnInit' after the class name and create a public ngOnInit() method that returns void.",
+        "analogousExample": "// Implementing OnInit in another component\n@Component({...})\nexport class ExampleComponent implements OnInit {\n  ngOnInit(): void {\n    // initialization logic here\n  }\n}",
+        "seedCode": {
+          "App.tsx": "import { Component, OnInit, OnDestroy } from '@angular/core';\nimport { Subscription } from 'rxjs';\n\n// Create the MemoryLeakHuntComponent class with @Component decorator\n@Component({\n  selector: 'app-memory-leak-hunt',\n  template: '<p>Memory Leak Hunt Component</p>'\n})\nexport class MemoryLeakHuntComponent {\n  \n}",
+          "store.ts": "// store setup",
+          "selectors.ts": "// selectors"
+        },
+        "expectedOutcome": "The component will implement the OnInit interface and have an empty ngOnInit method ready for initialization logic.",
+        "successCriteria": [
+          "MemoryLeakHuntComponent implements OnInit and has a public ngOnInit method that returns void."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure you've both implemented the OnInit interface (using 'implements OnInit') and defined the ngOnInit method with the correct signature (public, returns void).",
+        "feedbackWrong": "The component doesn't yet implement OnInit or have the ngOnInit method. Remember to add 'implements OnInit' after the class name and create a public ngOnInit(): void method.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "implements OnInit",
+            "ngOnInit(): void"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 11",
+        "title": "Implement OnDestroy interface and define ngOnDestroy method",
+        "instruction": "In your MemoryLeakHuntComponent class, implement the OnDestroy interface and create an empty ngOnDestroy method.",
+        "hint": "Add 'OnDestroy' to the class's 'implements' list and define a method named 'ngOnDestroy' with no return type annotation.",
+        "analogousExample": "// Similar: implementing an interface and lifecycle method\nclass ExampleComponent implements OnInit, OnDestroy {\n  ngOnInit() {}\n  ngOnDestroy() {}\n}",
+        "seedCode": {
+          "App.tsx": "import { Component, OnInit, OnDestroy } from '@angular/core';\nimport { Subscription } from 'rxjs';\n\n// Create the MemoryLeakHuntComponent class with @Component decorator\n@Component({\n  selector: 'app-memory-leak-hunt',\n  template: '<p>Memory Leak Hunt Component</p>'\n})\nexport class MemoryLeakHuntComponent implements OnInit, OnDestroy {\n  ngOnInit() {}\n  \n  // Add ngOnDestroy method here\n  \n}",
+          "store.ts": "// store setup",
+          "selectors.ts": "// selectors"
+        },
+        "expectedOutcome": "The component now implements both OnInit and OnDestroy interfaces, with empty lifecycle methods defined.",
+        "successCriteria": [
+          "OnDestroy is added to the 'implements' list and an empty ngOnDestroy method is defined in the class."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you've added 'OnDestroy' to the 'implements' list and created a method named 'ngOnDestroy' with no parameters.",
+        "feedbackWrong": "The component should implement both OnInit and OnDestroy interfaces. Add 'OnDestroy' to the 'implements' list and define an empty 'ngOnDestroy' method.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "implements",
+            "OnDestroy",
+            "ngOnDestroy()"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 11",
+        "title": "Add component state properties for timer and data",
+        "instruction": "Inside the MemoryLeakHuntComponent class, add two properties: a timer property of type number and a data property of type any[].",
+        "hint": "Declare these properties directly in the class body, above the ngOnInit method. Use TypeScript type annotations.",
+        "analogousExample": "// Example: adding properties to an Angular component class\nclass ExampleComponent {\n  counter: number = 0;\n  items: string[] = [];\n}",
+        "seedCode": {
+          "App.tsx": "import { Component, OnInit, OnDestroy } from '@angular/core';\nimport { Subscription } from 'rxjs';\n\n// Create the MemoryLeakHuntComponent class with @Component decorator\n@Component({\n  selector: 'app-memory-leak-hunt',\n  template: '<p>Memory Leak Hunt Component</p>'\n})\nexport class MemoryLeakHuntComponent implements OnInit, OnDestroy {\n  // Add timer and data properties here\n  \n  ngOnInit() {}\n  \n  // Add ngOnDestroy method here\n  \n}",
+          "store.ts": "// store setup",
+          "selectors.ts": "// selectors"
+        },
+        "expectedOutcome": "The component class will have timer and data properties declared, ready to be used for demonstrating potential memory leaks.",
+        "successCriteria": [
+          "The MemoryLeakHuntComponent class contains a timer property of type number and a data property of type any[]."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added one property, but need both timer (number) and data (any[]).",
+        "feedbackWrong": "The component class doesn't have both required properties. Add timer: number and data: any[] inside the class.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "timer:",
+            "number",
+            "data:",
+            "any[]"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 11",
+        "title": "Create a simulated data stream in ngOnInit",
+        "instruction": "Inside the ngOnInit method, create an interval observable using RxJS's interval function that emits every second and updates the data property with the current count.",
+        "hint": "Use RxJS's interval function to create an observable that emits sequential numbers every 1000 milliseconds. Subscribe to it and update the data property with the emitted value.",
+        "analogousExample": "// Creating an interval observable in ngOnInit\nngOnInit() {\n  interval(1000).subscribe(value => {\n    this.data = value;\n  });\n}",
+        "seedCode": {
+          "App.tsx": "import { Component, OnInit, OnDestroy } from '@angular/core';\nimport { Subscription, interval } from 'rxjs';\n\n// Create the MemoryLeakHuntComponent class with @Component decorator\n@Component({\n  selector: 'app-memory-leak-hunt',\n  template: '<p>Memory Leak Hunt Component</p>'\n})\nexport class MemoryLeakHuntComponent implements OnInit, OnDestroy {\n  // Add timer and data properties here\n  \n  // Declare dataSubscription property here\n  \n  ngOnInit() {\n    // Create interval observable here\n  }\n  \n  // Add ngOnDestroy method here\n  \n}",
+          "store.ts": "// store setup",
+          "selectors.ts": "// selectors"
+        },
+        "expectedOutcome": "The ngOnInit method will now contain an interval observable that updates the data property every second, simulating a data stream that needs cleanup.",
+        "successCriteria": [
+          "An interval observable is created in ngOnInit that emits every 1000ms and updates the data property with the emitted value."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're using RxJS's interval function and subscribing to update the data property. Check that the interval emits every 1000ms.",
+        "feedbackWrong": "The interval observable wasn't properly created. Remember to import interval from 'rxjs', create an observable that emits every 1000ms, and subscribe to update the data property.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "interval",
+            "subscribe",
+            "data",
+            "1000"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 11",
+        "title": "Subscribe to the data stream and store the subscription",
+        "instruction": "Inside the ngOnInit method, subscribe to the interval observable and assign the returned subscription to the dataSubscription property.",
+        "hint": "Call the subscribe method on the interval observable and assign the result to this.dataSubscription.",
+        "analogousExample": "// Similar: subscribing to an observable\nconst subscription = interval(1000).subscribe(value => console.log(value));",
+        "seedCode": {
+          "App.tsx": "import { Component, OnInit, OnDestroy } from '@angular/core';\nimport { Subscription, interval } from 'rxjs';\n\n// Create the MemoryLeakHuntComponent class with @Component decorator\n@Component({\n  selector: 'app-memory-leak-hunt',\n  template: '<p>Memory Leak Hunt Component</p>'\n})\nexport class MemoryLeakHuntComponent implements OnInit, OnDestroy {\n  // Add timer and data properties here\n  \n  // Declare dataSubscription property here\n  dataSubscription: Subscription;\n  \n  ngOnInit() {\n    // Create interval observable here\n    const dataStream = interval(1000);\n    // Subscribe to the data stream and store the subscription\n  }\n  \n  // Add ngOnDestroy method here\n  \n}",
+          "store.ts": "// store setup",
+          "selectors.ts": "// selectors"
+        },
+        "expectedOutcome": "The component now subscribes to the interval observable and stores the subscription reference for proper cleanup.",
+        "successCriteria": [
+          "The interval observable is subscribed to and the subscription is assigned to the dataSubscription property."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're assigning the subscription to the dataSubscription property.",
+        "feedbackWrong": "The subscription wasn't properly stored. Remember to call subscribe() on the interval observable and assign the result to this.dataSubscription.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "subscribe",
+            "dataSubscription",
+            "="
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 11",
+        "title": "Add cleanup logic in ngOnDestroy",
+        "instruction": "Inside the ngOnDestroy method, add logic to unsubscribe from the dataSubscription if it exists.",
+        "hint": "Check if the subscription property is defined before calling unsubscribe() on it.",
+        "analogousExample": "// Example cleanup in ngOnDestroy\nngOnDestroy() {\n  if (this.dataSubscription) {\n    this.dataSubscription.unsubscribe();\n  }\n}",
+        "seedCode": {
+          "App.tsx": "import { Component, OnInit, OnDestroy } from '@angular/core';\nimport { Subscription, interval } from 'rxjs';\n\n// Create the MemoryLeakHuntComponent class with @Component decorator\n@Component({\n  selector: 'app-memory-leak-hunt',\n  template: '<p>Memory Leak Hunt Component</p>'\n})\nexport class MemoryLeakHuntComponent implements OnInit, OnDestroy {\n  // Add timer and data properties here\n  \n  // Declare dataSubscription property here\n  dataSubscription: Subscription;\n  \n  ngOnInit() {\n    // Create interval observable here\n    const dataStream = interval(1000);\n    // Subscribe to the data stream and store the subscription\n  }\n  \n  // Add ngOnDestroy method here\n  ngOnDestroy() {\n    \n  }\n  \n}",
+          "store.ts": "// store setup",
+          "selectors.ts": "// selectors"
+        },
+        "expectedOutcome": "The ngOnDestroy method now includes proper cleanup logic to prevent memory leaks by unsubscribing from the observable subscription.",
+        "successCriteria": [
+          "ngOnDestroy contains an if statement that checks if dataSubscription exists and calls unsubscribe() on it."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're checking if the subscription exists before calling unsubscribe().",
+        "feedbackWrong": "The cleanup logic is missing or incorrect. Remember to check if dataSubscription exists and call unsubscribe() on it.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "ngOnDestroy",
+            "if",
+            "dataSubscription",
+            "unsubscribe"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 11",
+        "title": "Add template structure to display data",
+        "instruction": "Update the component's template to include a header section and a paragraph that displays the timer value from your component state.",
+        "hint": "Access the timer property in your template using interpolation syntax {{ timer }}. Add a <h2> for the header.",
+        "analogousExample": "// Similar: template with header and data display\n@Component({\n  selector: 'app-example',\n  template: '<h2>Example Component</h2><p>Current value: {{ value }}</p>'\n})\nexport class ExampleComponent {\n  value = 42;\n}",
+        "seedCode": {
+          "App.tsx": "import { Component, OnInit, OnDestroy } from '@angular/core';\nimport { Subscription, interval } from 'rxjs';\n\n// Create the MemoryLeakHuntComponent class with @Component decorator\n@Component({\n  selector: 'app-memory-leak-hunt',\n  template: '<p>Memory Leak Hunt Component</p>'\n})\nexport class MemoryLeakHuntComponent implements OnInit, OnDestroy {\n  // Add timer and data properties here\n  timer = 0;\n  \n  // Declare dataSubscription property here\n  dataSubscription: Subscription;\n  \n  ngOnInit() {\n    // Create interval observable here\n    const dataStream = interval(1000);\n    // Subscribe to the data stream and store the subscription\n  }\n  \n  // Add ngOnDestroy method here\n  ngOnDestroy() {\n    \n  }\n  \n}",
+          "store.ts": "// store setup",
+          "selectors.ts": "// selectors"
+        },
+        "expectedOutcome": "The component template will show a header and the current timer value, making the memory leak scenario visible in the UI.",
+        "successCriteria": [
+          "Template contains an <h2> header and a paragraph displaying {{ timer }} using interpolation."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You added some template elements, but make sure you have both a header and the timer display using interpolation.",
+        "feedbackWrong": "The template doesn't yet show the header and timer display as requested. Check the interpolation syntax.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<h2>",
+            "{{ timer }}",
+            "template"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 11",
+        "title": "Display the timer and data in the template",
+        "instruction": "Update the component's template to display the current timer value and data array length using interpolation.",
+        "hint": "Use double curly braces {{ }} to bind component properties in the template. You can display both the timer value and a message about data length.",
+        "analogousExample": "// Example: Displaying component properties in template\n@Component({\n  selector: 'app-example',\n  template: '<p>Count: {{ count }}</p><p>Items: {{ items.length }}</p>'\n})\nexport class ExampleComponent {\n  count = 5;\n  items = [1, 2, 3];\n}",
+        "seedCode": {
+          "App.tsx": "import { Component, OnInit, OnDestroy } from '@angular/core';\nimport { Subscription, interval } from 'rxjs';\n\n// Create the MemoryLeakHuntComponent class with @Component decorator\n@Component({\n  selector: 'app-memory-leak-hunt',\n  template: '<p>Memory Leak Hunt Component</p>'\n})\nexport class MemoryLeakHuntComponent implements OnInit, OnDestroy {\n  // Add timer and data properties here\n  timer = 0;\n  \n  // Declare dataSubscription property here\n  dataSubscription: Subscription;\n  \n  ngOnInit() {\n    // Create interval observable here\n    const dataStream = interval(1000);\n    // Subscribe to the data stream and store the subscription\n  }\n  \n  // Add ngOnDestroy method here\n  ngOnDestroy() {\n    \n  }\n  \n}",
+          "store.ts": "// store setup",
+          "selectors.ts": "// selectors"
+        },
+        "expectedOutcome": "The template will show the timer value and data length when the component renders.",
+        "successCriteria": [
+          "Template contains interpolation expressions for timer and data array length"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're using interpolation syntax {{ }} and displaying both timer and data length.",
+        "feedbackWrong": "The template doesn't yet display the timer and data. Remember to use interpolation with double curly braces.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "{{",
+            "timer",
+            "length"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 11",
+        "title": "Add a button to manually trigger cleanup",
+        "instruction": "Add a button element to your component's template with a click handler that calls the ngOnDestroy method to manually test cleanup functionality.",
+        "hint": "Use the (click) event binding to call ngOnDestroy() when the button is clicked.",
+        "analogousExample": "// Adding a button with click handler\n<button (click)=\"ngOnDestroy()\">Clean Up</button>",
+        "seedCode": {
+          "App.tsx": "import { Component, OnInit, OnDestroy } from '@angular/core';\nimport { Subscription, interval } from 'rxjs';\n\n// Create the MemoryLeakHuntComponent class with @Component decorator\n@Component({\n  selector: 'app-memory-leak-hunt',\n  template: '<p>Memory Leak Hunt Component</p>'\n})\nexport class MemoryLeakHuntComponent implements OnInit, OnDestroy {\n  // Add timer and data properties here\n  timer = 0;\n  \n  // Declare dataSubscription property here\n  dataSubscription: Subscription;\n  \n  ngOnInit() {\n    // Create interval observable here\n    const dataStream = interval(1000);\n    // Subscribe to the data stream and store the subscription\n  }\n  \n  // Add ngOnDestroy method here\n  ngOnDestroy() {\n    \n  }\n  \n}",
+          "store.ts": "// store setup",
+          "selectors.ts": "// selectors"
+        },
+        "expectedOutcome": "The component template will include a button that, when clicked, triggers the ngOnDestroy method to simulate cleanup.",
+        "successCriteria": [
+          "A button element with (click)=\"ngOnDestroy()\" is added to the component's template."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure you've added a button element with a click handler that calls ngOnDestroy().",
+        "feedbackWrong": "The button with click handler wasn't added correctly. Check that you've added a <button> element with (click)=\"ngOnDestroy()\" in the template.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<button",
+            "(click)=\"ngOnDestroy()\""
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import Component, OnInit, OnDestroy, and Subscription from Angular core",
+        "id": "step1"
+      },
+      {
+        "label": "Create the MemoryLeakHuntComponent class with Component decorator",
+        "id": "step2"
+      },
+      {
+        "label": "Implement OnInit interface and define ngOnInit method",
+        "id": "step3"
+      },
+      {
+        "label": "Implement OnDestroy interface and define ngOnDestroy method",
+        "id": "step4"
+      },
+      {
+        "label": "Add component state properties for timer and data",
+        "id": "step5"
+      },
+      {
+        "label": "Create a simulated data stream in ngOnInit",
+        "id": "step6"
+      },
+      {
+        "label": "Subscribe to the data stream and store the subscription",
+        "id": "step7"
+      },
+      {
+        "label": "Add cleanup logic in ngOnDestroy",
+        "id": "step8"
+      },
+      {
+        "label": "Add template structure to display data",
+        "id": "step9"
+      },
+      {
+        "label": "Display the timer and data in the template",
+        "id": "step10"
+      },
+      {
+        "label": "Add a button to manually trigger cleanup",
+        "id": "step11"
+      }
+    ],
+    "answerShape": "multi-file"
+  },
+  "source": "content"
+}

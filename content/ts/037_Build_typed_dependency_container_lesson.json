@@ -1,0 +1,338 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-ts-37",
+    "track": "ts",
+    "lessonNum": 37,
+    "title": "Build typed dependency container",
+    "shortName": "P37",
+    "intro": {
+      "tag": "LESSON #37",
+      "title": "Build typed dependency container",
+      "body": "In this lesson, you will build a typed dependency container in TypeScript, a tool for managing and injecting service instances in an application. You'll learn the core concept of dependency injection, which helps organize code by decoupling classes from their dependencies. The main technologies involved are TypeScript's interfaces, generics, and classes to ensure type safety. By the end, you'll have a functional container that can register and resolve services with full type checking.",
+      "usecase": "Typed dependency containers are essential in large-scale applications like e-commerce dashboards or enterprise admin panels, where managing dozens of services—such as user authentication, payment gateways, and data analytics—must be type-safe and maintainable. For example, in a dashboard that displays real-time sales data, filters, and interactive charts, a typed container ensures that each UI component receives correctly structured API clients and state managers without runtime errors. This pattern allows developers to swap implementations (like mocking a service during testing) while keeping the application's architecture clean and predictable, directly improving developer productivity and reducing bugs in complex product interfaces."
+    },
+    "objectives": [
+      "Implement a generic container class to store dependencies with type safety.",
+      "Construct a registration method that binds service identifiers to their implementations.",
+      "Configure a resolution method to retrieve and instantiate dependencies from the container.",
+      "Apply dependency injection patterns by integrating the container into a sample application.",
+      "Manipulate the container to handle both singleton and transient service lifetimes.",
+      "Initialize the container with a set of predefined services and validate their types.",
+      "Update the container to support optional dependencies and default implementations."
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 9",
+        "title": "Import TypeScript types and interfaces",
+        "instruction": "Import the TypeScript types and interfaces that will be used throughout the lesson: 'Container', 'Service', and 'Dependency' from './types'.",
+        "hint": "Use the import statement with curly braces to import multiple named exports from the './types' module.",
+        "analogousExample": "// Importing multiple types from a module\nimport { User, Product, Order } from './models';",
+        "seedCode": "// Import the required types and interfaces here\n",
+        "expectedOutcome": "The import statement for Container, Service, and Dependency types is added to the file.",
+        "successCriteria": [
+          "Container, Service, and Dependency are imported from './types' using a single import statement."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're importing all three types (Container, Service, and Dependency) from './types'.",
+        "feedbackWrong": "That's not quite right. You need to import Container, Service, and Dependency from the './types' module using a single import statement.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "{",
+            "Container",
+            "Service",
+            "Dependency",
+            "}",
+            "from",
+            "'./types'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 9",
+        "title": "Define the Service interface",
+        "instruction": "Create a TypeScript interface named 'Service' with two properties: 'name' of type string and 'instance' of type any.",
+        "hint": "Use the 'interface' keyword followed by the interface name and define the properties inside curly braces.",
+        "analogousExample": "// Example: defining an interface\ninterface User {\n  id: number;\n  name: string;\n}",
+        "seedCode": "// Import the required types and interfaces here\n\n// Define the Service interface here",
+        "expectedOutcome": "A Service interface is defined with the correct property types.",
+        "successCriteria": [
+          "The Service interface exists with 'name: string' and 'instance: any' properties."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure your interface has both 'name' (string) and 'instance' (any) properties.",
+        "feedbackWrong": "The Service interface is missing or has incorrect property definitions. Please create an interface with 'name: string' and 'instance: any'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "interface",
+            "Service",
+            "name:",
+            "string",
+            "instance:",
+            "any"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 9",
+        "title": "Define the Container interface",
+        "instruction": "Define a TypeScript interface named 'Container' with two generic type parameters: 'T' for the service identifier type and 'S' for the service type. Add two method signatures: 'register(id: T, service: S): void' and 'resolve(id: T): S | undefined'.",
+        "hint": "Use the 'interface' keyword followed by 'Container' and generic type parameters in angle brackets. Inside the interface body, declare the two method signatures with proper parameter types and return types.",
+        "analogousExample": "// Similar: interface with generic methods\ninterface Repository<T, U> {\n  add(item: T): void;\n  get(id: U): T | undefined;\n}",
+        "seedCode": "// Import the required types and interfaces here\n\n// Define the Service interface here\n\n// Define the Container interface here",
+        "expectedOutcome": "A Container interface with generic type parameters and method signatures for registering and resolving services.",
+        "successCriteria": [
+          "The Container interface is defined with generic types T and S, and includes both register and resolve method signatures with correct parameter and return types."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but check that your Container interface includes both generic type parameters (T and S) and both method signatures (register and resolve) with correct TypeScript syntax.",
+        "feedbackWrong": "The Container interface definition is missing or incorrect. Remember to use the 'interface' keyword, specify generic types T and S, and include both method signatures with proper TypeScript syntax.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "interface",
+            "Container",
+            "<T",
+            "S>",
+            "register",
+            "resolve",
+            "void",
+            "S | undefined"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 9",
+        "title": "Create the DependencyContainer class",
+        "instruction": "Create a class named DependencyContainer that implements the Container interface.",
+        "hint": "Use the 'class' keyword followed by the class name, then 'implements Container' and curly braces for the class body.",
+        "analogousExample": "// Example: implementing an interface in a class\nclass Logger implements Loggable {\n  log(message: string) {\n    console.log(message);\n  }\n}",
+        "seedCode": "// Import the required types and interfaces here\n\n// Define the Service interface here\n\n// Define the Container interface here\n\n// Create the DependencyContainer class here",
+        "expectedOutcome": "A DependencyContainer class is defined that implements the Container interface.",
+        "successCriteria": [
+          "The code contains a class named DependencyContainer that implements the Container interface."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your class is named exactly 'DependencyContainer' and implements the Container interface.",
+        "feedbackWrong": "The class definition doesn't match the requirements. Check that you've named it 'DependencyContainer' and used 'implements Container'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "class",
+            "DependencyContainer",
+            "implements",
+            "Container"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 9",
+        "title": "Initialize the services map",
+        "instruction": "Inside the DependencyContainer class, add a private property named 'services' with type 'Map<string, Service>' and initialize it as an empty Map.",
+        "hint": "Use the syntax 'private services = new Map<string, Service>();' inside the class body.",
+        "analogousExample": "// Similar: a class with a private Map property\nclass Registry {\n    private items = new Map<string, number>();\n}",
+        "seedCode": "// Import the required types and interfaces here\n\n// Define the Service interface here\n\n// Define the Container interface here\n\n// Create the DependencyContainer class here\nclass DependencyContainer {\n    // Add the private services property here\n}",
+        "expectedOutcome": "The DependencyContainer class now has a private Map property ready to store registered services.",
+        "successCriteria": [
+          "The DependencyContainer class contains a private property named 'services' of type 'Map<string, Service>' initialized as an empty Map."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure the property is private, named 'services', has type 'Map<string, Service>', and is initialized as a new Map.",
+        "feedbackWrong": "The services map wasn't added correctly. Check the syntax for private class properties and Map initialization.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "private",
+            "services",
+            "Map<string, Service>",
+            "new Map"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 9",
+        "title": "Implement the resolve method",
+        "instruction": "Inside the DependencyContainer class, implement the resolve method that takes a service name string and returns the corresponding service instance with proper type checking.",
+        "hint": "The resolve method should check if the service exists in the services map and return it, otherwise throw an error.",
+        "analogousExample": "// Example: retrieving a value from a map with type safety\nclass Registry {\n    private items = new Map<string, any>();\n    \n    getItem(key: string): any {\n        const item = this.items.get(key);\n        if (!item) {\n            throw new Error(`Item '${key}' not found`);\n        }\n        return item;\n    }\n}",
+        "seedCode": "// Import the required types and interfaces here\n\n// Define the Service interface here\n\n// Define the Container interface here\n\n// Create the DependencyContainer class here\nclass DependencyContainer {\n    // Add the private services property here\n    \n    // Add the register method here\n    \n    // Implement the resolve method here\n}",
+        "expectedOutcome": "The DependencyContainer class now has a resolve method that can retrieve registered services with proper error handling.",
+        "successCriteria": [
+          "The resolve method is implemented with type checking and throws an error when a service is not found."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure your resolve method checks if the service exists and throws an error when it doesn't.",
+        "feedbackWrong": "The resolve method implementation is missing or incorrect. It should retrieve services from the map and handle missing services.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "resolve",
+            "get",
+            "throw",
+            "Error"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 9",
+        "title": "Create example service interfaces",
+        "instruction": "Create two example service interfaces named 'Logger' and 'Database' to demonstrate typed dependency contracts.",
+        "hint": "Define each interface with a method signature that matches its purpose. For example, Logger could have a 'log' method.",
+        "analogousExample": "// Example of service interfaces\ninterface Logger {\n    log(message: string): void;\n}\n\ninterface Database {\n    query(sql: string): any[];\n}",
+        "seedCode": "// Import the required types and interfaces here\n\n// Define the Service interface here\n\n// Define the Container interface here\n\n// Create the DependencyContainer class here\nclass DependencyContainer {\n    // Add the private services property here\n    \n    // Add the register method here\n    \n    // Implement the resolve method here\n}\n\n// Create example service interfaces here",
+        "expectedOutcome": "Two typed service interfaces are defined, showing how different dependencies can have specific contracts.",
+        "successCriteria": [
+          "The Logger and Database interfaces are defined with at least one method each, using proper TypeScript syntax."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure both interfaces are defined with method signatures.",
+        "feedbackWrong": "The interfaces are missing or incomplete. Check that both Logger and Database have at least one method defined.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "interface Logger",
+            "interface Database",
+            "log",
+            "query"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 9",
+        "title": "Implement example service classes",
+        "instruction": "Create two concrete service classes that implement the Logger and Database service interfaces you defined earlier. Name them ConsoleLogger and InMemoryDatabase.",
+        "hint": "Use the 'implements' keyword to ensure each class satisfies its respective interface. Add a simple implementation for each method.",
+        "analogousExample": "// Example: implementing an interface\ninterface Greeter {\n    greet(name: string): string;\n}\n\nclass FriendlyGreeter implements Greeter {\n    greet(name: string): string {\n        return `Hello, ${name}!`;\n    }\n}",
+        "seedCode": "// Import the required types and interfaces here\n\n// Define the Service interface here\n\n// Define the Container interface here\n\n// Create the DependencyContainer class here\nclass DependencyContainer {\n    // Add the private services property here\n    \n    // Add the register method here\n    \n    // Implement the resolve method here\n}\n\n// Create example service interfaces here\n\n// Implement example service classes here",
+        "expectedOutcome": "Two concrete service classes (ConsoleLogger and InMemoryDatabase) that properly implement their respective interfaces with working method implementations.",
+        "successCriteria": [
+          "ConsoleLogger implements Logger with log() method, InMemoryDatabase implements Database with query() method, and both classes have correct TypeScript implementations."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure both classes use the 'implements' keyword and have all required methods from their interfaces.",
+        "feedbackWrong": "Try again. You need to create two classes: ConsoleLogger that implements Logger, and InMemoryDatabase that implements Database. Each should have the methods defined in their interfaces.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "class ConsoleLogger",
+            "implements Logger",
+            "log(",
+            "class InMemoryDatabase",
+            "implements Database",
+            "query("
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 9",
+        "title": "Demonstrate container usage with typed services",
+        "instruction": "Create an instance of DependencyContainer, register the example services, and resolve them with proper typing to demonstrate the container's functionality.",
+        "hint": "Instantiate the container class, call its register method for each service, then use resolve to get typed instances.",
+        "analogousExample": "// Example: Using a typed container\nconst container = new DependencyContainer();\ncontainer.register('serviceA', new ServiceA());\nconst instance = container.resolve<ServiceA>('serviceA');",
+        "seedCode": "// Import the required types and interfaces here\n\n// Define the Service interface here\n\n// Define the Container interface here\n\n// Create the DependencyContainer class here\nclass DependencyContainer {\n    // Add the private services property here\n    \n    // Add the register method here\n    \n    // Implement the resolve method here\n}\n\n// Create example service interfaces here\n\n// Implement example service classes here\n\n// Create container instance, register services, and resolve them here",
+        "expectedOutcome": "The container is instantiated, services are registered, and typed instances are resolved to demonstrate the dependency injection pattern.",
+        "successCriteria": [
+          "A DependencyContainer instance is created, at least one service is registered using register, and at least one service is resolved using resolve with proper TypeScript typing."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started well, but make sure to complete all three actions: create the container instance, register at least one service, and resolve at least one service with proper typing.",
+        "feedbackWrong": "The demonstration isn't complete. You need to create a DependencyContainer instance, register services using the register method, and resolve them with proper TypeScript typing.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "new DependencyContainer",
+            "register",
+            "resolve",
+            "<"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import TypeScript types and interfaces",
+        "id": "step1"
+      },
+      {
+        "label": "Define the Service interface",
+        "id": "step2"
+      },
+      {
+        "label": "Define the Container interface",
+        "id": "step3"
+      },
+      {
+        "label": "Create the DependencyContainer class",
+        "id": "step4"
+      },
+      {
+        "label": "Initialize the services map",
+        "id": "step5"
+      },
+      {
+        "label": "Implement the resolve method",
+        "id": "step6"
+      },
+      {
+        "label": "Create example service interfaces",
+        "id": "step7"
+      },
+      {
+        "label": "Implement example service classes",
+        "id": "step8"
+      },
+      {
+        "label": "Demonstrate container usage with typed services",
+        "id": "step9"
+      }
+    ]
+  },
+  "source": "content"
+}

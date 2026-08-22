@@ -1,0 +1,454 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-js-95",
+    "track": "js",
+    "lessonNum": 95,
+    "title": "Build mini virtual DOM diff and patch",
+    "shortName": "P95",
+    "intro": {
+      "tag": "LESSON #95",
+      "title": "Build mini virtual DOM diff and patch",
+      "body": "In this lesson, you will build a mini virtual DOM diff and patch system from scratch using plain JavaScript. You'll learn how to represent HTML elements as lightweight JavaScript objects (virtual nodes), compare two virtual trees to find differences (diffing), and apply those changes to the real browser DOM (patching). The core programming concepts involve recursion for tree traversal, object comparison, and DOM manipulation. You'll work with key JavaScript constructs like objects, arrays, functions, and methods such as `document.createElement` and `appendChild`. By the end, you'll understand the fundamental logic behind how modern frameworks like React efficiently update the user interface.",
+      "usecase": "This virtual DOM diffing pattern is fundamental to modern JavaScript frameworks like React, Vue, and Svelte. You'll use it when building dynamic dashboards that update charts in real-time, interactive forms with live validation feedback, or e-commerce product filters that instantly refresh results. As a developer, implementing this pattern helps you optimize performance by minimizing expensive DOM manipulations—crucial for maintaining smooth user experiences in complex applications like social media feeds, collaborative editing tools, or data visualization platforms where UI updates happen frequently."
+    },
+    "objectives": [
+      "Construct a virtual DOM node representation using JavaScript objects",
+      "Implement a function to compare two virtual DOM trees and identify differences",
+      "Apply a patching algorithm to update the real DOM based on detected changes",
+      "Initialize a simple virtual DOM library with createElement and render functions",
+      "Manipulate the DOM efficiently by updating only changed elements",
+      "Integrate event handling with virtual DOM nodes for interactive updates",
+      "Configure a reconciliation process to handle element additions, removals, and updates"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 13",
+        "title": "Import required utilities for virtual DOM operations",
+        "instruction": "Import the createElement function from a virtual DOM helper module. Use the import statement: `import { createElement } from './vdom.js';`",
+        "hint": "Use the ES6 import syntax to bring in the createElement function from the local file vdom.js.",
+        "analogousExample": "// Importing a utility function\nimport { formatDate } from './dateUtils.js';",
+        "seedCode": "import { createElement } from './vdom.js';",
+        "expectedOutcome": "The createElement function is imported and ready to be used for creating virtual DOM nodes.",
+        "successCriteria": [
+          "The createElement function is imported from './vdom.js'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're importing createElement from the correct path './vdom.js'.",
+        "feedbackWrong": "The import statement is missing or incorrect. You need to import createElement from './vdom.js' to proceed.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "createElement",
+            "from",
+            "./vdom.js"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 13",
+        "title": "Define the virtual node structure",
+        "instruction": "Create a function named createVNode that returns an object representing a virtual DOM node with type, props, and children properties.",
+        "hint": "The function should take parameters for the node type, properties, and children, then return an object with those three fields.",
+        "analogousExample": "// Example: a function that creates a data object\nfunction createData(id, value) {\n  return { id, value };\n}",
+        "seedCode": "import { createElement } from './vdom.js';\n\n// Create the createVNode function here\n",
+        "expectedOutcome": "A createVNode function that returns virtual node objects with type, props, and children properties.",
+        "successCriteria": [
+          "The createVNode function is defined and returns an object with type, props, and children properties."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure your function returns an object with exactly type, props, and children properties.",
+        "feedbackWrong": "The function isn't defined correctly. It should return an object with type, props, and children properties.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "createVNode",
+            "return",
+            "{",
+            "type",
+            "props",
+            "children"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 13",
+        "title": "Initialize the initial virtual DOM tree",
+        "instruction": "Create a variable named 'initialVTree' and assign it a virtual DOM tree using your createVNode function. Make it a simple tree with a 'div' element containing a text node 'Hello Virtual DOM'.",
+        "hint": "Use the createVNode function you defined earlier to create the virtual tree structure. Remember that createVNode takes tag name, props, and children as arguments.",
+        "analogousExample": "// Example: creating a simple virtual tree\nconst initialTree = createVNode('div', { id: 'root' }, ['Hello World']);",
+        "seedCode": "import { createElement } from './vdom.js';\n\n// Create the createVNode function here\n\n// Initialize the initial virtual DOM tree here",
+        "expectedOutcome": "You should have an initialVTree variable containing a virtual DOM tree structure that can be used as the starting point for diffing and patching.",
+        "successCriteria": [
+          "The initialVTree variable is declared and assigned a virtual node created with createVNode, representing a div element with the text content 'Hello Virtual DOM'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're using the createVNode function correctly and that your tree has the proper structure with a div element containing the text.",
+        "feedbackWrong": "The initial virtual DOM tree wasn't created correctly. Check that you're using the createVNode function properly and creating a tree with a div element containing 'Hello Virtual DOM' text.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "initialVTree",
+            "createVNode",
+            "'div'",
+            "'Hello Virtual DOM'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 13",
+        "title": "Create a function to render virtual DOM to real DOM",
+        "instruction": "Create a function named render that takes a virtual node and a container DOM element as parameters. Inside the function, convert the virtual node into a real DOM element and append it to the container.",
+        "hint": "Use document.createElement to create the DOM element based on the virtual node's type, then append it to the container element.",
+        "analogousExample": "// Example: a function that creates and appends an element\nfunction createAndAppend(tag, parent) {\n  const el = document.createElement(tag);\n  parent.appendChild(el);\n  return el;\n}",
+        "seedCode": "import { createElement } from './vdom.js';\n\n// Create the createVNode function here\n\n// Initialize the initial virtual DOM tree here\n\n// Create the render function here\n",
+        "expectedOutcome": "A render function is defined that can convert a virtual node to a real DOM element and attach it to a container.",
+        "successCriteria": [
+          "The render function is defined with two parameters (vnode and container), creates a DOM element using document.createElement, and appends it to the container."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the render function, but make sure it creates a DOM element and appends it to the container parameter.",
+        "feedbackWrong": "The render function isn't defined correctly. It should take a virtual node and container, create a DOM element, and append it.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "function render",
+            "vnode",
+            "container",
+            "document.createElement",
+            "appendChild"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 13",
+        "title": "Render the initial virtual DOM",
+        "instruction": "Call the render function with the initial virtual DOM tree to display it on the page.",
+        "hint": "You need to invoke the render function you created earlier, passing the initial virtual DOM tree as an argument.",
+        "analogousExample": "// Similar: calling a function with an argument\nrender(initialTree);",
+        "seedCode": "import { createElement } from './vdom.js';\n\n// Create the createVNode function here\n\n// Initialize the initial virtual DOM tree here\n\n// Create the render function here\n\n// Call render with the initial virtual DOM tree",
+        "expectedOutcome": "The initial virtual DOM tree will be rendered to the real DOM, making it visible in the browser.",
+        "successCriteria": [
+          "The render function is called with the initial virtual DOM tree as its argument."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're calling the render function with the initial virtual DOM tree as an argument.",
+        "feedbackWrong": "That's not quite right. You need to call the render function with the initial virtual DOM tree to display it.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "render",
+            "(",
+            "initialTree",
+            ")"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 13",
+        "title": "Define a function to create updated virtual DOM",
+        "instruction": "Create a function named 'createUpdatedVNode' that returns a new virtual DOM tree representing an updated state. This function should return a virtual node with different text content than the initial tree.",
+        "hint": "Define a function that returns a virtual node using the createVNode function you created earlier, but with modified properties.",
+        "analogousExample": "// Example: a function that returns a different virtual node\nfunction createUpdatedVNode() {\n  return createVNode('div', { id: 'updated' }, 'Updated content');\n}",
+        "seedCode": "import { createElement } from './vdom.js';\n\nfunction createVNode(type, props, ...children) {\n  return { type, props: props || {}, children: children.flat() };\n}\n\nconst initialVNode = createVNode('div', { id: 'app' }, 'Initial content');\n\nfunction render(vnode, container) {\n  const dom = createElement(vnode);\n  container.innerHTML = '';\n  container.appendChild(dom);\n}\n\nrender(initialVNode, document.getElementById('root'));\n\n// Create the createUpdatedVNode function here",
+        "expectedOutcome": "A function named createUpdatedVNode is defined that returns a virtual node with different content than the initial tree.",
+        "successCriteria": [
+          "The createUpdatedVNode function is defined and returns a virtual node object with different text content."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've created a function, but make sure it returns a virtual node with different content than the initial tree.",
+        "feedbackWrong": "The function isn't defined correctly. Create a function named createUpdatedVNode that returns a virtual node.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "createUpdatedVNode",
+            "return",
+            "createVNode"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 13",
+        "title": "Implement the diffing algorithm",
+        "instruction": "Create a function named diff that takes oldVNode and newVNode as parameters and returns an array of change objects.",
+        "hint": "The diff function should compare two virtual nodes and produce a list of differences. Start by returning an empty array.",
+        "analogousExample": "// Example: a function that compares two objects\nfunction compareObjects(obj1, obj2) {\n  const changes = [];\n  // comparison logic here\n  return changes;\n}",
+        "seedCode": "import { createElement } from './vdom.js';\n\nfunction createVNode(type, props, ...children) {\n  return { type, props: props || {}, children: children.flat() };\n}\n\nconst initialVNode = createVNode('div', { id: 'app' }, 'Initial content');\n\nfunction render(vnode, container) {\n  const dom = createElement(vnode);\n  container.innerHTML = '';\n  container.appendChild(dom);\n}\n\nrender(initialVNode, document.getElementById('root'));\n\n// Create the createUpdatedVNode function here\n\nfunction diff(oldVNode, newVNode) {\n  // Return an array of changes\n}",
+        "expectedOutcome": "A diff function is defined that will later be used to compare virtual DOM trees and identify updates.",
+        "successCriteria": [
+          "The diff function is declared with parameters oldVNode and newVNode and returns an array."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure your function takes two parameters and returns an array.",
+        "feedbackWrong": "The diff function should be a named function that accepts oldVNode and newVNode parameters and returns an array.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "function diff",
+            "oldVNode",
+            "newVNode",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 13",
+        "title": "Create a patch function to apply changes",
+        "instruction": "Create a function named patch that takes a real DOM element and an array of changes,",
+        "hint": "The patch function should iterate through the changes array and apply each change to the DOM element. Each change object will have a type property indicating what kind of update to perform.",
+        "analogousExample": "// Similar: a function that updates DOM based on instructions\nfunction applyUpdates(element, updates) {\n  updates.forEach(update => {\n    if (update.type === 'SET_ATTRIBUTE') {\n      element.setAttribute(update.name, update.value);\n    }\n  });\n}",
+        "seedCode": "import { createElement } from './vdom.js';\n\nfunction createVNode(type, props, ...children) {\n  return { type, props: props || {}, children: children.flat() };\n}\n\nconst initialVNode = createVNode('div', { id: 'app' }, 'Initial content');\n\nfunction render(vnode, container) {\n  const dom = createElement(vnode);\n  container.innerHTML = '';\n  container.appendChild(dom);\n}\n\nrender(initialVNode, document.getElementById('root'));\n\n// Create the createUpdatedVNode function here\n\nfunction diff(oldVNode, newVNode) {\n  // Return an array of changes\n}\n\n// Create the patch function here",
+        "expectedOutcome": "A patch function is defined that can process an array of changes and update the real DOM accordingly.",
+        "successCriteria": [
+          "The patch function is defined with two parameters (element and changes) and contains logic to apply changes to the DOM."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your patch function takes both parameters and has a body that can process changes.",
+        "feedbackWrong": "The patch function isn't defined correctly. It should be a named function that accepts a DOM element and changes array.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "patch",
+            "function",
+            "element",
+            "changes"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 13",
+        "title": "applies those changes to update the DOM",
+        "instruction": "applies those changes to update the DOM.",
+        "hint": "The patch function should iterate through the changes array and apply each change to the DOM element. Each change object will have a type property indicating what kind of update to perform.",
+        "analogousExample": "// Similar: a function that updates DOM based on instructions\nfunction applyUpdates(element, updates) {\n  updates.forEach(update => {\n    if (update.type === 'SET_ATTRIBUTE') {\n      element.setAttribute(update.name, update.value);\n    }\n  });\n}",
+        "seedCode": "import { createElement } from './vdom.js';\n\nfunction createVNode(type, props, ...children) {\n  return { type, props: props || {}, children: children.flat() };\n}\n\nconst initialVNode = createVNode('div', { id: 'app' }, 'Initial content');\n\nfunction render(vnode, container) {\n  const dom = createElement(vnode);\n  container.innerHTML = '';\n  container.appendChild(dom);\n}\n\nrender(initialVNode, document.getElementById('root'));\n\n// Create the createUpdatedVNode function here\n\nfunction diff(oldVNode, newVNode) {\n  // Return an array of changes\n}\n\n// Create the patch function here",
+        "expectedOutcome": "",
+        "successCriteria": [
+          "Complete the step as instructed."
+        ],
+        "feedbackCorrect": "Great! Step completed.",
+        "feedbackPartial": "Review the instruction and try again.",
+        "feedbackWrong": "Check the instruction and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "patch",
+            "function",
+            "element",
+            "changes"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 13",
+        "title": "Set up a mechanism to trigger updates",
+        "instruction": "Create a function named triggerUpdate that will generate a new virtual DOM and call the diff and patch functions.",
+        "hint": "Define a function that creates an updated virtual node, calculates the differences, and applies patches to the real DOM.",
+        "analogousExample": "// Example: a function that triggers a UI update\nfunction updateUI() {\n  const newState = calculateNewState();\n  const changes = diff(oldState, newState);\n  applyChanges(changes);\n}",
+        "seedCode": "import { createElement } from './vdom.js';\n\nfunction createVNode(type, props, ...children) {\n  return { type, props: props || {}, children: children.flat() };\n}\n\nconst initialVNode = createVNode('div', { id: 'app' }, 'Initial content');\n\nfunction render(vnode, container) {\n  const dom = createElement(vnode);\n  container.innerHTML = '';\n  container.appendChild(dom);\n}\n\nrender(initialVNode, document.getElementById('root'));\n\n// Create the createUpdatedVNode function here\n\nfunction diff(oldVNode, newVNode) {\n  // Return an array of changes\n}\n\n// Create the patch function here\n\n// Create the triggerUpdate function here",
+        "expectedOutcome": "A triggerUpdate function is defined that will orchestrate the virtual DOM update process.",
+        "successCriteria": [
+          "The triggerUpdate function is created and contains calls to create a new virtual node, diff, and patch."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the function, but make sure it includes the steps to create a new virtual node, calculate differences, and apply patches.",
+        "feedbackWrong": "The triggerUpdate function is missing or incomplete. Create a function that will generate a new virtual DOM and trigger the diff/patch process.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "triggerUpdate",
+            "function",
+            "diff",
+            "patch"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 13",
+        "title": "Wire the update mechanism to diff and patch functi",
+        "instruction": "Inside the triggerUpdate function, call the diff function to compare the old and new virtual nodes,",
+        "hint": "The diff function should receive the old and new virtual nodes as arguments, and the patch function should receive the resulting changes.",
+        "analogousExample": "// Example: calling functions in sequence\nfunction updateData(oldData, newData) {\n  const changes = compare(oldData, newData);\n  applyChanges(changes);\n}",
+        "seedCode": "import { createElement } from './vdom.js';\n\nfunction createVNode(type, props, ...children) {\n  return { type, props: props || {}, children: children.flat() };\n}\n\nconst initialVNode = createVNode('div', { id: 'app' }, 'Initial content');\n\nfunction render(vnode, container) {\n  const dom = createElement(vnode);\n  container.innerHTML = '';\n  container.appendChild(dom);\n}\n\nrender(initialVNode, document.getElementById('root'));\n\n// Create the createUpdatedVNode function here\n\nfunction diff(oldVNode, newVNode) {\n  // Return an array of changes\n}\n\n// Create the patch function here\n\n// Create the triggerUpdate function here\nfunction triggerUpdate() {\n  // Call diff and patch functions here\n}",
+        "expectedOutcome": "The triggerUpdate function will now compute differences between virtual DOM trees and apply those changes to the real DOM.",
+        "successCriteria": [
+          "The triggerUpdate function calls diff with old and new virtual nodes, then calls patch with the resulting changes."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure both diff and patch are called inside triggerUpdate.",
+        "feedbackWrong": "The triggerUpdate function should call diff and then patch. Check the function calls and arguments.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "triggerUpdate",
+            "diff",
+            "patch"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step12",
+        "type": "question",
+        "phase": "Step 12 of 13",
+        "title": "call the patch function to apply the changes ",
+        "instruction": "call the patch function to apply the changes to the DOM.",
+        "hint": "The diff function should receive the old and new virtual nodes as arguments, and the patch function should receive the resulting changes.",
+        "analogousExample": "// Example: calling functions in sequence\nfunction updateData(oldData, newData) {\n  const changes = compare(oldData, newData);\n  applyChanges(changes);\n}",
+        "seedCode": "import { createElement } from './vdom.js';\n\nfunction createVNode(type, props, ...children) {\n  return { type, props: props || {}, children: children.flat() };\n}\n\nconst initialVNode = createVNode('div', { id: 'app' }, 'Initial content');\n\nfunction render(vnode, container) {\n  const dom = createElement(vnode);\n  container.innerHTML = '';\n  container.appendChild(dom);\n}\n\nrender(initialVNode, document.getElementById('root'));\n\n// Create the createUpdatedVNode function here\n\nfunction diff(oldVNode, newVNode) {\n  // Return an array of changes\n}\n\n// Create the patch function here\n\n// Create the triggerUpdate function here\nfunction triggerUpdate() {\n  // Call diff and patch functions here\n}",
+        "expectedOutcome": "",
+        "successCriteria": [
+          "Complete the step as instructed."
+        ],
+        "feedbackCorrect": "Great! Step completed.",
+        "feedbackPartial": "Review the instruction and try again.",
+        "feedbackWrong": "Check the instruction and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "triggerUpdate",
+            "diff",
+            "patch"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step13",
+        "type": "question",
+        "phase": "Step 13 of 13",
+        "title": "Test the complete virtual DOM diff and patch system",
+        "instruction": "Create a test function that simulates a virtual DOM update by generating a new virtual node, diffing it with the current one, and patching the changes to the real DOM.",
+        "hint": "Define a function that creates an updated virtual node, calls your diff function to get the changes, then applies those changes using your patch function.",
+        "analogousExample": "// Example: a test function that triggers the update cycle\nfunction testUpdate() {\n  const newVNode = createVNode('div', { id: 'app' }, 'Updated content');\n  const changes = diff(initialVNode, newVNode);\n  patch(changes, document.getElementById('root'));\n}",
+        "seedCode": "import { createElement } from './vdom.js';\n\nfunction createVNode(type, props, ...children) {\n  return { type, props: props || {}, children: children.flat() };\n}\n\nconst initialVNode = createVNode('div', { id: 'app' }, 'Initial content');\n\nfunction render(vnode, container) {\n  const dom = createElement(vnode);\n  container.innerHTML = '';\n  container.appendChild(dom);\n}\n\nrender(initialVNode, document.getElementById('root'));\n\n// Create the createUpdatedVNode function here\n\nfunction diff(oldVNode, newVNode) {\n  // Return an array of changes\n}\n\n// Create the patch function here\n\n// Create the triggerUpdate function here\nfunction triggerUpdate() {\n  // Call diff and patch functions here\n}\n\n// Add your test function here",
+        "expectedOutcome": "A test function is defined that demonstrates the complete virtual DOM update cycle by creating a new virtual node, computing differences, and applying patches.",
+        "successCriteria": [
+          "The test function exists, creates a new virtual node, calls diff with old and new nodes, and calls patch with the resulting changes."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the test function, but it's missing some key parts. Make sure it creates a new virtual node, calls your diff function, and calls your patch function with the changes.",
+        "feedbackWrong": "The test function isn't properly implemented. Review the example: you need to create a new virtual node, compute differences between old and new nodes, and apply those changes to the DOM.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "function",
+            "createVNode",
+            "diff",
+            "patch"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import required utilities for virtual DOM operations",
+        "id": "step1"
+      },
+      {
+        "label": "Define the virtual node structure",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize the initial virtual DOM tree",
+        "id": "step3"
+      },
+      {
+        "label": "Create a function to render virtual DOM to real DOM",
+        "id": "step4"
+      },
+      {
+        "label": "Render the initial virtual DOM",
+        "id": "step5"
+      },
+      {
+        "label": "Define a function to create updated virtual DOM",
+        "id": "step6"
+      },
+      {
+        "label": "Implement the diffing algorithm",
+        "id": "step7"
+      },
+      {
+        "label": "Create a patch function to apply changes",
+        "id": "step8"
+      },
+      {
+        "label": "applies those changes to update the DOM",
+        "id": "step9"
+      },
+      {
+        "label": "Set up a mechanism to trigger updates",
+        "id": "step10"
+      },
+      {
+        "label": "Wire the update mechanism to diff and patch functi",
+        "id": "step11"
+      },
+      {
+        "label": "call the patch function to apply the changes ",
+        "id": "step12"
+      },
+      {
+        "label": "Test the complete virtual DOM diff and patch system",
+        "id": "step13"
+      }
+    ]
+  },
+  "source": "content"
+}

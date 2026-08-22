@@ -1,0 +1,358 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-react-ts-112",
+    "track": "react-ts",
+    "lessonNum": 112,
+    "title": "Zustand Persist Middleware",
+    "shortName": "P112",
+    "intro": {
+      "tag": "LESSON #112",
+      "title": "Zustand Persist Middleware",
+      "body": "In this lesson, you will build a simple counter app that saves its state even after you refresh the page. You will learn how to use the Zustand Persist middleware to automatically store your app's data in the browser's local storage. The core concept is using middleware to extend a Zustand store with persistence functionality, keeping your state synchronized. You will work with React, TypeScript, and Zustand's create function to implement this feature in a clean, beginner-friendly way.",
+      "usecase": "Zustand Persist Middleware is essential for maintaining user state across sessions in real-world applications like e-commerce platforms, where shopping cart items and user preferences must persist after page refreshes or browser restarts. In dashboard applications, this middleware preserves filter settings, chart configurations, and user-customized layouts so analysts can return to their exact workspace. Developers implement it in settings panels to remember theme choices, language selections, and notification preferences, creating seamless user experiences that don't reset with each visit. This pattern also powers offline-capable applications that sync local state with backend servers when connectivity is restored."
+    },
+    "objectives": [
+      "Initialize a Zustand store with TypeScript types for state and actions.",
+      "Configure the persist middleware to save store state to localStorage.",
+      "Apply the persist middleware to a Zustand store to enable data persistence.",
+      "Implement a custom storage engine to handle persistence in a specific format.",
+      "Control rehydration behavior by managing the onRehydrateStorage callback.",
+      "Update a React component to bind to the persisted store and display state.",
+      "Manipulate persisted state through store actions and observe persistence across sessions."
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 10",
+        "title": "Import React and ReactDOM for the application setup",
+        "instruction": "Import React and ReactDOM from their respective packages to set up the basic React TypeScript environment.",
+        "hint": "You'll need two import statements: one for React and one for ReactDOM.",
+        "analogousExample": "// Example of importing React and ReactDOM\nimport React from 'react';\nimport ReactDOM from 'react-dom';",
+        "seedCode": "// Import React and ReactDOM here",
+        "expectedOutcome": "The imports for React and ReactDOM are added at the top of the file.",
+        "successCriteria": [
+          "React is imported from 'react' and ReactDOM is imported from 'react-dom'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're importing both React and ReactDOM from their correct packages.",
+        "feedbackWrong": "import both React and ReactDOM using the correct import statements.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import React",
+            "from 'react'",
+            "import ReactDOM",
+            "from 'react-dom'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 10",
+        "title": "Import Zustand and persist middleware",
+        "instruction": "Import the 'create' function from 'zustand' and the 'persist' middleware from 'zustand/middleware'.",
+        "hint": "Use two separate import statements or a single import statement with destructuring.",
+        "analogousExample": "// Importing functions from libraries\nimport { useState } from 'react';\nimport { createStore } from 'redux';",
+        "seedCode": "// Import React and ReactDOM here\n\n// Import Zustand and persist middleware here",
+        "expectedOutcome": "The imports for Zustand and its persist middleware are added to the file.",
+        "successCriteria": [
+          "The 'create' function is imported from 'zustand' and 'persist' is imported from 'zustand/middleware'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure you're importing both 'create' from 'zustand' and 'persist' from 'zustand/middleware'.",
+        "feedbackWrong": "Check your import statements. You need to import 'create' from 'zustand' and 'persist' from 'zustand/middleware'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "create",
+            "zustand",
+            "persist",
+            "zustand/middleware"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 10",
+        "title": "Define the store interface",
+        "instruction": "Define a TypeScript interface named 'StoreState' that describes the shape of your Zustand store. Include a 'count' property of type number and a 'increment' method that returns void.",
+        "hint": "Use the 'interface' keyword to create the interface. Remember to specify types for both the state property and the action method.",
+        "analogousExample": "// Example: interface for a user store\ninterface UserStore {\n  name: string;\n  age: number;\n  updateName: (newName: string) => void;\n}",
+        "seedCode": "// Import React and ReactDOM here\n\n// Import Zustand and persist middleware here\n\n// Define the store interface here",
+        "expectedOutcome": "You'll have a TypeScript interface that defines the structure for your Zustand store with typed state and actions.",
+        "successCriteria": [
+          "An interface named 'StoreState' is defined with a 'count: number' property and an 'increment: () => void' method."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your interface includes both the 'count' property (type number) and the 'increment' method (returns void).",
+        "feedbackWrong": "The interface definition doesn't match the requirements. Please create an interface named 'StoreState' with 'count: number' and 'increment: () => void'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "interface",
+            "StoreState",
+            "count:",
+            "number",
+            "increment:",
+            "void"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 10",
+        "title": "Create the Zustand store with persist middleware",
+        "instruction": "Create a Zustand store named 'usePersistStore' using the 'create' function with persist middleware. Pass the 'persist' function as the second argument to 'create' and provide an initial state object with a 'count' property set to 0.",
+        "hint": "Call 'create' with two arguments: the store function and the persist configuration. The store function should return the initial state.",
+        "analogousExample": "// Example: creating a store with persist middleware\nconst useExampleStore = create(\n  persist(\n    (set) => ({\n      value: 0\n    }),\n    {\n      name: 'example-store'\n    }\n  )\n);",
+        "seedCode": "// Import React and ReactDOM here\nimport React from 'react';\nimport ReactDOM from 'react-dom/client';\n\n// Import Zustand and persist middleware here\nimport { create } from 'zustand';\nimport { persist } from 'zustand/middleware';\n\n// Define the store interface here\ninterface PersistStore {\n  count: number;\n}\n\n// Create the Zustand store with persist middleware here",
+        "expectedOutcome": "A Zustand store named 'usePersistStore' is created with persist middleware and an initial state containing a count property.",
+        "successCriteria": [
+          "The store is created using 'create' with 'persist' middleware, and the initial state includes a 'count' property set to 0."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure you're using both 'create' and 'persist', and that your initial state includes a 'count' property.",
+        "feedbackWrong": "The store wasn't created correctly. Remember to use 'create' with 'persist' middleware and provide an initial state object.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "usePersistStore",
+            "create",
+            "persist",
+            "count",
+            "0"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 10",
+        "title": "Configure persist options",
+        "instruction": "Add the name and storage configuration options to the persist middleware call in your store creation.",
+        "hint": "Pass a configuration object as the second argument to persist, containing a name property (string) and a getStorage property that returns localStorage.",
+        "analogousExample": "// Example: configuring persist middleware\nconst store = create(\n  persist(\n    (set) => ({\n      data: null,\n      setData: (newData) => set({ data: newData })\n    }),\n    {\n      name: 'my-store',\n      getStorage: () => localStorage\n    }\n  )\n);",
+        "seedCode": "// Import React and ReactDOM here\nimport React from 'react';\nimport ReactDOM from 'react-dom/client';\n\n// Import Zustand and persist middleware here\nimport { create } from 'zustand';\nimport { persist } from 'zustand/middleware';\n\n// Define the store interface here\ninterface PersistStore {\n  count: number;\n}\n\n// Create the Zustand store with persist middleware here\nconst usePersistStore = create(\n  persist(\n    (set) => ({\n      count: 0\n    }),\n    {\n      // Add persist configuration options here\n    }\n  )\n);",
+        "expectedOutcome": "The persist middleware will be configured to use localStorage with a specific name for storing the count state.",
+        "successCriteria": [
+          "The persist configuration object includes a name property (string) and a getStorage property that returns localStorage."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure both name and getStorage properties are included in the configuration object.",
+        "feedbackWrong": "The persist configuration is incomplete. Check that you've added both name and getStorage properties to the configuration object.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "name:",
+            "getStorage:",
+            "localStorage"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 10",
+        "title": "Create the main component structure",
+        "instruction": "Create a functional component named PersistDemo that returns null for now.",
+        "hint": "Define a component using either function declaration or arrow function syntax with TypeScript typing.",
+        "analogousExample": "// Example functional component\nfunction ExampleComponent() {\n  return null;\n}",
+        "seedCode": "// Import React and ReactDOM here\nimport React from 'react';\nimport ReactDOM from 'react-dom/client';\n\n// Import Zustand and persist middleware here\nimport { create } from 'zustand';\nimport { persist } from 'zustand/middleware';\n\n// Define the store interface here\ninterface PersistStore {\n  count: number;\n}\n\n// Create the Zustand store with persist middleware here\nconst usePersistStore = create(\n  persist(\n    (set) => ({\n      count: 0\n    }),\n    {\n      // Add persist configuration options here\n    }\n  )\n);\n\n// Create your PersistDemo component here",
+        "expectedOutcome": "A functional component named PersistDemo is created with proper TypeScript typing that returns null.",
+        "successCriteria": [
+          "The PersistDemo component is defined and returns null."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've created a component, but make sure it's named exactly 'PersistDemo' and returns null.",
+        "feedbackWrong": "The component wasn't created correctly. Create a functional component named PersistDemo that returns null.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "PersistDemo",
+            "return",
+            "null"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 10",
+        "title": "Access store state in component",
+        "instruction": "Inside your PersistDemo component, use the usePersistStore hook to access the count state and destructure it from the store.",
+        "hint": "Call the usePersistStore hook inside your component and destructure the count property from the returned store object.",
+        "analogousExample": "// Similar: accessing state from a custom hook\nconst MyComponent = () => {\n  const { value } = useCustomStore();\n  return null;\n};",
+        "seedCode": "// Import React and ReactDOM here\nimport React from 'react';\nimport ReactDOM from 'react-dom/client';\n\n// Import Zustand and persist middleware here\nimport { create } from 'zustand';\nimport { persist } from 'zustand/middleware';\n\n// Define the store interface here\ninterface PersistStore {\n  count: number;\n}\n\n// Create the Zustand store with persist middleware here\nconst usePersistStore = create(\n  persist(\n    (set) => ({\n      count: 0\n    }),\n    {\n      // Add persist configuration options here\n    }\n  )\n);\n\n// Create your PersistDemo component here\nconst PersistDemo = () => {\n  // Access store state here\n  \n  return null;\n};",
+        "expectedOutcome": "The component will have access to the count state from the Zustand store.",
+        "successCriteria": [
+          "The usePersistStore hook is called inside the PersistDemo component and the count property is destructured from it."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're calling the usePersistStore hook and destructuring the count property.",
+        "feedbackWrong": "Check that you're using the usePersistStore hook inside your component and destructuring the count property from it.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "usePersistStore",
+            "count"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 10",
+        "title": "Add UI elements to display state",
+        "instruction": "In your PersistDemo component, add a paragraph element that displays the current count value from the store.",
+        "hint": "Access the count state from your Zustand store and render it inside JSX curly braces.",
+        "analogousExample": "// Displaying state in a component\nconst DisplayCount = () => {\n  const count = 5;\n  return <p>Current count: {count}</p>;\n};",
+        "seedCode": "// Import React and ReactDOM here\nimport React from 'react';\nimport ReactDOM from 'react-dom/client';\n\n// Import Zustand and persist middleware here\nimport { create } from 'zustand';\nimport { persist } from 'zustand/middleware';\n\n// Define the store interface here\ninterface PersistStore {\n  count: number;\n}\n\n// Create the Zustand store with persist middleware here\nconst usePersistStore = create(\n  persist(\n    (set) => ({\n      count: 0\n    }),\n    {\n      // Add persist configuration options here\n    }\n  )\n);\n\n// Create your PersistDemo component here\nconst PersistDemo = () => {\n  // Access store state here\n  \n  return null;\n};",
+        "expectedOutcome": "The component will have a paragraph element showing the count value from the Zustand store.",
+        "successCriteria": [
+          "A paragraph element displays the count value using JSX curly braces."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure you're accessing the count from the store and rendering it inside a paragraph element.",
+        "feedbackWrong": "add a paragraph element that shows the count value from your Zustand store.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<p>",
+            "{",
+            "count",
+            "}",
+            "</p>"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 10",
+        "title": "Add button and wire increment handler",
+        "instruction": "Inside the PersistDemo component, add a button element with the text 'Increment' and wire its onClick event to call a function that increments the count in your Zustand store.",
+        "hint": "You can call the set function from your store to update the count state. Use the store's set function with a callback that returns the new state.",
+        "analogousExample": "// Similar: button with click handler\n<button onClick={() => set((state) => ({ count: state.count + 1 }))}>\n  Increment\n</button>",
+        "seedCode": "// Import React and ReactDOM here\nimport React from 'react';\nimport ReactDOM from 'react-dom/client';\n\n// Import Zustand and persist middleware here\nimport { create } from 'zustand';\nimport { persist } from 'zustand/middleware';\n\n// Define the store interface here\ninterface PersistStore {\n  count: number;\n}\n\n// Create the Zustand store with persist middleware here\nconst usePersistStore = create(\n  persist(\n    (set) => ({\n      count: 0\n    }),\n    {\n      // Add persist configuration options here\n    }\n  )\n);\n\n// Create your PersistDemo component here\nconst PersistDemo = () => {\n  // Access store state here\n  \n  return null;\n};",
+        "expectedOutcome": "The PersistDemo component will have a button that, when clicked, increments the count in the Zustand store.",
+        "successCriteria": [
+          "A button element with 'Increment' text is added to the component's return statement, and its onClick handler calls a function that updates the store's count state."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added a button, but make sure its onClick handler properly calls the set function to increment the count.",
+        "feedbackWrong": "The button or its click handler is missing or incorrect. Review how to wire onClick events to Zustand store updates.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<button",
+            "onClick",
+            "set",
+            "count",
+            "Increment"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 10",
+        "title": "Add persistence status indicator",
+        "instruction": "Inside your PersistDemo component, add a paragraph element that displays the current persistence status by accessing the store's hydration state.",
+        "hint": "Use the usePersistStore hook to access the _hasHydrated property, then render a paragraph showing whether persistence has loaded.",
+        "analogousExample": "// Example: displaying a loading status\nconst StatusDisplay = () => {\n  const isLoading = true;\n  return <p>Status: {isLoading ? 'Loading...' : 'Ready'}</p>;\n};",
+        "seedCode": "import React from 'react';\nimport ReactDOM from 'react-dom/client';\nimport { create } from 'zustand';\nimport { persist } from 'zustand/middleware';\n\ninterface PersistStore {\n  count: number;\n}\n\nconst usePersistStore = create(\n  persist(\n    (set) => ({\n      count: 0\n    }),\n    {\n      // Add persist configuration options here\n    }\n  )\n);\n\nconst PersistDemo = () => {\n  const { count } = usePersistStore();\n  \n  return (\n    <div>\n      <p>Count: {count}</p>\n      <button onClick={() => usePersistStore.setState({ count: count + 1 })}>\n        Increment\n      </button>\n    </div>\n  );\n};",
+        "expectedOutcome": "The component will show a paragraph indicating whether the persisted state has been loaded from localStorage.",
+        "successCriteria": [
+          "A paragraph element displays the persistence status using the store's _hasHydrated property."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're accessing the _hasHydrated property from the store and displaying it in a paragraph element.",
+        "feedbackWrong": "The persistence status indicator is missing or incorrect. You need to access the store's hydration state and display it in the UI.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "_hasHydrated",
+            "<p>",
+            "usePersistStore"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import React and ReactDOM for the application setup",
+        "id": "step1"
+      },
+      {
+        "label": "Import Zustand and persist middleware",
+        "id": "step2"
+      },
+      {
+        "label": "Define the store interface",
+        "id": "step3"
+      },
+      {
+        "label": "Create the Zustand store with persist middleware",
+        "id": "step4"
+      },
+      {
+        "label": "Configure persist options",
+        "id": "step5"
+      },
+      {
+        "label": "Create the main component structure",
+        "id": "step6"
+      },
+      {
+        "label": "Access store state in component",
+        "id": "step7"
+      },
+      {
+        "label": "Add UI elements to display state",
+        "id": "step8"
+      },
+      {
+        "label": "Add button and wire increment handler",
+        "id": "step9"
+      },
+      {
+        "label": "Add persistence status indicator",
+        "id": "step10"
+      }
+    ]
+  },
+  "source": "content"
+}

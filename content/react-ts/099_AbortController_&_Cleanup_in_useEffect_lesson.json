@@ -1,0 +1,368 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-react-ts-99",
+    "track": "react-ts",
+    "lessonNum": 99,
+    "title": "AbortController & Cleanup in useEffect",
+    "shortName": "P99",
+    "intro": {
+      "tag": "LESSON #99",
+      "title": "AbortController & Cleanup in useEffect",
+      "body": "In this lesson, you will build a React component that fetches and displays user data from a mock API, learning how to prevent memory leaks and unnecessary network requests. You will use the AbortController API to cancel a fetch request when a component unmounts or before a new request starts. The core programming concept is the cleanup function within the useEffect hook, which runs before the component re-renders or unmounts. You'll implement this in TypeScript to ensure type safety for the data you receive. By the end, you'll understand how to properly clean up side effects to create more efficient and reliable React applications.",
+      "usecase": "This pattern is essential in any React application where data fetching is tied to user interactions that can change rapidly. For example, in a live dashboard with search filters, selecting a new filter triggers a new API call; using AbortController prevents the previous, now irrelevant request from updating the state if it completes later, avoiding race conditions and incorrect data displays. Similarly, in an e-commerce product listing, as a user types in a search bar, each keystroke might fetch suggestions, and aborting outdated requests ensures the UI shows only the latest results. Implementing cleanup in useEffect ensures these cancellations happen automatically when the component unmounts or dependencies change, preventing memory leaks and improving application stability."
+    },
+    "objectives": [
+      "Initialize an AbortController instance within a useEffect hook",
+      "Configure fetch requests to use the AbortController signal for cancellation",
+      "Implement cleanup logic in useEffect to abort pending requests on component unmount",
+      "Apply TypeScript typing to AbortController and signal properties",
+      "Construct a React component that safely fetches data with automatic cleanup",
+      "Manipulate component state only when fetch requests complete successfully",
+      "Integrate AbortController cleanup with multiple useEffect dependencies"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 10",
+        "title": "Import React, useState, useEffect, and AbortController",
+        "instruction": "Import React, useState, and useEffect from 'react', and AbortController from the global scope.",
+        "hint": "Use import statements at the top of your file. AbortController is a built-in JavaScript API, so you don't need to import it from a package.",
+        "analogousExample": "// Importing React hooks and built-in APIs\nimport React, { useState, useEffect } from 'react';\n// AbortController is available globally",
+        "seedCode": "// Import React, useState, useEffect, and AbortController here\n\n",
+        "expectedOutcome": "The necessary imports are added to the top of the file, enabling the use of React hooks and the AbortController API.",
+        "successCriteria": [
+          "React, useState, and useEffect are imported from 'react', and AbortController is available for use."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure to import all required items: React, useState, useEffect from 'react', and ensure AbortController is available.",
+        "feedbackWrong": "The imports are missing or incorrect. Check that you've imported React, useState, and useEffect from 'react', and that AbortController is accessible.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "React",
+            "useState",
+            "useEffect",
+            "'react'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 10",
+        "title": "Create the main component with TypeScript",
+        "instruction": "Create a functional component named DataFetcher that returns a JSX element. Use an empty interface for props if none are needed.",
+        "hint": "Define a component using either function declaration or arrow function syntax. Make sure it returns a JSX element like a <div>.",
+        "analogousExample": "// Example: a simple functional component\nfunction DataFetcher() {\n  return <div>Component content</div>;\n}",
+        "seedCode": "import React, { useState, useEffect } from 'react';\n\n// Create the DataFetcher component here\n\n",
+        "expectedOutcome": "A DataFetcher component is defined with proper TypeScript typing and returns a JSX element.",
+        "successCriteria": [
+          "The DataFetcher component is created as a functional component and returns a JSX element."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've created a component, but make sure it returns a JSX element (like a <div>) and uses the correct name DataFetcher.",
+        "feedbackWrong": "The component isn't defined correctly. Create a functional component named DataFetcher that returns a JSX element.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "DataFetcher",
+            "return",
+            "<div>",
+            "function",
+            "()",
+            "{"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 10",
+        "title": "Initialize state for data and loading status",
+        "instruction": "Inside the DataFetcher component, declare two state variables using useState: one named 'data' (string or null) and one named 'loading' (boolean). Initialize data as null and loading as false.",
+        "hint": "Use useState with TypeScript generics to define the types: useState<string | null>(null) and useState<boolean>(false).",
+        "analogousExample": "// Example: state for user info and status\nconst [user, setUser] = useState<string | null>(null);\nconst [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);",
+        "seedCode": "import React, { useState, useEffect } from 'react';\n\n// Create the DataFetcher component here\nconst DataFetcher = () => {\n  // Initialize state variables here\n\n  return null;\n};",
+        "expectedOutcome": "The component will have typed state variables ready to store fetched data and track loading status.",
+        "successCriteria": [
+          "Two useState calls are present: one for 'data' (type string | null, initial null) and one for 'loading' (type boolean, initial false)."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure both state variables are declared with the correct types and initial values.",
+        "feedbackWrong": "Check the step instructions. You need to declare two useState variables with the specified types and initial values.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "useState",
+            "data",
+            "loading",
+            "string | null",
+            "boolean",
+            "null",
+            "false"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 10",
+        "title": "Define a fetch function with AbortController",
+        "instruction": "Inside your DataFetcher component, define an async function named fetchData that creates an AbortController instance.",
+        "hint": "Use the AbortController constructor to create a new controller inside your function.",
+        "analogousExample": "// Example: creating a function that uses AbortController\nasync function fetchData() {\n  const controller = new AbortController();\n  // rest of function will go here\n}",
+        "seedCode": "import React, { useState, useEffect } from 'react';\n\n// Create the DataFetcher component here\nconst DataFetcher = () => {\n  // Initialize state variables here\n  const [data, setData] = useState<string | null>(null);\n  const [loading, setLoading] = useState<boolean>(false);\n\n  // Define fetchData function here\n\n  return null;\n};",
+        "expectedOutcome": "You should have an async function named fetchData that creates an AbortController instance.",
+        "successCriteria": [
+          "The fetchData function is defined as async, takes no parameters, and creates a new AbortController instance."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure you've defined an async function named fetchData that creates a new AbortController instance inside it.",
+        "feedbackWrong": "The function definition is missing or incorrect. You need to define an async function named fetchData that creates an AbortController instance.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "async",
+            "function",
+            "fetchData",
+            "AbortController"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 10",
+        "title": "Implement useEffect with cleanup",
+        "instruction": "Add a useEffect hook inside your DataFetcher component that calls fetchData and returns a cleanup function that aborts the controller. The effect should run only once on mount.",
+        "hint": "The useEffect hook should be placed inside the component, after state declarations. The cleanup function should call abort() on the AbortController instance.",
+        "analogousExample": "// Example useEffect with cleanup\nuseEffect(() => {\n  const controller = new AbortController();\n  \n  // Perform async operation\n  fetchData(controller);\n  \n  // Cleanup function\n  return () => {\n    controller.abort();\n  };\n}, []);",
+        "seedCode": "import React, { useState, useEffect } from 'react';\n\n// Create the DataFetcher component here\nconst DataFetcher = () => {\n  // Initialize state variables here\n  const [data, setData] = useState<string | null>(null);\n  const [loading, setLoading] = useState<boolean>(false);\n\n  // Define fetchData function here\n\n  // Add useEffect with cleanup here\n\n  return null;\n};",
+        "expectedOutcome": "The useEffect hook is implemented with proper cleanup that aborts the fetch request when the component unmounts.",
+        "successCriteria": [
+          "useEffect is added inside the component",
+          "useEffect calls fetchData",
+          "useEffect returns a cleanup function that aborts the controller",
+          "useEffect has an empty dependency array to run only on mount"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your useEffect includes: 1) calling fetchData, 2) returning a cleanup function that aborts the controller, and 3) an empty dependency array.",
+        "feedbackWrong": "The useEffect implementation is missing key elements. Review the example and try again - remember to include the cleanup function and empty dependency array.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "useEffect",
+            "fetchData",
+            "return",
+            "abort",
+            "[]"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 10",
+        "title": "Add a button to trigger data fetch",
+        "instruction": "Inside the DataFetcher component's return statement, add a button element with the text 'Fetch Data'.",
+        "hint": "You can add a button using the <button> JSX element. Place it where you want it to appear in the component's output.",
+        "analogousExample": "// Adding a button in a component\nconst MyComponent = () => {\n  return (\n    <button>Click Me</button>\n  );\n};",
+        "seedCode": "import React, { useState, useEffect } from 'react';\n\nconst DataFetcher = () => {\n  const [data, setData] = useState<string | null>(null);\n  const [loading, setLoading] = useState<boolean>(false);\n\n  // Define fetchData function here\n\n  // Add useEffect with cleanup here\n\n  return (\n    <div>\n      {/* Add your button here */}\n    </div>\n  );\n};",
+        "expectedOutcome": "The component will render a button with the label 'Fetch Data' in the UI.",
+        "successCriteria": [
+          "A button element with the text 'Fetch Data' is present in the component's return statement."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added a button, but make sure it has the exact text 'Fetch Data'.",
+        "feedbackWrong": "The button element with the text 'Fetch Data' is missing from the component's return statement.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<button>",
+            "Fetch Data",
+            "</button>"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 10",
+        "title": "Display loading state",
+        "instruction": "In the return statement of your DataFetcher component, add a paragraph element that displays 'Loading...' when the loading state is true. Use conditional rendering with the logical AND operator (&&).",
+        "hint": "You can conditionally render JSX by writing {loading && <p>Loading...</p>}. This will only show the paragraph when loading is true.",
+        "analogousExample": "// Conditional rendering with logical AND\nfunction ShowMessage() {\n  const [isVisible, setIsVisible] = useState(false);\n  \n  return (\n    <div>\n      {isVisible && <p>The message is visible!</p>}\n    </div>\n  );\n}",
+        "seedCode": "import React, { useState, useEffect } from 'react';\n\nconst DataFetcher = () => {\n  const [data, setData] = useState<string | null>(null);\n  const [loading, setLoading] = useState<boolean>(false);\n\n  // Define fetchData function here\n\n  // Add useEffect with cleanup here\n\n  return (\n    <div>\n      {/* Add your button here */}\n      {loading && <p>Loading...</p>}\n    </div>\n  );\n};",
+        "expectedOutcome": "The UI will show a 'Loading...' message only when the loading state is true, providing visual feedback during data fetching.",
+        "successCriteria": [
+          "A paragraph element with 'Loading...' text is conditionally rendered using {loading && <p>Loading...</p>} syntax."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but check your syntax. Make sure you're using the logical AND operator (&&) and that the paragraph contains the exact text 'Loading...'.",
+        "feedbackWrong": "The loading message isn't displaying correctly. Remember to use {loading && <p>Loading...</p>} to conditionally render the paragraph based on the loading state.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "loading",
+            "&&",
+            "<p>",
+            "Loading..."
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 10",
+        "title": "Display fetched data",
+        "instruction": "Add a paragraph element after the loading indicator that displays the fetched data when it's not null.",
+        "hint": "Use a conditional check on the data state variable. If data is not null, render a paragraph containing the data.",
+        "analogousExample": "// Conditional rendering example\n{data && <p>{data}</p>}",
+        "seedCode": "import React, { useState, useEffect } from 'react';\n\nconst DataFetcher = () => {\n  const [data, setData] = useState<string | null>(null);\n  const [loading, setLoading] = useState<boolean>(false);\n\n  // Define fetchData function here\n\n  // Add useEffect with cleanup here\n\n  return (\n    <div>\n      {/* Add your button here */}\n      {loading && <p>Loading...</p>}\n      {/* Display fetched data here */}\n    </div>\n  );\n};",
+        "expectedOutcome": "The UI will show the fetched data in a paragraph when data is available and loading is complete.",
+        "successCriteria": [
+          "A paragraph element conditionally renders the data state value when it's not null."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure you're checking if data is not null before rendering the paragraph.",
+        "feedbackWrong": "The data isn't displaying correctly. Check that you're using the data state variable and rendering it only when it's not null.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "data",
+            "&&",
+            "<p>",
+            "{data}",
+            "</p>"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 10",
+        "title": "Add a button to abort the fetch",
+        "instruction": "Add a second button labeled 'Abort Fetch' that, when clicked, calls the abort method on the current AbortController instance. Store the controller in a ref or state to access it.",
+        "hint": "You'll need to store the AbortController instance so it can be accessed by the abort button. Consider using useState or useRef to store it.",
+        "analogousExample": "// Similar: storing and using an AbortController\nconst [controller, setController] = useState<AbortController | null>(null);\n\nconst handleAbort = () => {\n  if (controller) {\n    controller.abort();\n  }\n};",
+        "seedCode": "import React, { useState, useEffect } from 'react';\n\nconst DataFetcher = () => {\n  const [data, setData] = useState<string | null>(null);\n  const [loading, setLoading] = useState<boolean>(false);\n\n  // Define fetchData function here\n\n  // Add useEffect with cleanup here\n\n  return (\n    <div>\n      {/* Add your button here */}\n      {loading && <p>Loading...</p>}\n      {/* Display fetched data here */}\n    </div>\n  );\n};",
+        "expectedOutcome": "The component will have a button that can abort an ongoing fetch request when clicked.",
+        "successCriteria": [
+          "A second button labeled 'Abort Fetch' is added, and clicking it calls abort() on the stored AbortController instance."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added the button, but make sure it properly calls abort() on the stored controller instance.",
+        "feedbackWrong": "The abort button isn't functioning correctly. Check that you're storing the controller and calling abort() when the button is clicked.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "Abort Fetch",
+            "abort",
+            "controller",
+            "onClick"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 10",
+        "title": "Handle and display abort errors",
+        "instruction": "Inside the fetchData function, modify the catch block to check if the error is an AbortError and log or display a specific message (e.g., 'Fetch aborted') instead of a generic error.",
+        "hint": "You can check if the error name is 'AbortError' and handle it differently from other errors.",
+        "analogousExample": "// Example: handling abort errors in fetch\ntry {\n  const response = await fetch(url, { signal: controller.signal });\n  const result = await response.json();\n  setData(result);\n} catch (error) {\n  if (error.name === 'AbortError') {\n    console.log('Fetch aborted');\n  } else {\n    console.error('Fetch error:', error);\n  }\n}",
+        "seedCode": "import React, { useState, useEffect } from 'react';\n\nconst DataFetcher = () => {\n  const [data, setData] = useState<string | null>(null);\n  const [loading, setLoading] = useState<boolean>(false);\n\n  const fetchData = async () => {\n    const controller = new AbortController();\n    setLoading(true);\n    try {\n      const response = await fetch('https://api.example.com/data', { signal: controller.signal });\n      const result = await response.json();\n      setData(result);\n    } catch (error) {\n      // Handle abort errors here\n      console.error('Fetch error:', error);\n    } finally {\n      setLoading(false);\n    }\n    return () => controller.abort();\n  };\n\n  useEffect(() => {\n    const cleanup = fetchData();\n    return cleanup;\n  }, []);\n\n  return (\n    <div>\n      <button onClick={fetchData}>Fetch Data</button>\n      {loading && <p>Loading...</p>}\n      {data && <p>Data: {data}</p>}\n    </div>\n  );\n};",
+        "expectedOutcome": "The fetchData function now properly distinguishes between abort errors and other fetch errors, logging a specific message for aborted requests.",
+        "successCriteria": [
+          "The catch block in fetchData checks if the error is an AbortError and handles it separately from other errors."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're checking for 'AbortError' specifically and handling it differently from other errors.",
+        "feedbackWrong": "The abort error handling isn't quite right. Remember to check if error.name === 'AbortError' and handle it separately.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "AbortError",
+            "catch",
+            "error.name",
+            "abort"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import React, useState, useEffect, and AbortController",
+        "id": "step1"
+      },
+      {
+        "label": "Create the main component with TypeScript",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize state for data and loading status",
+        "id": "step3"
+      },
+      {
+        "label": "Define a fetch function with AbortController",
+        "id": "step4"
+      },
+      {
+        "label": "Implement useEffect with cleanup",
+        "id": "step5"
+      },
+      {
+        "label": "Add a button to trigger data fetch",
+        "id": "step6"
+      },
+      {
+        "label": "Display loading state",
+        "id": "step7"
+      },
+      {
+        "label": "Display fetched data",
+        "id": "step8"
+      },
+      {
+        "label": "Add a button to abort the fetch",
+        "id": "step9"
+      },
+      {
+        "label": "Handle and display abort errors",
+        "id": "step10"
+      }
+    ]
+  },
+  "source": "content"
+}

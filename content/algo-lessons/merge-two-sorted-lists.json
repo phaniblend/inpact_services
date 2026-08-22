@@ -1,0 +1,862 @@
+{
+  "id": "merge-two-sorted-lists",
+  "title": "Merge Two Sorted Lists",
+  "pattern": "linked-list",
+  "difficulty": "easy",
+  "language": "javascript",
+  "status": "draft",
+  "flow": [
+    {
+      "stepId": "title",
+      "mentorSays": "At the end of this lesson, you will be able to:\n\n1. Understand what the Merge Two Sorted Lists lesson asks for\n2. Use two pointers to merge sorted linked lists efficiently\n3. Handle edge cases like empty lists and remaining nodes\n4. Build a new merged list by comparing and connecting nodes\n5. Implement the solution step by step in your chosen language",
+      "action": "continue",
+      "next": "lesson-illustration"
+    },
+    {
+      "stepId": "lesson-illustration",
+      "mentorSays": "Perfect! Now let's understand what the Merge Two Sorted Lists lesson is asking.\n\n**Lesson Definition:**\nGiven two sorted linked lists, merge them into one sorted linked list. Return the head of the merged list.\n\n**Key Insight:**\nSince both lists are already sorted, we can use two pointers (one for each list) to compare values and build the merged list.\n\n**Example 1:**\nlist1: 1 -> 2 -> 4 -> null\nlist2: 1 -> 3 -> 4 -> null\n\nWe need to merge them into: 1 -> 1 -> 2 -> 3 -> 4 -> 4 -> null\n\n**Step-by-step trace:**\n\nInitial: list1 = 1 -> 2 -> 4, list2 = 1 -> 3 -> 4\nCreate dummy node: dummy -> null\ncurrent = dummy\n\nStep 1: Compare list1.val (1) and list2.val (1)\n- Both are 1, choose list1 (or list2, doesn't matter)\n- current.next = list1, current = list1, list1 = list1.next\nResult: dummy -> 1, current points to 1, list1 = 2 -> 4\n\nStep 2: Compare list1.val (2) and list2.val (1)\n- 2 > 1, choose list2\n- current.next = list2, current = list2, list2 = list2.next\nResult: dummy -> 1 -> 1, current points to second 1, list2 = 3 -> 4\n\nStep 3: Compare list1.val (2) and list2.val (3)\n- 2 < 3, choose list1\n- current.next = list1, current = list1, list1 = list1.next\nResult: dummy -> 1 -> 1 -> 2, current points to 2, list1 = 4\n\nStep 4: Compare list1.val (4) and list2.val (3)\n- 4 > 3, choose list2\n- current.next = list2, current = list2, list2 = list2.next\nResult: dummy -> 1 -> 1 -> 2 -> 3, current points to 3, list2 = 4\n\nStep 5: Compare list1.val (4) and list2.val (4)\n- Both are 4, choose list1\n- current.next = list1, current = list1, list1 = null\nResult: dummy -> 1 -> 1 -> 2 -> 3 -> 4, current points to 4, list1 = null\n\nStep 6: list1 is null, append remaining from list2\n- current.next = list2\nResult: dummy -> 1 -> 1 -> 2 -> 3 -> 4 -> 4 -> null ✓\n\nReturn dummy.next (which is 1 -> 1 -> 2 -> 3 -> 4 -> 4 -> null)\n\n**Example 2:**\nlist1: null (empty)\nlist2: 0 -> null\n\nSince list1 is empty, just return list2: 0 -> null\n\n**What makes this tricky:**\n1. Using a dummy node simplifies the code (avoids special case for first node)\n2. Handling when one list is exhausted before the other\n3. Deciding which node to add when values are equal (either works)\n4. Properly updating pointers to avoid losing references\n\n**Common pitfalls:**\n- Not using a dummy node (requires special handling for the first node)\n- Forgetting to append remaining nodes from the non-empty list\n- Losing references by not saving next pointers before updating\n- Not handling the case where one or both lists are empty",
+      "example": "Example 1:\nlist1: 1 -> 2 -> 4\nlist2: 1 -> 3 -> 4\n\nMerged: 1 -> 1 -> 2 -> 3 -> 4 -> 4\n\nExample 2:\nlist1: null (empty)\nlist2: 0\n\nMerged: 0\n\nExample 3:\nlist1: 5\nlist2: 1 -> 2 -> 3\n\nMerged: 1 -> 2 -> 3 -> 5",
+      "action": "continue",
+      "next": "thinking-challenge"
+    },
+    {
+      "stepId": "thinking-challenge",
+      "mentorSays": "Now that you understand what the lesson wants, here's the real question:\n\nHow would YOU merge two sorted linked lists?\n\nThink about it for a moment. What approach feels natural to you?",
+      "choices": [
+        {
+          "label": "Use two pointers, compare values, add smaller one to result",
+          "next": "explore-two-pointers"
+        },
+        {
+          "label": "Convert both lists to arrays, merge arrays, rebuild list",
+          "next": "explore-array"
+        },
+        {
+          "label": "Use recursion to merge the lists",
+          "next": "explore-recursive"
+        }
+      ]
+    },
+    {
+      "stepId": "explore-array",
+      "mentorSays": "That's a creative approach! You're thinking: \"I'll convert both lists to arrays, merge the arrays, then rebuild a linked list.\"\n\nThis works! However, it uses O(n+m) extra space and requires multiple passes.\n\nThere's a more efficient O(1) space approach using two pointers directly on the linked lists. Would you like to learn that?",
+      "action": "continue",
+      "next": "explore-two-pointers"
+    },
+    {
+      "stepId": "explore-recursive",
+      "mentorSays": "That's an elegant approach! You're thinking: \"I'll use recursion to merge the rest of the lists, then connect the current node.\"\n\nThis works beautifully! However, recursion uses O(n+m) extra space for the call stack.\n\nThere's an iterative approach that's equally elegant and uses O(1) space. Would you like to learn that?",
+      "action": "continue",
+      "next": "explore-two-pointers"
+    },
+    {
+      "stepId": "explore-two-pointers",
+      "mentorSays": "Excellent choice! The two-pointer approach is both efficient and elegant. Here's the core idea:\n\n**The Algorithm:**\n1. **Create a dummy node**: This simplifies our code by avoiding special cases for the first node\n2. **Initialize**: current = dummy, and we have two pointers (one for each list)\n3. **While both lists have nodes**:\n   - Compare the values at the current positions\n   - Add the smaller node to our result (current.next = smaller node)\n   - Move current forward and move the pointer of the list we took from\n4. **Append remaining**: After the loop, one list might still have nodes. Append them all.\n5. **Return dummy.next** (the actual head of the merged list)\n\n**Why it works**:\n- Since both lists are sorted, we always know which value should come next\n- By comparing and taking the smaller value, we maintain sorted order\n- The dummy node lets us build the list without special cases\n\n**Why use a dummy node?**\nWithout a dummy node, we'd need to:\n- Check if this is the first node (special case)\n- Initialize the head separately\n- Handle the case where one list is empty\n\nWith a dummy node:\n- We always have a \"previous\" node to attach to\n- No special cases needed!\n\nLet's trace with list1 = 1 -> 2 -> 4, list2 = 1 -> 3 -> 4:\n\n- **Initial**: dummy -> null, current = dummy, list1 = 1->2->4, list2 = 1->3->4\n- **Step 1**: Compare 1 and 1 → Add list1's 1, current = 1, list1 = 2->4\n- **Step 2**: Compare 2 and 1 → Add list2's 1, current = 1, list2 = 3->4\n- **Step 3**: Compare 2 and 3 → Add list1's 2, current = 2, list1 = 4\n- **Step 4**: Compare 4 and 3 → Add list2's 3, current = 3, list2 = 4\n- **Step 5**: Compare 4 and 4 → Add list1's 4, current = 4, list1 = null\n- **Step 6**: list1 is null, append list2's remaining (4)\n- **Result**: dummy -> 1 -> 1 -> 2 -> 3 -> 4 -> 4 -> null ✓\n\nThis is O(n+m) time and O(1) space! Now let's code it step by step.",
+      "action": "continue",
+      "next": "language-selection"
+    },
+    {
+      "stepId": "language-selection",
+      "mentorSays": "Great! Now let's code this solution. Which programming language would you like to use?",
+      "choices": [
+        {
+          "label": "JavaScript",
+          "next": "variable-check-js"
+        },
+        {
+          "label": "Python",
+          "next": "variable-check-python"
+        },
+        {
+          "label": "Java",
+          "next": "variable-check-java"
+        },
+        {
+          "label": "C++",
+          "next": "variable-check-cpp"
+        },
+        {
+          "label": "TypeScript",
+          "next": "variable-check-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-check-js",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-js"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-js",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'dummy' or 'current') and put data inside it.\n\nFor example, 'let dummy = new ListNode(0);' creates a variable that stores a node. Later, you can use that variable name to refer to it.",
+      "example": "let dummy = new ListNode(0);\nlet current = dummy;\n\nNow these variables store node references\nWe can use them to build our merged list",
+      "action": "continue",
+      "next": "function-check-js"
+    },
+    {
+      "stepId": "function-check-js",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-js"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-js",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.\n\nThink of it like a recipe: you provide ingredients (parameters), the function does the work, and gives you a result (return value).",
+      "example": "function add(a, b) {\n  return a + b;\n}\n\nadd(3, 5) returns 8\nadd(10, 20) returns 30",
+      "action": "continue",
+      "next": "parameter-check-js"
+    },
+    {
+      "stepId": "parameter-check-js",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "linked-list-check-js"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-js",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'function mergeTwoLists(list1, list2)', the 'list1' and 'list2' are parameters - they're placeholders that will receive the head nodes of the linked lists when you call the function.",
+      "example": "function mergeTwoLists(list1, list2) {\n  // 'list1' and 'list2' are parameters\n}\n\n// When we call it:\nmergeTwoLists(head1, head2);\n// The head nodes go into the parameters",
+      "action": "continue",
+      "next": "linked-list-check-js"
+    },
+    {
+      "stepId": "linked-list-check-js",
+      "mentorSays": "To solve this lesson, we'll need to work with linked lists. Do you know what a linked list is?",
+      "choices": [
+        {
+          "label": "Yes, I know linked lists",
+          "next": "loop-check-js"
+        },
+        {
+          "label": "No, explain linked lists",
+          "next": "linked-list-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "linked-list-explanation-js",
+      "mentorSays": "A linked list is a data structure where each element (called a node) contains:\n- A value (data)\n- A pointer/reference to the next node\n\nFor example, a list 1 -> 2 -> 3 -> null means:\n- Node 1 has value 1 and points to node 2\n- Node 2 has value 2 and points to node 3\n- Node 3 has value 3 and points to null (end)\n\nWe access nodes through pointers. If 'list1' points to the first node, then:\n- list1.val = 1 (the value)\n- list1.next = node 2 (the next node)",
+      "example": "// Node structure:\nclass ListNode {\n  constructor(val) {\n    this.val = val;\n    this.next = null;\n  }\n}\n\n// Example: 1 -> 2 -> 3 -> null\nlet node1 = new ListNode(1);\nlet node2 = new ListNode(2);\nlet node3 = new ListNode(3);\nnode1.next = node2;\nnode2.next = node3;\n// node1 is the head of the list",
+      "action": "continue",
+      "next": "loop-check-js"
+    },
+    {
+      "stepId": "loop-check-js",
+      "mentorSays": "To solve this lesson, we'll need to use loops. Do you know what a loop is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know loops",
+          "next": "coding-start-js"
+        },
+        {
+          "label": "No, explain loops",
+          "next": "loop-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "loop-explanation-js",
+      "mentorSays": "A loop lets you repeat code multiple times. A 'while' loop runs code while a condition is true.\n\nFor example, 'while (list1 && list2)' means: keep going while both list1 and list2 are not null.",
+      "example": "while (list1 && list2) {\n  // This code runs while both lists have nodes\n  // Compare values and add smaller one\n}",
+      "action": "continue",
+      "next": "coding-start-js"
+    },
+    {
+      "stepId": "coding-start-js",
+      "mentorSays": "Perfect! Let's implement the merge solution in JavaScript. We'll create a function that takes two sorted linked lists and returns the head of the merged list.",
+      "example": "function mergeTwoLists(list1, list2) {\n  \n}",
+      "action": "continue",
+      "next": "coding-create-dummy-js"
+    },
+    {
+      "stepId": "coding-create-dummy-js",
+      "mentorSays": "First, create a dummy node. This simplifies our code by giving us a starting point to attach nodes to.",
+      "example": "function mergeTwoLists(list1, list2) {\n  // Create dummy node to simplify code\n  let dummy = new ListNode(0);\n  let current = dummy;\n}",
+      "action": "continue",
+      "next": "coding-while-loop-js"
+    },
+    {
+      "stepId": "coding-while-loop-js",
+      "mentorSays": "Now, create a while loop that continues while both lists have nodes. We'll compare and merge inside this loop.",
+      "example": "function mergeTwoLists(list1, list2) {\n  let dummy = new ListNode(0);\n  let current = dummy;\n  \n  // While both lists have nodes, compare and merge\n  while (list1 && list2) {\n    \n  }\n}",
+      "action": "continue",
+      "next": "coding-compare-values-js"
+    },
+    {
+      "stepId": "coding-compare-values-js",
+      "mentorSays": "Inside the loop, compare the values of the current nodes. If list1's value is smaller or equal, add list1's node. Otherwise, add list2's node.",
+      "example": "function mergeTwoLists(list1, list2) {\n  let dummy = new ListNode(0);\n  let current = dummy;\n  \n  while (list1 && list2) {\n    // Compare values and add smaller one\n    if (list1.val <= list2.val) {\n      current.next = list1;\n      list1 = list1.next;\n    } else {\n      current.next = list2;\n      list2 = list2.next;\n    }\n    current = current.next;\n  }\n}",
+      "action": "continue",
+      "next": "coding-append-remaining-js"
+    },
+    {
+      "stepId": "coding-append-remaining-js",
+      "mentorSays": "After the loop, one list might still have remaining nodes. Append all remaining nodes from whichever list is not empty.",
+      "example": "function mergeTwoLists(list1, list2) {\n  let dummy = new ListNode(0);\n  let current = dummy;\n  \n  while (list1 && list2) {\n    if (list1.val <= list2.val) {\n      current.next = list1;\n      list1 = list1.next;\n    } else {\n      current.next = list2;\n      list2 = list2.next;\n    }\n    current = current.next;\n  }\n  \n  // Append remaining nodes from whichever list is not empty\n  if (list1) {\n    current.next = list1;\n  } else {\n    current.next = list2;\n  }\n}",
+      "action": "continue",
+      "next": "coding-return-js"
+    },
+    {
+      "stepId": "coding-return-js",
+      "mentorSays": "Finally, return dummy.next, which is the actual head of the merged list.",
+      "example": "function mergeTwoLists(list1, list2) {\n  let dummy = new ListNode(0);\n  let current = dummy;\n  \n  while (list1 && list2) {\n    if (list1.val <= list2.val) {\n      current.next = list1;\n      list1 = list1.next;\n    } else {\n      current.next = list2;\n      list2 = list2.next;\n    }\n    current = current.next;\n  }\n  \n  if (list1) {\n    current.next = list1;\n  } else {\n    current.next = list2;\n  }\n  \n  return dummy.next;\n}",
+      "action": "continue",
+      "next": "test-code-js"
+    },
+    {
+      "stepId": "test-code-js",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** list1 = 1 -> 2 -> 4, list2 = 1 -> 3 -> 4\nExpected: 1 -> 1 -> 2 -> 3 -> 4 -> 4\n\n**Test 2:** list1 = null, list2 = null\nExpected: null (both lists empty)\n\n**Test 3:** list1 = null, list2 = 0\nExpected: 0 (one list empty)\n\n**Test 4:** list1 = 5, list2 = 1 -> 2 -> 3\nExpected: 1 -> 2 -> 3 -> 5\n\n**Test 5:** list1 = 1 -> 3 -> 5, list2 = 2 -> 4 -> 6\nExpected: 1 -> 2 -> 3 -> 4 -> 5 -> 6\n\n**Test 6:** list1 = 1, list2 = 1\nExpected: 1 -> 1\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: [1,2,4] + [1,3,4] → [1,1,2,3,4,4]\nTest 2: [] + [] → []\nTest 3: [] + [0] → [0]\nTest 4: [5] + [1,2,3] → [1,2,3,5]\nTest 5: [1,3,5] + [2,4,6] → [1,2,3,4,5,6]\nTest 6: [1] + [1] → [1,1]",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-python",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-python"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-python",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'dummy' or 'current') and put data inside it.\n\nFor example, 'dummy = ListNode(0)' creates a variable that stores a node. Later, you can use that variable name to refer to it.",
+      "example": "dummy = ListNode(0)\ncurrent = dummy\n\nNow these variables store node references\nWe can use them to build our merged list",
+      "action": "continue",
+      "next": "function-check-python"
+    },
+    {
+      "stepId": "function-check-python",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-python"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-python",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.\n\nThink of it like a recipe: you provide ingredients (parameters), the function does the work, and gives you a result (return value).",
+      "example": "def add(a, b):\n    return a + b\n\nadd(3, 5) returns 8\nadd(10, 20) returns 30",
+      "action": "continue",
+      "next": "parameter-check-python"
+    },
+    {
+      "stepId": "parameter-check-python",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "linked-list-check-python"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-python",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'def merge_two_lists(list1, list2):', the 'list1' and 'list2' are parameters - they're placeholders that will receive the head nodes of the linked lists when you call the function.",
+      "example": "def merge_two_lists(list1, list2):\n  # 'list1' and 'list2' are parameters\n\n# When we call it:\nmerge_two_lists(head1, head2)\n# The head nodes go into the parameters",
+      "action": "continue",
+      "next": "linked-list-check-python"
+    },
+    {
+      "stepId": "linked-list-check-python",
+      "mentorSays": "To solve this lesson, we'll need to work with linked lists. Do you know what a linked list is?",
+      "choices": [
+        {
+          "label": "Yes, I know linked lists",
+          "next": "loop-check-python"
+        },
+        {
+          "label": "No, explain linked lists",
+          "next": "linked-list-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "linked-list-explanation-python",
+      "mentorSays": "A linked list is a data structure where each element (called a node) contains:\n- A value (data)\n- A pointer/reference to the next node\n\nFor example, a list 1 -> 2 -> 3 -> None means:\n- Node 1 has value 1 and points to node 2\n- Node 2 has value 2 and points to node 3\n- Node 3 has value 3 and points to None (end)\n\nWe access nodes through references. If 'list1' points to the first node, then:\n- list1.val = 1 (the value)\n- list1.next = node 2 (the next node)",
+      "example": "# Node structure:\nclass ListNode:\n    def __init__(self, val=0, next=None):\n        self.val = val\n        self.next = next\n\n# Example: 1 -> 2 -> 3 -> None\nnode1 = ListNode(1)\nnode2 = ListNode(2)\nnode3 = ListNode(3)\nnode1.next = node2\nnode2.next = node3\n# node1 is the head of the list",
+      "action": "continue",
+      "next": "loop-check-python"
+    },
+    {
+      "stepId": "loop-check-python",
+      "mentorSays": "To solve this lesson, we'll need to use loops. Do you know what a loop is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know loops",
+          "next": "coding-start-python"
+        },
+        {
+          "label": "No, explain loops",
+          "next": "loop-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "loop-explanation-python",
+      "mentorSays": "A loop lets you repeat code multiple times. A 'while' loop runs code while a condition is true.\n\nFor example, 'while list1 and list2:' means: keep going while both list1 and list2 are not None.",
+      "example": "while list1 and list2:\n    # This code runs while both lists have nodes\n    # Compare values and add smaller one",
+      "action": "continue",
+      "next": "coding-start-python"
+    },
+    {
+      "stepId": "coding-start-python",
+      "mentorSays": "Perfect! Let's implement the merge solution in Python. We'll create a function that takes two sorted linked lists and returns the head of the merged list.",
+      "example": "def mergeTwoLists(list1, list2):\n    \n    pass",
+      "action": "continue",
+      "next": "coding-create-dummy-python"
+    },
+    {
+      "stepId": "coding-create-dummy-python",
+      "mentorSays": "First, create a dummy node. This simplifies our code by giving us a starting point to attach nodes to.",
+      "example": "def mergeTwoLists(list1, list2):\n    # Create dummy node to simplify code\n    dummy = ListNode(0)\n    current = dummy\n    \n    pass",
+      "action": "continue",
+      "next": "coding-while-loop-python"
+    },
+    {
+      "stepId": "coding-while-loop-python",
+      "mentorSays": "Now, create a while loop that continues while both lists have nodes. We'll compare and merge inside this loop.",
+      "example": "def mergeTwoLists(list1, list2):\n    dummy = ListNode(0)\n    current = dummy\n    \n    # While both lists have nodes, compare and merge\n    while list1 and list2:\n        \n        pass",
+      "action": "continue",
+      "next": "coding-compare-values-python"
+    },
+    {
+      "stepId": "coding-compare-values-python",
+      "mentorSays": "Inside the loop, compare the values of the current nodes. If list1's value is smaller or equal, add list1's node. Otherwise, add list2's node.",
+      "example": "def mergeTwoLists(list1, list2):\n    dummy = ListNode(0)\n    current = dummy\n    \n    while list1 and list2:\n        # Compare values and add smaller one\n        if list1.val <= list2.val:\n            current.next = list1\n            list1 = list1.next\n        else:\n            current.next = list2\n            list2 = list2.next\n        current = current.next\n        \n        pass",
+      "action": "continue",
+      "next": "coding-append-remaining-python"
+    },
+    {
+      "stepId": "coding-append-remaining-python",
+      "mentorSays": "After the loop, one list might still have remaining nodes. Append all remaining nodes from whichever list is not empty.",
+      "example": "def mergeTwoLists(list1, list2):\n    dummy = ListNode(0)\n    current = dummy\n    \n    while list1 and list2:\n        if list1.val <= list2.val:\n            current.next = list1\n            list1 = list1.next\n        else:\n            current.next = list2\n            list2 = list2.next\n        current = current.next\n    \n    # Append remaining nodes from whichever list is not empty\n    if list1:\n        current.next = list1\n    else:\n        current.next = list2\n        \n        pass",
+      "action": "continue",
+      "next": "coding-return-python"
+    },
+    {
+      "stepId": "coding-return-python",
+      "mentorSays": "Finally, return dummy.next, which is the actual head of the merged list.",
+      "example": "def mergeTwoLists(list1, list2):\n    dummy = ListNode(0)\n    current = dummy\n    \n    while list1 and list2:\n        if list1.val <= list2.val:\n            current.next = list1\n            list1 = list1.next\n        else:\n            current.next = list2\n            list2 = list2.next\n        current = current.next\n    \n    if list1:\n        current.next = list1\n    else:\n        current.next = list2\n    \n    return dummy.next",
+      "action": "continue",
+      "next": "test-code-python"
+    },
+    {
+      "stepId": "test-code-python",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** list1 = 1 -> 2 -> 4, list2 = 1 -> 3 -> 4\nExpected: 1 -> 1 -> 2 -> 3 -> 4 -> 4\n\n**Test 2:** list1 = None, list2 = None\nExpected: None (both lists empty)\n\n**Test 3:** list1 = None, list2 = 0\nExpected: 0 (one list empty)\n\n**Test 4:** list1 = 5, list2 = 1 -> 2 -> 3\nExpected: 1 -> 2 -> 3 -> 5\n\n**Test 5:** list1 = 1 -> 3 -> 5, list2 = 2 -> 4 -> 6\nExpected: 1 -> 2 -> 3 -> 4 -> 5 -> 6\n\n**Test 6:** list1 = 1, list2 = 1\nExpected: 1 -> 1\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: [1,2,4] + [1,3,4] → [1,1,2,3,4,4]\nTest 2: [] + [] → []\nTest 3: [] + [0] → [0]\nTest 4: [5] + [1,2,3] → [1,2,3,5]\nTest 5: [1,3,5] + [2,4,6] → [1,2,3,4,5,6]\nTest 6: [1] + [1] → [1,1]",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-java",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-java"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-java",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'dummy' or 'current') and put data inside it.\n\nFor example, 'ListNode dummy = new ListNode(0);' creates a variable that stores a node. Later, you can use that variable name to refer to it.",
+      "example": "ListNode dummy = new ListNode(0);\nListNode current = dummy;\n\nNow these variables store node references\nWe can use them to build our merged list",
+      "action": "continue",
+      "next": "function-check-java"
+    },
+    {
+      "stepId": "function-check-java",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a method is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know methods",
+          "next": "parameter-check-java"
+        },
+        {
+          "label": "No, explain methods",
+          "next": "function-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-java",
+      "mentorSays": "A method (Java's version of a function) is a reusable block of code. You give it inputs (called parameters), and it can return an output.\n\nThink of it like a recipe: you provide ingredients (parameters), the method does the work, and gives you a result (return value).",
+      "example": "public int add(int a, int b) {\n    return a + b;\n}\n\nadd(3, 5) returns 8\nadd(10, 20) returns 30",
+      "action": "continue",
+      "next": "parameter-check-java"
+    },
+    {
+      "stepId": "parameter-check-java",
+      "mentorSays": "When we write a method, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "linked-list-check-java"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-java",
+      "mentorSays": "Parameters are like variables that receive values when you call the method. When you write 'public ListNode mergeTwoLists(ListNode list1, ListNode list2)', the 'list1' and 'list2' are parameters - they're placeholders that will receive the head nodes of the linked lists when you call the method.",
+      "example": "public ListNode mergeTwoLists(ListNode list1, ListNode list2) {\n  // 'list1' and 'list2' are parameters\n}\n\n// When we call it:\nmergeTwoLists(head1, head2);\n// The head nodes go into the parameters",
+      "action": "continue",
+      "next": "linked-list-check-java"
+    },
+    {
+      "stepId": "linked-list-check-java",
+      "mentorSays": "To solve this lesson, we'll need to work with linked lists. Do you know what a linked list is?",
+      "choices": [
+        {
+          "label": "Yes, I know linked lists",
+          "next": "loop-check-java"
+        },
+        {
+          "label": "No, explain linked lists",
+          "next": "linked-list-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "linked-list-explanation-java",
+      "mentorSays": "A linked list is a data structure where each element (called a node) contains:\n- A value (data)\n- A pointer/reference to the next node\n\nFor example, a list 1 -> 2 -> 3 -> null means:\n- Node 1 has value 1 and points to node 2\n- Node 2 has value 2 and points to node 3\n- Node 3 has value 3 and points to null (end)\n\nWe access nodes through references. If 'list1' points to the first node, then:\n- list1.val = 1 (the value)\n- list1.next = node 2 (the next node)",
+      "example": "// Node structure:\nclass ListNode {\n    int val;\n    ListNode next;\n    ListNode(int val) { this.val = val; }\n}\n\n// Example: 1 -> 2 -> 3 -> null\nListNode node1 = new ListNode(1);\nListNode node2 = new ListNode(2);\nListNode node3 = new ListNode(3);\nnode1.next = node2;\nnode2.next = node3;\n// node1 is the head of the list",
+      "action": "continue",
+      "next": "loop-check-java"
+    },
+    {
+      "stepId": "loop-check-java",
+      "mentorSays": "To solve this lesson, we'll need to use loops. Do you know what a loop is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know loops",
+          "next": "coding-start-java"
+        },
+        {
+          "label": "No, explain loops",
+          "next": "loop-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "loop-explanation-java",
+      "mentorSays": "A loop lets you repeat code multiple times. A 'while' loop runs code while a condition is true.\n\nFor example, 'while (list1 != null && list2 != null)' means: keep going while both list1 and list2 are not null.",
+      "example": "while (list1 != null && list2 != null) {\n    // This code runs while both lists have nodes\n    // Compare values and add smaller one\n}",
+      "action": "continue",
+      "next": "coding-start-java"
+    },
+    {
+      "stepId": "coding-start-java",
+      "mentorSays": "Perfect! Let's implement the merge solution in Java. We'll create a method that takes two sorted linked lists and returns the head of the merged list.",
+      "example": "public ListNode mergeTwoLists(ListNode list1, ListNode list2) {\n    \n}",
+      "action": "continue",
+      "next": "coding-create-dummy-java"
+    },
+    {
+      "stepId": "coding-create-dummy-java",
+      "mentorSays": "First, create a dummy node. This simplifies our code by giving us a starting point to attach nodes to.",
+      "example": "public ListNode mergeTwoLists(ListNode list1, ListNode list2) {\n    // Create dummy node to simplify code\n    ListNode dummy = new ListNode(0);\n    ListNode current = dummy;\n}",
+      "action": "continue",
+      "next": "coding-while-loop-java"
+    },
+    {
+      "stepId": "coding-while-loop-java",
+      "mentorSays": "Now, create a while loop that continues while both lists have nodes. We'll compare and merge inside this loop.",
+      "example": "public ListNode mergeTwoLists(ListNode list1, ListNode list2) {\n    ListNode dummy = new ListNode(0);\n    ListNode current = dummy;\n    \n    // While both lists have nodes, compare and merge\n    while (list1 != null && list2 != null) {\n        \n    }\n}",
+      "action": "continue",
+      "next": "coding-compare-values-java"
+    },
+    {
+      "stepId": "coding-compare-values-java",
+      "mentorSays": "Inside the loop, compare the values of the current nodes. If list1's value is smaller or equal, add list1's node. Otherwise, add list2's node.",
+      "example": "public ListNode mergeTwoLists(ListNode list1, ListNode list2) {\n    ListNode dummy = new ListNode(0);\n    ListNode current = dummy;\n    \n    while (list1 != null && list2 != null) {\n        // Compare values and add smaller one\n        if (list1.val <= list2.val) {\n            current.next = list1;\n            list1 = list1.next;\n        } else {\n            current.next = list2;\n            list2 = list2.next;\n        }\n        current = current.next;\n    }\n}",
+      "action": "continue",
+      "next": "coding-append-remaining-java"
+    },
+    {
+      "stepId": "coding-append-remaining-java",
+      "mentorSays": "After the loop, one list might still have remaining nodes. Append all remaining nodes from whichever list is not empty.",
+      "example": "public ListNode mergeTwoLists(ListNode list1, ListNode list2) {\n    ListNode dummy = new ListNode(0);\n    ListNode current = dummy;\n    \n    while (list1 != null && list2 != null) {\n        if (list1.val <= list2.val) {\n            current.next = list1;\n            list1 = list1.next;\n        } else {\n            current.next = list2;\n            list2 = list2.next;\n        }\n        current = current.next;\n    }\n    \n    // Append remaining nodes from whichever list is not empty\n    if (list1 != null) {\n        current.next = list1;\n    } else {\n        current.next = list2;\n    }\n}",
+      "action": "continue",
+      "next": "coding-return-java"
+    },
+    {
+      "stepId": "coding-return-java",
+      "mentorSays": "Finally, return dummy.next, which is the actual head of the merged list.",
+      "example": "public ListNode mergeTwoLists(ListNode list1, ListNode list2) {\n    ListNode dummy = new ListNode(0);\n    ListNode current = dummy;\n    \n    while (list1 != null && list2 != null) {\n        if (list1.val <= list2.val) {\n            current.next = list1;\n            list1 = list1.next;\n        } else {\n            current.next = list2;\n            list2 = list2.next;\n        }\n        current = current.next;\n    }\n    \n    if (list1 != null) {\n        current.next = list1;\n    } else {\n        current.next = list2;\n    }\n    \n    return dummy.next;\n}",
+      "action": "continue",
+      "next": "test-code-java"
+    },
+    {
+      "stepId": "test-code-java",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** list1 = 1 -> 2 -> 4, list2 = 1 -> 3 -> 4\nExpected: 1 -> 1 -> 2 -> 3 -> 4 -> 4\n\n**Test 2:** list1 = null, list2 = null\nExpected: null (both lists empty)\n\n**Test 3:** list1 = null, list2 = 0\nExpected: 0 (one list empty)\n\n**Test 4:** list1 = 5, list2 = 1 -> 2 -> 3\nExpected: 1 -> 2 -> 3 -> 5\n\n**Test 5:** list1 = 1 -> 3 -> 5, list2 = 2 -> 4 -> 6\nExpected: 1 -> 2 -> 3 -> 4 -> 5 -> 6\n\n**Test 6:** list1 = 1, list2 = 1\nExpected: 1 -> 1\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: [1,2,4] + [1,3,4] → [1,1,2,3,4,4]\nTest 2: [] + [] → []\nTest 3: [] + [0] → [0]\nTest 4: [5] + [1,2,3] → [1,2,3,5]\nTest 5: [1,3,5] + [2,4,6] → [1,2,3,4,5,6]\nTest 6: [1] + [1] → [1,1]",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-cpp",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-cpp"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-cpp",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'dummy' or 'current') and put data inside it.\n\nFor example, 'ListNode* dummy = new ListNode(0);' creates a variable that stores a pointer to a node. Later, you can use that variable name to refer to it.",
+      "example": "ListNode* dummy = new ListNode(0);\nListNode* current = dummy;\n\nNow these variables store node pointers\nWe can use them to build our merged list",
+      "action": "continue",
+      "next": "function-check-cpp"
+    },
+    {
+      "stepId": "function-check-cpp",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-cpp"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-cpp",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.\n\nThink of it like a recipe: you provide ingredients (parameters), the function does the work, and gives you a result (return value).",
+      "example": "int add(int a, int b) {\n    return a + b;\n}\n\nadd(3, 5) returns 8\nadd(10, 20) returns 30",
+      "action": "continue",
+      "next": "parameter-check-cpp"
+    },
+    {
+      "stepId": "parameter-check-cpp",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "linked-list-check-cpp"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-cpp",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'ListNode* mergeTwoLists(ListNode* list1, ListNode* list2)', the 'list1' and 'list2' are parameters - they're placeholders that will receive the head nodes of the linked lists when you call the function.",
+      "example": "ListNode* mergeTwoLists(ListNode* list1, ListNode* list2) {\n  // 'list1' and 'list2' are parameters\n}\n\n// When we call it:\nmergeTwoLists(head1, head2);\n// The head nodes go into the parameters",
+      "action": "continue",
+      "next": "linked-list-check-cpp"
+    },
+    {
+      "stepId": "linked-list-check-cpp",
+      "mentorSays": "To solve this lesson, we'll need to work with linked lists. Do you know what a linked list is?",
+      "choices": [
+        {
+          "label": "Yes, I know linked lists",
+          "next": "loop-check-cpp"
+        },
+        {
+          "label": "No, explain linked lists",
+          "next": "linked-list-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "linked-list-explanation-cpp",
+      "mentorSays": "A linked list is a data structure where each element (called a node) contains:\n- A value (data)\n- A pointer to the next node\n\nFor example, a list 1 -> 2 -> 3 -> nullptr means:\n- Node 1 has value 1 and points to node 2\n- Node 2 has value 2 and points to node 3\n- Node 3 has value 3 and points to nullptr (end)\n\nWe access nodes through pointers. If 'list1' points to the first node, then:\n- list1->val = 1 (the value)\n- list1->next = node 2 (the next node)",
+      "example": "// Node structure:\nstruct ListNode {\n    int val;\n    ListNode* next;\n    ListNode(int val) : val(val), next(nullptr) {}\n};\n\n// Example: 1 -> 2 -> 3 -> nullptr\nListNode* node1 = new ListNode(1);\nListNode* node2 = new ListNode(2);\nListNode* node3 = new ListNode(3);\nnode1->next = node2;\nnode2->next = node3;\n// node1 is the head of the list",
+      "action": "continue",
+      "next": "loop-check-cpp"
+    },
+    {
+      "stepId": "loop-check-cpp",
+      "mentorSays": "To solve this lesson, we'll need to use loops. Do you know what a loop is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know loops",
+          "next": "coding-start-cpp"
+        },
+        {
+          "label": "No, explain loops",
+          "next": "loop-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "loop-explanation-cpp",
+      "mentorSays": "A loop lets you repeat code multiple times. A 'while' loop runs code while a condition is true.\n\nFor example, 'while (list1 && list2)' means: keep going while both list1 and list2 are not nullptr.",
+      "example": "while (list1 && list2) {\n    // This code runs while both lists have nodes\n    // Compare values and add smaller one\n}",
+      "action": "continue",
+      "next": "coding-start-cpp"
+    },
+    {
+      "stepId": "coding-start-cpp",
+      "mentorSays": "Perfect! Let's implement the merge solution in C++. We'll create a function that takes two sorted linked lists and returns the head of the merged list.",
+      "example": "ListNode* mergeTwoLists(ListNode* list1, ListNode* list2) {\n    \n}",
+      "action": "continue",
+      "next": "coding-create-dummy-cpp"
+    },
+    {
+      "stepId": "coding-create-dummy-cpp",
+      "mentorSays": "First, create a dummy node. This simplifies our code by giving us a starting point to attach nodes to.",
+      "example": "ListNode* mergeTwoLists(ListNode* list1, ListNode* list2) {\n    // Create dummy node to simplify code\n    ListNode* dummy = new ListNode(0);\n    ListNode* current = dummy;\n}",
+      "action": "continue",
+      "next": "coding-while-loop-cpp"
+    },
+    {
+      "stepId": "coding-while-loop-cpp",
+      "mentorSays": "Now, create a while loop that continues while both lists have nodes. We'll compare and merge inside this loop.",
+      "example": "ListNode* mergeTwoLists(ListNode* list1, ListNode* list2) {\n    ListNode* dummy = new ListNode(0);\n    ListNode* current = dummy;\n    \n    // While both lists have nodes, compare and merge\n    while (list1 && list2) {\n        \n    }\n}",
+      "action": "continue",
+      "next": "coding-compare-values-cpp"
+    },
+    {
+      "stepId": "coding-compare-values-cpp",
+      "mentorSays": "Inside the loop, compare the values of the current nodes. If list1's value is smaller or equal, add list1's node. Otherwise, add list2's node.",
+      "example": "ListNode* mergeTwoLists(ListNode* list1, ListNode* list2) {\n    ListNode* dummy = new ListNode(0);\n    ListNode* current = dummy;\n    \n    while (list1 && list2) {\n        // Compare values and add smaller one\n        if (list1->val <= list2->val) {\n            current->next = list1;\n            list1 = list1->next;\n        } else {\n            current->next = list2;\n            list2 = list2->next;\n        }\n        current = current->next;\n    }\n}",
+      "action": "continue",
+      "next": "coding-append-remaining-cpp"
+    },
+    {
+      "stepId": "coding-append-remaining-cpp",
+      "mentorSays": "After the loop, one list might still have remaining nodes. Append all remaining nodes from whichever list is not empty.",
+      "example": "ListNode* mergeTwoLists(ListNode* list1, ListNode* list2) {\n    ListNode* dummy = new ListNode(0);\n    ListNode* current = dummy;\n    \n    while (list1 && list2) {\n        if (list1->val <= list2->val) {\n            current->next = list1;\n            list1 = list1->next;\n        } else {\n            current->next = list2;\n            list2 = list2->next;\n        }\n        current = current->next;\n    }\n    \n    // Append remaining nodes from whichever list is not empty\n    if (list1) {\n        current->next = list1;\n    } else {\n        current->next = list2;\n    }\n}",
+      "action": "continue",
+      "next": "coding-return-cpp"
+    },
+    {
+      "stepId": "coding-return-cpp",
+      "mentorSays": "Finally, return dummy->next, which is the actual head of the merged list.",
+      "example": "ListNode* mergeTwoLists(ListNode* list1, ListNode* list2) {\n    ListNode* dummy = new ListNode(0);\n    ListNode* current = dummy;\n    \n    while (list1 && list2) {\n        if (list1->val <= list2->val) {\n            current->next = list1;\n            list1 = list1->next;\n        } else {\n            current->next = list2;\n            list2 = list2->next;\n        }\n        current = current->next;\n    }\n    \n    if (list1) {\n        current->next = list1;\n    } else {\n        current->next = list2;\n    }\n    \n    return dummy->next;\n}",
+      "action": "continue",
+      "next": "test-code-cpp"
+    },
+    {
+      "stepId": "test-code-cpp",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** list1 = 1 -> 2 -> 4, list2 = 1 -> 3 -> 4\nExpected: 1 -> 1 -> 2 -> 3 -> 4 -> 4\n\n**Test 2:** list1 = nullptr, list2 = nullptr\nExpected: nullptr (both lists empty)\n\n**Test 3:** list1 = nullptr, list2 = 0\nExpected: 0 (one list empty)\n\n**Test 4:** list1 = 5, list2 = 1 -> 2 -> 3\nExpected: 1 -> 2 -> 3 -> 5\n\n**Test 5:** list1 = 1 -> 3 -> 5, list2 = 2 -> 4 -> 6\nExpected: 1 -> 2 -> 3 -> 4 -> 5 -> 6\n\n**Test 6:** list1 = 1, list2 = 1\nExpected: 1 -> 1\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: [1,2,4] + [1,3,4] → [1,1,2,3,4,4]\nTest 2: [] + [] → []\nTest 3: [] + [0] → [0]\nTest 4: [5] + [1,2,3] → [1,2,3,5]\nTest 5: [1,3,5] + [2,4,6] → [1,2,3,4,5,6]\nTest 6: [1] + [1] → [1,1]",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-ts",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-ts"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-ts",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'dummy' or 'current') and put data inside it.\n\nFor example, 'let dummy: ListNode = new ListNode(0);' creates a variable that stores a node. Later, you can use that variable name to refer to it.",
+      "example": "let dummy: ListNode = new ListNode(0);\nlet current: ListNode = dummy;\n\nNow these variables store node references\nWe can use them to build our merged list",
+      "action": "continue",
+      "next": "function-check-ts"
+    },
+    {
+      "stepId": "function-check-ts",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-ts"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-ts",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.\n\nThink of it like a recipe: you provide ingredients (parameters), the function does the work, and gives you a result (return value).",
+      "example": "function add(a: number, b: number): number {\n  return a + b;\n}\n\nadd(3, 5) returns 8\nadd(10, 20) returns 30",
+      "action": "continue",
+      "next": "parameter-check-ts"
+    },
+    {
+      "stepId": "parameter-check-ts",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "linked-list-check-ts"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-ts",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'function mergeTwoLists(list1: ListNode | null, list2: ListNode | null): ListNode | null', the 'list1' and 'list2' are parameters - they're placeholders that will receive the head nodes of the linked lists when you call the function.",
+      "example": "function mergeTwoLists(list1: ListNode | null, list2: ListNode | null): ListNode | null {\n  // 'list1' and 'list2' are parameters\n}\n\n// When we call it:\nmergeTwoLists(head1, head2);\n// The head nodes go into the parameters",
+      "action": "continue",
+      "next": "linked-list-check-ts"
+    },
+    {
+      "stepId": "linked-list-check-ts",
+      "mentorSays": "To solve this lesson, we'll need to work with linked lists. Do you know what a linked list is?",
+      "choices": [
+        {
+          "label": "Yes, I know linked lists",
+          "next": "loop-check-ts"
+        },
+        {
+          "label": "No, explain linked lists",
+          "next": "linked-list-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "linked-list-explanation-ts",
+      "mentorSays": "A linked list is a data structure where each element (called a node) contains:\n- A value (data)\n- A pointer/reference to the next node\n\nFor example, a list 1 -> 2 -> 3 -> null means:\n- Node 1 has value 1 and points to node 2\n- Node 2 has value 2 and points to node 3\n- Node 3 has value 3 and points to null (end)\n\nWe access nodes through references. If 'list1' points to the first node, then:\n- list1.val = 1 (the value)\n- list1.next = node 2 (the next node)",
+      "example": "// Node structure:\nclass ListNode {\n    val: number;\n    next: ListNode | null;\n    constructor(val?: number, next?: ListNode | null) {\n        this.val = val === undefined ? 0 : val;\n        this.next = next === undefined ? null : next;\n    }\n}\n\n// Example: 1 -> 2 -> 3 -> null\nlet node1 = new ListNode(1);\nlet node2 = new ListNode(2);\nlet node3 = new ListNode(3);\nnode1.next = node2;\nnode2.next = node3;\n// node1 is the head of the list",
+      "action": "continue",
+      "next": "loop-check-ts"
+    },
+    {
+      "stepId": "loop-check-ts",
+      "mentorSays": "To solve this lesson, we'll need to use loops. Do you know what a loop is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know loops",
+          "next": "coding-start-ts"
+        },
+        {
+          "label": "No, explain loops",
+          "next": "loop-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "loop-explanation-ts",
+      "mentorSays": "A loop lets you repeat code multiple times. A 'while' loop runs code while a condition is true.\n\nFor example, 'while (list1 && list2)' means: keep going while both list1 and list2 are not null.",
+      "example": "while (list1 && list2) {\n    // This code runs while both lists have nodes\n    // Compare values and add smaller one\n}",
+      "action": "continue",
+      "next": "coding-start-ts"
+    },
+    {
+      "stepId": "coding-start-ts",
+      "mentorSays": "Perfect! Let's implement the merge solution in TypeScript. We'll create a function that takes two sorted linked lists and returns the head of the merged list.",
+      "example": "function mergeTwoLists(list1: ListNode | null, list2: ListNode | null): ListNode | null {\n  \n}",
+      "action": "continue",
+      "next": "coding-create-dummy-ts"
+    },
+    {
+      "stepId": "coding-create-dummy-ts",
+      "mentorSays": "First, create a dummy node. This simplifies our code by giving us a starting point to attach nodes to.",
+      "example": "function mergeTwoLists(list1: ListNode | null, list2: ListNode | null): ListNode | null {\n  // Create dummy node to simplify code\n  let dummy: ListNode = new ListNode(0);\n  let current: ListNode = dummy;\n}",
+      "action": "continue",
+      "next": "coding-while-loop-ts"
+    },
+    {
+      "stepId": "coding-while-loop-ts",
+      "mentorSays": "Now, create a while loop that continues while both lists have nodes. We'll compare and merge inside this loop.",
+      "example": "function mergeTwoLists(list1: ListNode | null, list2: ListNode | null): ListNode | null {\n  let dummy: ListNode = new ListNode(0);\n  let current: ListNode = dummy;\n  \n  // While both lists have nodes, compare and merge\n  while (list1 && list2) {\n    \n  }\n}",
+      "action": "continue",
+      "next": "coding-compare-values-ts"
+    },
+    {
+      "stepId": "coding-compare-values-ts",
+      "mentorSays": "Inside the loop, compare the values of the current nodes. If list1's value is smaller or equal, add list1's node. Otherwise, add list2's node.",
+      "example": "function mergeTwoLists(list1: ListNode | null, list2: ListNode | null): ListNode | null {\n  let dummy: ListNode = new ListNode(0);\n  let current: ListNode = dummy;\n  \n  while (list1 && list2) {\n    // Compare values and add smaller one\n    if (list1.val <= list2.val) {\n      current.next = list1;\n      list1 = list1.next;\n    } else {\n      current.next = list2;\n      list2 = list2.next;\n    }\n    current = current.next;\n  }\n}",
+      "action": "continue",
+      "next": "coding-append-remaining-ts"
+    },
+    {
+      "stepId": "coding-append-remaining-ts",
+      "mentorSays": "After the loop, one list might still have remaining nodes. Append all remaining nodes from whichever list is not empty.",
+      "example": "function mergeTwoLists(list1: ListNode | null, list2: ListNode | null): ListNode | null {\n  let dummy: ListNode = new ListNode(0);\n  let current: ListNode = dummy;\n  \n  while (list1 && list2) {\n    if (list1.val <= list2.val) {\n      current.next = list1;\n      list1 = list1.next;\n    } else {\n      current.next = list2;\n      list2 = list2.next;\n    }\n    current = current.next;\n  }\n  \n  // Append remaining nodes from whichever list is not empty\n  if (list1) {\n    current.next = list1;\n  } else {\n    current.next = list2;\n  }\n}",
+      "action": "continue",
+      "next": "coding-return-ts"
+    },
+    {
+      "stepId": "coding-return-ts",
+      "mentorSays": "Finally, return dummy.next, which is the actual head of the merged list.",
+      "example": "function mergeTwoLists(list1: ListNode | null, list2: ListNode | null): ListNode | null {\n  let dummy: ListNode = new ListNode(0);\n  let current: ListNode = dummy;\n  \n  while (list1 && list2) {\n    if (list1.val <= list2.val) {\n      current.next = list1;\n      list1 = list1.next;\n    } else {\n      current.next = list2;\n      list2 = list2.next;\n    }\n    current = current.next;\n  }\n  \n  if (list1) {\n    current.next = list1;\n  } else {\n    current.next = list2;\n  }\n  \n  return dummy.next;\n}",
+      "action": "continue",
+      "next": "test-code-ts"
+    },
+    {
+      "stepId": "test-code-ts",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** list1 = 1 -> 2 -> 4, list2 = 1 -> 3 -> 4\nExpected: 1 -> 1 -> 2 -> 3 -> 4 -> 4\n\n**Test 2:** list1 = null, list2 = null\nExpected: null (both lists empty)\n\n**Test 3:** list1 = null, list2 = 0\nExpected: 0 (one list empty)\n\n**Test 4:** list1 = 5, list2 = 1 -> 2 -> 3\nExpected: 1 -> 2 -> 3 -> 5\n\n**Test 5:** list1 = 1 -> 3 -> 5, list2 = 2 -> 4 -> 6\nExpected: 1 -> 2 -> 3 -> 4 -> 5 -> 6\n\n**Test 6:** list1 = 1, list2 = 1\nExpected: 1 -> 1\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: [1,2,4] + [1,3,4] → [1,1,2,3,4,4]\nTest 2: [] + [] → []\nTest 3: [] + [0] → [0]\nTest 4: [5] + [1,2,3] → [1,2,3,5]\nTest 5: [1,3,5] + [2,4,6] → [1,2,3,4,5,6]\nTest 6: [1] + [1] → [1,1]",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "final",
+      "mentorSays": "🎉 Well done! You've learned to think through the Merge Two Sorted Lists lesson. You understand what the lesson asks for, how to use two pointers to merge sorted linked lists, and how to handle edge cases like empty lists and remaining nodes.\n\n**Key Takeaways:**\n1. **Dummy Node Pattern**: Using a dummy node simplifies code by avoiding special cases for the first node\n2. **Two Pointers**: Use one pointer for each list to compare values and build the merged list\n3. **Comparison Logic**: Always add the smaller (or equal) value to maintain sorted order\n4. **Remaining Nodes**: After the main loop, append all remaining nodes from the non-empty list\n\n**Time Complexity**: O(n + m) - we traverse both lists once\n**Space Complexity**: O(1) - we only use a constant amount of extra space (dummy node and pointers)\n\n**What to practice next:**\n- Merge k Sorted Lists (extension of this lesson)\n- Merge Sorted Arrays (similar concept with arrays)\n- Reverse Linked List (more linked list manipulation)\n\nThis kind of thinking—using two pointers to merge sorted sequences—is essential for solving many linked list and array lessons. Keep practicing!",
+      "action": "continue"
+    }
+  ]
+}
+
+

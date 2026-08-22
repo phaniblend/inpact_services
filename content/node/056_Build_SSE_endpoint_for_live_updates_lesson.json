@@ -1,0 +1,324 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-node-56",
+    "track": "node",
+    "lessonNum": 56,
+    "title": "Build SSE endpoint for live updates",
+    "shortName": "P56",
+    "intro": {
+      "tag": "LESSON #56",
+      "title": "Build SSE endpoint for live updates",
+      "body": "In this lesson, you will build a Server-Sent Events (SSE) endpoint in Node.js to stream live updates from a server to a client in real-time. You will learn how SSE enables one-way, persistent connections for sending continuous data, like notifications or live feeds, using plain HTTP. The core programming concepts involve setting up an Express server, handling HTTP headers for SSE, and writing data in a specific event stream format. You'll use key Node.js constructs such as HTTP response objects, event emitters, and interval timers to simulate and send updates. By the end, you'll have a working endpoint that clients can connect to for receiving live data streams.",
+      "usecase": "SSE endpoints are essential for real-time features in modern web applications. You'll see them powering live dashboards like stock trading platforms or server monitoring tools that update metrics without page refreshes. Social media feeds use SSE to push new posts and notifications instantly to users. News websites implement SSE for live scoreboards and breaking news alerts that appear automatically. As a Node.js developer, you'll build these endpoints to create responsive, data-driven experiences that keep users engaged with current information."
+    },
+    "objectives": [
+      "Construct a Node.js HTTP server with SSE endpoint configuration",
+      "Initialize SSE response headers for proper event-stream communication",
+      "Implement an interval-based data stream that sends live updates to clients",
+      "Manipulate response objects to maintain persistent SSE connections",
+      "Apply error handling to gracefully close SSE connections on client disconnect",
+      "Configure CORS headers to allow cross-origin SSE connections",
+      "Integrate a simple client-side JavaScript listener to display live updates"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 9",
+        "title": "Import required Node.js modules",
+        "instruction": "Import the http module and the EventEmitter class from the events module.",
+        "hint": "Use the require() function to import Node.js core modules. The http module is needed to create an HTTP server, and EventEmitter from events will help manage SSE connections.",
+        "analogousExample": "// Example: importing core modules\nconst fs = require('fs');\nconst path = require('path');",
+        "seedCode": "// Import the http module and EventEmitter from events\n",
+        "expectedOutcome": "The code will have the http module and EventEmitter class imported and ready to use.",
+        "successCriteria": [
+          "The http module and EventEmitter class from the events module are imported using require()."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure to import both modules: http and EventEmitter from events. Check that you're using the correct require() syntax.",
+        "feedbackWrong": "The imports are missing or incorrect. Remember to use require() to import the http module and EventEmitter from the events module.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "require('http')",
+            "require('events')",
+            "EventEmitter"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 9",
+        "title": "Create an HTTP server instance",
+        "instruction": "Create an HTTP server using http.createServer() and store it in a variable named 'server'.",
+        "hint": "Use the createServer method from the imported http module to create a server instance.",
+        "analogousExample": "// Creating a basic HTTP server\nconst server = http.createServer();",
+        "seedCode": "// Import the http module and EventEmitter from events\nconst http = require('http');\nconst EventEmitter = require('events');\n\n// Create an HTTP server instance\n",
+        "expectedOutcome": "You'll have a server variable ready to handle incoming HTTP requests.",
+        "successCriteria": [
+          "A server variable is created using http.createServer()"
+        ],
+        "feedbackCorrect": "Great! You've successfully created an HTTP server instance.",
+        "feedbackPartial": "You're close. Make sure you're using http.createServer() and storing it in a variable named 'server'.",
+        "feedbackWrong": "The server instance wasn't created correctly. Check that you're using the imported http module and the createServer method.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "server",
+            "createServer"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 9",
+        "title": "Initialize an EventEmitter for broadcasting",
+        "instruction": "Create a new EventEmitter instance and assign it to a constant variable named 'eventEmitter'.",
+        "hint": "Use the 'new' keyword with EventEmitter to create an instance. Store it in a variable so you can use it later.",
+        "analogousExample": "// Creating an EventEmitter instance\nconst myEmitter = new EventEmitter();",
+        "seedCode": "// Import the http module and EventEmitter from events\nconst http = require('http');\nconst EventEmitter = require('events');\n\n// Create an HTTP server instance\n\n// Initialize an EventEmitter for broadcasting\n",
+        "expectedOutcome": "You'll have an EventEmitter instance ready to broadcast events to connected clients.",
+        "successCriteria": [
+          "A constant variable named 'eventEmitter' is declared and assigned a new EventEmitter instance."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure you're creating a new EventEmitter instance and storing it in a variable named 'eventEmitter'.",
+        "feedbackWrong": "Check that you're using the correct syntax to create an EventEmitter instance and assigning it to a variable named 'eventEmitter'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "eventEmitter",
+            "new",
+            "EventEmitter"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 9",
+        "title": "Set up the server request handler",
+        "instruction": "Add a request handler function to the server that checks the request URL and method.",
+        "hint": "Create a function that takes request and response parameters, then logs or inspects the URL.",
+        "analogousExample": "// Example: a basic request handler\nfunction requestHandler(req, res) {\n  console.log('Request URL:', req.url);\n}",
+        "seedCode": "// Import the http module and EventEmitter from events\nconst http = require('http');\nconst EventEmitter = require('events');\n\n// Create an HTTP server instance\nconst server = http.createServer();\n\n// Initialize an EventEmitter for broadcasting\nconst eventEmitter = new EventEmitter();\n\n// Add your request handler function here\n",
+        "expectedOutcome": "A request handler function is defined and ready to be attached to the server.",
+        "successCriteria": [
+          "A function named requestHandler (or similar) is created that accepts req and res parameters and checks req.url."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the function, but make sure it accepts both req and res parameters and logs or checks the URL.",
+        "feedbackWrong": "The request handler function is missing or incomplete. Create a function that handles incoming requests.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "function",
+            "req",
+            "res",
+            "url"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 9",
+        "title": "Configure SSE response headers",
+        "instruction": "Inside your request handler function, set the response headers for Server-Sent Events when the request URL is '/events'.",
+        "hint": "Use res.writeHead() with status 200 and headers: 'Content-Type' as 'text/event-stream', 'Cache-Control' as 'no-cache', and 'Connection' as 'keep-alive'.",
+        "analogousExample": "// Setting HTTP headers for a specific endpoint\nfunction handleRequest(req, res) {\n  if (req.url === '/data') {\n    res.writeHead(200, {\n      'Content-Type': 'application/json',\n      'Cache-Control': 'no-cache'\n    });\n  }\n}",
+        "seedCode": "// Import the http module and EventEmitter from events\nconst http = require('http');\nconst EventEmitter = require('events');\n\n// Create an HTTP server instance\nconst server = http.createServer();\n\n// Initialize an EventEmitter for broadcasting\nconst eventEmitter = new EventEmitter();\n\n// Add your request handler function here\nfunction requestHandler(req, res) {\n  // Set SSE headers when the endpoint is '/events'\n}",
+        "expectedOutcome": "The request handler will now properly configure HTTP headers for SSE connections when clients access the '/events' endpoint.",
+        "successCriteria": [
+          "The request handler sets status 200 and includes 'Content-Type', 'Cache-Control', and 'Connection' headers for SSE when req.url is '/events'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but check that you're setting all three required headers: Content-Type, Cache-Control, and Connection.",
+        "feedbackWrong": "The headers aren't properly configured. Make sure to use res.writeHead() with status 200 and the correct header values for SSE.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "req.url",
+            "'/events'",
+            "res.writeHead",
+            "200",
+            "'Content-Type'",
+            "'text/event-stream'",
+            "'Cache-Control'",
+            "'no-cache'",
+            "'Connection'",
+            "'keep-alive'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 9",
+        "title": "Establish the SSE connection",
+        "instruction": "Inside the requestHandler function, write the code to send the initial SSE response that establishes the connection and keeps it open.",
+        "hint": "You need to write the initial SSE data format and keep the connection alive. Use res.write() to send the initial data.",
+        "analogousExample": "// Example: sending initial SSE data\nfunction handleSSEConnection(res) {\n  res.write('data: Connection established\\n\\n');\n}",
+        "seedCode": "// Import the http module and EventEmitter from events\nconst http = require('http');\nconst EventEmitter = require('events');\n\n// Create an HTTP server instance\nconst server = http.createServer();\n\n// Initialize an EventEmitter for broadcasting\nconst eventEmitter = new EventEmitter();\n\n// Add your request handler function here\nfunction requestHandler(req, res) {\n  // Set SSE headers when the endpoint is '/events'\n  if (req.url === '/events') {\n    res.writeHead(200, {\n      'Content-Type': 'text/event-stream',\n      'Cache-Control': 'no-cache',\n      'Connection': 'keep-alive'\n    });\n    // Write the initial SSE response here to establish the connection\n  }\n}",
+        "expectedOutcome": "The server will send the initial SSE data format when a client connects to the /events endpoint, establishing the SSE connection.",
+        "successCriteria": [
+          "The requestHandler function sends the initial SSE data using res.write() with the proper SSE format."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure you're using res.write() with the proper SSE data format (e.g., 'data: ...\\n\\n').",
+        "feedbackWrong": "The initial SSE response wasn't properly written. Check the SSE format and ensure you're using res.write() inside the correct conditional block.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "res.write",
+            "data:",
+            "\\n\\n"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 9",
+        "title": "Create event listener for updates",
+        "instruction": "Inside the requestHandler function, add an event listener to the eventEmitter that sends data to the SSE client when updates occur.",
+        "hint": "Use eventEmitter.on() to listen for a specific event name, then write the data to the response using res.write() with the proper SSE format.",
+        "analogousExample": "// Example: Listening for events and sending data\nfunction handleUpdates(res) {\n  eventEmitter.on('update', (data) => {\n    res.write(`data: ${data}\\n\\n`);\n  });\n}",
+        "seedCode": "// Import the http module and EventEmitter from events\nconst http = require('http');\nconst EventEmitter = require('events');\n\n// Create an HTTP server instance\nconst server = http.createServer();\n\n// Initialize an EventEmitter for broadcasting\nconst eventEmitter = new EventEmitter();\n\n// Add your request handler function here\nfunction requestHandler(req, res) {\n  // Set SSE headers when the endpoint is '/events'\n  if (req.url === '/events') {\n    res.writeHead(200, {\n      'Content-Type': 'text/event-stream',\n      'Cache-Control': 'no-cache',\n      'Connection': 'keep-alive'\n    });\n    // Write the initial SSE response here to establish the connection\n    // Add event listener for updates\n  }\n}",
+        "expectedOutcome": "The requestHandler will now listen for broadcast events and send them to connected SSE clients.",
+        "successCriteria": [
+          "An event listener is added inside the requestHandler that uses eventEmitter.on() and writes data to the response with res.write()."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure you're using eventEmitter.on() inside the requestHandler and writing data with res.write().",
+        "feedbackWrong": "Check the code: you need to add an event listener inside the requestHandler function that listens for events and writes data to the response.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "eventEmitter.on",
+            "res.write",
+            "requestHandler"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 9",
+        "title": "Start the server",
+        "instruction": "Make the server listen on port 3000 and log a startup message when it's ready.",
+        "hint": "Use the server.listen() method with the port number and a callback function that logs a message.",
+        "analogousExample": "// Starting a server on port 3000\nserver.listen(3000, () => {\n  console.log('Server listening on port 3000');\n});",
+        "seedCode": "// Import the http module and EventEmitter from events\nconst http = require('http');\nconst EventEmitter = require('events');\n\n// Create an HTTP server instance\nconst server = http.createServer();\n\n// Initialize an EventEmitter for broadcasting\nconst eventEmitter = new EventEmitter();\n\n// Add your request handler function here\nfunction requestHandler(req, res) {\n  // Set SSE headers when the endpoint is '/events'\n  if (req.url === '/events') {\n    res.writeHead(200, {\n      'Content-Type': 'text/event-stream',\n      'Cache-Control': 'no-cache',\n      'Connection': 'keep-alive'\n    });\n    // Write the initial SSE response here to establish the connection\n    // Add event listener for updates\n  }\n}\n\n// Start the server on port 3000",
+        "expectedOutcome": "The server will be configured to listen for incoming connections on port 3000 and log a confirmation message when started.",
+        "successCriteria": [
+          "The server.listen() method is called with port 3000 and a callback function that logs a startup message."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're calling server.listen() with both the port number and a callback function that logs a message.",
+        "feedbackWrong": "The server isn't properly configured to listen. Check that you're using server.listen() with port 3000 and a callback.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "server.listen",
+            "3000",
+            "console.log"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 9",
+        "title": "Test the SSE endpoint",
+        "instruction": "Start the server by calling server.listen() on port 3000 and add a console.log to confirm it's running.",
+        "hint": "Use server.listen(3000, () => { console.log('Server listening on port 3000'); }) to start the server and log a message.",
+        "analogousExample": "// Starting a server and logging\nserver.listen(3000, () => {\n  console.log('Server listening on port 3000');\n});",
+        "seedCode": "// Import the http module and EventEmitter from events\nconst http = require('http');\nconst EventEmitter = require('events');\n\n// Create an HTTP server instance\nconst server = http.createServer();\n\n// Initialize an EventEmitter for broadcasting\nconst eventEmitter = new EventEmitter();\n\n// Add your request handler function here\nfunction requestHandler(req, res) {\n  // Set SSE headers when the endpoint is '/events'\n  if (req.url === '/events') {\n    res.writeHead(200, {\n      'Content-Type': 'text/event-stream',\n      'Cache-Control': 'no-cache',\n      'Connection': 'keep-alive'\n    });\n    // Write the initial SSE response here to establish the connection\n    // Add event listener for updates\n  }\n}\n\n// Start the server on port 3000\n\n// Add server.listen() with a console.log here",
+        "expectedOutcome": "The server will start and log a confirmation message to the console.",
+        "successCriteria": [
+          "The server is started with server.listen() on port 3000 and logs a message to the console."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the server, but make sure to include a console.log message to confirm it's running.",
+        "feedbackWrong": "Check that you've called server.listen() with the correct port and added a console.log inside the callback.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "server.listen",
+            "3000",
+            "console.log"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import required Node.js modules",
+        "id": "step1"
+      },
+      {
+        "label": "Create an HTTP server instance",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize an EventEmitter for broadcasting",
+        "id": "step3"
+      },
+      {
+        "label": "Set up the server request handler",
+        "id": "step4"
+      },
+      {
+        "label": "Configure SSE response headers",
+        "id": "step5"
+      },
+      {
+        "label": "Establish the SSE connection",
+        "id": "step6"
+      },
+      {
+        "label": "Create event listener for updates",
+        "id": "step7"
+      },
+      {
+        "label": "Start the server",
+        "id": "step8"
+      },
+      {
+        "label": "Test the SSE endpoint",
+        "id": "step9"
+      }
+    ]
+  },
+  "source": "content"
+}

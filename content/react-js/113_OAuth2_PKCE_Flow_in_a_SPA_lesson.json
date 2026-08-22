@@ -1,0 +1,321 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-react-js-113",
+    "track": "react-js",
+    "lessonNum": 113,
+    "title": "OAuth2 PKCE Flow in a SPA",
+    "shortName": "P113",
+    "intro": {
+      "tag": "LESSON #113",
+      "title": "OAuth2 PKCE Flow in a SPA",
+      "body": "In this lesson, you will build a simple React single-page application (SPA) that securely logs in a user using the OAuth2 Proof Key for Code Exchange (PKCE) flow. You will learn the core concept of generating and exchanging cryptographic codes to protect against authorization code interception attacks. The main technologies involved are React hooks for state management, the Web Crypto API for generating code verifiers and challenges, and the browser's fetch API to communicate with an OAuth2 authorization server. By the end, you'll understand how to implement a secure, standards-based authentication flow in a client-side JavaScript application.",
+      "usecase": "The OAuth2 PKCE flow is essential for securing single-page applications (SPAs) that integrate with third-party services like Google, GitHub, or Microsoft. Developers implement this pattern when building dashboards that display user data from external APIs, such as fitness apps showing Strava activities or project management tools syncing with Google Calendar. This security flow appears in login modals where users authenticate via \"Sign in with Google\" buttons, ensuring tokens aren't exposed in browser history. Every time you use a web app that accesses your Spotify playlists or Dropbox files without storing passwords, PKCE is working behind the scenes to protect your credentials."
+    },
+    "objectives": [
+      "Construct a React component that initializes the OAuth2 PKCE authorization flow",
+      "Implement the code verifier and code challenge generation required for PKCE security",
+      "Configure the redirect URI to handle authorization code responses from the OAuth2 provider",
+      "Integrate token exchange logic to swap authorization codes for access tokens",
+      "Manipulate React state to securely store and manage OAuth2 tokens within the SPA",
+      "Control the application's authentication status by conditionally rendering UI components",
+      "Apply token validation and refresh mechanisms to maintain secure user sessions"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 9",
+        "title": "Import React and useState",
+        "instruction": "Import React and the useState hook from the 'react' package.",
+        "hint": "Use the import statement to bring in React and useState from the 'react' module.",
+        "analogousExample": "// Example: importing React and a hook\nimport React, { useState } from 'react';",
+        "seedCode": "// Import React and useState here",
+        "expectedOutcome": "The React library and useState hook are available for use in the component.",
+        "successCriteria": [
+          "React and useState are imported from 'react'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're importing both React and useState from the 'react' package.",
+        "feedbackWrong": "That doesn't look right. Remember to import both React and useState from the 'react' package using the import statement.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "React",
+            "useState",
+            "'react'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 9",
+        "title": "Create the main App component",
+        "instruction": "Create a functional component named App that returns an empty div element.",
+        "hint": "Define the component using either a function declaration or arrow function syntax. Make sure it returns a JSX div element.",
+        "analogousExample": "// Example of a functional component returning a div\nfunction ExampleComponent() {\n  return <div></div>;\n}",
+        "seedCode": "import React, { useState } from 'react';\n\n// Create your App component here",
+        "expectedOutcome": "The App component is defined and returns an empty div.",
+        "successCriteria": [
+          "A functional component named App exists and returns a JSX div element."
+        ],
+        "feedbackCorrect": "Great! You've created the main App component structure.",
+        "feedbackPartial": "You're close. Make sure your component is named exactly 'App' and returns a div element.",
+        "feedbackWrong": "The component isn't defined correctly. Check that you've created a function named App that returns a div.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "App",
+            "return",
+            "<div>",
+            "</div>"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 9",
+        "title": "Initialize authentication state",
+        "instruction": "Inside your App component, initialize a state variable named 'isAuthenticated' using useState, with a default value of false.",
+        "hint": "Call useState with false as the initial value and destructure the returned array into the state variable and its setter function.",
+        "analogousExample": "// Example: initializing a state variable\nfunction ExampleComponent() {\n  const [isLoggedIn, setIsLoggedIn] = useState(false);\n  return null;\n}",
+        "seedCode": "import React, { useState } from 'react';\n\n// Create your App component here\nconst App = () => {\n  // Initialize isAuthenticated state here\n  \n  return null;\n};",
+        "expectedOutcome": "The App component will have an 'isAuthenticated' state variable initialized to false, ready to track the user's authentication status.",
+        "successCriteria": [
+          "The component contains a call to useState with false as the initial value, and the returned array is destructured into a variable named 'isAuthenticated' and its setter."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but check that you've used useState with false as the initial value and named the state variable exactly 'isAuthenticated'.",
+        "feedbackWrong": "The authentication state wasn't initialized correctly. Make sure to call useState(false) inside the component and destructure the result into [isAuthenticated, setIsAuthenticated].",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "useState",
+            "isAuthenticated",
+            "false"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 9",
+        "title": "Create generateCodeVerifier helper",
+        "instruction": "Inside your App component, create a helper function named generateCodeVerifier that returns a random string for use as a PKCE code verifier.",
+        "hint": "You can create a function inside your component. Use Math.random() and toString(36) to generate random characters.",
+        "analogousExample": "// Example: a helper function inside a component\nconst generateRandomId = () => {\n  return Math.random().toString(36).substring(2);\n};",
+        "seedCode": "import React, { useState } from 'react';\n\nconst App = () => {\n  // Initialize isAuthenticated state here\n  \n  // Create your generateCodeVerifier helper function here\n  \n  return null;\n};",
+        "expectedOutcome": "Your component now contains a generateCodeVerifier function that can generate random strings for PKCE flow.",
+        "successCriteria": [
+          "The App component contains a function named generateCodeVerifier that returns a string value."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you've created a function named generateCodeVerifier that returns a string value.",
+        "feedbackWrong": "The generateCodeVerifier function is not properly defined. Check that you've created a function with that name inside your component.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "generateCodeVerifier",
+            "()",
+            "=>",
+            "return",
+            "toString"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 9",
+        "title": "Create login handler",
+        "instruction": "Inside your App component, define an async function named 'handleLogin' that will initiate the PKCE login flow. The function should be empty for now (just an async function declaration).",
+        "hint": "Use 'async function handleLogin() {}' or 'const handleLogin = async () => {}' syntax. Place it after your helper functions but before the return statement.",
+        "analogousExample": "// Similar: an async function declaration\nasync function fetchData() {\n  // Implementation would go here\n}",
+        "seedCode": "import React, { useState } from 'react';\n\nconst App = () => {\n  const [isAuthenticated, setIsAuthenticated] = useState(false);\n  const [token, setToken] = useState(null);\n\n  const generateCodeVerifier = () => {\n    const array = new Uint8Array(32);\n    window.crypto.getRandomValues(array);\n    return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');\n  };\n\n  // Create your generateCodeChallenge helper function here\n\n  // Define your handleLogin async function here\n\n  return null;\n};",
+        "expectedOutcome": "You should have an async function named 'handleLogin' defined in your component, ready to implement the OAuth2 authorization request logic.",
+        "successCriteria": [
+          "An async function named 'handleLogin' is defined inside the App component."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure you've defined an async function named 'handleLogin' inside the App component.",
+        "feedbackWrong": "The login handler function isn't defined correctly. Remember to create an async function named 'handleLogin' inside your component.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "async",
+            "handleLogin",
+            "function"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 9",
+        "title": "Create logout handler",
+        "instruction": "Define a logout handler function named handleLogout that resets the authentication state to false and clears the token state to null.",
+        "hint": "Create a function that calls setIsAuthenticated(false) and setToken(null).",
+        "analogousExample": "// Similar: a logout function\nfunction handleLogout() {\n  setIsLoggedIn(false);\n  setUserToken(null);\n}",
+        "seedCode": "import React, { useState } from 'react';\n\nconst App = () => {\n  const [isAuthenticated, setIsAuthenticated] = useState(false);\n  const [token, setToken] = useState(null);\n\n  const generateCodeVerifier = () => {\n    const array = new Uint8Array(32);\n    window.crypto.getRandomValues(array);\n    return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');\n  };\n\n  // Create your generateCodeChallenge helper function here\n\n  // Define your handleLogin async function here\n\n  // Define your handleLogout function here\n\n  return null;\n};",
+        "expectedOutcome": "A handleLogout function is defined that resets both authentication and token states.",
+        "successCriteria": [
+          "The handleLogout function is defined and calls setIsAuthenticated(false) and setToken(null)."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've defined a function, but make sure it calls both setIsAuthenticated(false) and setToken(null).",
+        "feedbackWrong": "The logout handler isn't defined correctly. Create a function named handleLogout that resets both state values.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "handleLogout",
+            "setIsAuthenticated(false)",
+            "setToken(null)"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 9",
+        "title": "Add authentication status display",
+        "instruction": "In your component's return statement, add a paragraph element that displays the current authentication status using the isAuthenticated state variable.",
+        "hint": "Use JSX to create a <p> tag and embed the isAuthenticated value inside curly braces.",
+        "analogousExample": "// Displaying a boolean state value\n<p>User is logged in: {isLoggedIn}</p>",
+        "seedCode": "import React, { useState } from 'react';\n\nconst App = () => {\n  const [isAuthenticated, setIsAuthenticated] = useState(false);\n  const [token, setToken] = useState(null);\n\n  const generateCodeVerifier = () => {\n    const array = new Uint8Array(32);\n    window.crypto.getRandomValues(array);\n    return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');\n  };\n\n  // Create your generateCodeChallenge helper function here\n\n  // Define your handleLogin async function here\n\n  // Define your handleLogout function here\n\n  return (\n    <>\n      <p>Authentication status: {isAuthenticated}</p>\n    </>\n  );\n};",
+        "expectedOutcome": "The UI will display a paragraph showing the current authentication status (true/false).",
+        "successCriteria": [
+          "A paragraph element is added to the return statement that displays the value of isAuthenticated."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added a paragraph, but make sure it displays the isAuthenticated value using curly braces.",
+        "feedbackWrong": "The authentication status display is missing or incorrect. Add a paragraph that shows the isAuthenticated value.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<p>",
+            "{isAuthenticated}",
+            "</p>"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 9",
+        "title": "Add login button and wire handler",
+        "instruction": "Add a button element below the authentication status paragraph that says 'Login' and wire its onClick event to call your handleLogin function.",
+        "hint": "Add a <button> element with text content 'Login' and an onClick attribute set to {handleLogin}.",
+        "analogousExample": "// Adding a button with click handler\n<button onClick={handleClick}>Click me</button>",
+        "seedCode": "import React, { useState } from 'react';\n\nconst App = () => {\n  const [isAuthenticated, setIsAuthenticated] = useState(false);\n  const [token, setToken] = useState(null);\n\n  const generateCodeVerifier = () => {\n    const array = new Uint8Array(32);\n    window.crypto.getRandomValues(array);\n    return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');\n  };\n\n  // Create your generateCodeChallenge helper function here\n\n  // Define your handleLogin async function here\n\n  // Define your handleLogout function here\n\n  return (\n    <>\n      <p>Authentication status: {isAuthenticated}</p>\n      \n    </>\n  );\n};",
+        "expectedOutcome": "A 'Login' button appears below the authentication status paragraph, ready to trigger the login flow when clicked.",
+        "successCriteria": [
+          "A button element with text 'Login' and onClick={handleLogin} is added to the JSX."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You added a button, but make sure it has the correct text 'Login' and the onClick is set to {handleLogin}.",
+        "feedbackWrong": "The button is missing or not properly connected. Add a <button> element with onClick={handleLogin} and text 'Login'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<button",
+            "onClick={handleLogin}",
+            "Login"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 9",
+        "title": "Add logout button and wire handler",
+        "instruction": "Add a logout button after the login button in your component's return statement.",
+        "hint": "Use the <button> element with an onClick handler that calls your handleLogout function.",
+        "analogousExample": "// Adding a button with an event handler\n<button onClick={handleAction}>Perform Action</button>",
+        "seedCode": "import React, { useState } from 'react';\n\nconst App = () => {\n  const [isAuthenticated, setIsAuthenticated] = useState(false);\n  const [token, setToken] = useState(null);\n\n  const generateCodeVerifier = () => {\n    const array = new Uint8Array(32);\n    window.crypto.getRandomValues(array);\n    return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');\n  };\n\n  // Create your generateCodeChallenge helper function here\n\n  // Define your handleLogin async function here\n\n  // Define your handleLogout function here\n\n  return (\n    <>\n      <p>Authentication status: {isAuthenticated}</p>\n      \n    </>\n  );\n};",
+        "expectedOutcome": "A logout button appears in the UI after the login button, ready to trigger the logout functionality.",
+        "successCriteria": [
+          "A logout button element with onClick={handleLogout} is added to the component's return statement."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added a button, but make sure it calls the handleLogout function when clicked.",
+        "feedbackWrong": "The logout button is missing or not properly connected to the handler. Check the button's onClick attribute.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<button",
+            "onClick={handleLogout}",
+            "Logout"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import React and useState",
+        "id": "step1"
+      },
+      {
+        "label": "Create the main App component",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize authentication state",
+        "id": "step3"
+      },
+      {
+        "label": "Create generateCodeVerifier helper",
+        "id": "step4"
+      },
+      {
+        "label": "Create login handler",
+        "id": "step5"
+      },
+      {
+        "label": "Create logout handler",
+        "id": "step6"
+      },
+      {
+        "label": "Add authentication status display",
+        "id": "step7"
+      },
+      {
+        "label": "Add login button and wire handler",
+        "id": "step8"
+      },
+      {
+        "label": "Add logout button and wire handler",
+        "id": "step9"
+      }
+    ]
+  },
+  "source": "content"
+}

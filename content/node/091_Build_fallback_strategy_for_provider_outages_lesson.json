@@ -1,0 +1,391 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-node-91",
+    "track": "node",
+    "lessonNum": 91,
+    "title": "Build fallback strategy for provider outages",
+    "shortName": "P91",
+    "intro": {
+      "tag": "LESSON #91",
+      "title": "Build fallback strategy for provider outages",
+      "body": "In this lesson, you will build a fallback strategy to handle outages from external service providers, ensuring your Node.js application remains resilient. You will learn to implement a simple circuit breaker pattern using conditional logic and error handling in JavaScript. The main constructs involved include try-catch blocks, HTTP requests with the 'node-fetch' module, and state management for tracking provider status. By the end, you'll have a function that automatically switches to a backup provider when the primary one fails, making your app more reliable for users.",
+      "usecase": "Fallback strategies for provider outages are essential in production systems that rely on third-party APIs like payment gateways (Stripe, PayPal), geolocation services (Google Maps, Mapbox), or email/SMS providers (SendGrid, Twilio). For example, an e-commerce checkout system might automatically switch to a backup payment processor when the primary gateway is down, ensuring customers can complete purchases during outages. Similarly, a weather dashboard might display cached data or use an alternative weather API when the main service is unavailable. Developers implement these strategies to maintain service reliability and prevent single points of failure in critical user-facing features."
+    },
+    "objectives": [
+      "Implement a primary provider function that simulates an API call",
+      "Construct a fallback provider function to handle primary provider failures",
+      "Configure a retry mechanism to attempt the primary provider before switching",
+      "Integrate a health check to monitor provider availability",
+      "Manipulate error handling to gracefully switch between providers",
+      "Initialize a provider selection strategy based on health status",
+      "Apply logging to track provider usage and fallback events"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 11",
+        "title": "Import required Node.js modules",
+        "instruction": "Import the built-in Node.js 'http' module and assign it to a constant named 'http'.",
+        "hint": "Use the CommonJS require() syntax to import the http module. For example: const moduleName = require('module-name');",
+        "analogousExample": "// Importing a built-in Node.js module\nconst fs = require('fs');",
+        "seedCode": "// Import the http module here",
+        "expectedOutcome": "The http module is imported and available for making HTTP requests in your application.",
+        "successCriteria": [
+          "The http module is imported using require() and assigned to a constant named 'http'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're using the correct module name 'http' and assigning it to a constant named 'http'.",
+        "feedbackWrong": "The http module needs to be imported using require('http') and assigned to a constant. Check the syntax and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "require",
+            "'http'",
+            "const",
+            "http",
+            "="
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 11",
+        "title": "Define primary and fallback provider URLs",
+        "instruction": "Create two constants named PRIMARY_PROVIDER_URL and FALLBACK_PROVIDER_URL with example API endpoint URLs as strings.",
+        "hint": "Use const declarations with descriptive names. Choose realistic example URLs like 'https://api.primary-provider.com/data' and 'https://api.backup-provider.com/data'.",
+        "analogousExample": "// Example: defining configuration constants\nconst API_BASE_URL = 'https://api.example.com';\nconst BACKUP_API_URL = 'https://backup.example.com';",
+        "seedCode": "// Import the http module here\nconst http = require('http');\n\n// Define primary and fallback provider URLs here",
+        "expectedOutcome": "You'll have two string constants representing your primary and backup API endpoints ready for use in the fallback strategy.",
+        "successCriteria": [
+          "Constants PRIMARY_PROVIDER_URL and FALLBACK_PROVIDER_URL are defined with string values representing API endpoints."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You defined at least one provider URL, but remember to create both PRIMARY_PROVIDER_URL and FALLBACK_PROVIDER_URL constants.",
+        "feedbackWrong": "The constants weren't defined correctly. Make sure you create two const variables with the exact names PRIMARY_PROVIDER_URL and FALLBACK_PROVIDER_URL, each assigned a string URL value.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "PRIMARY_PROVIDER_URL",
+            "FALLBACK_PROVIDER_URL",
+            "const",
+            "=",
+            "'",
+            "'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 11",
+        "title": "Create the request function skeleton",
+        "instruction": "Create an async function named makeRequest that takes a URL parameter.",
+        "hint": "Use the async keyword before function and include a parameter for the URL. The function body can be empty for now.",
+        "analogousExample": "// Example async function with a parameter\nasync function fetchData(url) {\n  // Function body\n}",
+        "seedCode": "// Import the http module here\nconst http = require('http');\n\n// Define primary and fallback provider URLs here\n\n// Create the makeRequest function here",
+        "expectedOutcome": "You will have an async function named makeRequest that accepts a URL parameter.",
+        "successCriteria": [
+          "The code contains an async function named makeRequest with a URL parameter."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you've created an async function named makeRequest that takes a URL parameter.",
+        "feedbackWrong": "Create an async function named makeRequest with a URL parameter.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "async",
+            "makeRequest",
+            "url"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 11",
+        "title": "Implement the HTTP request logic",
+        "instruction": "Inside the makeRequest function, implement the HTTP GET request logic using the http.get method wrapped in a Promise.",
+        "hint": "Use http.get(url, callback) where the callback handles the response. Remember to resolve the Promise with the response data or reject it with an error.",
+        "analogousExample": "// Example: Promise-wrapped HTTP GET\nfunction fetchData(url) {\n  return new Promise((resolve, reject) => {\n    http.get(url, (res) => {\n      let data = '';\n      res.on('data', chunk => data += chunk);\n      res.on('end', () => resolve(data));\n    }).on('error', reject);\n  });\n}",
+        "seedCode": "const http = require('http');\n\nconst primaryProvider = 'http://primary.example.com/data';\nconst fallbackProvider = 'http://fallback.example.com/data';\n\nfunction makeRequest(url) {\n  // Implement the HTTP GET request logic here\n}",
+        "expectedOutcome": "The makeRequest function should now contain a Promise that wraps an http.get call, handling response data collection and error events.",
+        "successCriteria": [
+          "makeRequest returns a Promise that uses http.get with proper response handling (data collection and error handling)."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started implementing the request logic, but check if you're properly handling the response data stream and error events.",
+        "feedbackWrong": "The implementation doesn't match the expected structure. Review how to use http.get within a Promise with proper response handling.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "new Promise",
+            "http.get",
+            "res.on",
+            "data",
+            "end",
+            "error"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 11",
+        "title": "Add error handling for individual requests",
+        "instruction": "Inside the makeRequest function, add a try-catch block around the HTTP request logic and check for non-200 HTTP status codes.",
+        "hint": "Wrap the request logic in try { ... } catch (error) { ... } and check if response.statusCode !== 200 inside the callback.",
+        "analogousExample": "// Similar: error handling in a function\nfunction fetchData(url) {\n  try {\n    // Request logic here\n    if (response.statusCode !== 200) {\n      throw new Error('Request failed');\n    }\n  } catch (error) {\n    console.error('Error:', error.message);\n    throw error;\n  }\n}",
+        "seedCode": "const http = require('http');\n\nconst primaryProvider = 'http://primary.example.com/data';\nconst fallbackProvider = 'http://fallback.example.com/data';\n\nfunction makeRequest(url) {\n  // Implement the HTTP GET request logic here\n}",
+        "expectedOutcome": "The makeRequest function will have basic error handling for network errors and HTTP status codes.",
+        "successCriteria": [
+          "The makeRequest function contains a try-catch block and checks response.statusCode."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure to include both the try-catch block and the status code check.",
+        "feedbackWrong": "The function still needs error handling. Add a try-catch block and check the HTTP status code.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "try",
+            "catch",
+            "statusCode"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 11",
+        "title": "Create the fallback strategy function",
+        "instruction": "Create an async function named fetchWithFallback that tries the primary provider first.",
+        "hint": "Define the function with the async keyword and use the primaryProvider constant as the first URL to try.",
+        "analogousExample": "// Similar: async function with fallback logic\nasync function fetchWithFallback() {\n  // Try primary provider first\n  try {\n    return await makeRequest(primaryProvider);\n  } catch (error) {\n    // Fallback logic will go here\n  }\n}",
+        "seedCode": "const http = require('http');\n\nconst primaryProvider = 'http://primary.example.com/data';\nconst fallbackProvider = 'http://fallback.example.com/data';\n\nfunction makeRequest(url) {\n  // Implement the HTTP GET request logic here\n}\n\n// Create the fallback strategy function here\n",
+        "expectedOutcome": "You should have an async function named fetchWithFallback that will contain the fallback logic.",
+        "successCriteria": [
+          "An async function named fetchWithFallback is created and uses the primaryProvider constant."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you've created an async function named fetchWithFallback that references the primaryProvider.",
+        "feedbackWrong": "The function isn't quite right. Create an async function named fetchWithFallback that will handle trying the primary provider first.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "async",
+            "function",
+            "fetchWithFallback",
+            "primaryProvider"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 11",
+        "title": "Add fallback to secondary provider",
+        "instruction": "Inside the fetchWithFallback function, add a catch block after the try block that attempts to make a request to the fallbackProvider URL.",
+        "hint": "Use the same makeRequest function you created earlier to call the fallback provider when the primary request fails.",
+        "analogousExample": "// Similar: catching an error and trying an alternative\nfunction fetchData() {\n  try {\n    return getPrimaryData();\n  } catch (error) {\n    console.log('Primary failed, trying backup');\n    return getBackupData();\n  }\n}",
+        "seedCode": "const http = require('http');\n\nconst primaryProvider = 'http://primary.example.com/data';\nconst fallbackProvider = 'http://fallback.example.com/data';\n\nfunction makeRequest(url) {\n  // Implement the HTTP GET request logic here\n}\n\nfunction fetchWithFallback() {\n  try {\n    return makeRequest(primaryProvider);\n  } catch (error) {\n    // Add fallback request here\n  }\n}",
+        "expectedOutcome": "The fetchWithFallback function should now have a catch block that attempts to call makeRequest with the fallbackProvider URL when the primary request fails.",
+        "successCriteria": [
+          "The catch block contains a call to makeRequest with fallbackProvider as the argument."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added a catch block, but make sure you're calling makeRequest with the fallbackProvider URL inside it.",
+        "feedbackWrong": "The catch block should contain a call to makeRequest with the fallbackProvider URL to implement the fallback strategy.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "catch",
+            "makeRequest",
+            "fallbackProvider"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 11",
+        "title": "Create the main execution function",
+        "instruction": "Create an async function named 'main' that will orchestrate the fallback strategy. The function should call fetchWithFallback and handle the result.",
+        "hint": "Define an async function called main. Inside it, use a try/catch block to call fetchWithFallback and log the result or any errors.",
+        "analogousExample": "// Similar: async main function\nasync function main() {\n  try {\n    const result = await fetchData();\n    console.log('Success:', result);\n  } catch (error) {\n    console.error('Failed:', error);\n  }\n}",
+        "seedCode": "const http = require('http');\n\nconst primaryProvider = 'http://primary.example.com/data';\nconst fallbackProvider = 'http://fallback.example.com/data';\n\nfunction makeRequest(url) {\n  // Implement the HTTP GET request logic here\n}\n\nfunction fetchWithFallback() {\n  try {\n    return makeRequest(primaryProvider);\n  } catch (error) {\n    // Add fallback request here\n  }\n}\n\n// Create the main async function here",
+        "expectedOutcome": "An async function named 'main' is defined, which will serve as the entry point to execute the fallback strategy.",
+        "successCriteria": [
+          "The code includes an async function named 'main' that contains a try/catch block and calls fetchWithFallback."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure the function is async and named 'main'. It should also include error handling with try/catch.",
+        "feedbackWrong": "The main function isn't defined correctly. Remember to create an async function named 'main' that calls fetchWithFallback and handles errors.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "async",
+            "function",
+            "main",
+            "fetchWithFallback"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 11",
+        "title": "Call the fallback strategy and handle results",
+        "instruction": "Inside the main function, call fetchWithFallback and log the successful response to the console.",
+        "hint": "Use await with fetchWithFallback to get the response, then log it with console.log.",
+        "analogousExample": "// Example: calling a function and logging its result\nasync function main() {\n  const result = await fetchData();\n  console.log('Data received:', result);\n}",
+        "seedCode": "const http = require('http');\n\nconst primaryProvider = 'http://primary.example.com/data';\nconst fallbackProvider = 'http://fallback.example.com/data';\n\nfunction makeRequest(url) {\n  // Implement the HTTP GET request logic here\n}\n\nfunction fetchWithFallback() {\n  try {\n    return makeRequest(primaryProvider);\n  } catch (error) {\n    // Add fallback request here\n  }\n}\n\nasync function main() {\n  // Call fetchWithFallback and log the response here\n}",
+        "expectedOutcome": "The main function will execute the fallback strategy and display the successful response in the console.",
+        "successCriteria": [
+          "fetchWithFallback is called inside main with await, and the response is logged using console.log."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're using await with fetchWithFallback and logging the result with console.log.",
+        "feedbackWrong": "The main function should call fetchWithFallback and log the response. Check the syntax and placement.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "fetchWithFallback",
+            "console.log",
+            "await"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 11",
+        "title": "Add final error handling and execute",
+        "instruction": "Inside the main function, add a try-catch block to handle any errors from fetchWithFallback,",
+        "hint": "Wrap the existing call to fetchWithFallback in a try block, add a catch block to log any errors, and then call main() outside the function definition.",
+        "analogousExample": "// Similar: try-catch and execution\nasync function runApp() {\n  try {\n    const result = await fetchData();\n    console.log('Success:', result);\n  } catch (error) {\n    console.error('Error:', error.message);\n  }\n}\n\nrunApp();",
+        "seedCode": "const http = require('http');\n\nconst primaryProvider = 'http://primary.example.com/data';\nconst fallbackProvider = 'http://fallback.example.com/data';\n\nfunction makeRequest(url) {\n  // Implement the HTTP GET request logic here\n}\n\nfunction fetchWithFallback() {\n  try {\n    return makeRequest(primaryProvider);\n  } catch (error) {\n    // Add fallback request here\n  }\n}\n\nasync function main() {\n  // Call fetchWithFallback and log the response here\n}\n\n// Add try-catch in main and call main() here",
+        "expectedOutcome": "The main function will have proper error handling and the application will execute when the file runs.",
+        "successCriteria": [
+          "main function contains a try-catch block that calls fetchWithFallback and logs results/errors, and main() is called at the end of the file."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you've added both the try-catch block inside main() and called main() at the bottom of the file.",
+        "feedbackWrong": "Check the instruction again. You need to add error handling inside the main function and then execute the application by calling main().",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "try",
+            "catch",
+            "fetchWithFallback",
+            "main()"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 11",
+        "title": "call main() at the bottom of the file to exec",
+        "instruction": "call main() at the bottom of the file to execute the application.",
+        "hint": "Wrap the existing call to fetchWithFallback in a try block, add a catch block to log any errors, and then call main() outside the function definition.",
+        "analogousExample": "// Similar: try-catch and execution\nasync function runApp() {\n  try {\n    const result = await fetchData();\n    console.log('Success:', result);\n  } catch (error) {\n    console.error('Error:', error.message);\n  }\n}\n\nrunApp();",
+        "seedCode": "const http = require('http');\n\nconst primaryProvider = 'http://primary.example.com/data';\nconst fallbackProvider = 'http://fallback.example.com/data';\n\nfunction makeRequest(url) {\n  // Implement the HTTP GET request logic here\n}\n\nfunction fetchWithFallback() {\n  try {\n    return makeRequest(primaryProvider);\n  } catch (error) {\n    // Add fallback request here\n  }\n}\n\nasync function main() {\n  // Call fetchWithFallback and log the response here\n}\n\n// Add try-catch in main and call main() here",
+        "expectedOutcome": "",
+        "successCriteria": [
+          "Complete the step as instructed."
+        ],
+        "feedbackCorrect": "Great! Step completed.",
+        "feedbackPartial": "Review the instruction and try again.",
+        "feedbackWrong": "Check the instruction and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "try",
+            "catch",
+            "fetchWithFallback",
+            "main()"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import required Node.js modules",
+        "id": "step1"
+      },
+      {
+        "label": "Define primary and fallback provider URLs",
+        "id": "step2"
+      },
+      {
+        "label": "Create the request function skeleton",
+        "id": "step3"
+      },
+      {
+        "label": "Implement the HTTP request logic",
+        "id": "step4"
+      },
+      {
+        "label": "Add error handling for individual requests",
+        "id": "step5"
+      },
+      {
+        "label": "Create the fallback strategy function",
+        "id": "step6"
+      },
+      {
+        "label": "Add fallback to secondary provider",
+        "id": "step7"
+      },
+      {
+        "label": "Create the main execution function",
+        "id": "step8"
+      },
+      {
+        "label": "Call the fallback strategy and handle results",
+        "id": "step9"
+      },
+      {
+        "label": "Add final error handling and execute",
+        "id": "step10"
+      },
+      {
+        "label": "call main() at the bottom of the file to exec",
+        "id": "step11"
+      }
+    ]
+  },
+  "source": "content"
+}

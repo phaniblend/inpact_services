@@ -1,0 +1,362 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-angular-51",
+    "track": "angular",
+    "lessonNum": 51,
+    "title": "Context Performance",
+    "shortName": "P51",
+    "intro": {
+      "tag": "LESSON #51",
+      "title": "Context Performance",
+      "body": "In this lesson, you'll build a simple Angular application that demonstrates how to optimize performance using context. You'll learn how to use Angular's change detection strategies and context providers to prevent unnecessary re-renders of components. The core concept involves understanding how data flows through your application and controlling when components update. You'll work with Angular's built-in performance features like ChangeDetectionStrategy and context providers to make your app faster and more efficient.",
+      "usecase": "In enterprise applications like financial dashboards or e-commerce admin panels, you often need to share data across multiple components without prop drilling. For example, a dashboard might have a theme switcher that affects dozens of child components, or a product filter that needs to update various display panels. Using context effectively prevents unnecessary re-renders when only specific parts of the UI depend on changed data. This pattern is crucial for maintaining performance in complex interfaces where data flows through many nested components."
+    },
+    "objectives": [
+      "Implement a context service to manage shared state across components",
+      "Configure dependency injection to provide context at the appropriate module level",
+      "Apply change detection strategies to optimize context updates",
+      "Construct observable data streams for reactive context consumption",
+      "Bind context values to template expressions using the async pipe",
+      "Control context subscription lifecycle to prevent memory leaks",
+      "Integrate context with Angular's built-in performance features"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 10",
+        "title": "Import Component, NgModule, and CommonModule",
+        "instruction": "Import Component and NgModule from '@angular/core', and CommonModule from '@angular/common'.",
+        "hint": "Use the import statement with curly braces to import multiple symbols from each module.",
+        "analogousExample": "// Importing multiple Angular modules\nimport { Component, NgModule } from '@angular/core';\nimport { CommonModule } from '@angular/common';",
+        "seedCode": "// Import Component and NgModule from '@angular/core', and CommonModule from '@angular/common'",
+        "expectedOutcome": "The necessary Angular core modules are imported for creating components and demonstrating context performance.",
+        "successCriteria": [
+          "Component and NgModule are imported from '@angular/core', and CommonModule is imported from '@angular/common'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but you need to import all three: Component and NgModule from '@angular/core', and CommonModule from '@angular/common'. Make sure to use the correct import syntax with curly braces.",
+        "feedbackWrong": "The imports are not correct. You need to import Component and NgModule from '@angular/core', and CommonModule from '@angular/common'. Check the import statements and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "Component",
+            "NgModule",
+            "@angular/core",
+            "CommonModule",
+            "@angular/common"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 10",
+        "title": "Create main AppComponent class with @Component decorator",
+        "instruction": "Create the AppComponent class with the @Component decorator. Include selector: 'app-root', template: '<h1>Context Performance Demo</h1>', and styles: [''].",
+        "hint": "Use the imported Component decorator to define the component metadata.",
+        "analogousExample": "// Example component definition\n@Component({\n  selector: 'app-example',\n  template: '<p>Example content</p>',\n  styles: ['']\n})\nexport class ExampleComponent {}",
+        "seedCode": "import { Component, NgModule } from '@angular/core';\nimport { CommonModule } from '@angular/common';\n\n@Component({\n  selector: 'app-root',\n  template: '<h1>Context Performance Demo</h1>',\n  styles: ['']\n})\nexport class AppComponent {}",
+        "expectedOutcome": "The AppComponent class is defined with proper Angular component decorator and metadata.",
+        "successCriteria": [
+          "AppComponent class exists with @Component decorator containing selector, template, and styles properties."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure you have all three properties: selector, template, and styles in the @Component decorator.",
+        "feedbackWrong": "The component definition is incomplete. Check that you have the @Component decorator with selector, template, and styles properties.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "@Component",
+            "selector",
+            "template",
+            "styles",
+            "AppComponent"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 10",
+        "title": "Initialize performance tracking state variables",
+        "instruction": "Inside the AppComponent class, add two public properties: renderCount of type number initialized to 0, and lastRenderTime of type number initialized to 0.",
+        "hint": "Add these properties directly in the class body, using TypeScript type annotations and initial values.",
+        "analogousExample": "// Example: class properties with types and initial values\nclass CounterComponent {\n  count: number = 0;\n  lastUpdated: number = Date.now();\n}",
+        "seedCode": "import { Component, NgModule } from '@angular/core';\nimport { CommonModule } from '@angular/common';\n\n@Component({\n  selector: 'app-root',\n  template: '<h1>Context Performance Demo</h1>',\n  styles: ['']\n})\nexport class AppComponent {\n  // Add renderCount and lastRenderTime properties here\n}",
+        "expectedOutcome": "The AppComponent class will have two typed number properties to track rendering metrics.",
+        "successCriteria": [
+          "AppComponent has public renderCount: number = 0 and lastRenderTime: number = 0 properties."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You added some properties, but make sure both renderCount and lastRenderTime are present with number types and initial values of 0.",
+        "feedbackWrong": "The properties weren't added correctly. Check that you've declared renderCount: number = 0 and lastRenderTime: number = 0 inside the AppComponent class.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "renderCount",
+            "lastRenderTime",
+            "number",
+            "=",
+            "0"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 10",
+        "title": "Create data array for demonstration",
+        "instruction": "Inside the AppComponent class, add a property named 'items' of type string[] and initialize it with sample string values like 'Item 1', 'Item 2', etc.",
+        "hint": "Define a property with type annotation: items: string[] = ['Item 1', 'Item 2', 'Item 3'];",
+        "analogousExample": "// Example: array property in a class\nclass ShoppingList {\n  items: string[] = ['Apples', 'Bananas', 'Milk'];\n}",
+        "seedCode": "import { Component, NgModule } from '@angular/core';\nimport { CommonModule } from '@angular/common';\n\n@Component({\n  selector: 'app-root',\n  template: '<h1>Context Performance Demo</h1>',\n  styles: ['']\n})\nexport class AppComponent {\n  // Add renderCount and lastRenderTime properties here\n  \n  // Add items array property here\n}",
+        "expectedOutcome": "The AppComponent class now has a 'items' property containing sample string data that will be used for rendering demonstration.",
+        "successCriteria": [
+          "The AppComponent class contains a property named 'items' of type string[] with at least two sample string values."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added a property, but check: 1) Is it named 'items'? 2) Does it have type string[]? 3) Is it initialized with sample string values?",
+        "feedbackWrong": "The items array property is not correctly defined. Make sure to add 'items: string[] = ['Item 1', 'Item 2'];' inside the AppComponent class.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "items:",
+            "string[]",
+            "["
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 10",
+        "title": "Define ngOnInit lifecycle method",
+        "instruction": "Add the ngOnInit lifecycle method to your AppComponent class to initialize the renderCount and lastRenderTime properties.",
+        "hint": "Implement the OnInit interface and define ngOnInit() method inside your component class.",
+        "analogousExample": "// Example: implementing ngOnInit\nimport { Component, OnInit } from '@angular/core';\n\n@Component({...})\nexport class ExampleComponent implements OnInit {\n  ngOnInit() {\n    // initialization logic here\n  }\n}",
+        "seedCode": "import { Component, NgModule } from '@angular/core';\nimport { CommonModule } from '@angular/common';\n\n@Component({\n  selector: 'app-root',\n  template: '<h1>Context Performance Demo</h1>',\n  styles: ['']\n})\nexport class AppComponent {\n  // Add renderCount and lastRenderTime properties here\n  \n  // Add items array property here\n  \n  ngOnInit() {\n    // Initialize renderCount to 0 and lastRenderTime to current time\n  }\n}",
+        "expectedOutcome": "The AppComponent class now has an ngOnInit method that will run when the component initializes.",
+        "successCriteria": [
+          "ngOnInit method is defined in AppComponent with proper initialization logic for renderCount and lastRenderTime."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added ngOnInit, but make sure to initialize both renderCount and lastRenderTime inside the method.",
+        "feedbackWrong": "The ngOnInit method is not properly defined. Remember to add it inside the AppComponent class and implement the initialization logic.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "ngOnInit",
+            "renderCount",
+            "lastRenderTime",
+            "0",
+            "Date.now()"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 10",
+        "title": "Create updateData handler method",
+        "instruction": "Inside the AppComponent class, define a method named updateData that modifies the items array and updates the performance tracking variables.",
+        "hint": "Add a method that pushes a new item to the items array, increments renderCount, and updates lastRenderTime to the current time.",
+        "analogousExample": "// Example: method that updates data and tracks changes\nupdateData() {\n  this.items.push('New item');\n  this.renderCount++;\n  this.lastRenderTime = Date.now();\n}",
+        "seedCode": "import { Component, NgModule } from '@angular/core';\nimport { CommonModule } from '@angular/common';\n\n@Component({\n  selector: 'app-root',\n  template: '<h1>Context Performance Demo</h1>',\n  styles: ['']\n})\nexport class AppComponent {\n  renderCount = 0;\n  lastRenderTime = Date.now();\n  items = ['Item 1', 'Item 2', 'Item 3'];\n\n  ngOnInit() {\n    this.renderCount = 0;\n    this.lastRenderTime = Date.now();\n  }\n\n  // Define updateData method here\n}",
+        "expectedOutcome": "The AppComponent class will have an updateData method that modifies the items array and updates performance metrics.",
+        "successCriteria": [
+          "The updateData method is defined, pushes a new item to the items array, increments renderCount, and updates lastRenderTime."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added a method, but make sure it modifies the items array and updates both renderCount and lastRenderTime.",
+        "feedbackWrong": "The updateData method is missing or doesn't properly modify the items array and update performance tracking variables.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "updateData",
+            "items",
+            "push",
+            "renderCount++",
+            "lastRenderTime",
+            "Date.now()"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 10",
+        "title": "Add performance tracking to ngDoCheck",
+        "instruction": "Add the ngDoCheck lifecycle method to your AppComponent class to increment renderCount and calculate the time since the last render.",
+        "hint": "Implement ngDoCheck() to track how often change detection runs. Inside it, increment renderCount and update lastRenderTime with the current timestamp.",
+        "analogousExample": "// Example: tracking method calls\nngDoCheck() {\n  this.callCount++;\n  this.lastCallTime = Date.now();\n}",
+        "seedCode": "import { Component, NgModule } from '@angular/core';\nimport { CommonModule } from '@angular/common';\n\n@Component({\n  selector: 'app-root',\n  template: '<h1>Context Performance Demo</h1>',\n  styles: ['']\n})\nexport class AppComponent {\n  renderCount = 0;\n  lastRenderTime = Date.now();\n  items = ['Item 1', 'Item 2', 'Item 3'];\n\n  ngOnInit() {\n    this.renderCount = 0;\n    this.lastRenderTime = Date.now();\n  }\n\n  // Define updateData method here\n\n  // Add ngDoCheck method here\n}",
+        "expectedOutcome": "The AppComponent will track each change detection cycle by incrementing renderCount and updating the timing.",
+        "successCriteria": [
+          "ngDoCheck method is implemented, renderCount is incremented, and lastRenderTime is updated with Date.now() inside the method."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added ngDoCheck, but make sure to increment renderCount and update lastRenderTime inside the method.",
+        "feedbackWrong": "The ngDoCheck method is missing or incomplete. Add the method to track change detection cycles.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "ngDoCheck",
+            "renderCount",
+            "lastRenderTime",
+            "Date.now"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 10",
+        "title": "Create main template structure with header",
+        "instruction": "In the AppComponent template, replace the existing <h1> with a <header> element containing an <h1> with the title 'Context Performance Demo' and a <div> with the text 'Renders: {{ renderCount }}'.",
+        "hint": "Update the template property in the @Component decorator to include the header structure.",
+        "analogousExample": "// Example: Adding a header with dynamic data\n@Component({\n  selector: 'app-example',\n  template: '<header><h1>Demo Title</h1><div>Count: {{ count }}</div></header>'\n})\nexport class ExampleComponent {\n  count = 0;\n}",
+        "seedCode": "import { Component, NgModule } from '@angular/core';\nimport { CommonModule } from '@angular/common';\n\n@Component({\n  selector: 'app-root',\n  template: '<h1>Context Performance Demo</h1>',\n  styles: ['']\n})\nexport class AppComponent {\n  renderCount = 0;\n  lastRenderTime = Date.now();\n  items = ['Item 1', 'Item 2', 'Item 3'];\n\n  ngOnInit() {\n    this.renderCount = 0;\n    this.lastRenderTime = Date.now();\n  }\n\n  // Define updateData method here\n\n  // Add ngDoCheck method here\n}",
+        "expectedOutcome": "The template now has a structured header section displaying the title and the current render count.",
+        "successCriteria": [
+          "The template contains a <header> element with an <h1> and a <div> showing the renderCount using interpolation."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure the template includes both the <h1> title and the <div> with the render count.",
+        "feedbackWrong": "The template structure doesn't match the requirement. Check that you replaced the <h1> with a <header> containing the specified elements.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<header>",
+            "<h1>",
+            "{{ renderCount }}"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 10",
+        "title": "Add data display with *ngFor directive",
+        "instruction": "In your template, add a <ul> element that uses *ngFor to iterate through the items array and display each item in an <li>.",
+        "hint": "Use *ngFor=\"let item of items\" on the <li> element to loop through the items array and display each value.",
+        "analogousExample": "// Example: Displaying a list with *ngFor\n<ul>\n  <li *ngFor=\"let item of items\">{{ item }}</li>\n</ul>",
+        "seedCode": "import { Component, NgModule } from '@angular/core';\nimport { CommonModule } from '@angular/common';\n\n@Component({\n  selector: 'app-root',\n  template: '<h1>Context Performance Demo</h1>',\n  styles: ['']\n})\nexport class AppComponent {\n  renderCount = 0;\n  lastRenderTime = Date.now();\n  items = ['Item 1', 'Item 2', 'Item 3'];\n\n  ngOnInit() {\n    this.renderCount = 0;\n    this.lastRenderTime = Date.now();\n  }\n\n  // Define updateData method here\n\n  // Add ngDoCheck method here\n}",
+        "expectedOutcome": "The template will include a list that dynamically displays each item from the items array using Angular's *ngFor directive.",
+        "successCriteria": [
+          "The template contains a <ul> with an <li> that uses *ngFor=\"let item of items\" and displays {{ item }}."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you have both the <ul> and <li> elements, and that the *ngFor directive is correctly placed on the <li> with the syntax \"let item of items\".",
+        "feedbackWrong": "The list isn't displaying correctly. Check that you've added the <ul> and <li> elements and used the *ngFor directive properly to iterate through the items array.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "*ngFor",
+            "let item of items",
+            "<ul>",
+            "<li>",
+            "{{ item }}"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 10",
+        "title": "Add update button and wire click event",
+        "instruction": "Add a button element to the template with a (click) event binding that calls the updateData() method. Place it after the existing header.",
+        "hint": "Use the Angular event binding syntax (click)=\"updateData()\" on a <button> element.",
+        "analogousExample": "// Adding a button with click event\n<button (click)=\"handleClick()\">Update Items</button>",
+        "seedCode": "import { Component, NgModule } from '@angular/core';\nimport { CommonModule } from '@angular/common';\n\n@Component({\n  selector: 'app-root',\n  template: '<h1>Context Performance Demo</h1>',\n  styles: ['']\n})\nexport class AppComponent {\n  renderCount = 0;\n  lastRenderTime = Date.now();\n  items = ['Item 1', 'Item 2', 'Item 3'];\n\n  ngOnInit() {\n    this.renderCount = 0;\n    this.lastRenderTime = Date.now();\n  }\n\n  // Define updateData method here\n\n  // Add ngDoCheck method here\n}",
+        "expectedOutcome": "The template will include a button that triggers data updates when clicked, enabling interactive performance observation.",
+        "successCriteria": [
+          "A button element with (click)=\"updateData()\" is added to the template after the header."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added a button, but make sure it has the correct event binding (click)=\"updateData()\" to call the updateData method.",
+        "feedbackWrong": "The button with the proper click event binding wasn't found. Add a <button> element with (click)=\"updateData()\" to the template.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<button",
+            "(click)=\"updateData()\""
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import Component, NgModule, and CommonModule",
+        "id": "step1"
+      },
+      {
+        "label": "Create main AppComponent class with @Component decorator",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize performance tracking state variables",
+        "id": "step3"
+      },
+      {
+        "label": "Create data array for demonstration",
+        "id": "step4"
+      },
+      {
+        "label": "Define ngOnInit lifecycle method",
+        "id": "step5"
+      },
+      {
+        "label": "Create updateData handler method",
+        "id": "step6"
+      },
+      {
+        "label": "Add performance tracking to ngDoCheck",
+        "id": "step7"
+      },
+      {
+        "label": "Create main template structure with header",
+        "id": "step8"
+      },
+      {
+        "label": "Add data display with *ngFor directive",
+        "id": "step9"
+      },
+      {
+        "label": "Add update button and wire click event",
+        "id": "step10"
+      }
+    ]
+  },
+  "source": "content"
+}

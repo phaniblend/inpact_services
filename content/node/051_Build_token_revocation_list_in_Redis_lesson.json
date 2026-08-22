@@ -1,0 +1,361 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-node-51",
+    "track": "node",
+    "lessonNum": 51,
+    "title": "Build token revocation list in Redis",
+    "shortName": "P51",
+    "intro": {
+      "tag": "LESSON #51",
+      "title": "Build token revocation list in Redis",
+      "body": "In this lesson, you will build a token revocation list using Redis to manage and invalidate access tokens in a Node.js application. You will learn how to store and check revoked tokens in Redis, a fast in-memory data store, to enhance security by preventing the use of compromised tokens. The core programming concept involves using Redis commands like SET and GET to handle key-value pairs for token management. You'll implement functions to add tokens to the revocation list and verify if a token is revoked, applying basic JavaScript and asynchronous operations. By the end, you'll have a functional revocation system that integrates with Node.js to secure your applications.",
+      "usecase": "Token revocation lists are essential security features in production authentication systems. When users log out or administrators need to terminate compromised sessions, services like banking dashboards, e-commerce platforms, and enterprise admin panels use Redis-based revocation to immediately invalidate JWT tokens. This prevents unauthorized access to sensitive user data, transaction histories, or admin controls even if tokens haven't technically expired. Developers implement this pattern to meet security compliance requirements while maintaining fast session management across distributed applications."
+    },
+    "objectives": [
+      "Initialize a Redis client connection in a Node.js application",
+      "Construct a token revocation function that stores tokens in Redis",
+      "Implement a token validation function that checks against the revocation list",
+      "Configure Redis key expiration for automatic token cleanup",
+      "Integrate the revocation list with a basic authentication middleware",
+      "Manipulate Redis data structures to store and retrieve token status",
+      "Apply error handling patterns for Redis connection failures"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 10",
+        "title": "Import required Node.js modules",
+        "instruction": "Import the redis, http, and url modules using require() statements.",
+        "hint": "Use the require() function to import each module. The redis module will be used for Redis interactions, http for creating a server, and url for parsing URLs.",
+        "analogousExample": "// Example: importing modules\nconst fs = require('fs');\nconst path = require('path');",
+        "seedCode": "// Import required modules here",
+        "expectedOutcome": "The redis, http, and url modules are imported and ready to use.",
+        "successCriteria": [
+          "redis, http, and url are imported using require() statements."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You imported some modules, but make sure to import all three: redis, http, and url.",
+        "feedbackWrong": "The required modules are not imported correctly. Use require() to import redis, http, and url.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "require('redis')",
+            "require('http')",
+            "require('url')"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 10",
+        "title": "Create Redis client instance",
+        "instruction": "Create a Redis client instance using the redis module's createClient() method. Store it in a constant variable named 'client'.",
+        "hint": "Use the redis module you imported to call createClient() without any arguments for default localhost configuration.",
+        "analogousExample": "// Creating a database connection instance\nconst db = mysql.createConnection(config);",
+        "seedCode": "const redis = require('redis');\n\n// Create Redis client instance here\n",
+        "expectedOutcome": "A Redis client instance is created and assigned to a constant variable named 'client'.",
+        "successCriteria": [
+          "The redis.createClient() method is called and the result is stored in a constant variable named 'client'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure you're calling createClient() from the redis module and storing it in a constant named 'client'.",
+        "feedbackWrong": "The Redis client wasn't created correctly. Remember to use redis.createClient() and assign it to a constant variable named 'client'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "client",
+            "createClient",
+            "redis"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 10",
+        "title": "Initialize HTTP server",
+        "instruction": "Create an HTTP server using the http module's createServer() method and define a basic request handler function that logs incoming requests.",
+        "hint": "Use http.createServer() and pass it a function that takes request and response parameters. Inside the function, log the request URL to the console.",
+        "analogousExample": "// Example: Basic HTTP server setup\nconst http = require('http');\n\nconst server = http.createServer((req, res) => {\n  console.log(`Request received: ${req.url}`);\n});",
+        "seedCode": "const redis = require('redis');\nconst http = require('http');\n\n// Create Redis client instance here\n\n// Create HTTP server with request handler here",
+        "expectedOutcome": "An HTTP server instance is created with a request handler that logs request URLs.",
+        "successCriteria": [
+          "The code includes http.createServer() with a handler function that logs request URLs to the console."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've created the server, but make sure the handler function logs the request URL to the console.",
+        "feedbackWrong": "The HTTP server isn't set up correctly. Use http.createServer() with a function that logs request URLs.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "createServer",
+            "req",
+            "console.log",
+            "req.url"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 10",
+        "title": "Define token revocation function",
+        "instruction": "Create an async function named 'revokeToken' that accepts a 'token' parameter and adds it to Redis with an expiration.",
+        "hint": "Define an async function that uses the Redis client to set a key-value pair with an expiration time.",
+        "analogousExample": "// Similar: async function that stores data with expiration\nasync function storeWithExpiry(key, value) {\n  await redisClient.set(key, value, 'EX', 3600);\n}",
+        "seedCode": "const redis = require('redis');\nconst http = require('http');\n\n// Create Redis client instance here\n\n// Create HTTP server with request handler here\n\n// Define token revocation function here",
+        "expectedOutcome": "An async function named 'revokeToken' is created that will handle adding tokens to the revocation list with expiration.",
+        "successCriteria": [
+          "The 'revokeToken' async function is defined with a 'token' parameter and contains Redis set operation with expiration."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure your function is async, accepts a 'token' parameter, and includes Redis set operation with expiration.",
+        "feedbackWrong": "The function definition is missing key elements. It should be async, accept a 'token' parameter, and include Redis set operation with expiration.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "async",
+            "function",
+            "revokeToken",
+            "token",
+            "set",
+            "EX"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 10",
+        "title": "Define token validation function",
+        "instruction": "Create an async function named 'isTokenRevoked' that takes a 'token' parameter and checks if that token exists in Redis.",
+        "hint": "Define a function that uses the Redis client's 'exists' method to check for the token key.",
+        "analogousExample": "// Example async validation function\nasync function checkExists(key) {\n  const exists = await redisClient.exists(key);\n  return exists === 1;\n}",
+        "seedCode": "const redis = require('redis');\nconst http = require('http');\n\n// Create Redis client instance here\n\n// Create HTTP server with request handler here\n\n// Define token revocation function here\n\n// Define token validation function here",
+        "expectedOutcome": "An async function 'isTokenRevoked' is defined that accepts a token parameter and returns a boolean indicating if the token is revoked.",
+        "successCriteria": [
+          "The 'isTokenRevoked' function is defined, accepts a token parameter, uses async/await with Redis exists method, and returns a boolean."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure your function is async, accepts a token parameter, and uses the Redis exists method to check for the token key.",
+        "feedbackWrong": "The function definition doesn't match requirements. Create an async function named 'isTokenRevoked' that takes a token parameter and checks Redis.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "async",
+            "function",
+            "isTokenRevoked",
+            "token",
+            "exists",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 10",
+        "title": "Set up request routing logic",
+        "instruction": "Inside the request handler, parse the request URL to identify the path and set up routing logic for '/revoke' and '/validate' endpoints.",
+        "hint": "Use the request.url property to get the URL path. You can use a simple if-else or switch statement to check for '/revoke' and '/validate' paths.",
+        "analogousExample": "// Example: routing based on URL path\nfunction handleRequest(req, res) {\n  const path = req.url;\n  if (path === '/api/data') {\n    // handle data endpoint\n  } else if (path === '/api/user') {\n    // handle user endpoint\n  } else {\n    // handle other paths\n  }\n}",
+        "seedCode": "const redis = require('redis');\nconst http = require('http');\n\n// Create Redis client instance here\n\n// Create HTTP server with request handler here\n\n// Define token revocation function here\n\n// Define token validation function here\n\n// Inside the request handler, parse the URL and set up routing logic:\n// 1. Get the request URL path\n// 2. Add if-else logic to handle '/revoke' and '/validate' endpoints\n// 3. For other paths, respond with 404\n",
+        "expectedOutcome": "The request handler will now be able to distinguish between '/revoke' and '/validate' endpoints based on the URL path.",
+        "successCriteria": [
+          "The request handler includes URL parsing and conditional logic for '/revoke' and '/validate' paths."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're checking for both '/revoke' and '/validate' paths and handling other paths appropriately.",
+        "feedbackWrong": "The routing logic is missing or incorrect. Check that you're parsing the request URL and setting up proper conditional statements.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "req.url",
+            "/revoke",
+            "/validate",
+            "if",
+            "else"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 10",
+        "title": "Implement /revoke endpoint",
+        "instruction": "Inside the request handler's routing logic, add code to handle POST requests to the '/revoke' endpoint by extracting the token from the request body and calling the revocation function.",
+        "hint": "Remember to check the request method, parse the request body, and call the appropriate function you defined earlier.",
+        "analogousExample": "// Example: handling a POST endpoint\nif (req.url === '/api/data' && req.method === 'POST') {\n    let body = '';\n    req.on('data', chunk => body += chunk);\n    req.on('end', () => {\n        const data = JSON.parse(body);\n        processData(data);\n    });\n}",
+        "seedCode": "const redis = require('redis');\nconst http = require('http');\n\n// Create Redis client instance here\n\n// Create HTTP server with request handler here\n\n// Define token revocation function here\n\n// Define token validation function here\n\n// Inside the request handler, parse the URL and set up routing logic:\n// 1. Get the request URL path\n// 2. Add if-else logic to handle '/revoke' and '/validate' endpoints\n// 3. For other paths, respond with 404\n\n// Add your /revoke endpoint logic here:",
+        "expectedOutcome": "The server will now handle POST requests to '/revoke' by extracting the token from the request body and calling the revocation function.",
+        "successCriteria": [
+          "The code includes logic to handle POST requests to '/revoke', parse the request body, extract a token, and call the revocation function."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've made progress, but make sure to handle POST requests specifically, parse the request body, and call the revocation function with the extracted token.",
+        "feedbackWrong": "The /revoke endpoint isn't fully implemented. Check that you're handling POST requests, parsing the body, and calling the revocation function.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "/revoke",
+            "POST",
+            "body",
+            "token",
+            "revocation"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 10",
+        "title": "Implement /validate endpoint",
+        "instruction": "Inside your request handler's routing logic, add the logic for the '/validate' endpoint: extract the token from the URL's query parameters and call your validation function with it.",
+        "hint": "Use the URL object to parse the request URL and access the query parameters. Then call your validation function with the extracted token.",
+        "analogousExample": "// Example: extracting query parameters and calling a function\nconst url = new URL(req.url, `http://${req.headers.host}`);\nconst token = url.searchParams.get('token');\nconst isValid = validateToken(token);",
+        "seedCode": "const redis = require('redis');\nconst http = require('http');\n\n// Create Redis client instance here\n\n// Create HTTP server with request handler here\n\n// Define token revocation function here\n\n// Define token validation function here\n\n// Inside the request handler, parse the URL and set up routing logic:\n// 1. Get the request URL path\n// 2. Add if-else logic to handle '/revoke' and '/validate' endpoints\n// 3. For other paths, respond with 404\n\n// Add your /revoke endpoint logic here:\n\n// Add your /validate endpoint logic here:",
+        "expectedOutcome": "The /validate endpoint will be able to receive GET requests with a token query parameter and check its revocation status.",
+        "successCriteria": [
+          "The /validate endpoint logic extracts the token from query parameters and calls the validation function."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added some logic, but make sure you're extracting the token from query parameters and calling the validation function.",
+        "feedbackWrong": "The /validate endpoint logic is missing or incorrect. Check that you're extracting the token from query parameters and calling the validation function.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "searchParams",
+            "get",
+            "token",
+            "validateToken"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 10",
+        "title": "Add response handling",
+        "instruction": "In your /revoke and /validate endpoint logic, add proper response headers and JSON responses for both success and error cases.",
+        "hint": "Use res.writeHead() to set status codes and Content-Type header, then res.end() with JSON.stringify() to send JSON responses.",
+        "analogousExample": "// Example response handling\nif (error) {\n  res.writeHead(400, { 'Content-Type': 'application/json' });\n  res.end(JSON.stringify({ error: 'Bad request' }));\n} else {\n  res.writeHead(200, { 'Content-Type': 'application/json' });\n  res.end(JSON.stringify({ success: true, data: result }));\n}",
+        "seedCode": "const redis = require('redis');\nconst http = require('http');\n\n// Create Redis client instance here\n\n// Create HTTP server with request handler here\n\n// Define token revocation function here\n\n// Define token validation function here\n\n// Inside the request handler, parse the URL and set up routing logic:\n// 1. Get the request URL path\n// 2. Add if-else logic to handle '/revoke' and '/validate' endpoints\n// 3. For other paths, respond with 404\n\n// Add your /revoke endpoint logic here:\n\n// Add your /validate endpoint logic here:\n\n// Add response handling with proper headers and JSON responses in both endpoints",
+        "expectedOutcome": "Both endpoints will send appropriate HTTP status codes and JSON-formatted responses.",
+        "successCriteria": [
+          "The /revoke and /validate endpoints include res.writeHead() with status codes and Content-Type header, and res.end() with JSON.stringify() for success and error responses."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added some response handling, but make sure both endpoints have complete response logic with headers and JSON.",
+        "feedbackWrong": "The response handling is missing or incomplete. Add res.writeHead() and res.end() with JSON.stringify() in both endpoints.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "writeHead",
+            "Content-Type",
+            "application/json",
+            "JSON.stringify",
+            "end"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 10",
+        "title": "Start the server and connect Redis",
+        "instruction": "Call redisClient.connect() to connect to Redis and server.listen() to start the HTTP server on port 3000.",
+        "hint": "Use the redisClient and server instances you created earlier. Call connect() on the client and listen() on the server.",
+        "analogousExample": "// Starting a server and database connection\nserver.listen(3000, () => {\n  console.log('Server running on port 3000');\n});\nredisClient.connect();",
+        "seedCode": "const redis = require('redis');\nconst http = require('http');\n\nconst redisClient = redis.createClient();\n\nconst server = http.createServer((req, res) => {\n  const url = req.url;\n  const method = req.method;\n\n  if (url === '/revoke' && method === 'POST') {\n    let body = '';\n    req.on('data', chunk => {\n      body += chunk.toString();\n    });\n    req.on('end', () => {\n      const data = JSON.parse(body);\n      const token = data.token;\n      const ttl = data.ttl || 3600;\n\n      redisClient.setEx(`revoked:${token}`, ttl, 'true', (err, reply) => {\n        if (err) {\n          res.writeHead(500, { 'Content-Type': 'application/json' });\n          res.end(JSON.stringify({ error: 'Revocation failed' }));\n          return;\n        }\n        res.writeHead(200, { 'Content-Type': 'application/json' });\n        res.end(JSON.stringify({ message: 'Token revoked', token }));\n      });\n    });\n  } else if (url === '/validate' && method === 'GET') {\n    const token = req.headers.authorization?.split(' ')[1];\n    if (!token) {\n      res.writeHead(400, { 'Content-Type': 'application/json' });\n      res.end(JSON.stringify({ error: 'Token missing' }));\n      return;\n    }\n\n    redisClient.get(`revoked:${token}`, (err, reply) => {\n      if (err) {\n        res.writeHead(500, { 'Content-Type': 'application/json' });\n        res.end(JSON.stringify({ error: 'Validation failed' }));\n        return;\n      }\n      if (reply === 'true') {\n        res.writeHead(401, { 'Content-Type': 'application/json' });\n        res.end(JSON.stringify({ valid: false, message: 'Token revoked' }));\n      } else {\n        res.writeHead(200, { 'Content-Type': 'application/json' });\n        res.end(JSON.stringify({ valid: true, message: 'Token valid' }));\n      }\n    });\n  } else {\n    res.writeHead(404, { 'Content-Type': 'application/json' });\n    res.end(JSON.stringify({ error: 'Not found' }));\n  }\n});\n\n// Start the server and connect Redis here",
+        "expectedOutcome": "The application becomes operational with Redis connected and the HTTP server listening for requests.",
+        "successCriteria": [
+          "redisClient.connect() and server.listen(3000) are called to start the application."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're calling both redisClient.connect() and server.listen(3000) to fully start the application.",
+        "feedbackWrong": "The server and Redis connection aren't properly started. You need to call redisClient.connect() and server.listen(3000) to make the application operational.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "redisClient.connect()",
+            "server.listen(3000)"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import required Node.js modules",
+        "id": "step1"
+      },
+      {
+        "label": "Create Redis client instance",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize HTTP server",
+        "id": "step3"
+      },
+      {
+        "label": "Define token revocation function",
+        "id": "step4"
+      },
+      {
+        "label": "Define token validation function",
+        "id": "step5"
+      },
+      {
+        "label": "Set up request routing logic",
+        "id": "step6"
+      },
+      {
+        "label": "Implement /revoke endpoint",
+        "id": "step7"
+      },
+      {
+        "label": "Implement /validate endpoint",
+        "id": "step8"
+      },
+      {
+        "label": "Add response handling",
+        "id": "step9"
+      },
+      {
+        "label": "Start the server and connect Redis",
+        "id": "step10"
+      }
+    ]
+  },
+  "source": "content"
+}

@@ -1,0 +1,422 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-node-21",
+    "track": "node",
+    "lessonNum": 21,
+    "title": "Build refresh token rotation flow",
+    "shortName": "P21",
+    "intro": {
+      "tag": "LESSON #21",
+      "title": "Build refresh token rotation flow",
+      "body": "In this lesson, you will build a secure refresh token rotation flow for a Node.js application. You will learn how to automatically issue new access tokens using a refresh token when the old one expires, enhancing security by reducing token reuse. The core programming concepts involve managing JWT (JSON Web Token) validation, state handling for tokens, and implementing conditional logic for token refresh. You will work with JavaScript, the jsonwebtoken library, and HTTP headers to handle authentication tokens. By the end, you'll have a functional flow that rotates tokens to keep user sessions secure without requiring frequent logins.",
+      "usecase": "Refresh token rotation is a critical security pattern used in virtually every modern web application that maintains user sessions. When you stay logged into platforms like Gmail, Netflix, or banking dashboards for extended periods, your access tokens expire periodically, but the app seamlessly refreshes them in the background without requiring you to re-enter credentials. This flow ensures continuous, secure access in admin panels, e-commerce platforms, and collaborative tools where users interact with data-rich interfaces for hours. As a Node.js developer, implementing this properly prevents session hijacking while delivering the smooth, uninterrupted experience users expect from professional applications."
+    },
+    "objectives": [
+      "Implement a refresh token endpoint in a Node.js server",
+      "Configure token validation middleware to check refresh token expiration",
+      "Initialize a new access token when a valid refresh token is presented",
+      "Manipulate token payloads to include user identification data",
+      "Integrate refresh token rotation into an existing authentication flow",
+      "Apply secure storage practices for refresh tokens in a database",
+      "Control token refresh frequency to prevent abuse"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 12",
+        "title": "Import required Node.js modules",
+        "instruction": "Import the crypto module for generating tokens and the fs module for file operations.",
+        "hint": "Use the require() function to import built-in Node.js modules.",
+        "analogousExample": "// Importing built-in modules\nconst http = require('http');\nconst path = require('path');",
+        "seedCode": "// Import crypto and fs modules here",
+        "expectedOutcome": "The crypto and fs modules are imported and ready to use for token generation and file operations.",
+        "successCriteria": [
+          "crypto and fs modules are imported using require()"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're importing both crypto and fs modules using require().",
+        "feedbackWrong": "import both the crypto and fs modules using the require() function.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "require",
+            "crypto",
+            "fs"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 12",
+        "title": "Create token generation helper functions",
+        "instruction": "Create a function named generateAccessToken that returns a random 32-byte hexadecimal string using crypto.randomBytes.",
+        "hint": "Use crypto.randomBytes(32) to generate random bytes, then convert them to a hex string with .toString('hex').",
+        "analogousExample": "// Example: creating a function that returns random data\nfunction generateRandomId() {\n  return crypto.randomBytes(16).toString('hex');\n}",
+        "seedCode": "// Import crypto and fs modules here\n\n// Create a function named generateAccessToken that returns a random 32-byte hexadecimal string",
+        "expectedOutcome": "You will have a function that can generate secure random access tokens.",
+        "successCriteria": [
+          "The generateAccessToken function exists and returns a 32-byte hex string using crypto.randomBytes."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure your function uses crypto.randomBytes(32) and converts the result to a hex string.",
+        "feedbackWrong": "The function doesn't generate a 32-byte hex string using crypto.randomBytes. Review the hint and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "generateAccessToken",
+            "crypto.randomBytes",
+            "toString('hex')"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 12",
+        "title": "Initialize token storage object",
+        "instruction": "Create an empty object named `refreshTokens` to store refresh tokens using user IDs as keys.",
+        "hint": "Declare a variable using `const` and assign it an empty object `{}`.",
+        "analogousExample": "// Similar: an object to store user data\nconst userData = {};",
+        "seedCode": "// Import crypto and fs modules here\n\n// Create a function named generateAccessToken that returns a random 32-byte hexadecimal string\n\n// Create an empty object named refreshTokens here",
+        "expectedOutcome": "An empty object is created and ready to store refresh tokens with user IDs as keys.",
+        "successCriteria": [
+          "The `refreshTokens` object is declared and initialized as an empty object."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you've created an empty object named `refreshTokens`.",
+        "feedbackWrong": "Not quite. You need to create an empty object named `refreshTokens` for storing tokens.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "refreshTokens",
+            "=",
+            "{}"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 12",
+        "title": "Create login simulation function",
+        "instruction": "Create a function named loginUser that takes a username parameter and returns an object containing both an access token and a refresh token for that user.",
+        "hint": "Inside the function, call your existing generateAccessToken function to create the access token, then generate a refresh token similarly. Store the refresh token in the refreshTokens object with the username as the key, then return both tokens.",
+        "analogousExample": "// Example: a function that creates user credentials\nfunction createUserCredentials(username) {\n  const accessToken = generateRandomToken();\n  const refreshToken = generateRandomToken();\n  tokenStore[username] = refreshToken;\n  return { accessToken, refreshToken };\n}",
+        "seedCode": "// Import crypto and fs modules here\n\n// Create a function named generateAccessToken that returns a random 32-byte hexadecimal string\n\n// Create an empty object named refreshTokens here\n\n// Create your loginUser function here",
+        "expectedOutcome": "A loginUser function that generates tokens and stores the refresh token, returning both in an object.",
+        "successCriteria": [
+          "The loginUser function exists, takes a username parameter, generates both tokens, stores the refresh token in refreshTokens[username], and returns an object with accessToken and refreshToken properties."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure your function generates both tokens, stores the refresh token in the refreshTokens object, and returns them in an object.",
+        "feedbackWrong": "The loginUser function is missing or doesn't meet the requirements. It should take a username, generate both tokens, store the refresh token, and return an object with both tokens.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "loginUser",
+            "username",
+            "generateAccessToken",
+            "refreshTokens[username]",
+            "return",
+            "accessToken",
+            "refreshToken"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 12",
+        "title": "Create access token validation function",
+        "instruction": "Create a function named validateAccessToken that takes an access token string as a parameter and returns true if the token is valid (not expired) and false otherwise. For now, implement a simple expiration check by verifying the token exists in your storage and hasn't expired (use a hardcoded expiration time of 1 hour from token creation).",
+        "hint": "You can check if a token exists by looking it up in your token storage object. For expiration, you can store a timestamp when the token was created and compare it with the current time.",
+        "analogousExample": "// Similar: validation function with expiration check\nfunction validateSession(sessionToken) {\n  const session = sessions[sessionToken];\n  if (!session) return false;\n  const now = Date.now();\n  const oneHour = 60 * 60 * 1000;\n  return (now - session.createdAt) < oneHour;\n}",
+        "seedCode": "// Import crypto and fs modules here\nconst crypto = require('crypto');\nconst fs = require('fs');\n\n// Create a function named generateAccessToken that returns a random 32-byte hexadecimal string\nfunction generateAccessToken() {\n  return crypto.randomBytes(32).toString('hex');\n}\n\n// Create an empty object named refreshTokens here\nconst refreshTokens = {};\n\n// Create your loginUser function here\nfunction loginUser(username, password) {\n  const accessToken = generateAccessToken();\n  const refreshToken = crypto.randomBytes(32).toString('hex');\n  \n  refreshTokens[refreshToken] = {\n    username: username,\n    accessToken: accessToken,\n    createdAt: Date.now()\n  };\n  \n  return { accessToken, refreshToken };\n}\n\n// Create your validateAccessToken function here",
+        "expectedOutcome": "A validateAccessToken function that checks token existence and expiration, returning a boolean.",
+        "successCriteria": [
+          "The validateAccessToken function exists, accepts a token parameter, checks if the token exists in refreshTokens, verifies it hasn't expired (within 1 hour), and returns true/false accordingly."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your function properly checks both token existence and expiration. Remember to compare the token's creation time with the current time.",
+        "feedbackWrong": "The validation function doesn't seem to be working correctly. Check that you're looking up the token in your refreshTokens object and comparing timestamps properly.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "validateAccessToken",
+            "function",
+            "refreshTokens",
+            "Date.now()",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 12",
+        "title": "Create refresh token validation function",
+        "instruction": "Create a function named validateRefreshToken that takes a refreshToken string as a parameter and returns true if the token exists in the refreshTokens object, otherwise returns false.",
+        "hint": "Check if the provided refreshToken exists as a key in the refreshTokens object you created earlier.",
+        "analogousExample": "// Example: a validation function\nfunction isValidEmail(email) {\n  return email.includes('@');\n}",
+        "seedCode": "// Import crypto and fs modules here\nconst crypto = require('crypto');\nconst fs = require('fs');\n\n// Create a function named generateAccessToken that returns a random 32-byte hexadecimal string\nfunction generateAccessToken() {\n  return crypto.randomBytes(32).toString('hex');\n}\n\n// Create an empty object named refreshTokens here\nconst refreshTokens = {};\n\n// Create your loginUser function here\nfunction loginUser(username, password) {\n  const accessToken = generateAccessToken();\n  const refreshToken = crypto.randomBytes(32).toString('hex');\n  \n  refreshTokens[refreshToken] = {\n    username: username,\n    accessToken: accessToken,\n    createdAt: Date.now()\n  };\n  \n  return { accessToken, refreshToken };\n}\n\n// Create your validateAccessToken function here\n\n// Create your validateRefreshToken function here",
+        "expectedOutcome": "A validateRefreshToken function that checks token existence in the refreshTokens object.",
+        "successCriteria": [
+          "The validateRefreshToken function exists, takes a refreshToken parameter, and returns a boolean based on whether the token exists in refreshTokens."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure your function takes a refreshToken parameter and returns true/false based on whether it exists in refreshTokens.",
+        "feedbackWrong": "The validateRefreshToken function should check if the provided token exists in the refreshTokens object and return a boolean.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "validateRefreshToken",
+            "refreshToken",
+            "refreshTokens",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 12",
+        "title": "Create token rotation handler",
+        "instruction": "Create a function named rotateRefreshToken that takes a refreshToken parameter, validates it, and returns a new access/refresh token pair.",
+        "hint": "Inside the function, first check if the refreshToken exists in your refreshTokens object. If valid, generate new tokens and update the storage.",
+        "analogousExample": "// Similar: a function that validates and returns new data\nfunction rotateRefreshToken(refreshToken) {\n  if (!refreshTokens[refreshToken]) {\n    return null;\n  }\n  const newAccessToken = generateAccessToken();\n  const newRefreshToken = crypto.randomBytes(32).toString('hex');\n  // Update storage with new tokens\n  refreshTokens[newRefreshToken] = {\n    username: refreshTokens[refreshToken].username,\n    accessToken: newAccessToken,\n    createdAt: Date.now()\n  };\n  delete refreshTokens[refreshToken];\n  return { accessToken: newAccessToken, refreshToken: newRefreshToken };\n}",
+        "seedCode": "// Import crypto and fs modules here\nconst crypto = require('crypto');\nconst fs = require('fs');\n\n// Create a function named generateAccessToken that returns a random 32-byte hexadecimal string\nfunction generateAccessToken() {\n  return crypto.randomBytes(32).toString('hex');\n}\n\n// Create an empty object named refreshTokens here\nconst refreshTokens = {};\n\n// Create your loginUser function here\nfunction loginUser(username, password) {\n  const accessToken = generateAccessToken();\n  const refreshToken = crypto.randomBytes(32).toString('hex');\n  \n  refreshTokens[refreshToken] = {\n    username: username,\n    accessToken: accessToken,\n    createdAt: Date.now()\n  };\n  \n  return { accessToken, refreshToken };\n}\n\n// Create your validateAccessToken function here\n\n// Create your validateRefreshToken function here\n\n// Create your rotateRefreshToken function here",
+        "expectedOutcome": "A rotateRefreshToken function that implements the core refresh token rotation logic.",
+        "successCriteria": [
+          "The rotateRefreshToken function exists, validates the refreshToken parameter, generates new tokens, updates the refreshTokens object, and returns the new token pair."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the rotateRefreshToken function, but make sure it validates the token, generates new tokens, updates storage, and returns the new pair.",
+        "feedbackWrong": "The rotateRefreshToken function is missing or incomplete. Review the token rotation logic.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "rotateRefreshToken",
+            "refreshToken",
+            "refreshTokens",
+            "generateAccessToken",
+            "crypto.randomBytes",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 12",
+        "title": "Create protected API endpoint simulation",
+        "instruction": "Create a function named protectedEndpoint that simulates a protected API endpoint. It should take an accessToken parameter and return a success message only if the token is valid.",
+        "hint": "Inside the function, call your existing validateAccessToken function with the provided token. Return a success message if validation passes, otherwise return an error message.",
+        "analogousExample": "// Example: A function that checks credentials\nfunction checkCredentials(password) {\n  if (password === 'secret') {\n    return 'Access granted';\n  } else {\n    return 'Access denied';\n  }\n}",
+        "seedCode": "// Import crypto and fs modules here\nconst crypto = require('crypto');\nconst fs = require('fs');\n\n// Create a function named generateAccessToken that returns a random 32-byte hexadecimal string\nfunction generateAccessToken() {\n  return crypto.randomBytes(32).toString('hex');\n}\n\n// Create an empty object named refreshTokens here\nconst refreshTokens = {};\n\n// Create your loginUser function here\nfunction loginUser(username, password) {\n  const accessToken = generateAccessToken();\n  const refreshToken = crypto.randomBytes(32).toString('hex');\n  \n  refreshTokens[refreshToken] = {\n    username: username,\n    accessToken: accessToken,\n    createdAt: Date.now()\n  };\n  \n  return { accessToken, refreshToken };\n}\n\n// Create your validateAccessToken function here\n\n// Create your validateRefreshToken function here\n\n// Create your rotateRefreshToken function here\n\n// Create your protectedEndpoint function here",
+        "expectedOutcome": "You will have a protectedEndpoint function that validates an access token and returns appropriate messages.",
+        "successCriteria": [
+          "The protectedEndpoint function exists, calls validateAccessToken, and returns a success message when the token is valid or an error message when invalid."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've created the function, but make sure it properly calls validateAccessToken and returns appropriate messages for both valid and invalid cases.",
+        "feedbackWrong": "The function is missing or doesn't properly validate tokens. Review the instruction and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "function protectedEndpoint",
+            "validateAccessToken",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 12",
+        "title": "Set up main application flow function",
+        "instruction": "Create a function named 'mainFlow' that will orchestrate the complete token rotation flow. The function should take no parameters and return a string describing the flow outcome.",
+        "hint": "Define a function that calls your existing helper functions in sequence to simulate login, token validation, and rotation.",
+        "analogousExample": "// Example of a main orchestration function\nfunction runProcess() {\n  const data = fetchData();\n  const processed = processData(data);\n  return `Process completed with: ${processed}`;\n}",
+        "seedCode": "// Import crypto and fs modules here\nconst crypto = require('crypto');\nconst fs = require('fs');\n\n// Create a function named generateAccessToken that returns a random 32-byte hexadecimal string\nfunction generateAccessToken() {\n  return crypto.randomBytes(32).toString('hex');\n}\n\n// Create an empty object named refreshTokens here\nconst refreshTokens = {};\n\n// Create your loginUser function here\nfunction loginUser(username, password) {\n  const accessToken = generateAccessToken();\n  const refreshToken = crypto.randomBytes(32).toString('hex');\n  \n  refreshTokens[refreshToken] = {\n    username: username,\n    accessToken: accessToken,\n    createdAt: Date.now()\n  };\n  \n  return { accessToken, refreshToken };\n}\n\n// Create your validateAccessToken function here\n\n// Create your validateRefreshToken function here\n\n// Create your rotateRefreshToken function here\n\n// Create your protectedEndpoint function here\n\n// Create your mainFlow function here",
+        "expectedOutcome": "A function named 'mainFlow' is defined that will serve as the entry point to demonstrate token rotation.",
+        "successCriteria": [
+          "The 'mainFlow' function is declared with no parameters and returns a string."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the function, but make sure it's named exactly 'mainFlow' and returns a string.",
+        "feedbackWrong": "The function isn't defined correctly. Create a function named 'mainFlow' that returns a string.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "function mainFlow",
+            "mainFlow()",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 12",
+        "title": "Add token persistence to file system",
+        "instruction": "Create a function named saveTokensToFile that writes the refreshTokens object to a JSON file named 'tokens.json'.",
+        "hint": "Use fs.writeFileSync to write JSON.stringify(refreshTokens) to 'tokens.json'.",
+        "analogousExample": "// Example: saving data to a file\nfunction saveDataToFile(data) {\n  fs.writeFileSync('data.json', JSON.stringify(data));\n}",
+        "seedCode": "// Import crypto and fs modules here\nconst crypto = require('crypto');\nconst fs = require('fs');\n\n// Create a function named generateAccessToken that returns a random 32-byte hexadecimal string\nfunction generateAccessToken() {\n  return crypto.randomBytes(32).toString('hex');\n}\n\n// Create an empty object named refreshTokens here\nconst refreshTokens = {};\n\n// Create your loginUser function here\nfunction loginUser(username, password) {\n  const accessToken = generateAccessToken();\n  const refreshToken = crypto.randomBytes(32).toString('hex');\n  \n  refreshTokens[refreshToken] = {\n    username: username,\n    accessToken: accessToken,\n    createdAt: Date.now()\n  };\n  \n  return { accessToken, refreshToken };\n}\n\n// Create your validateAccessToken function here\n\n// Create your validateRefreshToken function here\n\n// Create your rotateRefreshToken function here\n\n// Create your protectedEndpoint function here\n\n// Create your mainFlow function here\n\n// Create your saveTokensToFile function here",
+        "expectedOutcome": "A saveTokensToFile function that persists the refreshTokens object to a JSON file.",
+        "successCriteria": [
+          "The saveTokensToFile function exists and uses fs.writeFileSync to write JSON.stringify(refreshTokens) to 'tokens.json'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure your function uses fs.writeFileSync and JSON.stringify to write the refreshTokens object to 'tokens.json'.",
+        "feedbackWrong": "The function should be named saveTokensToFile and write the refreshTokens object to a JSON file using fs.writeFileSync.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "saveTokensToFile",
+            "fs.writeFileSync",
+            "JSON.stringify",
+            "tokens.json"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 12",
+        "title": "Update token storage to use file persistence",
+        "instruction": "Modify the refreshTokens object initialization to load existing tokens from the tokens.json file if it exists, using a try-catch block.",
+        "hint": "Use fs.readFileSync inside a try block to read the file, parse it as JSON, and assign it to refreshTokens. In the catch block, initialize refreshTokens as an empty object if the file doesn't exist.",
+        "analogousExample": "// Loading data from a file on startup\nlet data;\ntry {\n  const fileContent = fs.readFileSync('data.json', 'utf8');\n  data = JSON.parse(fileContent);\n} catch (error) {\n  data = {};\n}",
+        "seedCode": "// Import crypto and fs modules here\nconst crypto = require('crypto');\nconst fs = require('fs');\n\n// Create a function named generateAccessToken that returns a random 32-byte hexadecimal string\nfunction generateAccessToken() {\n  return crypto.randomBytes(32).toString('hex');\n}\n\n// Create your token storage object here\nlet refreshTokens;\ntry {\n  // Load tokens from file if it exists\n} catch (error) {\n  // Initialize as empty object if file doesn't exist\n}\n\n// Create your loginUser function here\nfunction loginUser(username, password) {\n  const accessToken = generateAccessToken();\n  const refreshToken = crypto.randomBytes(32).toString('hex');\n  \n  refreshTokens[refreshToken] = {\n    username: username,\n    accessToken: accessToken,\n    createdAt: Date.now()\n  };\n  \n  return { accessToken, refreshToken };\n}\n\n// Create your validateAccessToken function here\n\n// Create your validateRefreshToken function here\n\n// Create your rotateRefreshToken function here\n\n// Create your protectedEndpoint function here\n\n// Create your mainFlow function here\n\n// Create your saveTokensToFile function here",
+        "expectedOutcome": "The refreshTokens variable will be initialized with data from tokens.json if the file exists, otherwise it will be an empty object.",
+        "successCriteria": [
+          "refreshTokens is declared with let, initialized inside a try-catch block that attempts to read and parse tokens.json, and falls back to an empty object on error."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure to use fs.readFileSync to read the file and JSON.parse to convert the content. Also ensure you handle the error case by initializing refreshTokens as an empty object.",
+        "feedbackWrong": "The token storage initialization doesn't correctly load from the file. Review the hint and analogous example to see how to read a file and handle errors.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "let refreshTokens",
+            "try",
+            "fs.readFileSync",
+            "JSON.parse",
+            "catch",
+            "refreshTokens = {}"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step12",
+        "type": "question",
+        "phase": "Step 12 of 12",
+        "title": "Execute and test the complete flow",
+        "instruction": "Call the mainFlow function with test scenarios to demonstrate successful token rotation.",
+        "hint": "Invoke mainFlow() at the end of your code to run the simulation.",
+        "analogousExample": "// Calling a function to execute a process\nfunction mainFlow() {\n  console.log('Process executed');\n}\n\nmainFlow();",
+        "seedCode": "// Import crypto and fs modules here\nconst crypto = require('crypto');\nconst fs = require('fs');\n\n// Create a function named generateAccessToken that returns a random 32-byte hexadecimal string\nfunction generateAccessToken() {\n  return crypto.randomBytes(32).toString('hex');\n}\n\n// Create your token storage object here\nlet refreshTokens;\ntry {\n  // Load tokens from file if it exists\n} catch (error) {\n  // Initialize as empty object if file doesn't exist\n}\n\n// Create your loginUser function here\nfunction loginUser(username, password) {\n  const accessToken = generateAccessToken();\n  const refreshToken = crypto.randomBytes(32).toString('hex');\n  \n  refreshTokens[refreshToken] = {\n    username: username,\n    accessToken: accessToken,\n    createdAt: Date.now()\n  };\n  \n  return { accessToken, refreshToken };\n}\n\n// Create your validateAccessToken function here\n\n// Create your validateRefreshToken function here\n\n// Create your rotateRefreshToken function here\n\n// Create your protectedEndpoint function here\n\n// Create your mainFlow function here\n\n// Create your saveTokensToFile function here\n\n// Call mainFlow to execute the complete flow",
+        "expectedOutcome": "The mainFlow function is called to run the complete token rotation simulation.",
+        "successCriteria": [
+          "mainFlow() is invoked at the end of the code."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you call mainFlow() at the end of your code.",
+        "feedbackWrong": "The mainFlow function was not called. Add mainFlow(); at the end of your code.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "mainFlow()"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import required Node.js modules",
+        "id": "step1"
+      },
+      {
+        "label": "Create token generation helper functions",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize token storage object",
+        "id": "step3"
+      },
+      {
+        "label": "Create login simulation function",
+        "id": "step4"
+      },
+      {
+        "label": "Create access token validation function",
+        "id": "step5"
+      },
+      {
+        "label": "Create refresh token validation function",
+        "id": "step6"
+      },
+      {
+        "label": "Create token rotation handler",
+        "id": "step7"
+      },
+      {
+        "label": "Create protected API endpoint simulation",
+        "id": "step8"
+      },
+      {
+        "label": "Set up main application flow function",
+        "id": "step9"
+      },
+      {
+        "label": "Add token persistence to file system",
+        "id": "step10"
+      },
+      {
+        "label": "Update token storage to use file persistence",
+        "id": "step11"
+      },
+      {
+        "label": "Execute and test the complete flow",
+        "id": "step12"
+      }
+    ]
+  },
+  "source": "content"
+}

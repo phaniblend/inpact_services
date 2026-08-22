@@ -1,0 +1,356 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-vue-46",
+    "track": "vue",
+    "lessonNum": 46,
+    "title": "useMemo for Expensive Computation",
+    "shortName": "P46",
+    "intro": {
+      "tag": "LESSON #46",
+      "title": "useMemo for Expensive Computation",
+      "body": "In this lesson, you will build a simple Vue component that calculates the factorial of a number. You will learn how to use the `computed` property, which is Vue's equivalent to React's `useMemo`, to optimize expensive computations by caching their results. The core concept is memoization, which prevents unnecessary recalculations and improves performance. You will work with Vue's reactivity system, JavaScript functions, and conditional rendering. By the end, you'll understand when and how to apply memoization in Vue to handle slow operations efficiently.",
+      "usecase": "In real-world Vue applications, expensive computations like filtering large datasets, sorting user lists, or calculating complex analytics are common. For example, a financial dashboard might need to recalculate portfolio metrics or a data table might require heavy sorting and filtering based on user inputs. Using `computed` properties or `watch` with caching ensures these operations don't re-run on every render, preventing UI lag and improving performance. This pattern is crucial for maintaining smooth interactivity in features like live search filters, real-time charts, or dynamic form validations."
+    },
+    "objectives": [
+      "Implement a computed property to cache the result of an expensive calculation.",
+      "Apply the computed property within a Vue component's template to display the cached value.",
+      "Construct a reactive data source that triggers the computed property's recalculation when updated.",
+      "Manipulate the component's state to observe the computed property's caching behavior.",
+      "Integrate a method to perform the same calculation without caching and compare performance.",
+      "Configure a watcher to log when the expensive calculation executes, demonstrating memoization.",
+      "Initialize a component with user inputs that control the parameters of the memoized computation."
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 10",
+        "title": "Import Vue and required composition APIs",
+        "instruction": "Import ref and computed from 'vue'.",
+        "hint": "Use the import statement to bring in the necessary Vue composition API functions.",
+        "analogousExample": "// Importing functions from a module\nimport { useState, useEffect } from 'react';",
+        "seedCode": "// Import ref and computed from 'vue'",
+        "expectedOutcome": "The Vue composition API functions ref and computed are imported and ready to use.",
+        "successCriteria": [
+          "ref and computed are imported from 'vue'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're importing both ref and computed from 'vue'.",
+        "feedbackWrong": "import both ref and computed from the 'vue' module.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "ref",
+            "computed",
+            "'vue'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 10",
+        "title": "Create the main Vue component",
+        "instruction": "Create a Vue component named 'ExpensiveComputationDemo' with a setup function that returns an empty object.",
+        "hint": "Define a component that uses Vue's composition API. The setup function should return an object (even if empty for now).",
+        "analogousExample": "// Example: basic Vue component\nconst MyComponent = {\n  setup() {\n    return {};\n  }\n};",
+        "seedCode": "// Import ref and computed from 'vue'\n\n// Create the main Vue component\nconst ExpensiveComputationDemo = {\n  setup() {\n    // Return an empty object for now\n    return {};\n  }\n};",
+        "expectedOutcome": "A Vue component named ExpensiveComputationDemo is defined with a setup function that returns an empty object.",
+        "successCriteria": [
+          "The component ExpensiveComputationDemo is created with a setup function that returns an empty object."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you've created a component named ExpensiveComputationDemo with a setup function that returns an empty object.",
+        "feedbackWrong": "The component structure isn't quite right. Create a Vue component named ExpensiveComputationDemo with a setup function that returns an empty object.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "ExpensiveComputationDemo",
+            "setup",
+            "return",
+            "{}"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 10",
+        "title": "Initialize reactive state for number input",
+        "instruction": "Inside the setup function, use ref to create a reactive state variable called 'inputNumber' with an initial value of 1.",
+        "hint": "Remember to import ref if you haven't already, then declare const inputNumber = ref(1) inside setup().",
+        "analogousExample": "// Creating reactive state with ref\nconst count = ref(0);",
+        "seedCode": "// Import ref and computed from 'vue'\n\n// Create the main Vue component\nconst ExpensiveComputationDemo = {\n  setup() {\n    // Initialize reactive state here\n    \n    // Return an empty object for now\n    return {};\n  }\n};",
+        "expectedOutcome": "The component now has reactive state to store the user's number input.",
+        "successCriteria": [
+          "A reactive state variable named 'inputNumber' is created with ref(1) inside the setup function."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're using ref() with the correct initial value.",
+        "feedbackWrong": "Try creating a reactive state variable called 'inputNumber' with an initial value of 1 using ref().",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "inputNumber",
+            "ref",
+            "1"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 10",
+        "title": "Define an expensive computation function",
+        "instruction": "Inside the setup function, define a regular JavaScript function named computeExpensiveValue that takes a number parameter n and returns the factorial of n (n!).",
+        "hint": "You can create a simple factorial function using a for loop or recursion. For example: function computeExpensiveValue(n) { let result = 1; for (let i = 1; i <= n; i++) { result *= i; } return result; }",
+        "analogousExample": "// Similar: a function that performs calculation\nfunction calculateTotal(items) {\n  let total = 0;\n  for (let item of items) {\n    total += item.price;\n  }\n  return total;\n}",
+        "seedCode": "// Import ref and computed from 'vue'\n\n// Create the main Vue component\nconst ExpensiveComputationDemo = {\n  setup() {\n    // Initialize reactive state here\n    \n    // Define expensive computation function here\n    \n    // Return an empty object for now\n    return {};\n  }\n};",
+        "expectedOutcome": "You'll have a computeExpensiveValue function that can calculate factorials, which we'll later use to demonstrate expensive computations.",
+        "successCriteria": [
+          "A computeExpensiveValue function is defined inside setup() that takes a number parameter and returns its factorial."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your computeExpensiveValue function takes a parameter and returns the factorial calculation.",
+        "feedbackWrong": "The computeExpensiveValue function should be defined inside setup() and perform a factorial calculation. Try creating a function that multiplies numbers from 1 to n.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "computeExpensiveValue",
+            "function",
+            "n",
+            "factorial",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 10",
+        "title": "Create computed property for the expensive result",
+        "instruction": "Inside the setup function, create a computed property named 'expensiveResult' that calls the 'expensiveCalculation' function with 'numberInput.value' as its argument.",
+        "hint": "Use Vue's computed function to create a reactive computed property that automatically updates when its dependencies change.",
+        "analogousExample": "// Example computed property\nconst doubled = computed(() => number.value * 2);",
+        "seedCode": "// Import ref and computed from 'vue'\nimport { ref, computed } from 'vue';\n\n// Create the main Vue component\nconst ExpensiveComputationDemo = {\n  setup() {\n    // Initialize reactive state here\n    const numberInput = ref(0);\n    \n    // Define expensive computation function here\n    function expensiveCalculation(n) {\n      // Simulate expensive computation\n      let result = 0;\n      for (let i = 0; i < 100000000; i++) {\n        result += Math.sqrt(i) * Math.sin(i);\n      }\n      return n * 2;\n    }\n    \n    // Create computed property here\n    \n    // Return an empty object for now\n    return {};\n  }\n};",
+        "expectedOutcome": "A computed property named 'expensiveResult' is created that memoizes the result of the expensive calculation based on the current numberInput value.",
+        "successCriteria": [
+          "The computed property 'expensiveResult' is defined using Vue's computed function and calls 'expensiveCalculation' with 'numberInput.value'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're using Vue's computed function and passing the correct argument to expensiveCalculation.",
+        "feedbackWrong": "The computed property wasn't created correctly. Remember to use Vue's computed function and call expensiveCalculation with numberInput.value.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "computed",
+            "expensiveResult",
+            "expensiveCalculation",
+            "numberInput.value"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 10",
+        "title": "Add input field for number",
+        "instruction": "Inside the setup function's return object, add an input element of type number bound to the numberInput reactive state using v-model.",
+        "hint": "Use v-model to create two-way data binding between the input element and your numberInput ref.",
+        "analogousExample": "// Similar: input bound to reactive state\n<input type=\"number\" v-model=\"count\" />",
+        "seedCode": "// Import ref and computed from 'vue'\nimport { ref, computed } from 'vue';\n\n// Create the main Vue component\nconst ExpensiveComputationDemo = {\n  setup() {\n    // Initialize reactive state here\n    const numberInput = ref(0);\n    \n    // Define expensive computation function here\n    function expensiveCalculation(n) {\n      // Simulate expensive computation\n      let result = 0;\n      for (let i = 0; i < 100000000; i++) {\n        result += Math.sqrt(i) * Math.sin(i);\n      }\n      return n * 2;\n    }\n    \n    // Create computed property here\n    \n    // Return an empty object for now\n    return {};\n  }\n};",
+        "expectedOutcome": "The component will now have an input field that controls the numberInput value.",
+        "successCriteria": [
+          "The setup function returns an object containing an input element with type=\"number\" and v-model=\"numberInput\"."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure your input element has both type=\"number\" and v-model=\"numberInput\" attributes.",
+        "feedbackWrong": "The input element is missing or doesn't have the correct attributes. Check that you've added it to the return object with proper binding.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<input",
+            "type=\"number\"",
+            "v-model=\"numberInput\""
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 10",
+        "title": "Display the computed result",
+        "instruction": "Add a paragraph element in the template to display the computed property value. Use double curly braces to output the computed value.",
+        "hint": "In Vue templates, you can display reactive values using {{ }} syntax. Add a <p> tag that shows the computed result.",
+        "analogousExample": "// Displaying a computed value in Vue\n<p>{{ computedValue }}</p>",
+        "seedCode": "// Import ref and computed from 'vue'\nimport { ref, computed } from 'vue';\n\n// Create the main Vue component\nconst ExpensiveComputationDemo = {\n  setup() {\n    // Initialize reactive state here\n    const numberInput = ref(0);\n    \n    // Define expensive computation function here\n    function expensiveCalculation(n) {\n      // Simulate expensive computation\n      let result = 0;\n      for (let i = 0; i < 100000000; i++) {\n        result += Math.sqrt(i) * Math.sin(i);\n      }\n      return n * 2;\n    }\n    \n    // Create computed property here\n    const computedResult = computed(() => expensiveCalculation(numberInput.value));\n    \n    // Return template with input and result display\n    return {\n      numberInput,\n      computedResult\n    };\n  },\n  template: `\n    <div>\n      <input type=\"number\" v-model=\"numberInput\" />\n      <!-- Add paragraph here to display computedResult -->\n    </div>\n  `\n};",
+        "expectedOutcome": "The computed result will be displayed in the UI whenever the input changes, showing the memoized calculation output.",
+        "successCriteria": [
+          "A paragraph element is added to the template that displays the computedResult value using {{ }} syntax."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure you've added a <p> tag in the template that uses {{ computedResult }} to display the value.",
+        "feedbackWrong": "The paragraph element displaying the computed result is missing or incorrect. Add a <p> tag with {{ computedResult }} in the template.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<p",
+            "{{",
+            "computedResult",
+            "}}"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 10",
+        "title": "Add a button to trigger re-render without changing input",
+        "instruction": "Inside the setup function, add a reactive counter state and a function that increments it when clicked.",
+        "hint": "Create a new ref for the counter and a function that updates it. This will force re-renders without affecting the expensive computation.",
+        "analogousExample": "// Example: separate counter for re-renders\nconst renderCount = ref(0);\nfunction forceRender() {\n  renderCount.value++;\n}",
+        "seedCode": "// Import ref and computed from 'vue'\nimport { ref, computed } from 'vue';\n\n// Create the main Vue component\nconst ExpensiveComputationDemo = {\n  setup() {\n    // Initialize reactive state here\n    const numberInput = ref(0);\n    \n    // Define expensive computation function here\n    function expensiveCalculation(n) {\n      // Simulate expensive computation\n      let result = 0;\n      for (let i = 0; i < 100000000; i++) {\n        result += Math.sqrt(i) * Math.sin(i);\n      }\n      return n * 2;\n    }\n    \n    // Create computed property here\n    const computedResult = computed(() => expensiveCalculation(numberInput.value));\n    \n    // Add counter state and forceRender function here\n    \n    // Return template with input and result display\n    return {\n      numberInput,\n      computedResult\n    };\n  },\n  template: `\n    <div>\n      <input type=\"number\" v-model=\"numberInput\" />\n      <!-- Add paragraph here to display computedResult -->\n    </div>\n  `\n};",
+        "expectedOutcome": "The component will have a separate counter state and a function to increment it, preparing for a button that triggers re-renders.",
+        "successCriteria": [
+          "A new ref for render counter and a forceRender function are defined in setup."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure you've created both a reactive counter state and a function that increments it.",
+        "feedbackWrong": "Check the instruction: you need to add a reactive counter state and a function that increments it inside the setup function.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "renderCount",
+            "ref",
+            "forceRender",
+            "value++"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 10",
+        "title": "Initialize counter state for re-renders",
+        "instruction": "Inside the setup function, create a reactive state variable called renderCount using ref, initialized to 0.",
+        "hint": "Use the ref function you imported earlier to create a reactive reference with an initial value of 0.",
+        "analogousExample": "// Creating a reactive counter state\nconst count = ref(0);",
+        "seedCode": "// Import ref and computed from 'vue'\nimport { ref, computed } from 'vue';\n\n// Create the main Vue component\nconst ExpensiveComputationDemo = {\n  setup() {\n    // Initialize reactive state here\n    const numberInput = ref(0);\n    \n    // Define expensive computation function here\n    function expensiveCalculation(n) {\n      // Simulate expensive computation\n      let result = 0;\n      for (let i = 0; i < 100000000; i++) {\n        result += Math.sqrt(i) * Math.sin(i);\n      }\n      return n * 2;\n    }\n    \n    // Create computed property here\n    const computedResult = computed(() => expensiveCalculation(numberInput.value));\n    \n    // Add counter state and forceRender function here\n    \n    // Return template with input and result display\n    return {\n      numberInput,\n      computedResult\n    };\n  },\n  template: `\n    <div>\n      <input type=\"number\" v-model=\"numberInput\" />\n      <!-- Add paragraph here to display computedResult -->\n    </div>\n  `\n};",
+        "expectedOutcome": "A reactive renderCount state variable is created with an initial value of 0, ready to track re-renders.",
+        "successCriteria": [
+          "The setup function contains a renderCount variable declared with ref(0)."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're using ref with an initial value of 0 and naming it renderCount.",
+        "feedbackWrong": "Try creating a reactive state variable called renderCount using ref(0) inside the setup function.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "renderCount",
+            "ref",
+            "0"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 10",
+        "title": "Wire button to increment render counter",
+        "instruction": "In the setup function, add a click handler function that increments the render counter state and wire it to the button in the template.",
+        "hint": "Create a function that increments the counter state using the increment operator (++). Then add a @click directive to the button that calls this function.",
+        "analogousExample": "// Example click handler in Vue setup\nfunction handleClick() {\n  counter.value++;\n}\n// In template:\n<button @click=\"handleClick\">Click me</button>",
+        "seedCode": "// Import ref and computed from 'vue'\nimport { ref, computed } from 'vue';\n\n// Create the main Vue component\nconst ExpensiveComputationDemo = {\n  setup() {\n    // Initialize reactive state here\n    const numberInput = ref(0);\n    \n    // Define expensive computation function here\n    function expensiveCalculation(n) {\n      // Simulate expensive computation\n      let result = 0;\n      for (let i = 0; i < 100000000; i++) {\n        result += Math.sqrt(i) * Math.sin(i);\n      }\n      return n * 2;\n    }\n    \n    // Create computed property here\n    const computedResult = computed(() => expensiveCalculation(numberInput.value));\n    \n    // Add counter state and forceRender function here\n    const renderCounter = ref(0);\n    \n    // Return template with input and result display\n    return {\n      numberInput,\n      computedResult,\n      renderCounter\n    };\n  },\n  template: `\n    <div>\n      <input type=\"number\" v-model=\"numberInput\" />\n      <p>Computed result: {{ computedResult }}</p>\n      <button>Force Re-render</button>\n      <p>Render count: {{ renderCounter }}</p>\n    </div>\n  `\n};",
+        "expectedOutcome": "The button will increment the render counter when clicked, and both the computed result and render count will be displayed.",
+        "successCriteria": [
+          "A click handler function is defined that increments renderCounter, and the button has an @click directive that calls this handler."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure you've both defined a click handler function that increments renderCounter and added the @click directive to the button.",
+        "feedbackWrong": "The button isn't properly wired yet. You need to create a function that increments renderCounter and connect it to the button using @click.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "function",
+            "renderCounter",
+            "++",
+            "@click"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import Vue and required composition APIs",
+        "id": "step1"
+      },
+      {
+        "label": "Create the main Vue component",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize reactive state for number input",
+        "id": "step3"
+      },
+      {
+        "label": "Define an expensive computation function",
+        "id": "step4"
+      },
+      {
+        "label": "Create computed property for the expensive result",
+        "id": "step5"
+      },
+      {
+        "label": "Add input field for number",
+        "id": "step6"
+      },
+      {
+        "label": "Display the computed result",
+        "id": "step7"
+      },
+      {
+        "label": "Add a button to trigger re-render without changing input",
+        "id": "step8"
+      },
+      {
+        "label": "Initialize counter state for re-renders",
+        "id": "step9"
+      },
+      {
+        "label": "Wire button to increment render counter",
+        "id": "step10"
+      }
+    ]
+  },
+  "source": "content"
+}

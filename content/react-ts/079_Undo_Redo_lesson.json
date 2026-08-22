@@ -1,0 +1,335 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-react-ts-79",
+    "track": "react-ts",
+    "lessonNum": 79,
+    "title": "Undo/Redo",
+    "shortName": "P79",
+    "intro": {
+      "tag": "LESSON #79",
+      "title": "Undo/Redo",
+      "body": "In this lesson, you will build a simple text editor with undo and redo functionality. You'll learn how to manage state changes over time by implementing a history stack. The core concepts involve using React hooks like useState and useReducer to track past, present, and future states. You'll work with TypeScript to define types for your state and actions, ensuring type safety. By the end, you'll have a functional editor that lets you undo and redo text edits with buttons.",
+      "usecase": "Undo/redo functionality is essential in professional applications where users need to recover from mistakes or explore different states. You'll find this pattern in design tools like Figma or Photoshop, where designers frequently adjust elements and need to backtrack. In content editors like Notion or Google Docs, undo/redo allows writers to experiment with formatting and content changes safely. Even in complex dashboards with interactive filters and data visualizations, this feature prevents users from losing their work when adjusting parameters."
+    },
+    "objectives": [
+      "Initialize and manage state for tracking undo/redo history in a React component",
+      "Construct handler functions to update state for undo and redo actions",
+      "Apply conditional logic to control the enabling and disabling of undo/redo buttons",
+      "Integrate undo and redo handlers with UI event handlers like onClick",
+      "Render dynamic UI elements that reflect the current state of the undo/redo history",
+      "Manipulate the application state to revert or reapply changes using the history stack"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 9",
+        "title": "Import React and useState",
+        "instruction": "Import React and useState from 'react'.",
+        "hint": "Use the import statement to bring in React and the useState hook.",
+        "analogousExample": "// Importing React and a hook\nimport React, { useState } from 'react';",
+        "seedCode": "// Import React and useState here",
+        "expectedOutcome": "You'll have React and useState available to use in your component.",
+        "successCriteria": [
+          "React and useState are imported from 'react'."
+        ],
+        "feedbackCorrect": "Great! You've successfully imported React and useState.",
+        "feedbackPartial": "You're close. Make sure you're importing both React and useState from 'react'.",
+        "feedbackWrong": "That's not quite right. You need to import React and useState from 'react'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "React",
+            "useState",
+            "'react'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 9",
+        "title": "Create the main App component",
+        "instruction": "Create a functional component named App that returns null for now. Use proper TypeScript typing for the component.",
+        "hint": "You can use either a function declaration or an arrow function. Make sure to specify the return type as JSX.Element or React.ReactElement.",
+        "analogousExample": "// Example of a typed functional component\nfunction App(): JSX.Element {\n  return null;\n}",
+        "seedCode": "import React, { useState } from 'react';\n\n// Create the App component here",
+        "expectedOutcome": "A functional App component with TypeScript typing is defined, returning null.",
+        "successCriteria": [
+          "The App component is defined as a function or arrow function with proper TypeScript return type annotation and returns null."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've created a component, but check if you included the TypeScript return type annotation (like : JSX.Element).",
+        "feedbackWrong": "The App component isn't defined yet. Create a functional component named App that returns null.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "App",
+            "return",
+            "null"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 9",
+        "title": "Define state interface for undo/redo",
+        "instruction": "Inside your App component, define a TypeScript interface named 'UndoRedoState' with three properties: 'current' of type string, 'past' as an array of strings, and 'future' as an array of strings.",
+        "hint": "Use the 'interface' keyword followed by the interface name and property definitions with type annotations.",
+        "analogousExample": "// Example interface for a user\ninterface User {\n  name: string;\n  age: number;\n  email: string;\n}",
+        "seedCode": "import React, { useState } from 'react';\n\n// Create the App component here\n\n// Define the UndoRedoState interface here",
+        "expectedOutcome": "You will have a properly typed interface that describes the shape of your undo/redo state, with 'current' as a string, 'past' as string[], and 'future' as string[].",
+        "successCriteria": [
+          "The UndoRedoState interface is defined with the correct property names and types."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure your interface has all three properties: 'current' (string), 'past' (string[]), and 'future' (string[]).",
+        "feedbackWrong": "The interface definition is missing or incorrect. Remember to use the 'interface' keyword and define all three properties with proper TypeScript types.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "interface",
+            "UndoRedoState",
+            "current",
+            "past",
+            "future",
+            "string",
+            "string[]"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 9",
+        "title": "Initialize undo/redo state with useState",
+        "instruction": "Inside your App component, use useState to initialize a state variable named 'undoRedoState' with the UndoRedoState interface type. Set the initial value to have an empty history array, a currentIndex of -1, and a currentValue of an empty string.",
+        "hint": "Call useState<UndoRedoState>() with the appropriate initial object that matches your interface.",
+        "analogousExample": "// Similar: initializing typed state\nconst [user, setUser] = useState<User>({ name: '', age: 0 });",
+        "seedCode": "import React, { useState } from 'react';\n\n// Create the App component here\n\n// Define the UndoRedoState interface here\n\ninterface UndoRedoState {\n  history: string[];\n  currentIndex: number;\n  currentValue: string;\n}\n\nconst App = () => {\n  // Initialize undo/redo state here\n  \n  return null;\n};\n\nexport default App;",
+        "expectedOutcome": "The undoRedoState variable is properly typed and initialized with the correct structure.",
+        "successCriteria": [
+          "The useState hook is called with the UndoRedoState type and initial object matching the interface."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure your initial object has all three properties from the interface.",
+        "feedbackWrong": "Check that you're using useState with the UndoRedoState type and providing the correct initial value.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "useState",
+            "undoRedoState",
+            "UndoRedoState",
+            "history",
+            "currentIndex",
+            "currentValue"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 9",
+        "title": "Create handler to update the current value",
+        "instruction": "Inside your App component, create a function named handleUpdate that takes a newValue parameter of type string and updates the state to add the new value to history, increment currentIndex, and set currentValue.",
+        "hint": "The function should update all three pieces of state: add newValue to history, increment currentIndex by 1, and set currentValue to newValue.",
+        "analogousExample": "// Similar: a function that updates state\nfunction updateScore(newScore: number) {\n  setScore(newScore);\n}",
+        "seedCode": "import React, { useState } from 'react';\n\ninterface UndoRedoState {\n  history: string[];\n  currentIndex: number;\n  currentValue: string;\n}\n\nconst App = () => {\n  const [state, setState] = useState<UndoRedoState>({\n    history: [],\n    currentIndex: -1,\n    currentValue: ''\n  });\n  \n  // Create handleUpdate function here\n  \n  return null;\n};\n\nexport default App;",
+        "expectedOutcome": "A handleUpdate function is defined that properly updates the undo/redo state when called with a new value.",
+        "successCriteria": [
+          "The handleUpdate function is defined with a newValue parameter, updates history by adding newValue, increments currentIndex by 1, and sets currentValue to newValue."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your handleUpdate function properly updates all three state values: history, currentIndex, and currentValue.",
+        "feedbackWrong": "The handleUpdate function needs to be defined inside the App component with proper state updates. Check the function structure and state update logic.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "handleUpdate",
+            "newValue",
+            "history",
+            "currentIndex",
+            "currentValue"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 9",
+        "title": "Create handler for redo operation",
+        "instruction": "Create a function named handleRedo inside your App component that implements the redo logic to restore the next state from the history array when possible.",
+        "hint": "The handleRedo function should check if there is a future state (currentIndex < history.length - 1), then update the state with the next value from history and increment currentIndex.",
+        "analogousExample": "// Similar: a function that moves to the next item\nfunction goNext() {\n  if (currentIndex < items.length - 1) {\n    setCurrentIndex(currentIndex + 1);\n  }\n}",
+        "seedCode": "import React, { useState } from 'react';\n\ninterface UndoRedoState {\n  history: string[];\n  currentIndex: number;\n  currentValue: string;\n}\n\nconst App = () => {\n  const [state, setState] = useState<UndoRedoState>({\n    history: [],\n    currentIndex: -1,\n    currentValue: ''\n  });\n  \n  // Create handleUpdate function here\n  \n  // Create handleUndo function here\n  \n  // Create handleRedo function here\n  \n  return null;\n};\n\nexport default App;",
+        "expectedOutcome": "A handleRedo function is defined inside the App component that implements the redo logic.",
+        "successCriteria": [
+          "The handleRedo function is created with proper logic to check for future states and update the state accordingly."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've created a function, but check the logic: it should verify there's a future state (currentIndex < history.length - 1) before updating.",
+        "feedbackWrong": "The handleRedo function is missing or incorrect. Review the undo/redo pattern: redo moves forward in the history array when possible.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "handleRedo",
+            "state",
+            "setState",
+            "history",
+            "currentIndex"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 9",
+        "title": "Add input field for value editing",
+        "instruction": "Inside the component's return statement, add an input element with its value bound to state.currentValue and its onChange event wired to the handleUpdate function.",
+        "hint": "Use the input element with value and onChange attributes. The onChange should call handleUpdate with the event's target value.",
+        "analogousExample": "// Example: input element with controlled value\n<input \n  type=\"text\" \n  value={currentValue} \n  onChange={(e) => handleUpdate(e.target.value)} \n/>",
+        "seedCode": "import React, { useState } from 'react';\n\ninterface UndoRedoState {\n  history: string[];\n  currentIndex: number;\n  currentValue: string;\n}\n\nconst App = () => {\n  const [state, setState] = useState<UndoRedoState>({\n    history: [],\n    currentIndex: -1,\n    currentValue: ''\n  });\n  \n  const handleUpdate = (newValue: string) => {\n    // Implementation will be added later\n  };\n  \n  const handleUndo = () => {\n    // Implementation will be added later\n  };\n  \n  const handleRedo = () => {\n    // Implementation will be added later\n  };\n  \n  return (\n    <div>\n      {/* Add input field here */}\n    </div>\n  );\n};\n\nexport default App;",
+        "expectedOutcome": "The input field will appear in the UI, allowing the user to type and edit the current value. The value will be controlled by React state.",
+        "successCriteria": [
+          "Input element is present in the return statement",
+          "value attribute is set to state.currentValue",
+          "onChange attribute calls handleUpdate with e.target.value"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure the input has both value and onChange attributes properly set.",
+        "feedbackWrong": "The input field is missing or not properly configured. Check that you've added an input element with value and onChange attributes.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<input",
+            "value={state.currentValue}",
+            "onChange={",
+            "handleUpdate"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 9",
+        "title": "Add undo button with click handler",
+        "instruction": "Add a button element inside the div that calls handleUndo when clicked and is disabled when there are no past states to undo.",
+        "hint": "Use the button element with onClick={handleUndo}. The disabled attribute should check if state.currentIndex <= 0.",
+        "analogousExample": "// Example: A button with click handler and conditional disabling\n<button onClick={handleClick} disabled={!hasItems}>Click me</button>",
+        "seedCode": "import React, { useState } from 'react';\n\ninterface UndoRedoState {\n  history: string[];\n  currentIndex: number;\n  currentValue: string;\n}\n\nconst App = () => {\n  const [state, setState] = useState<UndoRedoState>({\n    history: [],\n    currentIndex: -1,\n    currentValue: ''\n  });\n  \n  const handleUpdate = (newValue: string) => {\n    // Implementation will be added later\n  };\n  \n  const handleUndo = () => {\n    // Implementation will be added later\n  };\n  \n  const handleRedo = () => {\n    // Implementation will be added later\n  };\n  \n  return (\n    <div>\n      {/* Add input field here */}\n      {/* Add undo button here */}\n    </div>\n  );\n};\n\nexport default App;",
+        "expectedOutcome": "A button appears in the UI that triggers undo functionality and is disabled when no undo history exists.",
+        "successCriteria": [
+          "Button element is present with onClick={handleUndo}",
+          "Button has disabled attribute that checks state.currentIndex <= 0"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You added a button, but check that it has both onClick and disabled attributes correctly implemented.",
+        "feedbackWrong": "The undo button is missing or not properly configured. Add a button with onClick={handleUndo} and disabled={state.currentIndex <= 0}.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<button",
+            "onClick={handleUndo}",
+            "disabled={state.currentIndex",
+            "}"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 9",
+        "title": "Add redo button with click handler",
+        "instruction": "Add a button element for the redo functionality. Place it after the undo button, wire its onClick event to the handleRedo function, and disable it when there are no future states to redo to.",
+        "hint": "Use the same pattern as the undo button: check if state.currentIndex is less than state.history.length - 1 to determine if redo should be enabled.",
+        "analogousExample": "// Similar: button with conditional disabling\n<button \n  onClick={handleAction}\n  disabled={!canPerformAction}\n>\n  Perform Action\n</button>",
+        "seedCode": "import React, { useState } from 'react';\n\ninterface UndoRedoState {\n  history: string[];\n  currentIndex: number;\n  currentValue: string;\n}\n\nconst App = () => {\n  const [state, setState] = useState<UndoRedoState>({\n    history: [],\n    currentIndex: -1,\n    currentValue: ''\n  });\n  \n  const handleUpdate = (newValue: string) => {\n    // Implementation will be added later\n  };\n  \n  const handleUndo = () => {\n    // Implementation will be added later\n  };\n  \n  const handleRedo = () => {\n    // Implementation will be added later\n  };\n  \n  return (\n    <div>\n      <input \n        type=\"text\" \n        value={state.currentValue} \n        onChange={(e) => handleUpdate(e.target.value)} \n      />\n      <button \n        onClick={handleUndo}\n        disabled={state.currentIndex <= 0}\n      >\n        Undo\n      </button>\n      {/* Add redo button here */}\n    </div>\n  );\n};\n\nexport default App;",
+        "expectedOutcome": "A redo button appears next to the undo button. It calls handleRedo when clicked and is disabled when there are no future states available.",
+        "successCriteria": [
+          "The redo button is present with onClick={handleRedo}, has appropriate disabled logic, and appears after the undo button in the JSX."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added a button, but check: 1) Is onClick wired to handleRedo? 2) Does the disabled condition check if currentIndex < history.length - 1? 3) Is the button placed after the undo button?",
+        "feedbackWrong": "The redo button is missing or incorrectly implemented. Review the instruction: add a button element with onClick={handleRedo} and appropriate disabled logic based on the state.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<button",
+            "onClick={handleRedo}",
+            "disabled={",
+            "state.currentIndex",
+            "state.history.length"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import React and useState",
+        "id": "step1"
+      },
+      {
+        "label": "Create the main App component",
+        "id": "step2"
+      },
+      {
+        "label": "Define state interface for undo/redo",
+        "id": "step3"
+      },
+      {
+        "label": "Initialize undo/redo state with useState",
+        "id": "step4"
+      },
+      {
+        "label": "Create handler to update the current value",
+        "id": "step5"
+      },
+      {
+        "label": "Create handler for redo operation",
+        "id": "step6"
+      },
+      {
+        "label": "Add input field for value editing",
+        "id": "step7"
+      },
+      {
+        "label": "Add undo button with click handler",
+        "id": "step8"
+      },
+      {
+        "label": "Add redo button with click handler",
+        "id": "step9"
+      }
+    ]
+  },
+  "source": "content"
+}

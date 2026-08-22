@@ -1,0 +1,330 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-node-19",
+    "track": "node",
+    "lessonNum": 19,
+    "title": "Build user signup login endpoints",
+    "shortName": "P19",
+    "intro": {
+      "tag": "LESSON #19",
+      "title": "Build user signup login endpoints",
+      "body": "In this lesson, you will build a simple Node.js API with two endpoints: one for user signup and one for user login. You will learn how to handle HTTP POST requests using the Express framework to receive and process user data, such as email and password. The core programming concept involves creating route handlers that manage request and response objects to validate input and return appropriate JSON messages. You'll use essential Node.js constructs like Express routing, middleware for parsing JSON, and basic conditional logic to simulate user authentication.",
+      "usecase": "User signup and login endpoints are the foundational authentication layer for virtually any web application that requires user accounts. You'll implement these endpoints when building features like registration forms for e-commerce sites, login screens for social media platforms, or secure access panels for banking dashboards. As a Node.js developer, you'll frequently create these RESTful endpoints to handle user credentials, manage sessions, and protect sensitive data across different client applications."
+    },
+    "objectives": [
+      "Construct a user signup endpoint that validates and stores new user data",
+      "Implement a login endpoint that authenticates users with email and password",
+      "Configure password hashing to securely store user credentials",
+      "Integrate validation middleware to check request data formats",
+      "Initialize a user data structure to persist registration information",
+      "Apply error handling to manage duplicate registrations and invalid logins",
+      "Manipulate response objects to return appropriate status codes and messages"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 9",
+        "title": "Import Express and required modules",
+        "instruction": "Import Express, body-parser, and create an Express application instance.",
+        "hint": "Use require() statements to import the modules and assign them to variables. Then create an Express app instance.",
+        "analogousExample": "// Importing modules and creating an instance\nconst express = require('express');\nconst bodyParser = require('body-parser');\nconst app = express();",
+        "seedCode": "// Import Express, body-parser, and create an Express application instance",
+        "expectedOutcome": "The Express app is set up with body-parser middleware imported and ready for use.",
+        "successCriteria": [
+          "Express and body-parser are imported using require(), and an Express application instance is created."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure you've imported both Express and body-parser and created the app instance.",
+        "feedbackWrong": "Check that you've imported both modules and created the Express app instance correctly.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "require('express')",
+            "require('body-parser')",
+            "express()",
+            "app"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 9",
+        "title": "Initialize Express app and middleware",
+        "instruction": "Initialize the Express application instance and add the JSON parsing middleware using body-parser.",
+        "hint": "Call the express() function to create an app instance, then use app.use() with bodyParser.json() as middleware.",
+        "analogousExample": "// Initialize Express app and middleware\nconst app = express();\napp.use(bodyParser.json());",
+        "seedCode": "// Import Express, body-parser, and create an Express application instance\nconst express = require('express');\nconst bodyParser = require('body-parser');\n\n// Initialize Express app and add JSON middleware\n",
+        "expectedOutcome": "The Express app will be initialized and configured to parse JSON request bodies.",
+        "successCriteria": [
+          "Express app instance is created and body-parser JSON middleware is added using app.use()"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure you've both created the app instance and added the body-parser middleware.",
+        "feedbackWrong": "The app initialization or middleware setup is incomplete. Check that you've called express() and used app.use() with bodyParser.json().",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "express()",
+            "app.use",
+            "bodyParser.json"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 9",
+        "title": "Create in-memory user storage",
+        "instruction": "Create an empty array named 'users' to store user objects. This will serve as temporary in-memory storage for user credentials.",
+        "hint": "Declare a variable using 'const' and assign it an empty array [].",
+        "analogousExample": "// Example: creating an empty array for storing items\nconst items = [];",
+        "seedCode": "// Import Express, body-parser, and create an Express application instance\nconst express = require('express');\nconst bodyParser = require('body-parser');\n\n// Initialize Express app and add JSON middleware\nconst app = express();\napp.use(bodyParser.json());\n\n// Create in-memory user storage\n",
+        "expectedOutcome": "An empty array named 'users' is created to store user objects with email and password fields.",
+        "successCriteria": [
+          "The 'users' array is declared and initialized as an empty array."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure you've declared a variable named 'users' and assigned it an empty array [].",
+        "feedbackWrong": "The 'users' array wasn't created correctly. You need to declare a variable named 'users' and initialize it as an empty array.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "users",
+            "=",
+            "[]"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 9",
+        "title": "Define user signup endpoint structure",
+        "instruction": "Create a POST route at '/signup' that extracts email and password from the request body. Use app.post() with the route path and a callback function that receives request and response objects.",
+        "hint": "The route should be defined as app.post('/signup', (req, res) => { ... }). Inside the callback, you can access the request body with req.body.",
+        "analogousExample": "// Example POST endpoint structure\napp.post('/api/users', (req, res) => {\n  const { name, age } = req.body;\n  // Process user data here\n});",
+        "seedCode": "// Import Express, body-parser, and create an Express application instance\nconst express = require('express');\nconst bodyParser = require('body-parser');\n\n// Initialize Express app and add JSON middleware\nconst app = express();\napp.use(bodyParser.json());\n\n// Create in-memory user storage\n\n// Define POST /signup endpoint\napp.post('/signup', (req, res) => {\n  const { email, password } = req.body;\n  // TODO: Add user registration logic\n});",
+        "expectedOutcome": "A POST route at '/signup' is created that extracts email and password from the request body.",
+        "successCriteria": [
+          "The code includes app.post('/signup', callback) with a callback that extracts email and password from req.body."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're using app.post() with '/signup' and extracting email and password from req.body.",
+        "feedbackWrong": "The endpoint structure isn't correct. Review how to define POST routes in Express and access request body data.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "app.post",
+            "'/signup'",
+            "req.body",
+            "email",
+            "password"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 9",
+        "title": "Add user validation logic",
+        "instruction": "Inside the POST /signup endpoint handler, add validation to check if both email and password are provided in the request body. If either is missing, return a 400 status with an appropriate error message.",
+        "hint": "Check if email and password exist and are not empty strings. Use an if statement to return an error response when validation fails.",
+        "analogousExample": "// Example: validating required fields\nif (!email || !password) {\n  return res.status(400).json({ error: 'Email and password are required' });\n}",
+        "seedCode": "// Import Express, body-parser, and create an Express application instance\nconst express = require('express');\nconst bodyParser = require('body-parser');\n\n// Initialize Express app and add JSON middleware\nconst app = express();\napp.use(bodyParser.json());\n\n// Create in-memory user storage\n\n// Define POST /signup endpoint\napp.post('/signup', (req, res) => {\n  const { email, password } = req.body;\n  // TODO: Add validation logic here\n  // TODO: Add user registration logic\n});",
+        "expectedOutcome": "The signup endpoint now validates that both email and password are provided before proceeding with registration.",
+        "successCriteria": [
+          "The endpoint handler includes validation that checks for missing email or password and returns a 400 status with an error message."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added some validation, but make sure to check both fields and return a proper 400 error response.",
+        "feedbackWrong": "The validation logic is missing or incorrect. Check that you're validating both email and password and returning a 400 status with an error message.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "if",
+            "email",
+            "password",
+            "400",
+            "status",
+            "json",
+            "error"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 9",
+        "title": "Implement duplicate user check",
+        "instruction": "Inside the /signup route handler, add logic to check if a user with the same email already exists in the users array before proceeding with registration.",
+        "hint": "You can use the Array.find() method to search for an existing user with the matching email.",
+        "analogousExample": "// Example: Checking for existing item in an array\nconst items = [{ id: 1, name: 'apple' }, { id: 2, name: 'banana' }];\nconst newItem = { id: 3, name: 'apple' };\nconst existingItem = items.find(item => item.name === newItem.name);\nif (existingItem) {\n  console.log('Item already exists!');\n}",
+        "seedCode": "// Import Express, body-parser, and create an Express application instance\nconst express = require('express');\nconst bodyParser = require('body-parser');\n\n// Initialize Express app and add JSON middleware\nconst app = express();\napp.use(bodyParser.json());\n\n// Create in-memory user storage\nconst users = [];\n\n// Define POST /signup endpoint\napp.post('/signup', (req, res) => {\n  const { email, password } = req.body;\n  // TODO: Add validation logic here\n  // TODO: Add user registration logic\n});",
+        "expectedOutcome": "The /signup endpoint should now include a check that prevents duplicate user registrations by verifying the email doesn't already exist in the users array.",
+        "successCriteria": [
+          "The signup handler includes a check for existing users with the same email using Array.find() or similar method."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're properly checking if a user with the same email already exists in the users array before proceeding.",
+        "feedbackWrong": "The duplicate check isn't implemented correctly. Look for an existing user with the same email in the users array before allowing registration.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "find",
+            "email",
+            "users",
+            "existing"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 9",
+        "title": "Complete signup endpoint with response",
+        "instruction": "Inside the /signup endpoint handler, store the new user in the users array and return a 201 status with a success message. Also handle the case where validation fails by returning a 400 status with an error message.",
+        "hint": "After validating the email and password, push the new user object to the users array. Use res.status(201).json() for success and res.status(400).json() for validation errors.",
+        "analogousExample": "// Example: storing data and returning response\napp.post('/items', (req, res) => {\n  const { name } = req.body;\n  if (!name) {\n    return res.status(400).json({ error: 'Name is required' });\n  }\n  items.push({ name });\n  res.status(201).json({ message: 'Item added', item: { name } });\n});",
+        "seedCode": "// Import Express, body-parser, and create an Express application instance\nconst express = require('express');\nconst bodyParser = require('body-parser');\n\n// Initialize Express app and add JSON middleware\nconst app = express();\napp.use(bodyParser.json());\n\n// Create in-memory user storage\nconst users = [];\n\n// Define POST /signup endpoint\napp.post('/signup', (req, res) => {\n  const { email, password } = req.body;\n  // TODO: Add validation logic here\n  // TODO: Add user registration logic\n});",
+        "expectedOutcome": "The signup endpoint will now store valid users in memory and return appropriate HTTP responses for both success and validation failure cases.",
+        "successCriteria": [
+          "The /signup endpoint stores new user objects in the users array and returns 201 with success message for valid requests, and returns 400 with error message for invalid requests."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure you're storing the user object in the users array and returning both success (201) and error (400) responses with appropriate JSON messages.",
+        "feedbackWrong": "The signup endpoint needs to store users in the users array and return proper HTTP responses. Check that you're using res.status(201).json() for success and res.status(400).json() for validation errors.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "users.push",
+            "res.status(201)",
+            "res.status(400)",
+            ".json("
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 9",
+        "title": "Define user login endpoint structure",
+        "instruction": "Create a POST route at '/login' that extracts email and password from the request body.",
+        "hint": "Use app.post() with the '/login' path and a callback function that receives req and res parameters.",
+        "analogousExample": "// Similar: another POST endpoint\napp.post('/api/data', (req, res) => {\n  const { name, value } = req.body;\n  // Handle the data here\n});",
+        "seedCode": "// Import Express, body-parser, and create an Express application instance\nconst express = require('express');\nconst bodyParser = require('body-parser');\n\n// Initialize Express app and add JSON middleware\nconst app = express();\napp.use(bodyParser.json());\n\n// Create in-memory user storage\nconst users = [];\n\n// Define POST /signup endpoint\napp.post('/signup', (req, res) => {\n  const { email, password } = req.body;\n  // TODO: Add validation logic here\n  // TODO: Add user registration logic\n});\n\n// TODO: Create POST /login endpoint here",
+        "expectedOutcome": "A new POST route for '/login' is defined with email and password extracted from req.body.",
+        "successCriteria": [
+          "The code includes app.post('/login', (req, res) => { const { email, password } = req.body; });"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're using app.post() with '/login' and extracting email and password from req.body.",
+        "feedbackWrong": "The login endpoint structure isn't correct. Create a POST route at '/login' that extracts email and password from the request body.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "app.post",
+            "'/login'",
+            "req.body",
+            "email",
+            "password"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 9",
+        "title": "Implement user authentication logic",
+        "instruction": "Inside the POST /login endpoint, add logic to find a user by email from the users array and compare the provided password with the stored password.",
+        "hint": "Use the find() method on the users array to locate a user with matching email, then check if the password from req.body matches the user's password.",
+        "analogousExample": "// Example: Finding and validating user\nconst user = users.find(u => u.email === email);\nif (!user) {\n  return res.status(401).json({ message: 'Invalid credentials' });\n}\nif (user.password !== password) {\n  return res.status(401).json({ message: 'Invalid credentials' });\n}",
+        "seedCode": "// Import Express, body-parser, and create an Express application instance\nconst express = require('express');\nconst bodyParser = require('body-parser');\n\n// Initialize Express app and add JSON middleware\nconst app = express();\napp.use(bodyParser.json());\n\n// Create in-memory user storage\nconst users = [];\n\n// Define POST /signup endpoint\napp.post('/signup', (req, res) => {\n  const { email, password } = req.body;\n  // TODO: Add validation logic here\n  // TODO: Add user registration logic\n});\n\n// TODO: Create POST /login endpoint here\napp.post('/login', (req, res) => {\n  const { email, password } = req.body;\n  // Add authentication logic here\n});",
+        "expectedOutcome": "The login endpoint will now be able to verify user credentials against the stored user data.",
+        "successCriteria": [
+          "The login endpoint includes code to find a user by email and compare passwords, returning appropriate error responses if authentication fails."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added some authentication logic, but make sure to both find the user by email and compare passwords with proper error handling.",
+        "feedbackWrong": "The authentication logic is missing or incomplete. The login endpoint should find a user by email and verify the password matches.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "find",
+            "email",
+            "password",
+            "401",
+            "credentials"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import Express and required modules",
+        "id": "step1"
+      },
+      {
+        "label": "Initialize Express app and middleware",
+        "id": "step2"
+      },
+      {
+        "label": "Create in-memory user storage",
+        "id": "step3"
+      },
+      {
+        "label": "Define user signup endpoint structure",
+        "id": "step4"
+      },
+      {
+        "label": "Add user validation logic",
+        "id": "step5"
+      },
+      {
+        "label": "Implement duplicate user check",
+        "id": "step6"
+      },
+      {
+        "label": "Complete signup endpoint with response",
+        "id": "step7"
+      },
+      {
+        "label": "Define user login endpoint structure",
+        "id": "step8"
+      },
+      {
+        "label": "Implement user authentication logic",
+        "id": "step9"
+      }
+    ]
+  },
+  "source": "content"
+}

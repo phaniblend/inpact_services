@@ -1,0 +1,358 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-node-79",
+    "track": "node",
+    "lessonNum": 79,
+    "title": "Build tenant level data isolation guards",
+    "shortName": "P79",
+    "intro": {
+      "tag": "LESSON #79",
+      "title": "Build tenant level data isolation guards",
+      "body": "In this lesson, you will build tenant-level data isolation guards to securely separate data for different users or organizations (tenants) in a multi-tenant application. You will learn the core concept of middleware-based request filtering, which checks incoming requests to ensure data access is restricted to the correct tenant. The main technologies involved are Node.js, Express middleware, and simple request/response handling. By the end, you will have a functional guard that validates tenant IDs and prevents unauthorized data access, a fundamental skill for building secure, scalable applications.",
+      "usecase": "Tenant-level data isolation is essential in multi-tenant SaaS applications where a single software instance serves multiple customers (tenants). For example, in a dashboard like Salesforce or HubSpot, each company's data must be completely segregated—customer records, analytics, and reports should only be accessible to users from that specific tenant. Developers implement these guards at the database query level, ensuring that every data request automatically filters by tenant ID, preventing accidental data leaks between organizations. This pattern also appears in admin panels where support teams need to view data but must be restricted to specific client accounts, maintaining strict privacy and compliance with regulations like GDPR."
+    },
+    "objectives": [
+      "Implement middleware to extract tenant context from incoming requests",
+      "Configure database queries to filter data by tenant identifier",
+      "Construct validation functions to enforce tenant-level access rules",
+      "Initialize tenant-aware service layers that isolate data operations",
+      "Integrate tenant isolation guards into existing API endpoints",
+      "Manipulate query parameters to maintain tenant boundaries across operations",
+      "Apply tenant context validation to prevent cross-tenant data exposure"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 10",
+        "title": "Import required Node.js modules",
+        "instruction": "Import the 'express' module for creating the server and the 'uuid' module for generating unique tenant IDs.",
+        "hint": "Use the require() function to import both modules. You'll need these for building tenant isolation guards.",
+        "analogousExample": "// Example: importing modules in Node.js\nconst fs = require('fs');\nconst path = require('path');",
+        "seedCode": "// Import express and uuid modules here",
+        "expectedOutcome": "The express and uuid modules are imported and ready to use for tenant isolation functionality.",
+        "successCriteria": [
+          "Both express and uuid modules are imported using require() statements."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've imported one module, but need both. Make sure to import both 'express' and 'uuid' using require().",
+        "feedbackWrong": "The imports are missing or incorrect. You need to import both 'express' and 'uuid' modules for this lesson.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "require",
+            "express",
+            "uuid"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 10",
+        "title": "Initialize Express application",
+        "instruction": "Create an Express application instance and store it in a constant named 'app'.",
+        "hint": "Call the express() function to create an Express application instance.",
+        "analogousExample": "// Creating an Express application instance\nconst app = express();",
+        "seedCode": "// Import express and uuid modules here\n\n// Create Express application instance here",
+        "expectedOutcome": "The Express application instance is created and ready for configuration.",
+        "successCriteria": [
+          "An Express application instance is created and assigned to a constant named 'app'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're calling express() and assigning the result to a constant named 'app'.",
+        "feedbackWrong": "The Express application instance wasn't created correctly. Check the syntax for creating an Express app.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "app",
+            "=",
+            "express()"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 10",
+        "title": "Create in-memory data store",
+        "instruction": "Create an empty object named 'tenantData' to serve as an in-memory data store for tenant-specific data.",
+        "hint": "Initialize a variable with an empty object literal {}.",
+        "analogousExample": "// Example: creating a simple in-memory store\nconst userStore = {};",
+        "seedCode": "// Import express and uuid modules here\n\n// Create Express application instance here\n\n// Create in-memory data store here",
+        "expectedOutcome": "An object named 'tenantData' is created to hold tenant-specific data.",
+        "successCriteria": [
+          "The 'tenantData' object is declared and initialized as an empty object."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you've created an empty object named 'tenantData'.",
+        "feedbackWrong": "Try creating an empty object named 'tenantData' to serve as the data store.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "tenantData",
+            "=",
+            "{}"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 10",
+        "title": "Define tenant data structure",
+        "instruction": "Define a tenant data structure by adding a 'tenants' object property to your in-memory store. Each tenant should have a unique ID as the key, with properties for 'name' and 'data' (an array).",
+        "hint": "Add a property to your existing store object. Use tenant IDs as keys, with each value being an object containing name and data fields.",
+        "analogousExample": "// Example: Adding structured data to an object\nconst store = {\n  users: {\n    'user-123': { name: 'Alice', items: [] },\n    'user-456': { name: 'Bob', items: [] }\n  }\n};",
+        "seedCode": "// Import express and uuid modules here\n\n// Create Express application instance here\n\n// Create in-memory data store here\nconst store = {};\n\n// Define tenant data structure here",
+        "expectedOutcome": "The store object now has a 'tenants' property containing structured tenant data with unique IDs as keys.",
+        "successCriteria": [
+          "Store object contains a 'tenants' property with at least one sample tenant object having 'name' and 'data' properties."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your store has a 'tenants' property with proper tenant objects containing 'name' and 'data' fields.",
+        "feedbackWrong": "The tenant data structure wasn't properly defined. Check that you added a 'tenants' property to the store with the correct structure.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "tenants",
+            "name",
+            "data"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 10",
+        "title": "Create middleware to extract tenant ID",
+        "instruction": "Create an Express middleware function named 'extractTenantId' that extracts a tenant ID from the 'x-tenant-id' request header and attaches it to the request object as 'req.tenantId'.",
+        "hint": "Define a function that takes (req, res, next) as parameters, reads the 'x-tenant-id' header from req.headers, and assigns it to req.tenantId before calling next().",
+        "analogousExample": "// Example middleware function\nfunction extractTenantId(req, res, next) {\n  req.tenantId = req.headers['x-tenant-id'];\n  next();\n}",
+        "seedCode": "// Import express and uuid modules here\n\n// Create Express application instance here\n\n// Create in-memory data store here\nconst store = {};\n\n// Define tenant data structure here\n\n// Create middleware to extract tenant ID here",
+        "expectedOutcome": "A middleware function named extractTenantId is defined that reads the x-tenant-id header and attaches it to the request object.",
+        "successCriteria": [
+          "The extractTenantId middleware function is defined with proper parameters, extracts the x-tenant-id header, assigns it to req.tenantId, and calls next()."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your middleware function: 1) Takes (req, res, next) parameters, 2) Reads req.headers['x-tenant-id'], 3) Assigns it to req.tenantId, and 4) Calls next() to continue the request chain.",
+        "feedbackWrong": "The middleware function isn't quite right. Remember to create a function named extractTenantId that extracts the tenant ID from request headers and attaches it to the request object.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "extractTenantId",
+            "req.headers",
+            "x-tenant-id",
+            "req.tenantId",
+            "next()"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 10",
+        "title": "Create tenant validation guard",
+        "instruction": "Create a function named validateTenant that takes a tenantId parameter. Inside the function, check if the tenantId exists as a key in the store object. If it doesn't exist, create a new entry in store with that tenantId as the key and set its value to an empty array.",
+        "hint": "You can use an if statement to check if store[tenantId] is undefined, then assign store[tenantId] = [].",
+        "analogousExample": "// Similar: a function that validates and initializes a user\nfunction validateUser(userId) {\n  if (!users[userId]) {\n    users[userId] = { name: '', email: '' };\n  }\n}",
+        "seedCode": "// Import express and uuid modules here\nconst express = require('express');\nconst { v4: uuidv4 } = require('uuid');\n\n// Create Express application instance here\nconst app = express();\napp.use(express.json());\n\n// Create in-memory data store here\nconst store = {};\n\n// Define tenant data structure here\n\n// Create middleware to extract tenant ID here\nconst tenantMiddleware = (req, res, next) => {\n  const tenantId = req.headers['x-tenant-id'];\n  if (!tenantId) {\n    return res.status(400).json({ error: 'Tenant ID is required' });\n  }\n  req.tenantId = tenantId;\n  next();\n};\n\n// Create tenant validation guard here\n",
+        "expectedOutcome": "A validateTenant function is created that ensures a tenant's data structure exists in the store.",
+        "successCriteria": [
+          "The validateTenant function is defined, checks for the existence of tenantId in store, and initializes it with an empty array if missing."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the function, but make sure it checks if the tenantId exists in store and creates an empty array entry if it doesn't.",
+        "feedbackWrong": "The function is missing or doesn't properly validate and initialize the tenant data structure. Review the instruction.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "validateTenant",
+            "tenantId",
+            "store",
+            "if",
+            "[]"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 10",
+        "title": "Create data retrieval function with tenant guard",
+        "instruction": "Create a function named getTenantData that takes a tenantId parameter and returns the data for that tenant from the store, or null if the tenant doesn't exist.",
+        "hint": "Define a function that accesses the store object using the tenantId as a key and returns the corresponding data.",
+        "analogousExample": "// Example: a simple data retrieval function\nfunction getUserData(userId) {\n  const users = { 'user1': { name: 'Alice' }, 'user2': { name: 'Bob' } };\n  return users[userId] || null;\n}",
+        "seedCode": "// Import express and uuid modules here\nconst express = require('express');\nconst { v4: uuidv4 } = require('uuid');\n\n// Create Express application instance here\nconst app = express();\napp.use(express.json());\n\n// Create in-memory data store here\nconst store = {};\n\n// Define tenant data structure here\n\n// Create middleware to extract tenant ID here\nconst tenantMiddleware = (req, res, next) => {\n  const tenantId = req.headers['x-tenant-id'];\n  if (!tenantId) {\n    return res.status(400).json({ error: 'Tenant ID is required' });\n  }\n  req.tenantId = tenantId;\n  next();\n};\n\n// Create tenant validation guard here\n\n// Create data retrieval function with tenant guard here",
+        "expectedOutcome": "A function named getTenantData that retrieves tenant-specific data from the store.",
+        "successCriteria": [
+          "Function getTenantData is defined, takes a tenantId parameter, accesses store[tenantId], and returns the data or null."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure your function is named getTenantData, takes a tenantId parameter, and returns store[tenantId] or null.",
+        "feedbackWrong": "The function doesn't match the requirements. It should be named getTenantData, take a tenantId parameter, and return the tenant's data from the store.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "getTenantData",
+            "tenantId",
+            "store",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 10",
+        "title": "Create data storage function with tenant guard",
+        "instruction": "Create a function named storeData that accepts tenantId, key, and value parameters, validates the tenant exists in the store, and stores the key-value pair only for that tenant.",
+        "hint": "Check if store[tenantId] exists before storing data. If the tenant doesn't exist, return an error message.",
+        "analogousExample": "// Similar: storing data for a specific user\nfunction storeUserData(userId, key, value) {\n  if (!users[userId]) {\n    return { error: 'User not found' };\n  }\n  users[userId][key] = value;\n  return { success: true };\n}",
+        "seedCode": "// Import express and uuid modules here\nconst express = require('express');\nconst { v4: uuidv4 } = require('uuid');\n\n// Create Express application instance here\nconst app = express();\napp.use(express.json());\n\n// Create in-memory data store here\nconst store = {};\n\n// Define tenant data structure here\n\n// Create middleware to extract tenant ID here\nconst tenantMiddleware = (req, res, next) => {\n  const tenantId = req.headers['x-tenant-id'];\n  if (!tenantId) {\n    return res.status(400).json({ error: 'Tenant ID is required' });\n  }\n  req.tenantId = tenantId;\n  next();\n};\n\n// Create tenant validation guard here\n\n// Create data retrieval function with tenant guard here\n\n// Create data storage function with tenant guard here",
+        "expectedOutcome": "A storeData function that validates tenant existence before storing data, ensuring tenant-level isolation.",
+        "successCriteria": [
+          "storeData function is defined with proper parameter validation and tenant-specific data storage logic."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the function, but make sure it validates the tenant exists in the store before storing the key-value pair.",
+        "feedbackWrong": "The function doesn't properly validate tenant existence or store data with tenant isolation. Review the tenant guard concept.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "storeData",
+            "tenantId",
+            "key",
+            "value",
+            "store[tenantId]",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 10",
+        "title": "Set up GET endpoint with tenant isolation",
+        "instruction": "Create a GET endpoint at '/data' that uses the tenantMiddleware and calls the data retrieval function to return tenant-specific data.",
+        "hint": "Use app.get() to define the endpoint. The route handler should access req.tenantId and pass it to the data retrieval function.",
+        "analogousExample": "// Example: A GET endpoint with middleware\napp.get('/items', authMiddleware, (req, res) => {\n  const items = getItemsForUser(req.userId);\n  res.json(items);\n});",
+        "seedCode": "// Import express and uuid modules here\nconst express = require('express');\nconst { v4: uuidv4 } = require('uuid');\n\n// Create Express application instance here\nconst app = express();\napp.use(express.json());\n\n// Create in-memory data store here\nconst store = {};\n\n// Define tenant data structure here\n\n// Create middleware to extract tenant ID here\nconst tenantMiddleware = (req, res, next) => {\n  const tenantId = req.headers['x-tenant-id'];\n  if (!tenantId) {\n    return res.status(400).json({ error: 'Tenant ID is required' });\n  }\n  req.tenantId = tenantId;\n  next();\n};\n\n// Create tenant validation guard here\n\n// Create data retrieval function with tenant guard here\n\n// Create data storage function with tenant guard here\n\n// Create GET endpoint with tenant isolation here",
+        "expectedOutcome": "A GET endpoint is defined that uses tenantMiddleware and retrieves tenant-specific data.",
+        "successCriteria": [
+          "The endpoint is defined with app.get('/data', tenantMiddleware, handler). The handler uses req.tenantId and calls the data retrieval function."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're using app.get() with '/data' route, tenantMiddleware, and a handler that uses req.tenantId.",
+        "feedbackWrong": "The endpoint is not correctly set up. Review how to define Express GET endpoints with middleware.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "app.get",
+            "'/data'",
+            "tenantMiddleware",
+            "req.tenantId"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 10",
+        "title": "Set up POST endpoint with tenant isolation",
+        "instruction": "Create a POST endpoint at '/data' that uses the tenant middleware and stores data with tenant isolation.",
+        "hint": "Use app.post() to define the endpoint, include tenantMiddleware, and call a data storage function that accepts tenantId and request body.",
+        "analogousExample": "// Example POST endpoint with middleware\napp.post('/items', authMiddleware, (req, res) => {\n  const newItem = req.body;\n  const result = storeItem(newItem);\n  res.status(201).json(result);\n});",
+        "seedCode": "// Import express and uuid modules here\nconst express = require('express');\nconst { v4: uuidv4 } = require('uuid');\n\n// Create Express application instance here\nconst app = express();\napp.use(express.json());\n\n// Create in-memory data store here\nconst store = {};\n\n// Define tenant data structure here\n\n// Create middleware to extract tenant ID here\nconst tenantMiddleware = (req, res, next) => {\n  const tenantId = req.headers['x-tenant-id'];\n  if (!tenantId) {\n    return res.status(400).json({ error: 'Tenant ID is required' });\n  }\n  req.tenantId = tenantId;\n  next();\n};\n\n// Create tenant validation guard here\n\n// Create data retrieval function with tenant guard here\n\n// Create data storage function with tenant guard here\n\n// Create GET endpoint with tenant isolation here\n\n// Create POST endpoint with tenant isolation here",
+        "expectedOutcome": "A POST endpoint is defined that uses tenantMiddleware and stores data with tenant isolation.",
+        "successCriteria": [
+          "The endpoint uses app.post() at '/data', includes tenantMiddleware, and calls a data storage function."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure the endpoint uses app.post() at '/data', includes tenantMiddleware, and calls a data storage function.",
+        "feedbackWrong": "The POST endpoint is missing or incorrect. Review the instruction and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "app.post",
+            "'/data'",
+            "tenantMiddleware",
+            "storeData"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import required Node.js modules",
+        "id": "step1"
+      },
+      {
+        "label": "Initialize Express application",
+        "id": "step2"
+      },
+      {
+        "label": "Create in-memory data store",
+        "id": "step3"
+      },
+      {
+        "label": "Define tenant data structure",
+        "id": "step4"
+      },
+      {
+        "label": "Create middleware to extract tenant ID",
+        "id": "step5"
+      },
+      {
+        "label": "Create tenant validation guard",
+        "id": "step6"
+      },
+      {
+        "label": "Create data retrieval function with tenant guard",
+        "id": "step7"
+      },
+      {
+        "label": "Create data storage function with tenant guard",
+        "id": "step8"
+      },
+      {
+        "label": "Set up GET endpoint with tenant isolation",
+        "id": "step9"
+      },
+      {
+        "label": "Set up POST endpoint with tenant isolation",
+        "id": "step10"
+      }
+    ]
+  },
+  "source": "content"
+}

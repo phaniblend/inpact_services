@@ -1,0 +1,357 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-vue-85",
+    "track": "vue",
+    "lessonNum": 85,
+    "title": "Concurrent Mode Gotchas",
+    "shortName": "P85",
+    "intro": {
+      "tag": "LESSON #85",
+      "title": "Concurrent Mode Gotchas",
+      "body": "In this lesson, you will build a simple Vue application that demonstrates common pitfalls when working with asynchronous operations, such as race conditions and state update conflicts. You'll learn how to use Vue's Composition API with `ref` and `computed` to manage reactive state, and implement `watch` to handle side effects safely. The main technologies involved are Vue 3, JavaScript, and key Vue reactivity features. By the end, you'll understand how to avoid these 'gotchas' and write more predictable, concurrent-friendly code.",
+      "usecase": "In real-world Vue applications, concurrent mode challenges often appear when building complex dashboards with multiple live-updating widgets, such as financial trading platforms or real-time analytics interfaces. Developers encounter these gotchas when implementing interactive data filters that trigger simultaneous API calls, or when managing overlapping state updates in multi-step forms with auto-save functionality. Understanding these patterns is crucial for preventing UI flickering, race conditions, and inconsistent state in production applications where users expect smooth, predictable interactions across interconnected components."
+    },
+    "objectives": [
+      "Implement a reactive state that demonstrates race conditions in concurrent Vue updates",
+      "Construct a component that uses Suspense boundaries to handle asynchronous dependencies",
+      "Apply the `nextTick` utility to control the timing of DOM updates after state changes",
+      "Configure a watcher with the `flush` option to manipulate when side effects run relative to the render cycle",
+      "Integrate the `onMounted` and `onUpdated` lifecycle hooks to observe and debug rendering phases",
+      "Initialize a ref within a computed property to avoid stale closures in concurrent scenarios",
+      "Render conditional content using `v-if` with `key` attributes to prevent unwanted DOM reuse during fast updates"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 10",
+        "title": "Import Vue and ref from 'vue'",
+        "instruction": "Import Vue and ref from the 'vue' package.",
+        "hint": "Use the import statement to bring in Vue and the ref function for reactive state.",
+        "analogousExample": "// Importing Vue and a reactive utility\nimport { ref } from 'vue'",
+        "seedCode": "// Import Vue and ref here",
+        "expectedOutcome": "The Vue package and ref function are imported, enabling reactive state management.",
+        "successCriteria": [
+          "Vue and ref are imported from 'vue'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're importing both Vue and ref from the 'vue' package.",
+        "feedbackWrong": "Check the import statement. You need to import Vue and ref from 'vue'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "vue",
+            "ref",
+            "'vue'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 10",
+        "title": "Create the main Vue component",
+        "instruction": "Define a Vue component named 'ConcurrentGotchasDemo' with a template and script section. The component should be a single-file component structure.",
+        "hint": "In Vue single-file components, you need to export a default object with a template property and a script section. Start by creating the basic component structure.",
+        "analogousExample": "// Basic Vue component structure\nexport default {\n  template: `\n    <div>\n      <!-- Component content goes here -->\n    </div>\n  `\n}",
+        "seedCode": "<template>\n  <!-- Component content will go here -->\n</template>\n\n<script>\nimport { ref } from 'vue';\n\nexport default {\n  // Component logic will go here\n};\n</script>",
+        "expectedOutcome": "A Vue single-file component named 'ConcurrentGotchasDemo' with proper template and script sections is created.",
+        "successCriteria": [
+          "The component is defined as a default export with template and script sections, and uses the name 'ConcurrentGotchasDemo' in the export."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you've exported the component as default and included both template and script sections.",
+        "feedbackWrong": "The component structure isn't quite right. Remember to create a Vue single-file component with template and script sections, and export it as default.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "export default",
+            "template:",
+            "script:",
+            "ConcurrentGotchasDemo"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 10",
+        "title": "Initialize reactive state with ref",
+        "instruction": "Inside the component's script setup, declare two reactive state variables using ref(): one named counter initialized to 0, and another named message initialized to an empty string.",
+        "hint": "Use the ref() function from Vue to create reactive references. The syntax is: const variableName = ref(initialValue).",
+        "analogousExample": "// Example of reactive state with ref\nconst count = ref(0);\nconst text = ref('');",
+        "seedCode": "<template>\n  <!-- Component content will go here -->\n</template>\n\n<script>\nimport { ref } from 'vue';\n\nexport default {\n  // Component logic will go here\n  setup() {\n    // Declare reactive state variables here\n    \n  }\n};\n</script>",
+        "expectedOutcome": "The component will have two reactive state variables ready to track changes: counter for numeric updates and message for text updates.",
+        "successCriteria": [
+          "Two reactive variables are declared using ref(): counter initialized to 0 and message initialized to ''."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you've declared both variables: counter and message, both using ref() with the correct initial values.",
+        "feedbackWrong": "The step requires declaring two reactive state variables using ref(). Check that you've used the ref() function and initialized counter to 0 and message to an empty string.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "counter",
+            "message",
+            "ref",
+            "0",
+            "''"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 10",
+        "title": "Define a function that simulates concurrent state updates",
+        "instruction": "Inside the setup function, create a function named simulateConcurrentUpdates that will demonstrate problematic concurrent state updates.",
+        "hint": "Define a function that will be called later to trigger multiple state updates in quick succession.",
+        "analogousExample": "// Example: a function that updates state\nfunction updateMultipleTimes() {\n  // Multiple state updates would go here\n}",
+        "seedCode": "<template>\n  <!-- Component content will go here -->\n</template>\n\n<script>\nimport { ref } from 'vue';\n\nexport default {\n  setup() {\n    // Declare reactive state variables here\n    \n    // Define a function that simulates concurrent state updates\n    \n  }\n};\n</script>",
+        "expectedOutcome": "A function named simulateConcurrentUpdates is defined in the setup function, ready to demonstrate concurrent update issues.",
+        "successCriteria": [
+          "The simulateConcurrentUpdates function is defined in the setup function."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've defined a function, but make sure it's named exactly 'simulateConcurrentUpdates' and placed inside the setup function.",
+        "feedbackWrong": "The function wasn't defined correctly. Make sure to create a function named 'simulateConcurrentUpdates' inside the setup function.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "simulateConcurrentUpdates",
+            "function"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 10",
+        "title": "Define a function that batches updates properly",
+        "instruction": "Inside the setup function, define a function named batchUpdates that uses nextTick to properly batch state updates.",
+        "hint": "You'll need to import nextTick from 'vue' and call it with a callback function that updates your reactive state.",
+        "analogousExample": "// Example: using nextTick for batching\nimport { nextTick } from 'vue';\n\nfunction batchUpdates() {\n  nextTick(() => {\n    // State updates here will be batched\n  });\n}",
+        "seedCode": "<template>\n  <!-- Component content will go here -->\n</template>\n\n<script>\nimport { ref } from 'vue';\n\nimport { nextTick } from 'vue';\n\nexport default {\n  setup() {\n    // Declare reactive state variables here\n    \n    // Define a function that simulates concurrent state updates\n    \n    // Define a function that batches updates properly\n    \n  }\n};\n</script>",
+        "expectedOutcome": "A batchUpdates function is defined that uses nextTick to properly batch state updates.",
+        "successCriteria": [
+          "The batchUpdates function is defined and uses nextTick with a callback function."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure your batchUpdates function uses nextTick with a callback function.",
+        "feedbackWrong": "The batchUpdates function should use nextTick to properly batch state updates.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "batchUpdates",
+            "nextTick",
+            "() =>",
+            "{"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 10",
+        "title": "Add the main template structure",
+        "instruction": "Inside the <template> section, add a <div> container with the class 'demo-container' to wrap all the UI content for this demonstration.",
+        "hint": "Look for the <template> tag at the top of the file. Add a <div> element with the class attribute set to 'demo-container' inside it.",
+        "analogousExample": "// Similar: adding a container div in Vue template\n<template>\n  <div class=\"container\">\n    <!-- Content goes here -->\n  </div>\n</template>",
+        "seedCode": "<template>\n  <div class=\"demo-container\">\n    <!-- Component content will go here -->\n  </div>\n</template>\n\n<script>\nimport { ref } from 'vue';\nimport { nextTick } from 'vue';\n\nexport default {\n  setup() {\n    // Declare reactive state variables here\n    \n    // Define a function that simulates concurrent state updates\n    \n    // Define a function that batches updates properly\n    \n  }\n};\n</script>",
+        "expectedOutcome": "The template now has a container div with the class 'demo-container' ready to hold the demonstration UI elements.",
+        "successCriteria": [
+          "A <div> element with class='demo-container' exists inside the <template> section."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure you've added a <div> element with the exact class 'demo-container' inside the <template> tags.",
+        "feedbackWrong": "The template structure isn't quite right. You need to add a <div> container with class='demo-container' inside the <template> section.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<div",
+            "class=\"demo-container\"",
+            "</div>"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 10",
+        "title": "Display current state values",
+        "instruction": "Inside the template, add two paragraph elements to display the current counter and message state values. Use Vue's template interpolation syntax with the state variables.",
+        "hint": "Add <p> elements inside the <div class='demo-container'>. Use double curly braces {{ }} to display the reactive state values.",
+        "analogousExample": "// Displaying reactive state in template\n<template>\n  <div>\n    <p>Count: {{ count }}</p>\n    <p>Message: {{ message }}</p>\n  </div>\n</template>",
+        "seedCode": "<template>\n  <div class=\"demo-container\">\n    <!-- Add paragraph elements here to display state values -->\n  </div>\n</template>\n\n<script>\nimport { ref } from 'vue';\nimport { nextTick } from 'vue';\n\nexport default {\n  setup() {\n    // Declare reactive state variables here\n    \n    // Define a function that simulates concurrent state updates\n    \n    // Define a function that batches updates properly\n    \n  }\n};\n</script>",
+        "expectedOutcome": "The template will have two paragraph elements showing the current counter and message values, though they will initially show as empty since state hasn't been initialized yet.",
+        "successCriteria": [
+          "Two <p> elements are added to the template with proper interpolation syntax displaying the state variables."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added some paragraph elements, but make sure you have two separate <p> tags - one for the counter and one for the message, both using the correct interpolation syntax.",
+        "feedbackWrong": "The template still needs paragraph elements to display the state values. Add two <p> tags inside the demo-container div, using {{ }} to show the state variables.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<p>",
+            "{{",
+            "}}",
+            "counter",
+            "message"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 10",
+        "title": "Add the problematic update button and wire its click handler",
+        "instruction": "Inside the template's <div>, add a <button> element with the text 'Trigger Problematic Updates' and bind its click event to the problematic update function you defined earlier.",
+        "hint": "Use @click or v-on:click to bind the click event to your problematic update function. Make sure the button text matches exactly.",
+        "analogousExample": "// Adding a button with click handler\n<button @click=\"handleClick\">Click me</button>",
+        "seedCode": "<template>\n  <div class=\"demo-container\">\n    <!-- Add paragraph elements here to display state values -->\n    \n  </div>\n</template>\n\n<script>\nimport { ref } from 'vue';\nimport { nextTick } from 'vue';\n\nexport default {\n  setup() {\n    // Declare reactive state variables here\n    \n    // Define a function that simulates concurrent state updates\n    \n    // Define a function that batches updates properly\n    \n  }\n};\n</script>",
+        "expectedOutcome": "A button appears in the UI that, when clicked, will trigger the problematic concurrent state updates function.",
+        "successCriteria": [
+          "The template contains a <button> element with the text 'Trigger Problematic Updates' and a click handler bound to the problematic update function."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure the button text is exactly 'Trigger Problematic Updates' and the click handler is properly bound to your problematic update function.",
+        "feedbackWrong": "The button isn't properly configured. Check that you've added a <button> element with the correct text and click handler binding.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<button",
+            "Trigger Problematic Updates",
+            "@click",
+            "problematicUpdate"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 10",
+        "title": "Add the proper update button and wire its click handler",
+        "instruction": "Add a second button element inside the template that calls the proper update function when clicked.",
+        "hint": "Use the @click directive to bind the button's click event to the proper update function you defined earlier.",
+        "analogousExample": "// Adding a button with click handler\n<button @click=\"handleProperUpdate\">Proper Update</button>",
+        "seedCode": "<template>\n  <div class=\"demo-container\">\n    <!-- Add paragraph elements here to display state values -->\n    \n  </div>\n</template>\n\n<script>\nimport { ref } from 'vue';\nimport { nextTick } from 'vue';\n\nexport default {\n  setup() {\n    // Declare reactive state variables here\n    \n    // Define a function that simulates concurrent state updates\n    \n    // Define a function that batches updates properly\n    \n  }\n};\n</script>",
+        "expectedOutcome": "A second button appears in the UI that will demonstrate proper update batching when clicked.",
+        "successCriteria": [
+          "A button element with @click binding to the proper update function is added to the template."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You added a button, but make sure it uses @click to call the proper update function.",
+        "feedbackWrong": "The button or its click handler is missing or incorrect.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<button",
+            "@click",
+            "properUpdate"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 10",
+        "title": "Add explanatory text about concurrent mode gotchas",
+        "instruction": "Add two paragraph elements inside the template's div to explain the difference between the problematic and proper update approaches. The first paragraph should describe the concurrent update issue, and the second should explain how proper batching works.",
+        "hint": "Use <p> tags with descriptive text about why the two buttons behave differently. Place them after the existing state display paragraphs.",
+        "analogousExample": "// Adding explanatory paragraphs in Vue template\n<template>\n  <div>\n    <p>This explains the first concept.</p>\n    <p>This explains the second concept.</p>\n  </div>\n</template>",
+        "seedCode": "<template>\n  <div class=\"demo-container\">\n    <!-- Add paragraph elements here to display state values -->\n    \n  </div>\n</template>\n\n<script>\nimport { ref } from 'vue';\nimport { nextTick } from 'vue';\n\nexport default {\n  setup() {\n    // Declare reactive state variables here\n    \n    // Define a function that simulates concurrent state updates\n    \n    // Define a function that batches updates properly\n    \n  }\n};\n</script>",
+        "expectedOutcome": "The template now contains two explanatory paragraphs that help learners understand the concurrent mode concepts demonstrated by the two update buttons.",
+        "successCriteria": [
+          "Two <p> elements are added to the template with educational text about concurrent update issues and proper batching."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added some explanatory text, but make sure you have two separate paragraphs that clearly explain both the problematic concurrent updates and the proper batching approach.",
+        "feedbackWrong": "The explanatory paragraphs are missing or incomplete. Add two <p> elements with text that explains the difference between the two update approaches.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<p>",
+            "</p>",
+            "concurrent",
+            "batching",
+            "update"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import Vue and ref from 'vue'",
+        "id": "step1"
+      },
+      {
+        "label": "Create the main Vue component",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize reactive state with ref",
+        "id": "step3"
+      },
+      {
+        "label": "Define a function that simulates concurrent state updates",
+        "id": "step4"
+      },
+      {
+        "label": "Define a function that batches updates properly",
+        "id": "step5"
+      },
+      {
+        "label": "Add the main template structure",
+        "id": "step6"
+      },
+      {
+        "label": "Display current state values",
+        "id": "step7"
+      },
+      {
+        "label": "Add the problematic update button and wire its click handler",
+        "id": "step8"
+      },
+      {
+        "label": "Add the proper update button and wire its click handler",
+        "id": "step9"
+      },
+      {
+        "label": "Add explanatory text about concurrent mode gotchas",
+        "id": "step10"
+      }
+    ]
+  },
+  "source": "content"
+}

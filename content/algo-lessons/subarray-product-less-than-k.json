@@ -1,0 +1,930 @@
+{
+  "id": "subarray-product-less-than-k",
+  "title": "Subarray Product Less Than K",
+  "pattern": "sliding-window",
+  "difficulty": "medium",
+  "language": "javascript",
+  "status": "draft",
+  "flow": [
+    {
+      "stepId": "title",
+      "mentorSays": "At the end of this lesson, you will be able to:\n\n1. Understand what it means to count subarrays based on product constraints\n2. Use a variable-size sliding window correctly\n3. Explain why shrinking the window restores validity when product >= k\n4. Count all valid subarrays ending at each position efficiently\n5. Implement the solution step by step in your chosen language",
+      "action": "continue",
+      "next": "lesson-illustration"
+    },
+    {
+      "stepId": "lesson-illustration",
+      "mentorSays": "Perfect! Now let's understand what the Subarray Product Less Than K lesson is asking.\n\n**Lesson Definition:**\nGiven an array of positive integers `nums` and an integer `k`, return the number of contiguous subarrays where the product of all the elements in the subarray is strictly less than `k`.\n\n**Key Observations:**\n- All numbers are positive (this is crucial!)\n- Subarrays must be contiguous\n- We're counting, not finding the maximum\n- Product grows when we expand the window (since all numbers are positive)\n\n**Example 1:** nums = [10, 5, 2, 6], k = 100\n\nWe need to count all contiguous subarrays where product < 100.\n\nLet's list all valid subarrays:\n- [10] → product = 10 < 100 ✓\n- [5] → product = 5 < 100 ✓\n- [2] → product = 2 < 100 ✓\n- [6] → product = 6 < 100 ✓\n- [10, 5] → product = 50 < 100 ✓\n- [5, 2] → product = 10 < 100 ✓\n- [2, 6] → product = 12 < 100 ✓\n- [5, 2, 6] → product = 60 < 100 ✓\n- [10, 5, 2] → product = 100 ❌ (not < 100)\n- [10, 5, 2, 6] → product = 600 ❌ (not < 100)\n\nTotal: 8 valid subarrays\n\n**Example 2:** nums = [1, 2, 3], k = 0\n\nSince all numbers are positive, no product can be < 0.\nAnswer: 0\n\n**Step-by-step trace for Example 1:**\n\nnums = [10, 5, 2, 6], k = 100\n\nWe'll use a sliding window approach:\n- **right = 0**: [10], product = 10 < 100 ✓\n  - Valid subarrays ending at 0: [10] → count = 1\n- **right = 1**: [10, 5], product = 50 < 100 ✓\n  - Valid subarrays ending at 1: [5], [10, 5] → count = 2\n- **right = 2**: [10, 5, 2], product = 100 ❌ (not < 100)\n  - Shrink: remove 10, [5, 2], product = 10 < 100 ✓\n  - Valid subarrays ending at 2: [2], [5, 2] → count = 2\n- **right = 3**: [5, 2, 6], product = 60 < 100 ✓\n  - Valid subarrays ending at 3: [6], [2, 6], [5, 2, 6] → count = 3\n\nTotal: 1 + 2 + 2 + 3 = 8 ✓\n\n**What makes this tricky:**\n1. Understanding that for each valid window ending at `right`, the number of valid subarrays is `right - left + 1`\n2. When product >= k, we must shrink from the left until product < k\n3. Since all numbers are positive, product only increases when expanding\n4. Edge case: k <= 1 means no valid subarrays (since all products are >= 1)\n\n**Common pitfalls:**\n- Trying to count subarrays starting at each position (inefficient)\n- Not understanding why `right - left + 1` gives the count of valid subarrays ending at `right`\n- Forgetting to handle the edge case where k <= 1\n- Using prefix products with division (can cause precision issues)",
+      "example": "Example 1:\nnums = [10, 5, 2, 6], k = 100\n\nValid subarrays:\n[10] → 10 < 100 ✓\n[5] → 5 < 100 ✓\n[2] → 2 < 100 ✓\n[6] → 6 < 100 ✓\n[10,5] → 50 < 100 ✓\n[5,2] → 10 < 100 ✓\n[2,6] → 12 < 100 ✓\n[5,2,6] → 60 < 100 ✓\n\nTotal: 8\n\nExample 2:\nnums = [1, 2, 3], k = 0\n\nAll products are positive, none < 0\nAnswer: 0",
+      "action": "continue",
+      "next": "thinking-challenge"
+    },
+    {
+      "stepId": "thinking-challenge",
+      "mentorSays": "Now that you understand what the lesson wants, here's the real question:\n\nHow would YOU count all subarrays with product < k?\n\nThink about it for a moment. What approach feels natural to you?",
+      "choices": [
+        {
+          "label": "Check every subarray using nested loops",
+          "next": "explore-brute-force"
+        },
+        {
+          "label": "Use prefix products to quickly calculate subarray products",
+          "next": "explore-prefix-products"
+        },
+        {
+          "label": "Use a sliding window with shrinking when product >= k",
+          "next": "explore-sliding-window"
+        }
+      ]
+    },
+    {
+      "stepId": "explore-brute-force",
+      "mentorSays": "That's a straightforward approach! You're thinking: \"I'll check every possible subarray and calculate its product.\"\n\nFor nums = [10, 5, 2, 6], k = 100:\n- Check [10]: product = 10 < 100 ✓\n- Check [10, 5]: product = 50 < 100 ✓\n- Check [10, 5, 2]: product = 100 ❌\n- Check [10, 5, 2, 6]: product = 600 ❌\n- Check [5]: product = 5 < 100 ✓\n- Check [5, 2]: product = 10 < 100 ✓\n- ... and so on\n\nThis works! However, it's O(n²) time because there are O(n²) subarrays, and we calculate the product for each one.\n\nThere's a more efficient O(n) approach using a sliding window. Would you like to learn that?",
+      "action": "continue",
+      "next": "explore-sliding-window"
+    },
+    {
+      "stepId": "explore-prefix-products",
+      "mentorSays": "Great thinking! Prefix products can help calculate subarray products quickly.\n\nFor nums = [10, 5, 2, 6]:\nPrefix products: [1, 10, 50, 100, 600]\n\nTo get product of [5, 2] (indices 1-2): prefix[3] / prefix[1] = 100 / 10 = 10 ✓\n\nThis works, but there are issues:\n- Division can cause precision lessons with floating-point numbers\n- If we had zeros (though this lesson guarantees positive numbers), division would break\n- We still need to check all O(n²) subarrays\n\nThere's a cleaner O(n) approach using a sliding window. Would you like to learn that?",
+      "action": "continue",
+      "next": "explore-sliding-window"
+    },
+    {
+      "stepId": "explore-sliding-window",
+      "mentorSays": "Excellent choice! The sliding window approach is both efficient and elegant. Here's the core idea:\n\n**The Algorithm:**\n1. **Key insight**: Since all numbers are positive, product only increases when we expand the window. If product >= k, we must shrink from the left.\n2. **Initialize**: product = 1, left = 0, count = 0\n3. **For each right index**:\n   - Expand window: `product *= nums[right]`\n   - Shrink if needed: While `product >= k`, divide by `nums[left]` and move `left++`\n   - Count valid subarrays: All subarrays ending at `right` are valid, so add `right - left + 1` to count\n4. **Return count**\n\n**Why it works**:\n- When we have a valid window [left, right] with product < k, all subarrays ending at `right` are valid:\n  - [nums[right]]\n  - [nums[right-1], nums[right]]\n  - ...\n  - [nums[left], ..., nums[right]]\n- That's exactly `right - left + 1` subarrays!\n- Since all numbers are positive, shrinking from the left will eventually make the product < k\n\n**Why `right - left + 1`?**\nIf left = 1 and right = 3, the valid subarrays ending at 3 are:\n- [nums[3]]\n- [nums[2], nums[3]]\n- [nums[1], nums[2], nums[3]]\n\nThat's 3 - 1 + 1 = 3 subarrays! ✓\n\nLet's trace with nums = [10, 5, 2, 6], k = 100:\n\n- **right = 0**: product = 10, left = 0\n  - 10 < 100 ✓, count += (0 - 0 + 1) = 1\n- **right = 1**: product = 50, left = 0\n  - 50 < 100 ✓, count += (1 - 0 + 1) = 2, total = 3\n- **right = 2**: product = 100, left = 0\n  - 100 >= 100 ❌, shrink: product = 100/10 = 10, left = 1\n  - 10 < 100 ✓, count += (2 - 1 + 1) = 2, total = 5\n- **right = 3**: product = 60, left = 1\n  - 60 < 100 ✓, count += (3 - 1 + 1) = 3, total = 8\n\n**Return 8** ✓\n\nThis is O(n) time and O(1) space! Now let's code it step by step.",
+      "action": "continue",
+      "next": "language-selection"
+    },
+    {
+      "stepId": "language-selection",
+      "mentorSays": "Great! Now let's code this solution. Which programming language would you like to use?",
+      "choices": [
+        {
+          "label": "JavaScript",
+          "next": "variable-check-js"
+        },
+        {
+          "label": "Python",
+          "next": "variable-check-python"
+        },
+        {
+          "label": "Java",
+          "next": "variable-check-java"
+        },
+        {
+          "label": "C++",
+          "next": "variable-check-cpp"
+        },
+        {
+          "label": "TypeScript",
+          "next": "variable-check-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-check-js",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-js"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-js",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'product' or 'left') and put data inside it.\n\nFor example, 'let product = 1;' creates a variable that stores the number 1. Later, you can use that variable name to refer to it. We'll use variables to track the current product, the left pointer, and the total count.",
+      "example": "let product = 1;  // Current product of window\nlet left = 0;     // Left pointer of window\nlet count = 0;    // Total count of valid subarrays\n\nThese variables help us track our sliding window state",
+      "action": "continue",
+      "next": "function-check-js"
+    },
+    {
+      "stepId": "function-check-js",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-js"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-js",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.\n\nThink of it like a recipe: you provide ingredients (parameters), the function does the work, and gives you a result (return value).",
+      "example": "function numSubarrayProductLessThanK(nums, k) {\n  // This function takes nums array and k\n  // It returns the count of subarrays with product < k\n  return 0;\n}",
+      "action": "continue",
+      "next": "parameter-check-js"
+    },
+    {
+      "stepId": "parameter-check-js",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "array-check-js"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-js",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'function numSubarrayProductLessThanK(nums, k)', the 'nums' and 'k' are parameters - they're placeholders that will receive actual values when you call the function.\n\nWhen you call 'numSubarrayProductLessThanK([10, 5, 2, 6], 100)', the array and number go into the parameters.",
+      "example": "function numSubarrayProductLessThanK(nums, k) {\n  // 'nums' and 'k' are parameters\n}\n\n// When we call it:\nnumSubarrayProductLessThanK([10, 5, 2, 6], 100);\n// The array and number go into the parameters",
+      "action": "continue",
+      "next": "array-check-js"
+    },
+    {
+      "stepId": "array-check-js",
+      "mentorSays": "To solve this lesson, we'll need to work with arrays. Do you know what an array is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know arrays",
+          "next": "loop-check-js"
+        },
+        {
+          "label": "No, explain arrays",
+          "next": "array-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "array-explanation-js",
+      "mentorSays": "An array is a list of values stored in order. Each value has a position number called an 'index'. Array indices start counting from 0, not 1.\n\nFor example, let nums = [10, 5, 2, 6] means:\n- nums[0] = 10 (first element, index 0)\n- nums[1] = 5 (second element, index 1)\n- nums[2] = 2 (third element, index 2)\n- nums[3] = 6 (fourth element, index 3)\n\nWe'll slide a window over this array to find valid subarrays.",
+      "example": "let nums = [10, 5, 2, 6];\n\nnums[0] = 10\nnums[1] = 5\nnums[2] = 2\nnums[3] = 6\n\nWe'll use indices to access elements",
+      "action": "continue",
+      "next": "loop-check-js"
+    },
+    {
+      "stepId": "loop-check-js",
+      "mentorSays": "To solve this lesson, we'll need to use loops. Do you know what a loop is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know loops",
+          "next": "coding-start-js"
+        },
+        {
+          "label": "No, explain loops",
+          "next": "loop-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "loop-explanation-js",
+      "mentorSays": "A loop lets you repeat code multiple times. A 'for' loop in JavaScript runs code for each value in a sequence.\n\nFor example, 'for (let right = 0; right < nums.length; right++)' means: run the code for each index from 0 to the length of the array. This lets us move our right pointer through the array.",
+      "example": "for (let right = 0; right < 4; right++) {\n  console.log(right);\n}\n\nThis prints: 0, 1, 2, 3",
+      "action": "continue",
+      "next": "coding-start-js"
+    },
+    {
+      "stepId": "coding-start-js",
+      "mentorSays": "Perfect! Let's implement the subarray product solution in JavaScript. We'll create a function that takes an array and k, and returns the count of subarrays with product < k.",
+      "example": "function numSubarrayProductLessThanK(nums, k) {\n  \n}",
+      "action": "continue",
+      "next": "coding-edge-case-js"
+    },
+    {
+      "stepId": "coding-edge-case-js",
+      "mentorSays": "First, handle the edge case: if k <= 1, no valid subarrays exist (since all products are >= 1).",
+      "example": "function numSubarrayProductLessThanK(nums, k) {\n  // Edge case: k <= 1 means no valid subarrays\n  if (k <= 1) return 0;\n  \n}",
+      "action": "continue",
+      "next": "coding-init-vars-js"
+    },
+    {
+      "stepId": "coding-init-vars-js",
+      "mentorSays": "Initialize our sliding window variables: product (current product), left (left pointer), and count (total count of valid subarrays).",
+      "example": "function numSubarrayProductLessThanK(nums, k) {\n  if (k <= 1) return 0;\n  \n  let product = 1;  // Current product of window\n  let left = 0;      // Left pointer of window\n  let count = 0;     // Total count of valid subarrays\n  \n}",
+      "action": "continue",
+      "next": "coding-outer-loop-js"
+    },
+    {
+      "stepId": "coding-outer-loop-js",
+      "mentorSays": "Create a loop that moves the right pointer through the array. This will expand our window.",
+      "example": "function numSubarrayProductLessThanK(nums, k) {\n  if (k <= 1) return 0;\n  \n  let product = 1;\n  let left = 0;\n  let count = 0;\n  \n  // Expand window by moving right pointer\n  for (let right = 0; right < nums.length; right++) {\n    \n  }\n}",
+      "action": "continue",
+      "next": "coding-expand-window-js"
+    },
+    {
+      "stepId": "coding-expand-window-js",
+      "mentorSays": "Inside the loop, expand the window by multiplying the current product by nums[right]. This adds the new element to our window.",
+      "example": "function numSubarrayProductLessThanK(nums, k) {\n  if (k <= 1) return 0;\n  \n  let product = 1;\n  let left = 0;\n  let count = 0;\n  \n  for (let right = 0; right < nums.length; right++) {\n    // Expand window: include nums[right]\n    product *= nums[right];\n    \n  }\n}",
+      "action": "continue",
+      "next": "coding-shrink-window-js"
+    },
+    {
+      "stepId": "coding-shrink-window-js",
+      "mentorSays": "If the product is >= k, we need to shrink the window from the left. Keep dividing by nums[left] and moving left forward until product < k.",
+      "example": "function numSubarrayProductLessThanK(nums, k) {\n  if (k <= 1) return 0;\n  \n  let product = 1;\n  let left = 0;\n  let count = 0;\n  \n  for (let right = 0; right < nums.length; right++) {\n    product *= nums[right];\n    \n    // Shrink window if product >= k\n    while (product >= k) {\n      product /= nums[left];\n      left++;\n    }\n    \n  }\n}",
+      "action": "continue",
+      "next": "coding-count-subarrays-js"
+    },
+    {
+      "stepId": "coding-count-subarrays-js",
+      "mentorSays": "After ensuring the window is valid (product < k), count all valid subarrays ending at right. The number of such subarrays is right - left + 1.",
+      "example": "function numSubarrayProductLessThanK(nums, k) {\n  if (k <= 1) return 0;\n  \n  let product = 1;\n  let left = 0;\n  let count = 0;\n  \n  for (let right = 0; right < nums.length; right++) {\n    product *= nums[right];\n    \n    while (product >= k) {\n      product /= nums[left];\n      left++;\n    }\n    \n    // Count all valid subarrays ending at right\n    count += right - left + 1;\n  }\n}",
+      "action": "continue",
+      "next": "coding-return-js"
+    },
+    {
+      "stepId": "coding-return-js",
+      "mentorSays": "Finally, return the total count of valid subarrays.",
+      "example": "function numSubarrayProductLessThanK(nums, k) {\n  if (k <= 1) return 0;\n  \n  let product = 1;\n  let left = 0;\n  let count = 0;\n  \n  for (let right = 0; right < nums.length; right++) {\n    product *= nums[right];\n    \n    while (product >= k) {\n      product /= nums[left];\n      left++;\n    }\n    \n    count += right - left + 1;\n  }\n  \n  return count;\n}",
+      "action": "continue",
+      "next": "test-code-js"
+    },
+    {
+      "stepId": "test-code-js",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** nums = [10, 5, 2, 6], k = 100\nExpected: 8\n\n**Test 2:** nums = [1, 2, 3], k = 0\nExpected: 0 (all products are positive, none < 0)\n\n**Test 3:** nums = [1, 1, 1], k = 2\nExpected: 6 (all 6 subarrays have product = 1 < 2)\n\n**Test 4:** nums = [10], k = 5\nExpected: 0 (product = 10 >= 5)\n\n**Test 5:** nums = [2, 5, 3, 10], k = 30\nExpected: 6\n\n**Test 6:** nums = [1, 1, 1, 1, 1], k = 1\nExpected: 0 (k <= 1, no valid subarrays)\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: [10,5,2,6], k=100 → 8\nTest 2: [1,2,3], k=0 → 0\nTest 3: [1,1,1], k=2 → 6\nTest 4: [10], k=5 → 0\nTest 5: [2,5,3,10], k=30 → 6\nTest 6: [1,1,1,1,1], k=1 → 0",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-python",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-python"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-python",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'product' or 'left') and put data inside it.\n\nFor example, 'product = 1' creates a variable that stores the number 1. Later, you can use that variable name to refer to it. We'll use variables to track the current product, the left pointer, and the total count.",
+      "example": "product = 1  # Current product of window\nleft = 0     # Left pointer of window\ncount = 0    # Total count of valid subarrays\n\nThese variables help us track our sliding window state",
+      "action": "continue",
+      "next": "function-check-python"
+    },
+    {
+      "stepId": "function-check-python",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-python"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-python",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.\n\nThink of it like a recipe: you provide ingredients (parameters), the function does the work, and gives you a result (return value).",
+      "example": "def num_subarray_product_less_than_k(nums, k):\n    # This function takes nums list and k\n    # It returns the count of subarrays with product < k\n    return 0",
+      "action": "continue",
+      "next": "parameter-check-python"
+    },
+    {
+      "stepId": "parameter-check-python",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "array-check-python"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-python",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'def num_subarray_product_less_than_k(nums, k)', the 'nums' and 'k' are parameters - they're placeholders that will receive actual values when you call the function.\n\nWhen you call 'num_subarray_product_less_than_k([10, 5, 2, 6], 100)', the list and number go into the parameters.",
+      "example": "def num_subarray_product_less_than_k(nums, k):\n    # 'nums' and 'k' are parameters\n\n# When we call it:\nnum_subarray_product_less_than_k([10, 5, 2, 6], 100)\n# The list and number go into the parameters",
+      "action": "continue",
+      "next": "array-check-python"
+    },
+    {
+      "stepId": "array-check-python",
+      "mentorSays": "To solve this lesson, we'll need to work with lists (Python's version of arrays). Do you know what a list is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know lists",
+          "next": "loop-check-python"
+        },
+        {
+          "label": "No, explain lists",
+          "next": "array-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "array-explanation-python",
+      "mentorSays": "A list is a collection of values stored in order. Each value has a position number called an 'index'. List indices start counting from 0, not 1.\n\nFor example, nums = [10, 5, 2, 6] means:\n- nums[0] = 10 (first element, index 0)\n- nums[1] = 5 (second element, index 1)\n- nums[2] = 2 (third element, index 2)\n- nums[3] = 6 (fourth element, index 3)\n\nWe'll slide a window over this list to find valid subarrays.",
+      "example": "nums = [10, 5, 2, 6]\n\nnums[0] = 10\nnums[1] = 5\nnums[2] = 2\nnums[3] = 6\n\nWe'll use indices to access elements",
+      "action": "continue",
+      "next": "loop-check-python"
+    },
+    {
+      "stepId": "loop-check-python",
+      "mentorSays": "To solve this lesson, we'll need to use loops. Do you know what a loop is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know loops",
+          "next": "coding-start-python"
+        },
+        {
+          "label": "No, explain loops",
+          "next": "loop-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "loop-explanation-python",
+      "mentorSays": "A loop lets you repeat code multiple times. A 'for' loop in Python runs code for each item in a sequence.\n\nFor example, 'for right in range(len(nums)):' means: run the code for each index from 0 to the length of the list. This lets us move our right pointer through the list.",
+      "example": "for right in range(4):\n    print(right)\n\nThis prints: 0, 1, 2, 3",
+      "action": "continue",
+      "next": "coding-start-python"
+    },
+    {
+      "stepId": "coding-start-python",
+      "mentorSays": "Perfect! Let's implement the subarray product solution in Python. We'll create a function that takes a list and k, and returns the count of subarrays with product < k.",
+      "example": "def num_subarray_product_less_than_k(nums, k):\n    \n    pass",
+      "action": "continue",
+      "next": "coding-edge-case-python"
+    },
+    {
+      "stepId": "coding-edge-case-python",
+      "mentorSays": "First, handle the edge case: if k <= 1, no valid subarrays exist (since all products are >= 1).",
+      "example": "def num_subarray_product_less_than_k(nums, k):\n    # Edge case: k <= 1 means no valid subarrays\n    if k <= 1:\n        return 0\n    \n    pass",
+      "action": "continue",
+      "next": "coding-init-vars-python"
+    },
+    {
+      "stepId": "coding-init-vars-python",
+      "mentorSays": "Initialize our sliding window variables: product (current product), left (left pointer), and count (total count of valid subarrays).",
+      "example": "def num_subarray_product_less_than_k(nums, k):\n    if k <= 1:\n        return 0\n    \n    product = 1  # Current product of window\n    left = 0     # Left pointer of window\n    count = 0    # Total count of valid subarrays\n    \n    pass",
+      "action": "continue",
+      "next": "coding-outer-loop-python"
+    },
+    {
+      "stepId": "coding-outer-loop-python",
+      "mentorSays": "Create a loop that moves the right pointer through the list. This will expand our window.",
+      "example": "def num_subarray_product_less_than_k(nums, k):\n    if k <= 1:\n        return 0\n    \n    product = 1\n    left = 0\n    count = 0\n    \n    # Expand window by moving right pointer\n    for right in range(len(nums)):\n        \n        pass",
+      "action": "continue",
+      "next": "coding-expand-window-python"
+    },
+    {
+      "stepId": "coding-expand-window-python",
+      "mentorSays": "Inside the loop, expand the window by multiplying the current product by nums[right]. This adds the new element to our window.",
+      "example": "def num_subarray_product_less_than_k(nums, k):\n    if k <= 1:\n        return 0\n    \n    product = 1\n    left = 0\n    count = 0\n    \n    for right in range(len(nums)):\n        # Expand window: include nums[right]\n        product *= nums[right]\n        \n        pass",
+      "action": "continue",
+      "next": "coding-shrink-window-python"
+    },
+    {
+      "stepId": "coding-shrink-window-python",
+      "mentorSays": "If the product is >= k, we need to shrink the window from the left. Keep dividing by nums[left] and moving left forward until product < k.",
+      "example": "def num_subarray_product_less_than_k(nums, k):\n    if k <= 1:\n        return 0\n    \n    product = 1\n    left = 0\n    count = 0\n    \n    for right in range(len(nums)):\n        product *= nums[right]\n        \n        # Shrink window if product >= k\n        while product >= k:\n            product //= nums[left]  # Integer division\n            left += 1\n        \n        pass",
+      "action": "continue",
+      "next": "coding-count-subarrays-python"
+    },
+    {
+      "stepId": "coding-count-subarrays-python",
+      "mentorSays": "After ensuring the window is valid (product < k), count all valid subarrays ending at right. The number of such subarrays is right - left + 1.",
+      "example": "def num_subarray_product_less_than_k(nums, k):\n    if k <= 1:\n        return 0\n    \n    product = 1\n    left = 0\n    count = 0\n    \n    for right in range(len(nums)):\n        product *= nums[right]\n        \n        while product >= k:\n            product //= nums[left]\n            left += 1\n        \n        # Count all valid subarrays ending at right\n        count += right - left + 1\n    \n    pass",
+      "action": "continue",
+      "next": "coding-return-python"
+    },
+    {
+      "stepId": "coding-return-python",
+      "mentorSays": "Finally, return the total count of valid subarrays.",
+      "example": "def num_subarray_product_less_than_k(nums, k):\n    if k <= 1:\n        return 0\n    \n    product = 1\n    left = 0\n    count = 0\n    \n    for right in range(len(nums)):\n        product *= nums[right]\n        \n        while product >= k:\n            product //= nums[left]\n            left += 1\n        \n        count += right - left + 1\n    \n    return count",
+      "action": "continue",
+      "next": "test-code-python"
+    },
+    {
+      "stepId": "test-code-python",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** nums = [10, 5, 2, 6], k = 100\nExpected: 8\n\n**Test 2:** nums = [1, 2, 3], k = 0\nExpected: 0 (all products are positive, none < 0)\n\n**Test 3:** nums = [1, 1, 1], k = 2\nExpected: 6 (all 6 subarrays have product = 1 < 2)\n\n**Test 4:** nums = [10], k = 5\nExpected: 0 (product = 10 >= 5)\n\n**Test 5:** nums = [2, 5, 3, 10], k = 30\nExpected: 6\n\n**Test 6:** nums = [1, 1, 1, 1, 1], k = 1\nExpected: 0 (k <= 1, no valid subarrays)\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: [10,5,2,6], k=100 → 8\nTest 2: [1,2,3], k=0 → 0\nTest 3: [1,1,1], k=2 → 6\nTest 4: [10], k=5 → 0\nTest 5: [2,5,3,10], k=30 → 6\nTest 6: [1,1,1,1,1], k=1 → 0",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-java",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-java"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-java",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'product' or 'left') and put data inside it.\n\nFor example, 'int product = 1;' creates a variable that stores the number 1. Later, you can use that variable name to refer to it. We'll use variables to track the current product, the left pointer, and the total count.",
+      "example": "int product = 1;  // Current product of window\nint left = 0;      // Left pointer of window\nint count = 0;      // Total count of valid subarrays\n\nThese variables help us track our sliding window state",
+      "action": "continue",
+      "next": "function-check-java"
+    },
+    {
+      "stepId": "function-check-java",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a method is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know methods",
+          "next": "parameter-check-java"
+        },
+        {
+          "label": "No, explain methods",
+          "next": "function-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-java",
+      "mentorSays": "A method (Java's version of a function) is a reusable block of code. You give it inputs (called parameters), and it can return an output.\n\nThink of it like a recipe: you provide ingredients (parameters), the method does the work, and gives you a result (return value).",
+      "example": "public int numSubarrayProductLessThanK(int[] nums, int k) {\n    // This method takes nums array and k\n    // It returns the count of subarrays with product < k\n    return 0;\n}",
+      "action": "continue",
+      "next": "parameter-check-java"
+    },
+    {
+      "stepId": "parameter-check-java",
+      "mentorSays": "When we write a method, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "array-check-java"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-java",
+      "mentorSays": "Parameters are like variables that receive values when you call the method. When you write 'public int numSubarrayProductLessThanK(int[] nums, int k)', the 'nums' and 'k' are parameters - they're placeholders that will receive actual values when you call the method.\n\nWhen you call 'numSubarrayProductLessThanK(new int[]{10, 5, 2, 6}, 100)', the array and number go into the parameters.",
+      "example": "public int numSubarrayProductLessThanK(int[] nums, int k) {\n    // 'nums' and 'k' are parameters\n}\n\n// When we call it:\nnumSubarrayProductLessThanK(new int[]{10, 5, 2, 6}, 100);\n// The array and number go into the parameters",
+      "action": "continue",
+      "next": "array-check-java"
+    },
+    {
+      "stepId": "array-check-java",
+      "mentorSays": "To solve this lesson, we'll need to work with arrays. Do you know what an array is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know arrays",
+          "next": "loop-check-java"
+        },
+        {
+          "label": "No, explain arrays",
+          "next": "array-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "array-explanation-java",
+      "mentorSays": "An array is a collection of values stored in order. Each value has a position number called an 'index'. Array indices start counting from 0, not 1.\n\nFor example, int[] nums = {10, 5, 2, 6} means:\n- nums[0] = 10 (first element, index 0)\n- nums[1] = 5 (second element, index 1)\n- nums[2] = 2 (third element, index 2)\n- nums[3] = 6 (fourth element, index 3)\n\nWe'll slide a window over this array to find valid subarrays.",
+      "example": "int[] nums = {10, 5, 2, 6};\n\nnums[0] = 10\nnums[1] = 5\nnums[2] = 2\nnums[3] = 6\n\nWe'll use indices to access elements",
+      "action": "continue",
+      "next": "loop-check-java"
+    },
+    {
+      "stepId": "loop-check-java",
+      "mentorSays": "To solve this lesson, we'll need to use loops. Do you know what a loop is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know loops",
+          "next": "coding-start-java"
+        },
+        {
+          "label": "No, explain loops",
+          "next": "loop-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "loop-explanation-java",
+      "mentorSays": "A loop lets you repeat code multiple times. A 'for' loop in Java runs code for each value in a sequence.\n\nFor example, 'for (int right = 0; right < nums.length; right++)' means: run the code for each index from 0 to the length of the array. This lets us move our right pointer through the array.",
+      "example": "for (int right = 0; right < 4; right++) {\n    System.out.println(right);\n}\n\nThis prints: 0, 1, 2, 3",
+      "action": "continue",
+      "next": "coding-start-java"
+    },
+    {
+      "stepId": "coding-start-java",
+      "mentorSays": "Perfect! Let's implement the subarray product solution in Java. We'll create a method that takes an array and k, and returns the count of subarrays with product < k.",
+      "example": "public int numSubarrayProductLessThanK(int[] nums, int k) {\n    \n}",
+      "action": "continue",
+      "next": "coding-edge-case-java"
+    },
+    {
+      "stepId": "coding-edge-case-java",
+      "mentorSays": "First, handle the edge case: if k <= 1, no valid subarrays exist (since all products are >= 1).",
+      "example": "public int numSubarrayProductLessThanK(int[] nums, int k) {\n    // Edge case: k <= 1 means no valid subarrays\n    if (k <= 1) return 0;\n    \n}",
+      "action": "continue",
+      "next": "coding-init-vars-java"
+    },
+    {
+      "stepId": "coding-init-vars-java",
+      "mentorSays": "Initialize our sliding window variables: product (current product), left (left pointer), and count (total count of valid subarrays).",
+      "example": "public int numSubarrayProductLessThanK(int[] nums, int k) {\n    if (k <= 1) return 0;\n    \n    int product = 1;  // Current product of window\n    int left = 0;      // Left pointer of window\n    int count = 0;     // Total count of valid subarrays\n    \n}",
+      "action": "continue",
+      "next": "coding-outer-loop-java"
+    },
+    {
+      "stepId": "coding-outer-loop-java",
+      "mentorSays": "Create a loop that moves the right pointer through the array. This will expand our window.",
+      "example": "public int numSubarrayProductLessThanK(int[] nums, int k) {\n    if (k <= 1) return 0;\n    \n    int product = 1;\n    int left = 0;\n    int count = 0;\n    \n    // Expand window by moving right pointer\n    for (int right = 0; right < nums.length; right++) {\n        \n    }\n}",
+      "action": "continue",
+      "next": "coding-expand-window-java"
+    },
+    {
+      "stepId": "coding-expand-window-java",
+      "mentorSays": "Inside the loop, expand the window by multiplying the current product by nums[right]. This adds the new element to our window.",
+      "example": "public int numSubarrayProductLessThanK(int[] nums, int k) {\n    if (k <= 1) return 0;\n    \n    int product = 1;\n    int left = 0;\n    int count = 0;\n    \n    for (int right = 0; right < nums.length; right++) {\n        // Expand window: include nums[right]\n        product *= nums[right];\n        \n    }\n}",
+      "action": "continue",
+      "next": "coding-shrink-window-java"
+    },
+    {
+      "stepId": "coding-shrink-window-java",
+      "mentorSays": "If the product is >= k, we need to shrink the window from the left. Keep dividing by nums[left] and moving left forward until product < k.",
+      "example": "public int numSubarrayProductLessThanK(int[] nums, int k) {\n    if (k <= 1) return 0;\n    \n    int product = 1;\n    int left = 0;\n    int count = 0;\n    \n    for (int right = 0; right < nums.length; right++) {\n        product *= nums[right];\n        \n        // Shrink window if product >= k\n        while (product >= k) {\n            product /= nums[left];\n            left++;\n        }\n        \n    }\n}",
+      "action": "continue",
+      "next": "coding-count-subarrays-java"
+    },
+    {
+      "stepId": "coding-count-subarrays-java",
+      "mentorSays": "After ensuring the window is valid (product < k), count all valid subarrays ending at right. The number of such subarrays is right - left + 1.",
+      "example": "public int numSubarrayProductLessThanK(int[] nums, int k) {\n    if (k <= 1) return 0;\n    \n    int product = 1;\n    int left = 0;\n    int count = 0;\n    \n    for (int right = 0; right < nums.length; right++) {\n        product *= nums[right];\n        \n        while (product >= k) {\n            product /= nums[left];\n            left++;\n        }\n        \n        // Count all valid subarrays ending at right\n        count += right - left + 1;\n    }\n}",
+      "action": "continue",
+      "next": "coding-return-java"
+    },
+    {
+      "stepId": "coding-return-java",
+      "mentorSays": "Finally, return the total count of valid subarrays.",
+      "example": "public int numSubarrayProductLessThanK(int[] nums, int k) {\n    if (k <= 1) return 0;\n    \n    int product = 1;\n    int left = 0;\n    int count = 0;\n    \n    for (int right = 0; right < nums.length; right++) {\n        product *= nums[right];\n        \n        while (product >= k) {\n            product /= nums[left];\n            left++;\n        }\n        \n        count += right - left + 1;\n    }\n    \n    return count;\n}",
+      "action": "continue",
+      "next": "test-code-java"
+    },
+    {
+      "stepId": "test-code-java",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** nums = [10, 5, 2, 6], k = 100\nExpected: 8\n\n**Test 2:** nums = [1, 2, 3], k = 0\nExpected: 0 (all products are positive, none < 0)\n\n**Test 3:** nums = [1, 1, 1], k = 2\nExpected: 6 (all 6 subarrays have product = 1 < 2)\n\n**Test 4:** nums = [10], k = 5\nExpected: 0 (product = 10 >= 5)\n\n**Test 5:** nums = [2, 5, 3, 10], k = 30\nExpected: 6\n\n**Test 6:** nums = [1, 1, 1, 1, 1], k = 1\nExpected: 0 (k <= 1, no valid subarrays)\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: [10,5,2,6], k=100 → 8\nTest 2: [1,2,3], k=0 → 0\nTest 3: [1,1,1], k=2 → 6\nTest 4: [10], k=5 → 0\nTest 5: [2,5,3,10], k=30 → 6\nTest 6: [1,1,1,1,1], k=1 → 0",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-cpp",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-cpp"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-cpp",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'product' or 'left') and put data inside it.\n\nFor example, 'int product = 1;' creates a variable that stores the number 1. Later, you can use that variable name to refer to it. We'll use variables to track the current product, the left pointer, and the total count.",
+      "example": "int product = 1;  // Current product of window\nint left = 0;      // Left pointer of window\nint count = 0;     // Total count of valid subarrays\n\nThese variables help us track our sliding window state",
+      "action": "continue",
+      "next": "function-check-cpp"
+    },
+    {
+      "stepId": "function-check-cpp",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-cpp"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-cpp",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.\n\nThink of it like a recipe: you provide ingredients (parameters), the function does the work, and gives you a result (return value).",
+      "example": "int numSubarrayProductLessThanK(vector<int>& nums, int k) {\n    // This function takes nums vector and k\n    // It returns the count of subarrays with product < k\n    return 0;\n}",
+      "action": "continue",
+      "next": "parameter-check-cpp"
+    },
+    {
+      "stepId": "parameter-check-cpp",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "array-check-cpp"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-cpp",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'int numSubarrayProductLessThanK(vector<int>& nums, int k)', the 'nums' and 'k' are parameters - they're placeholders that will receive actual values when you call the function.\n\nWhen you call 'numSubarrayProductLessThanK({10, 5, 2, 6}, 100)', the vector and number go into the parameters.",
+      "example": "int numSubarrayProductLessThanK(vector<int>& nums, int k) {\n    // 'nums' and 'k' are parameters\n}\n\n// When we call it:\nnumSubarrayProductLessThanK({10, 5, 2, 6}, 100);\n// The vector and number go into the parameters",
+      "action": "continue",
+      "next": "array-check-cpp"
+    },
+    {
+      "stepId": "array-check-cpp",
+      "mentorSays": "To solve this lesson, we'll need to work with vectors (C++'s version of arrays). Do you know what a vector is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know vectors",
+          "next": "loop-check-cpp"
+        },
+        {
+          "label": "No, explain vectors",
+          "next": "array-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "array-explanation-cpp",
+      "mentorSays": "A vector is a collection of values stored in order. Each value has a position number called an 'index'. Vector indices start counting from 0, not 1.\n\nFor example, vector<int> nums = {10, 5, 2, 6} means:\n- nums[0] = 10 (first element, index 0)\n- nums[1] = 5 (second element, index 1)\n- nums[2] = 2 (third element, index 2)\n- nums[3] = 6 (fourth element, index 3)\n\nWe'll slide a window over this vector to find valid subarrays.",
+      "example": "vector<int> nums = {10, 5, 2, 6};\n\nnums[0] = 10\nnums[1] = 5\nnums[2] = 2\nnums[3] = 6\n\nWe'll use indices to access elements",
+      "action": "continue",
+      "next": "loop-check-cpp"
+    },
+    {
+      "stepId": "loop-check-cpp",
+      "mentorSays": "To solve this lesson, we'll need to use loops. Do you know what a loop is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know loops",
+          "next": "coding-start-cpp"
+        },
+        {
+          "label": "No, explain loops",
+          "next": "loop-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "loop-explanation-cpp",
+      "mentorSays": "A loop lets you repeat code multiple times. A 'for' loop in C++ runs code for each value in a sequence.\n\nFor example, 'for (int right = 0; right < nums.size(); right++)' means: run the code for each index from 0 to the size of the vector. This lets us move our right pointer through the vector.",
+      "example": "for (int right = 0; right < 4; right++) {\n    cout << right << endl;\n}\n\nThis prints: 0, 1, 2, 3",
+      "action": "continue",
+      "next": "coding-start-cpp"
+    },
+    {
+      "stepId": "coding-start-cpp",
+      "mentorSays": "Perfect! Let's implement the subarray product solution in C++. We'll create a function that takes a vector and k, and returns the count of subarrays with product < k.",
+      "example": "int numSubarrayProductLessThanK(vector<int>& nums, int k) {\n    \n}",
+      "action": "continue",
+      "next": "coding-edge-case-cpp"
+    },
+    {
+      "stepId": "coding-edge-case-cpp",
+      "mentorSays": "First, handle the edge case: if k <= 1, no valid subarrays exist (since all products are >= 1).",
+      "example": "int numSubarrayProductLessThanK(vector<int>& nums, int k) {\n    // Edge case: k <= 1 means no valid subarrays\n    if (k <= 1) return 0;\n    \n}",
+      "action": "continue",
+      "next": "coding-init-vars-cpp"
+    },
+    {
+      "stepId": "coding-init-vars-cpp",
+      "mentorSays": "Initialize our sliding window variables: product (current product), left (left pointer), and count (total count of valid subarrays).",
+      "example": "int numSubarrayProductLessThanK(vector<int>& nums, int k) {\n    if (k <= 1) return 0;\n    \n    int product = 1;  // Current product of window\n    int left = 0;      // Left pointer of window\n    int count = 0;     // Total count of valid subarrays\n    \n}",
+      "action": "continue",
+      "next": "coding-outer-loop-cpp"
+    },
+    {
+      "stepId": "coding-outer-loop-cpp",
+      "mentorSays": "Create a loop that moves the right pointer through the vector. This will expand our window.",
+      "example": "int numSubarrayProductLessThanK(vector<int>& nums, int k) {\n    if (k <= 1) return 0;\n    \n    int product = 1;\n    int left = 0;\n    int count = 0;\n    \n    // Expand window by moving right pointer\n    for (int right = 0; right < nums.size(); right++) {\n        \n    }\n}",
+      "action": "continue",
+      "next": "coding-expand-window-cpp"
+    },
+    {
+      "stepId": "coding-expand-window-cpp",
+      "mentorSays": "Inside the loop, expand the window by multiplying the current product by nums[right]. This adds the new element to our window.",
+      "example": "int numSubarrayProductLessThanK(vector<int>& nums, int k) {\n    if (k <= 1) return 0;\n    \n    int product = 1;\n    int left = 0;\n    int count = 0;\n    \n    for (int right = 0; right < nums.size(); right++) {\n        // Expand window: include nums[right]\n        product *= nums[right];\n        \n    }\n}",
+      "action": "continue",
+      "next": "coding-shrink-window-cpp"
+    },
+    {
+      "stepId": "coding-shrink-window-cpp",
+      "mentorSays": "If the product is >= k, we need to shrink the window from the left. Keep dividing by nums[left] and moving left forward until product < k.",
+      "example": "int numSubarrayProductLessThanK(vector<int>& nums, int k) {\n    if (k <= 1) return 0;\n    \n    int product = 1;\n    int left = 0;\n    int count = 0;\n    \n    for (int right = 0; right < nums.size(); right++) {\n        product *= nums[right];\n        \n        // Shrink window if product >= k\n        while (product >= k) {\n            product /= nums[left];\n            left++;\n        }\n        \n    }\n}",
+      "action": "continue",
+      "next": "coding-count-subarrays-cpp"
+    },
+    {
+      "stepId": "coding-count-subarrays-cpp",
+      "mentorSays": "After ensuring the window is valid (product < k), count all valid subarrays ending at right. The number of such subarrays is right - left + 1.",
+      "example": "int numSubarrayProductLessThanK(vector<int>& nums, int k) {\n    if (k <= 1) return 0;\n    \n    int product = 1;\n    int left = 0;\n    int count = 0;\n    \n    for (int right = 0; right < nums.size(); right++) {\n        product *= nums[right];\n        \n        while (product >= k) {\n            product /= nums[left];\n            left++;\n        }\n        \n        // Count all valid subarrays ending at right\n        count += right - left + 1;\n    }\n}",
+      "action": "continue",
+      "next": "coding-return-cpp"
+    },
+    {
+      "stepId": "coding-return-cpp",
+      "mentorSays": "Finally, return the total count of valid subarrays.",
+      "example": "int numSubarrayProductLessThanK(vector<int>& nums, int k) {\n    if (k <= 1) return 0;\n    \n    int product = 1;\n    int left = 0;\n    int count = 0;\n    \n    for (int right = 0; right < nums.size(); right++) {\n        product *= nums[right];\n        \n        while (product >= k) {\n            product /= nums[left];\n            left++;\n        }\n        \n        count += right - left + 1;\n    }\n    \n    return count;\n}",
+      "action": "continue",
+      "next": "test-code-cpp"
+    },
+    {
+      "stepId": "test-code-cpp",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** nums = [10, 5, 2, 6], k = 100\nExpected: 8\n\n**Test 2:** nums = [1, 2, 3], k = 0\nExpected: 0 (all products are positive, none < 0)\n\n**Test 3:** nums = [1, 1, 1], k = 2\nExpected: 6 (all 6 subarrays have product = 1 < 2)\n\n**Test 4:** nums = [10], k = 5\nExpected: 0 (product = 10 >= 5)\n\n**Test 5:** nums = [2, 5, 3, 10], k = 30\nExpected: 6\n\n**Test 6:** nums = [1, 1, 1, 1, 1], k = 1\nExpected: 0 (k <= 1, no valid subarrays)\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: [10,5,2,6], k=100 → 8\nTest 2: [1,2,3], k=0 → 0\nTest 3: [1,1,1], k=2 → 6\nTest 4: [10], k=5 → 0\nTest 5: [2,5,3,10], k=30 → 6\nTest 6: [1,1,1,1,1], k=1 → 0",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-ts",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-ts"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-ts",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'product' or 'left') and put data inside it.\n\nFor example, 'let product: number = 1;' creates a variable that stores the number 1. Later, you can use that variable name to refer to it. We'll use variables to track the current product, the left pointer, and the total count.",
+      "example": "let product: number = 1;  // Current product of window\nlet left: number = 0;      // Left pointer of window\nlet count: number = 0;     // Total count of valid subarrays\n\nThese variables help us track our sliding window state",
+      "action": "continue",
+      "next": "function-check-ts"
+    },
+    {
+      "stepId": "function-check-ts",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-ts"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-ts",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.\n\nThink of it like a recipe: you provide ingredients (parameters), the function does the work, and gives you a result (return value).",
+      "example": "function numSubarrayProductLessThanK(nums: number[], k: number): number {\n    // This function takes nums array and k\n    // It returns the count of subarrays with product < k\n    return 0;\n}",
+      "action": "continue",
+      "next": "parameter-check-ts"
+    },
+    {
+      "stepId": "parameter-check-ts",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "array-check-ts"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-ts",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'function numSubarrayProductLessThanK(nums: number[], k: number)', the 'nums' and 'k' are parameters - they're placeholders that will receive actual values when you call the function.\n\nWhen you call 'numSubarrayProductLessThanK([10, 5, 2, 6], 100)', the array and number go into the parameters.",
+      "example": "function numSubarrayProductLessThanK(nums: number[], k: number): number {\n    // 'nums' and 'k' are parameters\n}\n\n// When we call it:\nnumSubarrayProductLessThanK([10, 5, 2, 6], 100);\n// The array and number go into the parameters",
+      "action": "continue",
+      "next": "array-check-ts"
+    },
+    {
+      "stepId": "array-check-ts",
+      "mentorSays": "To solve this lesson, we'll need to work with arrays. Do you know what an array is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know arrays",
+          "next": "loop-check-ts"
+        },
+        {
+          "label": "No, explain arrays",
+          "next": "array-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "array-explanation-ts",
+      "mentorSays": "An array is a list of values stored in order. Each value has a position number called an 'index'. Array indices start counting from 0, not 1.\n\nFor example, let nums: number[] = [10, 5, 2, 6] means:\n- nums[0] = 10 (first element, index 0)\n- nums[1] = 5 (second element, index 1)\n- nums[2] = 2 (third element, index 2)\n- nums[3] = 6 (fourth element, index 3)\n\nWe'll slide a window over this array to find valid subarrays.",
+      "example": "let nums: number[] = [10, 5, 2, 6];\n\nnums[0] = 10\nnums[1] = 5\nnums[2] = 2\nnums[3] = 6\n\nWe'll use indices to access elements",
+      "action": "continue",
+      "next": "loop-check-ts"
+    },
+    {
+      "stepId": "loop-check-ts",
+      "mentorSays": "To solve this lesson, we'll need to use loops. Do you know what a loop is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know loops",
+          "next": "coding-start-ts"
+        },
+        {
+          "label": "No, explain loops",
+          "next": "loop-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "loop-explanation-ts",
+      "mentorSays": "A loop lets you repeat code multiple times. A 'for' loop in TypeScript runs code for each value in a sequence.\n\nFor example, 'for (let right = 0; right < nums.length; right++)' means: run the code for each index from 0 to the length of the array. This lets us move our right pointer through the array.",
+      "example": "for (let right = 0; right < 4; right++) {\n    console.log(right);\n}\n\nThis prints: 0, 1, 2, 3",
+      "action": "continue",
+      "next": "coding-start-ts"
+    },
+    {
+      "stepId": "coding-start-ts",
+      "mentorSays": "Perfect! Let's implement the subarray product solution in TypeScript. We'll create a function that takes an array and k, and returns the count of subarrays with product < k.",
+      "example": "function numSubarrayProductLessThanK(nums: number[], k: number): number {\n    \n}",
+      "action": "continue",
+      "next": "coding-edge-case-ts"
+    },
+    {
+      "stepId": "coding-edge-case-ts",
+      "mentorSays": "First, handle the edge case: if k <= 1, no valid subarrays exist (since all products are >= 1).",
+      "example": "function numSubarrayProductLessThanK(nums: number[], k: number): number {\n    // Edge case: k <= 1 means no valid subarrays\n    if (k <= 1) return 0;\n    \n}",
+      "action": "continue",
+      "next": "coding-init-vars-ts"
+    },
+    {
+      "stepId": "coding-init-vars-ts",
+      "mentorSays": "Initialize our sliding window variables: product (current product), left (left pointer), and count (total count of valid subarrays).",
+      "example": "function numSubarrayProductLessThanK(nums: number[], k: number): number {\n    if (k <= 1) return 0;\n    \n    let product: number = 1;  // Current product of window\n    let left: number = 0;      // Left pointer of window\n    let count: number = 0;     // Total count of valid subarrays\n    \n}",
+      "action": "continue",
+      "next": "coding-outer-loop-ts"
+    },
+    {
+      "stepId": "coding-outer-loop-ts",
+      "mentorSays": "Create a loop that moves the right pointer through the array. This will expand our window.",
+      "example": "function numSubarrayProductLessThanK(nums: number[], k: number): number {\n    if (k <= 1) return 0;\n    \n    let product: number = 1;\n    let left: number = 0;\n    let count: number = 0;\n    \n    // Expand window by moving right pointer\n    for (let right = 0; right < nums.length; right++) {\n        \n    }\n}",
+      "action": "continue",
+      "next": "coding-expand-window-ts"
+    },
+    {
+      "stepId": "coding-expand-window-ts",
+      "mentorSays": "Inside the loop, expand the window by multiplying the current product by nums[right]. This adds the new element to our window.",
+      "example": "function numSubarrayProductLessThanK(nums: number[], k: number): number {\n    if (k <= 1) return 0;\n    \n    let product: number = 1;\n    let left: number = 0;\n    let count: number = 0;\n    \n    for (let right = 0; right < nums.length; right++) {\n        // Expand window: include nums[right]\n        product *= nums[right];\n        \n    }\n}",
+      "action": "continue",
+      "next": "coding-shrink-window-ts"
+    },
+    {
+      "stepId": "coding-shrink-window-ts",
+      "mentorSays": "If the product is >= k, we need to shrink the window from the left. Keep dividing by nums[left] and moving left forward until product < k.",
+      "example": "function numSubarrayProductLessThanK(nums: number[], k: number): number {\n    if (k <= 1) return 0;\n    \n    let product: number = 1;\n    let left: number = 0;\n    let count: number = 0;\n    \n    for (let right = 0; right < nums.length; right++) {\n        product *= nums[right];\n        \n        // Shrink window if product >= k\n        while (product >= k) {\n            product /= nums[left];\n            left++;\n        }\n        \n    }\n}",
+      "action": "continue",
+      "next": "coding-count-subarrays-ts"
+    },
+    {
+      "stepId": "coding-count-subarrays-ts",
+      "mentorSays": "After ensuring the window is valid (product < k), count all valid subarrays ending at right. The number of such subarrays is right - left + 1.",
+      "example": "function numSubarrayProductLessThanK(nums: number[], k: number): number {\n    if (k <= 1) return 0;\n    \n    let product: number = 1;\n    let left: number = 0;\n    let count: number = 0;\n    \n    for (let right = 0; right < nums.length; right++) {\n        product *= nums[right];\n        \n        while (product >= k) {\n            product /= nums[left];\n            left++;\n        }\n        \n        // Count all valid subarrays ending at right\n        count += right - left + 1;\n    }\n}",
+      "action": "continue",
+      "next": "coding-return-ts"
+    },
+    {
+      "stepId": "coding-return-ts",
+      "mentorSays": "Finally, return the total count of valid subarrays.",
+      "example": "function numSubarrayProductLessThanK(nums: number[], k: number): number {\n    if (k <= 1) return 0;\n    \n    let product: number = 1;\n    let left: number = 0;\n    let count: number = 0;\n    \n    for (let right = 0; right < nums.length; right++) {\n        product *= nums[right];\n        \n        while (product >= k) {\n            product /= nums[left];\n            left++;\n        }\n        \n        count += right - left + 1;\n    }\n    \n    return count;\n}",
+      "action": "continue",
+      "next": "test-code-ts"
+    },
+    {
+      "stepId": "test-code-ts",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** nums = [10, 5, 2, 6], k = 100\nExpected: 8\n\n**Test 2:** nums = [1, 2, 3], k = 0\nExpected: 0 (all products are positive, none < 0)\n\n**Test 3:** nums = [1, 1, 1], k = 2\nExpected: 6 (all 6 subarrays have product = 1 < 2)\n\n**Test 4:** nums = [10], k = 5\nExpected: 0 (product = 10 >= 5)\n\n**Test 5:** nums = [2, 5, 3, 10], k = 30\nExpected: 6\n\n**Test 6:** nums = [1, 1, 1, 1, 1], k = 1\nExpected: 0 (k <= 1, no valid subarrays)\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: [10,5,2,6], k=100 → 8\nTest 2: [1,2,3], k=0 → 0\nTest 3: [1,1,1], k=2 → 6\nTest 4: [10], k=5 → 0\nTest 5: [2,5,3,10], k=30 → 6\nTest 6: [1,1,1,1,1], k=1 → 0",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "final",
+      "mentorSays": "🎉 Well done! You've successfully implemented the Subarray Product Less Than K solution!\n\n**Time Complexity:** O(n)\n- We iterate through the array once with the right pointer\n- Each element is added and removed from the window at most once\n- Even though we have a nested while loop, each element is processed at most twice (once when added, once when removed)\n\n**Space Complexity:** O(1)\n- We only use a constant amount of extra space (product, left, count variables)\n- No additional data structures are needed\n\n**Key Takeaways:**\n1. **Positive numbers enable sliding window**: Since all numbers are positive, product only increases when expanding, making the sliding window technique perfect\n2. **Shrinking restores validity**: When product >= k, shrinking from the left will eventually make product < k (since we're dividing by positive numbers)\n3. **Count by window size**: For each valid window ending at `right`, the number of valid subarrays is `right - left + 1`\n4. **Edge case handling**: k <= 1 means no valid subarrays (since all products are >= 1)\n5. **Variable-size window**: Unlike fixed-size sliding windows, this lesson requires a variable-size window that shrinks when needed\n\n**Related Practice Lessons:**\n- Minimum Size Subarray Sum (LeetCode #209)\n- Fruit Into Baskets (LeetCode #904)\n- Longest Substring with At Most K Distinct Characters (LeetCode #340)\n\nKeep practicing sliding window lessons - they're a powerful technique for array and string lessons!",
+      "action": "continue"
+    }
+  ]
+}

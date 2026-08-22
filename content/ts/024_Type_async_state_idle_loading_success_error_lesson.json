@@ -1,0 +1,403 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-ts-24",
+    "track": "ts",
+    "lessonNum": 24,
+    "title": "Type async state idle loading success error",
+    "shortName": "P24",
+    "intro": {
+      "tag": "LESSON #24",
+      "title": "Type async state idle loading success error",
+      "body": "In this lesson, you will build a simple application that fetches data from an API and displays different UI states based on the request status. You will learn how to model asynchronous operations using a typed state object that tracks 'idle', 'loading', 'success', and 'error' statuses. The main technologies involved are TypeScript's union types and interfaces to ensure type safety. This approach helps manage UI updates and error handling in a predictable way, making your code more robust and maintainable.",
+      "usecase": "Managing async states is crucial for building responsive user interfaces that communicate status clearly. In real applications, you'll see this pattern when loading dashboard data, submitting forms, or fetching search results—each requiring distinct UI feedback. For example, a weather app shows a loading spinner while fetching forecasts, displays data on success, or shows an error message if the network fails. Implementing typed async states ensures your components handle all possible outcomes predictably, preventing bugs and improving user experience."
+    },
+    "objectives": [
+      "Construct a TypeScript type union to represent the distinct states of an asynchronous operation.",
+      "Initialize a state variable using the defined async state type with an 'idle' default.",
+      "Implement a handler function that updates the async state to 'loading' upon request initiation.",
+      "Manipulate the state variable to transition to 'success' with fetched data upon a resolved promise.",
+      "Control the state flow by updating to 'error' with a descriptive message upon a rejected promise.",
+      "Render conditional UI elements based on the current async state value.",
+      "Integrate the async state type and handler into a complete function that simulates data fetching."
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 11",
+        "title": "Import React and useState",
+        "instruction": "Import React and useState from the 'react' package.",
+        "hint": "Use the import statement to bring in React and the useState hook.",
+        "analogousExample": "// Importing modules in TypeScript\nimport React, { useState } from 'react';",
+        "seedCode": "// Import React and useState here",
+        "expectedOutcome": "You'll have the necessary imports to use React and state management.",
+        "successCriteria": [
+          "React and useState are imported from 'react'."
+        ],
+        "feedbackCorrect": "Great! You've successfully imported React and useState.",
+        "feedbackPartial": "You're close. Make sure you're importing both React and useState from 'react'.",
+        "feedbackWrong": "That's not quite right. You need to import React and useState from 'react'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "React",
+            "useState",
+            "'react'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 11",
+        "title": "Define the AsyncState type",
+        "instruction": "Define a TypeScript discriminated union type named AsyncState with four variants: 'idle', 'loading', 'success', and 'error'. The 'success' variant should have a data property of type string, and the 'error' variant should have an error property of type string.",
+        "hint": "Use the 'type' keyword to create a union type. Each variant can be represented as an object with a 'status' property (like 'idle', 'loading', etc.) and optional data/error properties.",
+        "analogousExample": "// Example: a union type for different states\ntype RequestStatus = \n  | { status: 'pending' }\n  | { status: 'fulfilled'; data: string }\n  | { status: 'rejected'; reason: string };",
+        "seedCode": "import React, { useState } from 'react';\n// Define AsyncState type here",
+        "expectedOutcome": "A TypeScript type AsyncState is defined with discriminated union variants for idle, loading, success, and error states.",
+        "successCriteria": [
+          "AsyncState type is defined as a union with four object types, each with a 'status' property and appropriate data/error properties for success and error variants."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but check that all four variants (idle, loading, success, error) are included, and that success has a 'data' property (string) and error has an 'error' property (string).",
+        "feedbackWrong": "The AsyncState type definition is missing or incorrect. Ensure you define a union type with four variants: idle (no extra data), loading (no extra data), success (with data: string), and error (with error: string).",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "type",
+            "AsyncState",
+            "idle",
+            "loading",
+            "success",
+            "error",
+            "data",
+            "string"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 11",
+        "title": "Create the main component",
+        "instruction": "Create a functional component named App that returns a JSX element. Use either a function declaration or arrow function syntax.",
+        "hint": "Define a component called App that returns a JSX element like a div or fragment. Remember to include the return statement.",
+        "analogousExample": "// Example: a simple functional component\nfunction App() {\n  return <div>Hello</div>;\n}",
+        "seedCode": "import React, { useState } from 'react';\n\ntype AsyncState<T> = {\n  status: 'idle' | 'loading' | 'success' | 'error';\n  data: T | null;\n  error: string | null;\n};\n\n// Create the App component here",
+        "expectedOutcome": "The App component is defined and returns a JSX element.",
+        "successCriteria": [
+          "A functional component named App is defined and returns a JSX element."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the component, but make sure it's named App and returns a JSX element (like a div or fragment).",
+        "feedbackWrong": "The component isn't defined correctly. Create a functional component named App that returns a JSX element.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "App",
+            "return",
+            "<"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 11",
+        "title": "Initialize async state with useState",
+        "instruction": "Inside the App component, declare a state variable called asyncState using useState, initialized to the idle variant of the AsyncState type with null data and error.",
+        "hint": "Use the useState hook with the AsyncState type. The initial state should have status 'idle', data null, and error null.",
+        "analogousExample": "// Example: initializing typed state\nconst [user, setUser] = useState<{ name: string; age: number }>({ name: '', age: 0 });",
+        "seedCode": "import React, { useState } from 'react';\n\ntype AsyncState<T> = {\n  status: 'idle' | 'loading' | 'success' | 'error';\n  data: T | null;\n  error: string | null;\n};\n\nconst App = () => {\n  // Initialize asyncState here\n  return null;\n};",
+        "expectedOutcome": "The asyncState variable is declared with the correct type and initial idle state.",
+        "successCriteria": [
+          "asyncState is declared using useState with the AsyncState type, initialized to { status: 'idle', data: null, error: null }."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure asyncState uses the AsyncState type and is initialized with status 'idle', data null, and error null.",
+        "feedbackWrong": "Check the initialization. You need to declare asyncState with useState, using the AsyncState type and the idle variant as the initial state.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "asyncState",
+            "useState",
+            "AsyncState",
+            "'idle'",
+            "null",
+            "null"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 11",
+        "title": "Define a mock async function",
+        "instruction": "Inside your component, define an async function named fetchData that returns a promise and simulates a delay using setTimeout.",
+        "hint": "You can use setTimeout inside a Promise to create an artificial delay.",
+        "analogousExample": "// Example: a mock async function\nasync function fetchMockData() {\n  return new Promise((resolve) => {\n    setTimeout(() => {\n      resolve('Data loaded');\n    }, 1000);\n  });\n}",
+        "seedCode": "import React, { useState } from 'react';\n\ntype AsyncState<T> = {\n  status: 'idle' | 'loading' | 'success' | 'error';\n  data: T | null;\n  error: string | null;\n};\n\nconst App = () => {\n  // Initialize asyncState here\n  \n  // Define fetchData function here\n  \n  return null;\n};",
+        "expectedOutcome": "You will have a fetchData function that returns a Promise and simulates a delay.",
+        "successCriteria": [
+          "An async function named fetchData is defined, returns a Promise, and uses setTimeout to simulate a delay."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure fetchData is an async function that returns a Promise with a setTimeout inside.",
+        "feedbackWrong": "The function isn't defined correctly. It should be async, return a Promise, and simulate a delay.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "fetchData",
+            "async",
+            "Promise",
+            "setTimeout"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 11",
+        "title": "Create a handler to start loading",
+        "instruction": "Define a function called handleFetch inside your component that sets asyncState to loading status, calls fetchData, and handles the result.",
+        "hint": "Create an async function that updates state to loading, awaits the fetchData promise, and updates state to success or error.",
+        "analogousExample": "// Similar: async handler that updates state\nasync function handleSubmit() {\n  setState({ status: 'loading' });\n  try {\n    const result = await submitData();\n    setState({ status: 'success', data: result });\n  } catch (error) {\n    setState({ status: 'error', error: error.message });\n  }\n}",
+        "seedCode": "import React, { useState } from 'react';\n\ntype AsyncState<T> = {\n  status: 'idle' | 'loading' | 'success' | 'error';\n  data: T | null;\n  error: string | null;\n};\n\nconst App = () => {\n  const [asyncState, setAsyncState] = useState<AsyncState<string>>({\n    status: 'idle',\n    data: null,\n    error: null,\n  });\n\n  const fetchData = async (): Promise<string> => {\n    await new Promise(resolve => setTimeout(resolve, 1000));\n    return 'Data loaded!';\n  };\n\n  // Define handleFetch function here\n\n  return null;\n};",
+        "expectedOutcome": "A handler function that updates asyncState to loading, calls fetchData, and updates state to success or error based on the result.",
+        "successCriteria": [
+          "The handleFetch function is defined, sets status to 'loading', calls fetchData, and handles both success and error cases."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've defined a handler, but make sure it sets status to 'loading', calls fetchData, and handles both success and error cases.",
+        "feedbackWrong": "The handler is missing or doesn't properly manage the async state flow. Review the example and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "handleFetch",
+            "async",
+            "setAsyncState",
+            "status: 'loading'",
+            "fetchData",
+            "try",
+            "catch",
+            "status: 'success'",
+            "status: 'error'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 11",
+        "title": "Add a container div",
+        "instruction": "In your App component, return a div element to serve as the main container for your UI.",
+        "hint": "Replace the current return statement with a JSX div element.",
+        "analogousExample": "// Returning a container div\nconst MyComponent = () => {\n  return (\n    <div>\n      {/* Content will go here */}\n    </div>\n  );\n};",
+        "seedCode": "import React, { useState } from 'react';\n\ntype AsyncState<T> = {\n  status: 'idle' | 'loading' | 'success' | 'error';\n  data: T | null;\n  error: string | null;\n};\n\nconst App = () => {\n  const [asyncState, setAsyncState] = useState<AsyncState<string>>({\n    status: 'idle',\n    data: null,\n    error: null,\n  });\n\n  const fetchData = async (): Promise<string> => {\n    await new Promise(resolve => setTimeout(resolve, 1000));\n    return 'Data loaded!';\n  };\n\n  // Define handleFetch function here\n\n  return (\n    <div>\n      {/* UI content will be added here */}\n    </div>\n  );\n};",
+        "expectedOutcome": "The component now returns a JSX div element that will serve as the container for the rest of the UI elements.",
+        "successCriteria": [
+          "The App component returns a div element as its root JSX element."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're returning a div element from the component.",
+        "feedbackWrong": "The component should return a div element. Check your return statement syntax.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "return",
+            "<div>",
+            "</div>"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 11",
+        "title": "Display idle state content",
+        "instruction": "Inside your component's return statement, add a conditional check that renders a paragraph with the text 'Click the button to load data' and a button with the text 'Load Data' only when asyncState.status is 'idle'.",
+        "hint": "Use a logical AND (&&) operator or a ternary operator to conditionally render the content based on asyncState.status === 'idle'.",
+        "analogousExample": "// Conditional rendering based on state\nconst Example = () => {\n  const [status, setStatus] = useState('idle');\n  return (\n    <div>\n      {status === 'idle' && (\n        <p>Ready to start</p>\n      )}\n    </div>\n  );\n};",
+        "seedCode": "import React, { useState } from 'react';\n\ntype AsyncState<T> = {\n  status: 'idle' | 'loading' | 'success' | 'error';\n  data: T | null;\n  error: string | null;\n};\n\nconst App = () => {\n  const [asyncState, setAsyncState] = useState<AsyncState<string>>({\n    status: 'idle',\n    data: null,\n    error: null,\n  });\n\n  const fetchData = async (): Promise<string> => {\n    await new Promise(resolve => setTimeout(resolve, 1000));\n    return 'Data loaded!';\n  };\n\n  // Define handleFetch function here\n\n  return (\n    <div>\n      {/* Add conditional rendering for idle state here */}\n    </div>\n  );\n};",
+        "expectedOutcome": "The UI will show a paragraph with the text 'Click the button to load data' and a button labeled 'Load Data' when the asyncState.status is 'idle'.",
+        "successCriteria": [
+          "The code includes a conditional check for asyncState.status === 'idle' that renders a paragraph with the specified text and a button with the specified text."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're checking asyncState.status === 'idle' and rendering both the paragraph and button with the correct text.",
+        "feedbackWrong": "The idle state content isn't properly displayed. Check that you're conditionally rendering based on asyncState.status and including both the paragraph and button with the specified text.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "asyncState.status",
+            "'idle'",
+            "paragraph",
+            "button",
+            "Load Data"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 11",
+        "title": "Display loading state content",
+        "instruction": "Add a conditional rendering block that displays a loading indicator when asyncState.status is 'loading'.",
+        "hint": "Use a ternary operator or logical && to check if asyncState.status equals 'loading'. If true, render a paragraph or div with loading text.",
+        "analogousExample": "// Conditional rendering for loading state\n{isLoading ? <p>Loading...</p> : null}",
+        "seedCode": "import React, { useState } from 'react';\n\ntype AsyncState<T> = {\n  status: 'idle' | 'loading' | 'success' | 'error';\n  data: T | null;\n  error: string | null;\n};\n\nconst App = () => {\n  const [asyncState, setAsyncState] = useState<AsyncState<string>>({\n    status: 'idle',\n    data: null,\n    error: null,\n  });\n\n  const fetchData = async (): Promise<string> => {\n    await new Promise(resolve => setTimeout(resolve, 1000));\n    return 'Data loaded!';\n  };\n\n  // Define handleFetch function here\n\n  return (\n    <div>\n      {asyncState.status === 'idle' && <p>Click to load data</p>}\n      {/* Add conditional rendering for loading state here */}\n    </div>\n  );\n};",
+        "expectedOutcome": "The UI will show a loading indicator when the asyncState.status is 'loading'.",
+        "successCriteria": [
+          "A conditional rendering block is added that checks asyncState.status === 'loading' and renders appropriate loading content."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure the condition checks asyncState.status and renders content only when it's 'loading'.",
+        "feedbackWrong": "The loading state content isn't displayed correctly. Check the condition and the JSX you added.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "asyncState.status",
+            "'loading'",
+            "?",
+            ":",
+            "&&",
+            "<p>",
+            "Loading"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 11",
+        "title": "Display error state content",
+        "instruction": "Add conditional rendering to display an error message when asyncState.status is 'error'.",
+        "hint": "Add a JSX block that checks if asyncState.status equals 'error' and renders a paragraph with the error message.",
+        "analogousExample": "// Conditional rendering for error state\nif (status === 'error') {\n  return <p>Something went wrong!</p>;\n}",
+        "seedCode": "import React, { useState } from 'react';\n\ntype AsyncState<T> = {\n  status: 'idle' | 'loading' | 'success' | 'error';\n  data: T | null;\n  error: string | null;\n};\n\nconst App = () => {\n  const [asyncState, setAsyncState] = useState<AsyncState<string>>({\n    status: 'idle',\n    data: null,\n    error: null,\n  });\n\n  const fetchData = async (): Promise<string> => {\n    await new Promise(resolve => setTimeout(resolve, 1000));\n    return 'Data loaded!';\n  };\n\n  // Define handleFetch function here\n\n  return (\n    <div>\n      {asyncState.status === 'idle' && <p>Click to load data</p>}\n      {/* Add conditional rendering for loading state here */}\n      {/* Add conditional rendering for success state here */}\n    </div>\n  );\n};",
+        "expectedOutcome": "The UI will show an error message when the asyncState.status is 'error'.",
+        "successCriteria": [
+          "The component includes a conditional JSX block that renders when asyncState.status is 'error', displaying an error message."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure the condition checks asyncState.status and renders a paragraph with an error message.",
+        "feedbackWrong": "The error state rendering is missing or incorrect. Please add a conditional JSX block that displays when asyncState.status is 'error'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "asyncState.status",
+            "'error'",
+            "<p>",
+            "error"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 11",
+        "title": "Wire the button to the handler",
+        "instruction": "Add a button element with an onClick handler that calls the handleFetch function when clicked.",
+        "hint": "Create a <button> element inside the container div. Use onClick={handleFetch} to connect it to your handler function.",
+        "analogousExample": "// Example: button with click handler\n<button onClick={handleClick}>Click me</button>",
+        "seedCode": "import React, { useState } from 'react';\n\ntype AsyncState<T> = {\n  status: 'idle' | 'loading' | 'success' | 'error';\n  data: T | null;\n  error: string | null;\n};\n\nconst App = () => {\n  const [asyncState, setAsyncState] = useState<AsyncState<string>>({\n    status: 'idle',\n    data: null,\n    error: null,\n  });\n\n  const fetchData = async (): Promise<string> => {\n    await new Promise(resolve => setTimeout(resolve, 1000));\n    return 'Data loaded!';\n  };\n\n  const handleFetch = async () => {\n    setAsyncState({ status: 'loading', data: null, error: null });\n    try {\n      const result = await fetchData();\n      setAsyncState({ status: 'success', data: result, error: null });\n    } catch (err) {\n      setAsyncState({ status: 'error', data: null, error: 'Failed to load data' });\n    }\n  };\n\n  return (\n    <div>\n      {asyncState.status === 'idle' && <p>Click to load data</p>}\n      {asyncState.status === 'loading' && <p>Loading...</p>}\n      {asyncState.status === 'success' && <p>{asyncState.data}</p>}\n      {asyncState.status === 'error' && <p>Error: {asyncState.error}</p>}\n      {/* Add button with onClick handler here */}\n    </div>\n  );\n};",
+        "expectedOutcome": "A button appears in the UI that triggers the async operation when clicked.",
+        "successCriteria": [
+          "The button element is added with onClick={handleFetch}."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You added a button, but make sure it has onClick={handleFetch}.",
+        "feedbackWrong": "The button isn't properly connected. Add a <button> with onClick={handleFetch}.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<button",
+            "onClick={handleFetch}",
+            ">",
+            "</button>"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import React and useState",
+        "id": "step1"
+      },
+      {
+        "label": "Define the AsyncState type",
+        "id": "step2"
+      },
+      {
+        "label": "Create the main component",
+        "id": "step3"
+      },
+      {
+        "label": "Initialize async state with useState",
+        "id": "step4"
+      },
+      {
+        "label": "Define a mock async function",
+        "id": "step5"
+      },
+      {
+        "label": "Create a handler to start loading",
+        "id": "step6"
+      },
+      {
+        "label": "Add a container div",
+        "id": "step7"
+      },
+      {
+        "label": "Display idle state content",
+        "id": "step8"
+      },
+      {
+        "label": "Display loading state content",
+        "id": "step9"
+      },
+      {
+        "label": "Display error state content",
+        "id": "step10"
+      },
+      {
+        "label": "Wire the button to the handler",
+        "id": "step11"
+      }
+    ]
+  },
+  "source": "content"
+}

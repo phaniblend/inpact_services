@@ -1,0 +1,393 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-angular-83",
+    "track": "angular",
+    "lessonNum": 83,
+    "title": "Optimistic UI",
+    "shortName": "P83",
+    "intro": {
+      "tag": "LESSON #83",
+      "title": "Optimistic UI",
+      "body": "In this lesson, you'll build a simple task list app that instantly updates the UI when you add a task, before the server confirms it—this is called Optimistic UI. You'll learn how to manage application state with Angular's built-in services and data binding. The main technologies you'll use are TypeScript for type safety and Angular's component structure and event handling. By the end, you'll understand how to create a responsive user experience that feels fast and seamless, even when dealing with network delays.",
+      "usecase": "Optimistic UI is a crucial pattern in modern web applications where immediate feedback enhances user experience. You'll see this in social media platforms like Facebook or Twitter when liking posts - the UI updates instantly while the request processes in the background. In e-commerce sites, adding items to cart shows immediate visual confirmation before server validation. Dashboard applications use this for toggling settings or filters, providing smooth interactions even with network latency. This approach reduces perceived wait time and makes applications feel more responsive and reliable."
+    },
+    "objectives": [
+      "Initialize a component state to manage optimistic UI data",
+      "Implement a service method that simulates an API call with delayed response",
+      "Configure event handlers to update UI optimistically before API confirmation",
+      "Apply error handling to revert optimistic updates when API calls fail",
+      "Bind optimistic state changes to template elements for immediate feedback",
+      "Integrate loading indicators that show only during actual API operations",
+      "Manipulate component state to maintain data consistency between optimistic and confirmed states"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 10",
+        "title": "Import Component and HttpClient modules",
+        "instruction": "Import the Component decorator from '@angular/core' and HttpClientModule from '@angular/common/http'.",
+        "hint": "Use the import statement with the from keyword to bring in these Angular modules.",
+        "analogousExample": "// Example of importing Angular modules\nimport { Component } from '@angular/core';\nimport { HttpClientModule } from '@angular/common/http';",
+        "seedCode": {
+          "App.tsx": "// Import Component from '@angular/core' and HttpClientModule from '@angular/common/http'",
+          "selectors.ts": "// selectors"
+        },
+        "expectedOutcome": "The necessary Angular modules for creating components and making HTTP requests are imported.",
+        "successCriteria": [
+          "Component is imported from '@angular/core' and HttpClientModule is imported from '@angular/common/http'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've imported some modules, but make sure to import both Component from '@angular/core' and HttpClientModule from '@angular/common/http'.",
+        "feedbackWrong": "The imports are missing or incorrect. You need to import Component from '@angular/core' and HttpClientModule from '@angular/common/http'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "Component",
+            "@angular/core",
+            "HttpClientModule",
+            "@angular/common/http"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 10",
+        "title": "Create the main component class",
+        "instruction": "Create a component class named TaskComponent with the @Component decorator and define its selector and template.",
+        "hint": "Use the @Component decorator from '@angular/core' and define a selector like 'app-task' and a simple template string.",
+        "analogousExample": "// Example component class\n@Component({\n  selector: 'app-example',\n  template: '<p>Example component</p>'\n})\nexport class ExampleComponent {}",
+        "seedCode": {
+          "App.tsx": "import { Component } from '@angular/core';\nimport { HttpClientModule } from '@angular/common/http';\n\n// Create the TaskComponent class here",
+          "selectors.ts": "// selectors"
+        },
+        "expectedOutcome": "A TaskComponent class is created with the @Component decorator, a selector, and a template.",
+        "successCriteria": [
+          "TaskComponent class is defined with @Component decorator, selector, and template properties."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure the TaskComponent class has the @Component decorator with selector and template properties.",
+        "feedbackWrong": "The TaskComponent class is missing or incomplete. Check that it has the @Component decorator with selector and template.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "TaskComponent",
+            "@Component",
+            "selector",
+            "template"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 10",
+        "title": "Define the task data interface",
+        "instruction": "Define a TypeScript interface named Task with three properties: id (number), title (string), and completed (boolean).",
+        "hint": "Use the interface keyword followed by the interface name and property definitions with type annotations.",
+        "analogousExample": "// Example interface definition\ninterface User {\n  id: number;\n  name: string;\n  active: boolean;\n}",
+        "seedCode": {
+          "App.tsx": "import { Component } from '@angular/core';\nimport { HttpClientModule } from '@angular/common/http';\n\n// Create the TaskComponent class here\n\n// Define the Task interface here",
+          "selectors.ts": "// selectors"
+        },
+        "expectedOutcome": "You'll have a Task interface that defines the shape of task objects with proper TypeScript types.",
+        "successCriteria": [
+          "A Task interface is defined with id: number, title: string, and completed: boolean properties."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure all three properties are included with the correct TypeScript types: id should be number, title should be string, and completed should be boolean.",
+        "feedbackWrong": "The Task interface isn't properly defined. Remember to use the interface keyword, name it Task, and include all three properties with their TypeScript types.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "interface",
+            "Task",
+            "id:",
+            "title:",
+            "completed:",
+            "number",
+            "string",
+            "boolean"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 10",
+        "title": "Initialize component state with tasks array",
+        "instruction": "Inside the TaskComponent class, add a public property named 'tasks' of type 'Task[]' and initialize it with an empty array.",
+        "hint": "Use TypeScript syntax to declare the property type. The property should be accessible in the template.",
+        "analogousExample": "// Example: declaring and initializing an array property\nclass ShoppingCartComponent {\n  public items: Item[] = [];\n}",
+        "seedCode": {
+          "App.tsx": "import { Component } from '@angular/core';\nimport { HttpClientModule } from '@angular/common/http';\n\ninterface Task {\n  id: number;\n  title: string;\n  completed: boolean;\n}\n\n@Component({\n  selector: 'app-task',\n  standalone: true,\n  imports: [HttpClientModule],\n  template: ''\n})\nexport class TaskComponent {\n  // Add tasks property here\n}",
+          "selectors.ts": "// selectors"
+        },
+        "expectedOutcome": "The component now has a typed 'tasks' property initialized as an empty array, ready to store task data.",
+        "successCriteria": [
+          "The TaskComponent class contains a public 'tasks' property of type 'Task[]' initialized with an empty array."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added a tasks property, but check the type annotation or initialization value.",
+        "feedbackWrong": "The tasks property is missing or incorrectly defined. It should be a public property of type Task[] initialized as an empty array.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "tasks:",
+            "Task[]",
+            "= []"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 10",
+        "title": "Inject HttpClient service",
+        "instruction": "Inject the HttpClient service into the component's constructor to enable HTTP operations.",
+        "hint": "Add a constructor parameter with the HttpClient type and assign it to a private property.",
+        "analogousExample": "// Example: injecting a service\nconstructor(private http: HttpClient) {}",
+        "seedCode": {
+          "App.tsx": "import { Component } from '@angular/core';\nimport { HttpClientModule, HttpClient } from '@angular/common/http';\n\ninterface Task {\n  id: number;\n  title: string;\n  completed: boolean;\n}\n\n@Component({\n  selector: 'app-task',\n  standalone: true,\n  imports: [HttpClientModule],\n  template: ''\n})\nexport class TaskComponent {\n  // Add tasks property here\n  \n  // Add constructor with HttpClient injection here\n}",
+          "selectors.ts": "// selectors"
+        },
+        "expectedOutcome": "The component constructor now has HttpClient injected as a private property, ready for HTTP operations.",
+        "successCriteria": [
+          "HttpClient is injected as a constructor parameter and assigned to a private property."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure HttpClient is properly injected as a constructor parameter with the correct type.",
+        "feedbackWrong": "The HttpClient service needs to be injected into the constructor. Check the example and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "constructor",
+            "private",
+            "http",
+            "HttpClient"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 10",
+        "title": "Create optimistic toggle handler",
+        "instruction": "Inside the TaskComponent class, create a method named toggleTask that takes a taskId parameter of type number. This method will implement the optimistic UI pattern.",
+        "hint": "Remember to update the local tasks array immediately before making the HTTP request to provide instant visual feedback.",
+        "analogousExample": "// Example: A method that optimistically updates local data\noptimisticUpdate(itemId: number) {\n  // 1. Update local state immediately\n  // 2. Make async request\n}",
+        "seedCode": {
+          "App.tsx": "import { Component } from '@angular/core';\nimport { HttpClientModule, HttpClient } from '@angular/common/http';\n\ninterface Task {\n  id: number;\n  title: string;\n  completed: boolean;\n}\n\n@Component({\n  selector: 'app-task',\n  standalone: true,\n  imports: [HttpClientModule],\n  template: ''\n})\nexport class TaskComponent {\n  // Add tasks property here\n  \n  // Add constructor with HttpClient injection here\n  \n  // Create toggleTask method here\n}",
+          "selectors.ts": "// selectors"
+        },
+        "expectedOutcome": "The TaskComponent class will have a toggleTask method that will later be used to implement optimistic updates.",
+        "successCriteria": [
+          "A toggleTask method with a taskId: number parameter exists in the TaskComponent class."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've created a method, but make sure it's named toggleTask and accepts a taskId parameter of type number.",
+        "feedbackWrong": "The toggleTask method with the correct signature wasn't found. Create a method named toggleTask that takes a taskId: number parameter.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "toggleTask",
+            "taskId",
+            "number"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 10",
+        "title": "Add error handling for optimistic updates",
+        "instruction": "In the toggleTask method, add a catch block after the subscribe call to handle HTTP errors and revert the task's completed status back to its original value.",
+        "hint": "Use the .subscribe() method's error callback or add a catch block to handle errors. Inside, find the task by id and toggle its completed property back.",
+        "analogousExample": "// Example: Error handling in an HTTP request\nthis.http.post('/api/data', payload).subscribe({\n  next: (response) => console.log('Success'),\n  error: (err) => {\n    console.error('Request failed:', err);\n    // Revert optimistic update here\n  }\n});",
+        "seedCode": {
+          "App.tsx": "import { Component } from '@angular/core';\nimport { HttpClientModule, HttpClient } from '@angular/common/http';\n\ninterface Task {\n  id: number;\n  title: string;\n  completed: boolean;\n}\n\n@Component({\n  selector: 'app-task',\n  standalone: true,\n  imports: [HttpClientModule],\n  template: ''\n})\nexport class TaskComponent {\n  tasks: Task[] = [\n    { id: 1, title: 'Learn Angular', completed: false },\n    { id: 2, title: 'Build Optimistic UI', completed: false }\n  ];\n\n  constructor(private http: HttpClient) {}\n\n  toggleTask(id: number) {\n    const task = this.tasks.find(t => t.id === id);\n    if (!task) return;\n    \n    const originalCompleted = task.completed;\n    task.completed = !task.completed;\n    \n    this.http.patch(`/api/tasks/${id}`, { completed: task.completed }).subscribe();\n    // Add error handling here\n  }\n}",
+          "selectors.ts": "// selectors"
+        },
+        "expectedOutcome": "The toggleTask method will now include error handling that reverts the optimistic update if the HTTP request fails.",
+        "successCriteria": [
+          "The toggleTask method contains an error callback or catch block that finds the task by id and reverts its completed status."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added some error handling, but make sure it properly finds the task and reverts the completed status.",
+        "feedbackWrong": "The error handling is missing or incorrect. The toggleTask method should handle HTTP errors and revert the task's completed status.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "error",
+            "subscribe",
+            "completed",
+            "revert",
+            "task"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 10",
+        "title": "Create the component template structure",
+        "instruction": "In the component's template property, create a basic structure with a container div and use *ngFor to loop through the tasks array to display each task's title.",
+        "hint": "Use Angular's structural directive *ngFor to iterate over the tasks array and display each task's title property.",
+        "analogousExample": "// Example: Basic template with ngFor\n@Component({\n  template: `<div *ngFor=\"let item of items\">{{ item.name }}</div>`\n})",
+        "seedCode": {
+          "App.tsx": "import { Component } from '@angular/core';\nimport { HttpClientModule, HttpClient } from '@angular/common/http';\n\ninterface Task {\n  id: number;\n  title: string;\n  completed: boolean;\n}\n\n@Component({\n  selector: 'app-task',\n  standalone: true,\n  imports: [HttpClientModule],\n  template: ''\n})\nexport class TaskComponent {\n  tasks: Task[] = [\n    { id: 1, title: 'Learn Angular', completed: false },\n    { id: 2, title: 'Build Optimistic UI', completed: false }\n  ];\n\n  constructor(private http: HttpClient) {}\n\n  toggleTask(id: number) {\n    const task = this.tasks.find(t => t.id === id);\n    if (!task) return;\n    \n    const originalCompleted = task.completed;\n    task.completed = !task.completed;\n    \n    this.http.patch(`/api/tasks/${id}`, { completed: task.completed }).subscribe();\n    // Add error handling here\n  }\n}",
+          "selectors.ts": "// selectors"
+        },
+        "expectedOutcome": "The component template now has a container with an *ngFor loop that displays each task's title.",
+        "successCriteria": [
+          "The template property contains a div with *ngFor=\"let task of tasks\" and displays {{ task.title }}."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure you're using *ngFor to iterate over the tasks array and display each task's title.",
+        "feedbackWrong": "The template structure is missing or incorrect. Ensure you have a div with *ngFor=\"let task of tasks\" and display {{ task.title }} inside it.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "*ngFor",
+            "tasks",
+            "{{",
+            "task.title",
+            "}}"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 10",
+        "title": "Display task items with checkboxes",
+        "instruction": "Inside the component's template, add a <div> that uses *ngFor to iterate over the tasks array and display each task with a checkbox bound to its completed property.",
+        "hint": "Use *ngFor=\"let task of tasks\" on a <div> element, then add an <input type=\"checkbox\"> with [checked]=\"task.completed\" and (change)=\"toggleTask(task.id)\".",
+        "analogousExample": "// Displaying items with checkboxes\n<div *ngFor=\"let item of items\">\n  <input type=\"checkbox\" [checked]=\"item.isDone\" (change)=\"toggleItem(item.id)\">\n  {{ item.name }}\n</div>",
+        "seedCode": {
+          "App.tsx": "import { Component } from '@angular/core';\nimport { HttpClientModule, HttpClient } from '@angular/common/http';\n\ninterface Task {\n  id: number;\n  title: string;\n  completed: boolean;\n}\n\n@Component({\n  selector: 'app-task',\n  standalone: true,\n  imports: [HttpClientModule],\n  template: ''\n})\nexport class TaskComponent {\n  tasks: Task[] = [\n    { id: 1, title: 'Learn Angular', completed: false },\n    { id: 2, title: 'Build Optimistic UI', completed: false }\n  ];\n\n  constructor(private http: HttpClient) {}\n\n  toggleTask(id: number) {\n    const task = this.tasks.find(t => t.id === id);\n    if (!task) return;\n    \n    const originalCompleted = task.completed;\n    task.completed = !task.completed;\n    \n    this.http.patch(`/api/tasks/${id}`, { completed: task.completed }).subscribe();\n    // Add error handling here\n  }\n}",
+          "selectors.ts": "// selectors"
+        },
+        "expectedOutcome": "The template will display two task items with checkboxes that reflect their completed status and trigger the toggleTask handler when clicked.",
+        "successCriteria": [
+          "The template contains a <div> with *ngFor iterating over tasks, each with a checkbox bound to task.completed and wired to toggleTask."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure you have *ngFor, [checked] binding, and (change) event all correctly implemented.",
+        "feedbackWrong": "The template doesn't yet display the tasks with checkboxes. Review the instruction and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "*ngFor",
+            "tasks",
+            "[checked]",
+            "task.completed",
+            "(change)",
+            "toggleTask"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 10",
+        "title": "Wire checkboxes to the optimistic toggle handler",
+        "instruction": "In the template, add (change) event binding to each checkbox that calls toggleTask with the task id.",
+        "hint": "Use (change)=\"toggleTask(task.id)\" on the checkbox input element.",
+        "analogousExample": "<!-- Example: binding event to a checkbox -->\n<input type=\"checkbox\" (change)=\"handleCheckbox(item.id)\">",
+        "seedCode": {
+          "App.tsx": "import { Component } from '@angular/core';\nimport { HttpClientModule, HttpClient } from '@angular/common/http';\n\ninterface Task {\n  id: number;\n  title: string;\n  completed: boolean;\n}\n\n@Component({\n  selector: 'app-task',\n  standalone: true,\n  imports: [HttpClientModule],\n  template: `\n    <div>\n      <h2>Task List</h2>\n      <ul>\n        <li *ngFor=\"let task of tasks\">\n          <input \n            type=\"checkbox\" \n            [checked]=\"task.completed\" \n            (change)=\"toggleTask(task.id)\">\n          {{ task.title }}\n        </li>\n      </ul>\n    </div>\n  `\n})\nexport class TaskComponent {\n  tasks: Task[] = [\n    { id: 1, title: 'Learn Angular', completed: false },\n    { id: 2, title: 'Build Optimistic UI', completed: false }\n  ];\n\n  constructor(private http: HttpClient) {}\n\n  toggleTask(id: number) {\n    const task = this.tasks.find(t => t.id === id);\n    if (!task) return;\n    \n    const originalCompleted = task.completed;\n    task.completed = !task.completed;\n    \n    this.http.patch(`/api/tasks/${id}`, { completed: task.completed }).subscribe();\n    // Add error handling here\n  }\n}",
+          "selectors.ts": "// selectors"
+        },
+        "expectedOutcome": "Each checkbox will now trigger the optimistic toggle handler when clicked, immediately updating the UI before the server request completes.",
+        "successCriteria": [
+          "The template contains (change)=\"toggleTask(task.id)\" event binding on each checkbox input."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure you've added the (change) event binding to the checkbox input element with toggleTask(task.id).",
+        "feedbackWrong": "The checkboxes need to be wired to the toggle handler. Add (change)=\"toggleTask(task.id)\" to each checkbox input in the template.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "(change)=\"toggleTask(task.id)\""
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import Component and HttpClient modules",
+        "id": "step1"
+      },
+      {
+        "label": "Create the main component class",
+        "id": "step2"
+      },
+      {
+        "label": "Define the task data interface",
+        "id": "step3"
+      },
+      {
+        "label": "Initialize component state with tasks array",
+        "id": "step4"
+      },
+      {
+        "label": "Inject HttpClient service",
+        "id": "step5"
+      },
+      {
+        "label": "Create optimistic toggle handler",
+        "id": "step6"
+      },
+      {
+        "label": "Add error handling for optimistic updates",
+        "id": "step7"
+      },
+      {
+        "label": "Create the component template structure",
+        "id": "step8"
+      },
+      {
+        "label": "Display task items with checkboxes",
+        "id": "step9"
+      },
+      {
+        "label": "Wire checkboxes to the optimistic toggle handler",
+        "id": "step10"
+      }
+    ],
+    "answerShape": "multi-file"
+  },
+  "source": "content"
+}

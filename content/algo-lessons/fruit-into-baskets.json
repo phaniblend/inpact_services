@@ -1,0 +1,896 @@
+{
+  "id": "fruit-into-baskets",
+  "title": "Fruit Into Baskets",
+  "pattern": "sliding-window",
+  "difficulty": "medium",
+  "language": "javascript",
+  "status": "draft",
+  "flow": [
+    {
+      "stepId": "title",
+      "mentorSays": "At the end of this lesson, you will be able to:\n\n1. Understand what the Fruit Into Baskets lesson asks for\n2. Recognize this as a sliding window lesson with at most 2 distinct values\n3. Use a hash map to track fruit types and their frequencies\n4. Expand and shrink the window to maintain at most 2 distinct types\n5. Implement the solution step by step in your chosen language",
+      "action": "continue",
+      "next": "lesson-illustration"
+    },
+    {
+      "stepId": "lesson-illustration",
+      "mentorSays": "Perfect! Now let's understand what the Fruit Into Baskets lesson is asking.\n\n**Lesson Definition:**\nYou are visiting a fruit farm. There's a row of fruit trees. Each tree produces one type of fruit. You have two baskets, and each basket can only hold one type of fruit. However, there's no limit on the amount of fruit each basket can hold.\n\nGiven an array `fruits` where `fruits[i]` is the type of fruit the `i`-th tree produces, return the maximum number of fruits you can collect (the length of the longest contiguous subarray with at most 2 distinct fruit types).\n\n**Key Insight:**\nThis is equivalent to finding the longest contiguous subarray with at most 2 distinct values!\n\n**Example 1:** fruits = [1, 2, 1]\n\nWe can collect from all 3 trees:\n- Tree 0: type 1 → Basket 1\n- Tree 1: type 2 → Basket 2\n- Tree 2: type 1 → Basket 1\n\nTypes: {1, 2} (2 distinct types ≤ 2) ✓\nAnswer: 3\n\n**Example 2:** fruits = [0, 1, 2, 2]\n\nLet's check different subarrays:\n- [0, 1] → types {0, 1} → length 2\n- [1, 2] → types {1, 2} → length 2\n- [2, 2] → types {2} → length 2\n- [1, 2, 2] → types {1, 2} → length 3 ✓\n\nAnswer: 3 (from [1, 2, 2])\n\n**Example 3:** fruits = [1, 2, 3, 2, 2]\n\nLet's find the longest subarray with at most 2 distinct types:\n- [2, 3, 2, 2] → types {2, 3} → length 4 ✓\n- Or [1, 2] → types {1, 2} → length 2\n\nAnswer: 4 (from [2, 3, 2, 2])\n\n**Step-by-step trace for Example 3:**\n\nfruits = [1, 2, 3, 2, 2]\n\nWe'll use a sliding window approach:\n- **Window [0-0]**: {1}, distinct = 1 ≤ 2 ✓, maxLen = 1\n- **Window [0-1]**: {1, 2}, distinct = 2 ≤ 2 ✓, maxLen = 2\n- **Window [0-2]**: {1, 2, 3}, distinct = 3 > 2 ✗, shrink left\n  - **Window [1-2]**: {2, 3}, distinct = 2 ≤ 2 ✓, maxLen = 3\n- **Window [1-3]**: {2, 3}, distinct = 2 ≤ 2 ✓, maxLen = 4\n- **Window [1-4]**: {2, 3}, distinct = 2 ≤ 2 ✓, maxLen = 4\n\nAnswer: 4\n\n**What makes this tricky:**\n1. Understanding that \"at most 2 distinct types\" means we can have 1 or 2 types\n2. When we have 3 distinct types, we need to shrink the window from the left\n3. We need to track which types are in the current window and their frequencies\n4. When shrinking, we remove fruits until we're back to 2 distinct types\n\n**Common pitfalls:**\n- Not understanding that we need to track frequencies (not just types)\n- Shrinking incorrectly when we have 3 distinct types\n- Not updating the maximum length correctly\n- Off-by-one errors when calculating window size",
+      "example": "Example 1:\nfruits = [1, 2, 1]\n\nTypes: {1, 2} (2 distinct)\nAnswer: 3\n\nExample 2:\nfruits = [0, 1, 2, 2]\n\nLongest: [1, 2, 2] → types {1, 2}\nAnswer: 3\n\nExample 3:\nfruits = [1, 2, 3, 2, 2]\n\nLongest: [2, 3, 2, 2] → types {2, 3}\nAnswer: 4",
+      "action": "continue",
+      "next": "thinking-challenge"
+    },
+    {
+      "stepId": "thinking-challenge",
+      "mentorSays": "Now that you understand what the lesson wants, here's the real question:\n\nHow would YOU find the longest subarray with at most 2 distinct fruit types?\n\nThink about it for a moment. What approach feels natural to you?",
+      "choices": [
+        {
+          "label": "Use a sliding window with hash map to track distinct types",
+          "next": "explore-sliding-window"
+        },
+        {
+          "label": "Check all possible subarrays and count distinct types",
+          "next": "explore-brute-force"
+        },
+        {
+          "label": "Use two pointers to track the two types",
+          "next": "explore-two-pointers"
+        }
+      ]
+    },
+    {
+      "stepId": "explore-brute-force",
+      "mentorSays": "That's a straightforward approach! You're thinking: \"I'll check every possible subarray and count how many distinct types it has.\"\n\nFor fruits = [1, 2, 3, 2, 2]:\n- Check [1]: distinct = 1 ≤ 2 ✓\n- Check [1, 2]: distinct = 2 ≤ 2 ✓\n- Check [1, 2, 3]: distinct = 3 > 2 ✗\n- Check [2, 3]: distinct = 2 ≤ 2 ✓\n- ... and so on\n\nThis works! However, it's O(n²) time because we check O(n²) subarrays, and for each we count distinct types O(n), giving us O(n³) total.\n\nThere's a more efficient O(n) approach using a sliding window. Would you like to learn that?",
+      "action": "continue",
+      "next": "explore-sliding-window"
+    },
+    {
+      "stepId": "explore-two-pointers",
+      "mentorSays": "Great thinking! Two pointers can work, but we need to track which types are in the window, not just positions.\n\nActually, the sliding window approach with a hash map is cleaner because:\n- We need to know which types are currently in the window\n- We need to know their frequencies (to know when to remove a type completely)\n- A hash map naturally tracks both type and frequency\n\nThere's an elegant O(n) approach using a sliding window with a hash map. Would you like to learn that?",
+      "action": "continue",
+      "next": "explore-sliding-window"
+    },
+    {
+      "stepId": "explore-sliding-window",
+      "mentorSays": "Excellent choice! The sliding window approach is both efficient and elegant. Here's the core idea:\n\n**The Algorithm:**\n1. **Use two pointers**: `left` and `right` to define the current window\n2. **Track types**: Use a hash map to count fruit types in the current window\n3. **Expand**: Move `right` pointer to expand the window, add fruit type to map\n4. **Check validity**: If we have more than 2 distinct types, the window is invalid\n5. **Shrink**: If invalid, move `left` pointer to shrink the window, remove fruits until we have ≤ 2 types\n6. **Update maxLen**: Track the maximum valid window size\n\n**Why it works**:\n- We maintain a window with at most 2 distinct fruit types\n- When we expand and get 3 types, we shrink from the left\n- We remove fruits until one type is completely gone (frequency becomes 0)\n- The maximum window size we've seen is our answer\n\n**Key insight**: When we have 3 distinct types, we need to remove fruits from the left until we're back to 2 types. We do this by decrementing frequencies and removing types when frequency reaches 0.\n\nLet's trace with fruits = [1, 2, 3, 2, 2]:\n\n- **right = 0**: type = 1, map = {1:1}, distinct = 1 ≤ 2 ✓, maxLen = 1\n- **right = 1**: type = 2, map = {1:1, 2:1}, distinct = 2 ≤ 2 ✓, maxLen = 2\n- **right = 2**: type = 3, map = {1:1, 2:1, 3:1}, distinct = 3 > 2 ✗, shrink left\n  - **left = 0**: remove type 1, map = {2:1, 3:1}, distinct = 2 ≤ 2 ✓, maxLen = 3\n- **right = 3**: type = 2, map = {2:2, 3:1}, distinct = 2 ≤ 2 ✓, maxLen = 4\n- **right = 4**: type = 2, map = {2:3, 3:1}, distinct = 2 ≤ 2 ✓, maxLen = 4\n\nAnswer: 4\n\nThis is O(n) time and O(1) space (since we only track at most 2 types)! Now let's code it step by step.",
+      "action": "continue",
+      "next": "language-selection"
+    },
+    {
+      "stepId": "language-selection",
+      "mentorSays": "Great! Now let's code this solution. Which programming language would you like to use?",
+      "choices": [
+        {
+          "label": "JavaScript",
+          "next": "variable-check-js"
+        },
+        {
+          "label": "Python",
+          "next": "variable-check-python"
+        },
+        {
+          "label": "Java",
+          "next": "variable-check-java"
+        },
+        {
+          "label": "C++",
+          "next": "variable-check-cpp"
+        },
+        {
+          "label": "TypeScript",
+          "next": "variable-check-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-check-js",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-js"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-js",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'left' or 'freq') and put data inside it.\n\nFor example, 'let left = 0;' creates a variable that stores the number 0. Later, you can use that variable name to refer to it. We'll use variables to track the left pointer, the frequency map, and the maximum length.",
+      "example": "let left = 0;        // Left pointer of window\nlet maxLen = 0;     // Maximum length found\nconst freq = {};    // Frequency map for fruit types\n\nThese variables help us track our sliding window state",
+      "action": "continue",
+      "next": "function-check-js"
+    },
+    {
+      "stepId": "function-check-js",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-js"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-js",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.\n\nThink of it like a recipe: you provide ingredients (parameters), the function does the work, and gives you a result (return value).",
+      "example": "function totalFruit(fruits) {\n    // This function takes fruits array\n    // It returns the maximum number of fruits\n    return 0;\n}",
+      "action": "continue",
+      "next": "parameter-check-js"
+    },
+    {
+      "stepId": "parameter-check-js",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "array-check-js"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-js",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'function totalFruit(fruits)', the 'fruits' is a parameter - it's a placeholder that will receive an actual value when you call the function.\n\nWhen you call 'totalFruit([1, 2, 1])', the array goes into the parameter.",
+      "example": "function totalFruit(fruits) {\n    // 'fruits' is a parameter\n}\n\n// When we call it:\ntotalFruit([1, 2, 1]);\n// The array goes into the parameter",
+      "action": "continue",
+      "next": "array-check-js"
+    },
+    {
+      "stepId": "array-check-js",
+      "mentorSays": "To solve this lesson, we'll need to work with arrays. Do you know what an array is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know arrays",
+          "next": "loop-check-js"
+        },
+        {
+          "label": "No, explain arrays",
+          "next": "array-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "array-explanation-js",
+      "mentorSays": "An array is a list of values stored in order. Each value has a position number called an 'index'. Array indices start counting from 0, not 1.\n\nFor example, let fruits = [1, 2, 1] means:\n- fruits[0] = 1 (first element, index 0)\n- fruits[1] = 2 (second element, index 1)\n- fruits[2] = 1 (third element, index 2)\n\nWe'll slide a window over this array to find the longest subarray with at most 2 distinct types.",
+      "example": "let fruits = [1, 2, 1];\n\nfruits[0] = 1\nfruits[1] = 2\nfruits[2] = 1\n\nWe'll use indices to access elements",
+      "action": "continue",
+      "next": "loop-check-js"
+    },
+    {
+      "stepId": "loop-check-js",
+      "mentorSays": "To solve this lesson, we'll need to use loops. Do you know what a loop is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know loops",
+          "next": "coding-start-js"
+        },
+        {
+          "label": "No, explain loops",
+          "next": "loop-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "loop-explanation-js",
+      "mentorSays": "A loop lets you repeat code multiple times. A 'for' loop in JavaScript runs code for each value in a sequence.\n\nFor example, 'for (let right = 0; right < fruits.length; right++)' means: run the code for each index from 0 to the length of the array. This lets us move our right pointer through the array.",
+      "example": "for (let right = 0; right < 3; right++) {\n    console.log(right);\n}\n\nThis prints: 0, 1, 2",
+      "action": "continue",
+      "next": "coding-start-js"
+    },
+    {
+      "stepId": "coding-start-js",
+      "mentorSays": "Perfect! Let's implement the fruit into baskets solution in JavaScript. We'll create a function that takes a fruits array and returns the maximum number of fruits we can collect.",
+      "example": "function totalFruit(fruits) {\n  \n}",
+      "action": "continue",
+      "next": "coding-init-vars-js"
+    },
+    {
+      "stepId": "coding-init-vars-js",
+      "mentorSays": "First, let's initialize our variables: left pointer, frequency map to track fruit types, and maxLen to track the maximum length.",
+      "example": "function totalFruit(fruits) {\n  let left = 0;\n  let maxLen = 0;\n  const freq = {};  // Track frequency of each fruit type\n  \n}",
+      "action": "continue",
+      "next": "coding-outer-loop-js"
+    },
+    {
+      "stepId": "coding-outer-loop-js",
+      "mentorSays": "Create a loop that moves the right pointer through the array. This will expand our window.",
+      "example": "function totalFruit(fruits) {\n  let left = 0;\n  let maxLen = 0;\n  const freq = {};\n  \n  // Expand window by moving right pointer\n  for (let right = 0; right < fruits.length; right++) {\n    \n  }\n}",
+      "action": "continue",
+      "next": "coding-add-fruit-js"
+    },
+    {
+      "stepId": "coding-add-fruit-js",
+      "mentorSays": "Inside the loop, add the current fruit type to our frequency map. This expands the window.",
+      "example": "function totalFruit(fruits) {\n  let left = 0;\n  let maxLen = 0;\n  const freq = {};\n  \n  for (let right = 0; right < fruits.length; right++) {\n    // Add current fruit to frequency map\n    const type = fruits[right];\n    freq[type] = (freq[type] || 0) + 1;\n    \n  }\n}",
+      "action": "continue",
+      "next": "coding-shrink-window-js"
+    },
+    {
+      "stepId": "coding-shrink-window-js",
+      "mentorSays": "If we have more than 2 distinct types, we need to shrink the window from the left. Remove fruits until we're back to 2 types.",
+      "example": "function totalFruit(fruits) {\n  let left = 0;\n  let maxLen = 0;\n  const freq = {};\n  \n  for (let right = 0; right < fruits.length; right++) {\n    const type = fruits[right];\n    freq[type] = (freq[type] || 0) + 1;\n    \n    // Shrink window if we have more than 2 distinct types\n    while (Object.keys(freq).length > 2) {\n      const leftType = fruits[left];\n      freq[leftType]--;\n      if (freq[leftType] === 0) {\n        delete freq[leftType];\n      }\n      left++;\n    }\n    \n  }\n}",
+      "action": "continue",
+      "next": "coding-update-maxlen-js"
+    },
+    {
+      "stepId": "coding-update-maxlen-js",
+      "mentorSays": "After potentially shrinking, update maxLen with the current window size. The window now has at most 2 distinct types.",
+      "example": "function totalFruit(fruits) {\n  let left = 0;\n  let maxLen = 0;\n  const freq = {};\n  \n  for (let right = 0; right < fruits.length; right++) {\n    const type = fruits[right];\n    freq[type] = (freq[type] || 0) + 1;\n    \n    while (Object.keys(freq).length > 2) {\n      const leftType = fruits[left];\n      freq[leftType]--;\n      if (freq[leftType] === 0) {\n        delete freq[leftType];\n      }\n      left++;\n    }\n    \n    // Update maxLen with current window size\n    maxLen = Math.max(maxLen, right - left + 1);\n  }\n}",
+      "action": "continue",
+      "next": "coding-return-js"
+    },
+    {
+      "stepId": "coding-return-js",
+      "mentorSays": "Finally, return maxLen, which contains the maximum number of fruits we can collect.",
+      "example": "function totalFruit(fruits) {\n  let left = 0;\n  let maxLen = 0;\n  const freq = {};\n  \n  for (let right = 0; right < fruits.length; right++) {\n    const type = fruits[right];\n    freq[type] = (freq[type] || 0) + 1;\n    \n    while (Object.keys(freq).length > 2) {\n      const leftType = fruits[left];\n      freq[leftType]--;\n      if (freq[leftType] === 0) {\n        delete freq[leftType];\n      }\n      left++;\n    }\n    \n    maxLen = Math.max(maxLen, right - left + 1);\n  }\n  \n  return maxLen;\n}",
+      "action": "continue",
+      "next": "test-code-js"
+    },
+    {
+      "stepId": "test-code-js",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** fruits = [1, 2, 1]\nExpected: 3 (all fruits, types {1, 2})\n\n**Test 2:** fruits = [0, 1, 2, 2]\nExpected: 3 (from [1, 2, 2], types {1, 2})\n\n**Test 3:** fruits = [1, 2, 3, 2, 2]\nExpected: 4 (from [2, 3, 2, 2], types {2, 3})\n\n**Test 4:** fruits = [3, 3, 3, 1, 2, 1, 1, 2, 3, 3, 4]\nExpected: 5 (from [1, 2, 1, 1, 2], types {1, 2})\n\n**Test 5:** fruits = [1]\nExpected: 1 (single fruit)\n\n**Test 6:** fruits = [1, 1, 1]\nExpected: 3 (all same type)\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: [1,2,1] → 3\nTest 2: [0,1,2,2] → 3\nTest 3: [1,2,3,2,2] → 4\nTest 4: [3,3,3,1,2,1,1,2,3,3,4] → 5\nTest 5: [1] → 1\nTest 6: [1,1,1] → 3",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-python",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-python"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-python",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'left' or 'freq') and put data inside it.\n\nFor example, 'left = 0' creates a variable that stores the number 0. Later, you can use that variable name to refer to it. We'll use variables to track the left pointer, the frequency map, and the maximum length.",
+      "example": "left = 0         # Left pointer of window\nmax_len = 0     # Maximum length found\nfreq = {}       # Frequency map for fruit types\n\nThese variables help us track our sliding window state",
+      "action": "continue",
+      "next": "function-check-python"
+    },
+    {
+      "stepId": "function-check-python",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-python"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-python",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.\n\nThink of it like a recipe: you provide ingredients (parameters), the function does the work, and gives you a result (return value).",
+      "example": "def total_fruit(fruits):\n    # This function takes fruits list\n    # It returns the maximum number of fruits\n    return 0",
+      "action": "continue",
+      "next": "parameter-check-python"
+    },
+    {
+      "stepId": "parameter-check-python",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "array-check-python"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-python",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'def total_fruit(fruits)', the 'fruits' is a parameter - it's a placeholder that will receive an actual value when you call the function.\n\nWhen you call 'total_fruit([1, 2, 1])', the list goes into the parameter.",
+      "example": "def total_fruit(fruits):\n    # 'fruits' is a parameter\n\n# When we call it:\ntotal_fruit([1, 2, 1])\n# The list goes into the parameter",
+      "action": "continue",
+      "next": "array-check-python"
+    },
+    {
+      "stepId": "array-check-python",
+      "mentorSays": "To solve this lesson, we'll need to work with lists (Python's version of arrays). Do you know what a list is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know lists",
+          "next": "loop-check-python"
+        },
+        {
+          "label": "No, explain lists",
+          "next": "array-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "array-explanation-python",
+      "mentorSays": "A list is a collection of values stored in order. Each value has a position number called an 'index'. List indices start counting from 0, not 1.\n\nFor example, fruits = [1, 2, 1] means:\n- fruits[0] = 1 (first element, index 0)\n- fruits[1] = 2 (second element, index 1)\n- fruits[2] = 1 (third element, index 2)\n\nWe'll slide a window over this list to find the longest subarray with at most 2 distinct types.",
+      "example": "fruits = [1, 2, 1]\n\nfruits[0] = 1\nfruits[1] = 2\nfruits[2] = 1\n\nWe'll use indices to access elements",
+      "action": "continue",
+      "next": "loop-check-python"
+    },
+    {
+      "stepId": "loop-check-python",
+      "mentorSays": "To solve this lesson, we'll need to use loops. Do you know what a loop is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know loops",
+          "next": "coding-start-python"
+        },
+        {
+          "label": "No, explain loops",
+          "next": "loop-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "loop-explanation-python",
+      "mentorSays": "A loop lets you repeat code multiple times. A 'for' loop in Python runs code for each item in a sequence.\n\nFor example, 'for right in range(len(fruits)):' means: run the code for each index from 0 to the length of the list. This lets us move our right pointer through the list.",
+      "example": "for right in range(3):\n    print(right)\n\nThis prints: 0, 1, 2",
+      "action": "continue",
+      "next": "coding-start-python"
+    },
+    {
+      "stepId": "coding-start-python",
+      "mentorSays": "Perfect! Let's implement the fruit into baskets solution in Python. We'll create a function that takes a fruits list and returns the maximum number of fruits we can collect.",
+      "example": "def total_fruit(fruits):\n    \n    pass",
+      "action": "continue",
+      "next": "coding-init-vars-python"
+    },
+    {
+      "stepId": "coding-init-vars-python",
+      "mentorSays": "First, let's initialize our variables: left pointer, frequency map to track fruit types, and max_len to track the maximum length.",
+      "example": "def total_fruit(fruits):\n    left = 0\n    max_len = 0\n    freq = {}  # Track frequency of each fruit type\n    \n    pass",
+      "action": "continue",
+      "next": "coding-outer-loop-python"
+    },
+    {
+      "stepId": "coding-outer-loop-python",
+      "mentorSays": "Create a loop that moves the right pointer through the list. This will expand our window.",
+      "example": "def total_fruit(fruits):\n    left = 0\n    max_len = 0\n    freq = {}\n    \n    # Expand window by moving right pointer\n    for right in range(len(fruits)):\n        \n        pass",
+      "action": "continue",
+      "next": "coding-add-fruit-python"
+    },
+    {
+      "stepId": "coding-add-fruit-python",
+      "mentorSays": "Inside the loop, add the current fruit type to our frequency map. This expands the window.",
+      "example": "def total_fruit(fruits):\n    left = 0\n    max_len = 0\n    freq = {}\n    \n    for right in range(len(fruits)):\n        # Add current fruit to frequency map\n        type_val = fruits[right]\n        freq[type_val] = freq.get(type_val, 0) + 1\n        \n        pass",
+      "action": "continue",
+      "next": "coding-shrink-window-python"
+    },
+    {
+      "stepId": "coding-shrink-window-python",
+      "mentorSays": "If we have more than 2 distinct types, we need to shrink the window from the left. Remove fruits until we're back to 2 types.",
+      "example": "def total_fruit(fruits):\n    left = 0\n    max_len = 0\n    freq = {}\n    \n    for right in range(len(fruits)):\n        type_val = fruits[right]\n        freq[type_val] = freq.get(type_val, 0) + 1\n        \n        # Shrink window if we have more than 2 distinct types\n        while len(freq) > 2:\n            left_type = fruits[left]\n            freq[left_type] -= 1\n            if freq[left_type] == 0:\n                del freq[left_type]\n            left += 1\n        \n        pass",
+      "action": "continue",
+      "next": "coding-update-maxlen-python"
+    },
+    {
+      "stepId": "coding-update-maxlen-python",
+      "mentorSays": "After potentially shrinking, update max_len with the current window size. The window now has at most 2 distinct types.",
+      "example": "def total_fruit(fruits):\n    left = 0\n    max_len = 0\n    freq = {}\n    \n    for right in range(len(fruits)):\n        type_val = fruits[right]\n        freq[type_val] = freq.get(type_val, 0) + 1\n        \n        while len(freq) > 2:\n            left_type = fruits[left]\n            freq[left_type] -= 1\n            if freq[left_type] == 0:\n                del freq[left_type]\n            left += 1\n        \n        # Update max_len with current window size\n        max_len = max(max_len, right - left + 1)\n    \n    pass",
+      "action": "continue",
+      "next": "coding-return-python"
+    },
+    {
+      "stepId": "coding-return-python",
+      "mentorSays": "Finally, return max_len, which contains the maximum number of fruits we can collect.",
+      "example": "def total_fruit(fruits):\n    left = 0\n    max_len = 0\n    freq = {}\n    \n    for right in range(len(fruits)):\n        type_val = fruits[right]\n        freq[type_val] = freq.get(type_val, 0) + 1\n        \n        while len(freq) > 2:\n            left_type = fruits[left]\n            freq[left_type] -= 1\n            if freq[left_type] == 0:\n                del freq[left_type]\n            left += 1\n        \n        max_len = max(max_len, right - left + 1)\n    \n    return max_len",
+      "action": "continue",
+      "next": "test-code-python"
+    },
+    {
+      "stepId": "test-code-python",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** fruits = [1, 2, 1]\nExpected: 3 (all fruits, types {1, 2})\n\n**Test 2:** fruits = [0, 1, 2, 2]\nExpected: 3 (from [1, 2, 2], types {1, 2})\n\n**Test 3:** fruits = [1, 2, 3, 2, 2]\nExpected: 4 (from [2, 3, 2, 2], types {2, 3})\n\n**Test 4:** fruits = [3, 3, 3, 1, 2, 1, 1, 2, 3, 3, 4]\nExpected: 5 (from [1, 2, 1, 1, 2], types {1, 2})\n\n**Test 5:** fruits = [1]\nExpected: 1 (single fruit)\n\n**Test 6:** fruits = [1, 1, 1]\nExpected: 3 (all same type)\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: [1,2,1] → 3\nTest 2: [0,1,2,2] → 3\nTest 3: [1,2,3,2,2] → 4\nTest 4: [3,3,3,1,2,1,1,2,3,3,4] → 5\nTest 5: [1] → 1\nTest 6: [1,1,1] → 3",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-java",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-java"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-java",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'left' or 'freq') and put data inside it.\n\nFor example, 'int left = 0;' creates a variable that stores the number 0. Later, you can use that variable name to refer to it. We'll use variables to track the left pointer, the frequency map, and the maximum length.",
+      "example": "int left = 0;                    // Left pointer of window\nint maxLen = 0;                 // Maximum length found\nMap<Integer, Integer> freq = new HashMap<>();  // Frequency map\n\nThese variables help us track our sliding window state",
+      "action": "continue",
+      "next": "function-check-java"
+    },
+    {
+      "stepId": "function-check-java",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a method is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know methods",
+          "next": "parameter-check-java"
+        },
+        {
+          "label": "No, explain methods",
+          "next": "function-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-java",
+      "mentorSays": "A method (Java's version of a function) is a reusable block of code. You give it inputs (called parameters), and it can return an output.\n\nThink of it like a recipe: you provide ingredients (parameters), the method does the work, and gives you a result (return value).",
+      "example": "public int totalFruit(int[] fruits) {\n    // This method takes fruits array\n    // It returns the maximum number of fruits\n    return 0;\n}",
+      "action": "continue",
+      "next": "parameter-check-java"
+    },
+    {
+      "stepId": "parameter-check-java",
+      "mentorSays": "When we write a method, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "array-check-java"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-java",
+      "mentorSays": "Parameters are like variables that receive values when you call the method. When you write 'public int totalFruit(int[] fruits)', the 'fruits' is a parameter - it's a placeholder that will receive an actual value when you call the method.\n\nWhen you call 'totalFruit(new int[]{1, 2, 1})', the array goes into the parameter.",
+      "example": "public int totalFruit(int[] fruits) {\n    // 'fruits' is a parameter\n}\n\n// When we call it:\ntotalFruit(new int[]{1, 2, 1});\n// The array goes into the parameter",
+      "action": "continue",
+      "next": "array-check-java"
+    },
+    {
+      "stepId": "array-check-java",
+      "mentorSays": "To solve this lesson, we'll need to work with arrays. Do you know what an array is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know arrays",
+          "next": "loop-check-java"
+        },
+        {
+          "label": "No, explain arrays",
+          "next": "array-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "array-explanation-java",
+      "mentorSays": "An array is a collection of values stored in order. Each value has a position number called an 'index'. Array indices start counting from 0, not 1.\n\nFor example, int[] fruits = {1, 2, 1} means:\n- fruits[0] = 1 (first element, index 0)\n- fruits[1] = 2 (second element, index 1)\n- fruits[2] = 1 (third element, index 2)\n\nWe'll slide a window over this array to find the longest subarray with at most 2 distinct types.",
+      "example": "int[] fruits = {1, 2, 1};\n\nfruits[0] = 1\nfruits[1] = 2\nfruits[2] = 1\n\nWe'll use indices to access elements",
+      "action": "continue",
+      "next": "loop-check-java"
+    },
+    {
+      "stepId": "loop-check-java",
+      "mentorSays": "To solve this lesson, we'll need to use loops. Do you know what a loop is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know loops",
+          "next": "coding-start-java"
+        },
+        {
+          "label": "No, explain loops",
+          "next": "loop-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "loop-explanation-java",
+      "mentorSays": "A loop lets you repeat code multiple times. A 'for' loop in Java runs code for each value in a sequence.\n\nFor example, 'for (int right = 0; right < fruits.length; right++)' means: run the code for each index from 0 to the length of the array. This lets us move our right pointer through the array.",
+      "example": "for (int right = 0; right < 3; right++) {\n    System.out.println(right);\n}\n\nThis prints: 0, 1, 2",
+      "action": "continue",
+      "next": "coding-start-java"
+    },
+    {
+      "stepId": "coding-start-java",
+      "mentorSays": "Perfect! Let's implement the fruit into baskets solution in Java. We'll create a method that takes a fruits array and returns the maximum number of fruits we can collect.",
+      "example": "public int totalFruit(int[] fruits) {\n    \n}",
+      "action": "continue",
+      "next": "coding-init-vars-java"
+    },
+    {
+      "stepId": "coding-init-vars-java",
+      "mentorSays": "First, let's initialize our variables: left pointer, frequency map to track fruit types, and maxLen to track the maximum length.",
+      "example": "public int totalFruit(int[] fruits) {\n    int left = 0;\n    int maxLen = 0;\n    Map<Integer, Integer> freq = new HashMap<>();  // Track frequency of each fruit type\n    \n}",
+      "action": "continue",
+      "next": "coding-outer-loop-java"
+    },
+    {
+      "stepId": "coding-outer-loop-java",
+      "mentorSays": "Create a loop that moves the right pointer through the array. This will expand our window.",
+      "example": "public int totalFruit(int[] fruits) {\n    int left = 0;\n    int maxLen = 0;\n    Map<Integer, Integer> freq = new HashMap<>();\n    \n    // Expand window by moving right pointer\n    for (int right = 0; right < fruits.length; right++) {\n        \n    }\n}",
+      "action": "continue",
+      "next": "coding-add-fruit-java"
+    },
+    {
+      "stepId": "coding-add-fruit-java",
+      "mentorSays": "Inside the loop, add the current fruit type to our frequency map. This expands the window.",
+      "example": "public int totalFruit(int[] fruits) {\n    int left = 0;\n    int maxLen = 0;\n    Map<Integer, Integer> freq = new HashMap<>();\n    \n    for (int right = 0; right < fruits.length; right++) {\n        // Add current fruit to frequency map\n        int type = fruits[right];\n        freq.put(type, freq.getOrDefault(type, 0) + 1);\n        \n    }\n}",
+      "action": "continue",
+      "next": "coding-shrink-window-java"
+    },
+    {
+      "stepId": "coding-shrink-window-java",
+      "mentorSays": "If we have more than 2 distinct types, we need to shrink the window from the left. Remove fruits until we're back to 2 types.",
+      "example": "public int totalFruit(int[] fruits) {\n    int left = 0;\n    int maxLen = 0;\n    Map<Integer, Integer> freq = new HashMap<>();\n    \n    for (int right = 0; right < fruits.length; right++) {\n        int type = fruits[right];\n        freq.put(type, freq.getOrDefault(type, 0) + 1);\n        \n        // Shrink window if we have more than 2 distinct types\n        while (freq.size() > 2) {\n            int leftType = fruits[left];\n            freq.put(leftType, freq.get(leftType) - 1);\n            if (freq.get(leftType) == 0) {\n                freq.remove(leftType);\n            }\n            left++;\n        }\n        \n    }\n}",
+      "action": "continue",
+      "next": "coding-update-maxlen-java"
+    },
+    {
+      "stepId": "coding-update-maxlen-java",
+      "mentorSays": "After potentially shrinking, update maxLen with the current window size. The window now has at most 2 distinct types.",
+      "example": "public int totalFruit(int[] fruits) {\n    int left = 0;\n    int maxLen = 0;\n    Map<Integer, Integer> freq = new HashMap<>();\n    \n    for (int right = 0; right < fruits.length; right++) {\n        int type = fruits[right];\n        freq.put(type, freq.getOrDefault(type, 0) + 1);\n        \n        while (freq.size() > 2) {\n            int leftType = fruits[left];\n            freq.put(leftType, freq.get(leftType) - 1);\n            if (freq.get(leftType) == 0) {\n                freq.remove(leftType);\n            }\n            left++;\n        }\n        \n        // Update maxLen with current window size\n        maxLen = Math.max(maxLen, right - left + 1);\n    }\n}",
+      "action": "continue",
+      "next": "coding-return-java"
+    },
+    {
+      "stepId": "coding-return-java",
+      "mentorSays": "Finally, return maxLen, which contains the maximum number of fruits we can collect.",
+      "example": "public int totalFruit(int[] fruits) {\n    int left = 0;\n    int maxLen = 0;\n    Map<Integer, Integer> freq = new HashMap<>();\n    \n    for (int right = 0; right < fruits.length; right++) {\n        int type = fruits[right];\n        freq.put(type, freq.getOrDefault(type, 0) + 1);\n        \n        while (freq.size() > 2) {\n            int leftType = fruits[left];\n            freq.put(leftType, freq.get(leftType) - 1);\n            if (freq.get(leftType) == 0) {\n                freq.remove(leftType);\n            }\n            left++;\n        }\n        \n        maxLen = Math.max(maxLen, right - left + 1);\n    }\n    \n    return maxLen;\n}",
+      "action": "continue",
+      "next": "test-code-java"
+    },
+    {
+      "stepId": "test-code-java",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** fruits = [1, 2, 1]\nExpected: 3 (all fruits, types {1, 2})\n\n**Test 2:** fruits = [0, 1, 2, 2]\nExpected: 3 (from [1, 2, 2], types {1, 2})\n\n**Test 3:** fruits = [1, 2, 3, 2, 2]\nExpected: 4 (from [2, 3, 2, 2], types {2, 3})\n\n**Test 4:** fruits = [3, 3, 3, 1, 2, 1, 1, 2, 3, 3, 4]\nExpected: 5 (from [1, 2, 1, 1, 2], types {1, 2})\n\n**Test 5:** fruits = [1]\nExpected: 1 (single fruit)\n\n**Test 6:** fruits = [1, 1, 1]\nExpected: 3 (all same type)\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: [1,2,1] → 3\nTest 2: [0,1,2,2] → 3\nTest 3: [1,2,3,2,2] → 4\nTest 4: [3,3,3,1,2,1,1,2,3,3,4] → 5\nTest 5: [1] → 1\nTest 6: [1,1,1] → 3",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-cpp",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-cpp"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-cpp",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'left' or 'freq') and put data inside it.\n\nFor example, 'int left = 0;' creates a variable that stores the number 0. Later, you can use that variable name to refer to it. We'll use variables to track the left pointer, the frequency map, and the maximum length.",
+      "example": "int left = 0;                    // Left pointer of window\nint maxLen = 0;                 // Maximum length found\nunordered_map<int, int> freq;   // Frequency map\n\nThese variables help us track our sliding window state",
+      "action": "continue",
+      "next": "function-check-cpp"
+    },
+    {
+      "stepId": "function-check-cpp",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-cpp"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-cpp",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.\n\nThink of it like a recipe: you provide ingredients (parameters), the function does the work, and gives you a result (return value).",
+      "example": "int totalFruit(vector<int>& fruits) {\n    // This function takes fruits vector\n    // It returns the maximum number of fruits\n    return 0;\n}",
+      "action": "continue",
+      "next": "parameter-check-cpp"
+    },
+    {
+      "stepId": "parameter-check-cpp",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "array-check-cpp"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-cpp",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'int totalFruit(vector<int>& fruits)', the 'fruits' is a parameter - it's a placeholder that will receive an actual value when you call the function.\n\nWhen you call 'totalFruit({1, 2, 1})', the vector goes into the parameter.",
+      "example": "int totalFruit(vector<int>& fruits) {\n    // 'fruits' is a parameter\n}\n\n// When we call it:\ntotalFruit({1, 2, 1});\n// The vector goes into the parameter",
+      "action": "continue",
+      "next": "array-check-cpp"
+    },
+    {
+      "stepId": "array-check-cpp",
+      "mentorSays": "To solve this lesson, we'll need to work with vectors (C++'s version of arrays). Do you know what a vector is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know vectors",
+          "next": "loop-check-cpp"
+        },
+        {
+          "label": "No, explain vectors",
+          "next": "array-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "array-explanation-cpp",
+      "mentorSays": "A vector is a collection of values stored in order. Each value has a position number called an 'index'. Vector indices start counting from 0, not 1.\n\nFor example, vector<int> fruits = {1, 2, 1} means:\n- fruits[0] = 1 (first element, index 0)\n- fruits[1] = 2 (second element, index 1)\n- fruits[2] = 1 (third element, index 2)\n\nWe'll slide a window over this vector to find the longest subarray with at most 2 distinct types.",
+      "example": "vector<int> fruits = {1, 2, 1};\n\nfruits[0] = 1\nfruits[1] = 2\nfruits[2] = 1\n\nWe'll use indices to access elements",
+      "action": "continue",
+      "next": "loop-check-cpp"
+    },
+    {
+      "stepId": "loop-check-cpp",
+      "mentorSays": "To solve this lesson, we'll need to use loops. Do you know what a loop is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know loops",
+          "next": "coding-start-cpp"
+        },
+        {
+          "label": "No, explain loops",
+          "next": "loop-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "loop-explanation-cpp",
+      "mentorSays": "A loop lets you repeat code multiple times. A 'for' loop in C++ runs code for each value in a sequence.\n\nFor example, 'for (int right = 0; right < fruits.size(); right++)' means: run the code for each index from 0 to the size of the vector. This lets us move our right pointer through the vector.",
+      "example": "for (int right = 0; right < 3; right++) {\n    cout << right << endl;\n}\n\nThis prints: 0, 1, 2",
+      "action": "continue",
+      "next": "coding-start-cpp"
+    },
+    {
+      "stepId": "coding-start-cpp",
+      "mentorSays": "Perfect! Let's implement the fruit into baskets solution in C++. We'll create a function that takes a fruits vector and returns the maximum number of fruits we can collect.",
+      "example": "int totalFruit(vector<int>& fruits) {\n    \n}",
+      "action": "continue",
+      "next": "coding-init-vars-cpp"
+    },
+    {
+      "stepId": "coding-init-vars-cpp",
+      "mentorSays": "First, let's initialize our variables: left pointer, frequency map to track fruit types, and maxLen to track the maximum length.",
+      "example": "int totalFruit(vector<int>& fruits) {\n    int left = 0;\n    int maxLen = 0;\n    unordered_map<int, int> freq;  // Track frequency of each fruit type\n    \n}",
+      "action": "continue",
+      "next": "coding-outer-loop-cpp"
+    },
+    {
+      "stepId": "coding-outer-loop-cpp",
+      "mentorSays": "Create a loop that moves the right pointer through the vector. This will expand our window.",
+      "example": "int totalFruit(vector<int>& fruits) {\n    int left = 0;\n    int maxLen = 0;\n    unordered_map<int, int> freq;\n    \n    // Expand window by moving right pointer\n    for (int right = 0; right < fruits.size(); right++) {\n        \n    }\n}",
+      "action": "continue",
+      "next": "coding-add-fruit-cpp"
+    },
+    {
+      "stepId": "coding-add-fruit-cpp",
+      "mentorSays": "Inside the loop, add the current fruit type to our frequency map. This expands the window.",
+      "example": "int totalFruit(vector<int>& fruits) {\n    int left = 0;\n    int maxLen = 0;\n    unordered_map<int, int> freq;\n    \n    for (int right = 0; right < fruits.size(); right++) {\n        // Add current fruit to frequency map\n        int type = fruits[right];\n        freq[type]++;\n        \n    }\n}",
+      "action": "continue",
+      "next": "coding-shrink-window-cpp"
+    },
+    {
+      "stepId": "coding-shrink-window-cpp",
+      "mentorSays": "If we have more than 2 distinct types, we need to shrink the window from the left. Remove fruits until we're back to 2 types.",
+      "example": "int totalFruit(vector<int>& fruits) {\n    int left = 0;\n    int maxLen = 0;\n    unordered_map<int, int> freq;\n    \n    for (int right = 0; right < fruits.size(); right++) {\n        int type = fruits[right];\n        freq[type]++;\n        \n        // Shrink window if we have more than 2 distinct types\n        while (freq.size() > 2) {\n            int leftType = fruits[left];\n            freq[leftType]--;\n            if (freq[leftType] == 0) {\n                freq.erase(leftType);\n            }\n            left++;\n        }\n        \n    }\n}",
+      "action": "continue",
+      "next": "coding-update-maxlen-cpp"
+    },
+    {
+      "stepId": "coding-update-maxlen-cpp",
+      "mentorSays": "After potentially shrinking, update maxLen with the current window size. The window now has at most 2 distinct types.",
+      "example": "int totalFruit(vector<int>& fruits) {\n    int left = 0;\n    int maxLen = 0;\n    unordered_map<int, int> freq;\n    \n    for (int right = 0; right < fruits.size(); right++) {\n        int type = fruits[right];\n        freq[type]++;\n        \n        while (freq.size() > 2) {\n            int leftType = fruits[left];\n            freq[leftType]--;\n            if (freq[leftType] == 0) {\n                freq.erase(leftType);\n            }\n            left++;\n        }\n        \n        // Update maxLen with current window size\n        maxLen = max(maxLen, right - left + 1);\n    }\n}",
+      "action": "continue",
+      "next": "coding-return-cpp"
+    },
+    {
+      "stepId": "coding-return-cpp",
+      "mentorSays": "Finally, return maxLen, which contains the maximum number of fruits we can collect.",
+      "example": "int totalFruit(vector<int>& fruits) {\n    int left = 0;\n    int maxLen = 0;\n    unordered_map<int, int> freq;\n    \n    for (int right = 0; right < fruits.size(); right++) {\n        int type = fruits[right];\n        freq[type]++;\n        \n        while (freq.size() > 2) {\n            int leftType = fruits[left];\n            freq[leftType]--;\n            if (freq[leftType] == 0) {\n                freq.erase(leftType);\n            }\n            left++;\n        }\n        \n        maxLen = max(maxLen, right - left + 1);\n    }\n    \n    return maxLen;\n}",
+      "action": "continue",
+      "next": "test-code-cpp"
+    },
+    {
+      "stepId": "test-code-cpp",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** fruits = [1, 2, 1]\nExpected: 3 (all fruits, types {1, 2})\n\n**Test 2:** fruits = [0, 1, 2, 2]\nExpected: 3 (from [1, 2, 2], types {1, 2})\n\n**Test 3:** fruits = [1, 2, 3, 2, 2]\nExpected: 4 (from [2, 3, 2, 2], types {2, 3})\n\n**Test 4:** fruits = [3, 3, 3, 1, 2, 1, 1, 2, 3, 3, 4]\nExpected: 5 (from [1, 2, 1, 1, 2], types {1, 2})\n\n**Test 5:** fruits = [1]\nExpected: 1 (single fruit)\n\n**Test 6:** fruits = [1, 1, 1]\nExpected: 3 (all same type)\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: [1,2,1] → 3\nTest 2: [0,1,2,2] → 3\nTest 3: [1,2,3,2,2] → 4\nTest 4: [3,3,3,1,2,1,1,2,3,3,4] → 5\nTest 5: [1] → 1\nTest 6: [1,1,1] → 3",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-ts",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-ts"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-ts",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'left' or 'freq') and put data inside it.\n\nFor example, 'let left: number = 0;' creates a variable that stores the number 0. Later, you can use that variable name to refer to it. We'll use variables to track the left pointer, the frequency map, and the maximum length.",
+      "example": "let left: number = 0;        // Left pointer of window\nlet maxLen: number = 0;     // Maximum length found\nconst freq: Record<number, number> = {};  // Frequency map\n\nThese variables help us track our sliding window state",
+      "action": "continue",
+      "next": "function-check-ts"
+    },
+    {
+      "stepId": "function-check-ts",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-ts"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-ts",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.\n\nThink of it like a recipe: you provide ingredients (parameters), the function does the work, and gives you a result (return value).",
+      "example": "function totalFruit(fruits: number[]): number {\n    // This function takes fruits array\n    // It returns the maximum number of fruits\n    return 0;\n}",
+      "action": "continue",
+      "next": "parameter-check-ts"
+    },
+    {
+      "stepId": "parameter-check-ts",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "array-check-ts"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-ts",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'function totalFruit(fruits: number[])', the 'fruits' is a parameter - it's a placeholder that will receive an actual value when you call the function.\n\nWhen you call 'totalFruit([1, 2, 1])', the array goes into the parameter.",
+      "example": "function totalFruit(fruits: number[]): number {\n    // 'fruits' is a parameter\n}\n\n// When we call it:\ntotalFruit([1, 2, 1]);\n// The array goes into the parameter",
+      "action": "continue",
+      "next": "array-check-ts"
+    },
+    {
+      "stepId": "array-check-ts",
+      "mentorSays": "To solve this lesson, we'll need to work with arrays. Do you know what an array is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know arrays",
+          "next": "loop-check-ts"
+        },
+        {
+          "label": "No, explain arrays",
+          "next": "array-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "array-explanation-ts",
+      "mentorSays": "An array is a list of values stored in order. Each value has a position number called an 'index'. Array indices start counting from 0, not 1.\n\nFor example, let fruits: number[] = [1, 2, 1] means:\n- fruits[0] = 1 (first element, index 0)\n- fruits[1] = 2 (second element, index 1)\n- fruits[2] = 1 (third element, index 2)\n\nWe'll slide a window over this array to find the longest subarray with at most 2 distinct types.",
+      "example": "let fruits: number[] = [1, 2, 1];\n\nfruits[0] = 1\nfruits[1] = 2\nfruits[2] = 1\n\nWe'll use indices to access elements",
+      "action": "continue",
+      "next": "loop-check-ts"
+    },
+    {
+      "stepId": "loop-check-ts",
+      "mentorSays": "To solve this lesson, we'll need to use loops. Do you know what a loop is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know loops",
+          "next": "coding-start-ts"
+        },
+        {
+          "label": "No, explain loops",
+          "next": "loop-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "loop-explanation-ts",
+      "mentorSays": "A loop lets you repeat code multiple times. A 'for' loop in TypeScript runs code for each value in a sequence.\n\nFor example, 'for (let right = 0; right < fruits.length; right++)' means: run the code for each index from 0 to the length of the array. This lets us move our right pointer through the array.",
+      "example": "for (let right = 0; right < 3; right++) {\n    console.log(right);\n}\n\nThis prints: 0, 1, 2",
+      "action": "continue",
+      "next": "coding-start-ts"
+    },
+    {
+      "stepId": "coding-start-ts",
+      "mentorSays": "Perfect! Let's implement the fruit into baskets solution in TypeScript. We'll create a function that takes a fruits array and returns the maximum number of fruits we can collect.",
+      "example": "function totalFruit(fruits: number[]): number {\n    \n}",
+      "action": "continue",
+      "next": "coding-init-vars-ts"
+    },
+    {
+      "stepId": "coding-init-vars-ts",
+      "mentorSays": "First, let's initialize our variables: left pointer, frequency map to track fruit types, and maxLen to track the maximum length.",
+      "example": "function totalFruit(fruits: number[]): number {\n    let left: number = 0;\n    let maxLen: number = 0;\n    const freq: Record<number, number> = {};  // Track frequency of each fruit type\n    \n}",
+      "action": "continue",
+      "next": "coding-outer-loop-ts"
+    },
+    {
+      "stepId": "coding-outer-loop-ts",
+      "mentorSays": "Create a loop that moves the right pointer through the array. This will expand our window.",
+      "example": "function totalFruit(fruits: number[]): number {\n    let left: number = 0;\n    let maxLen: number = 0;\n    const freq: Record<number, number> = {};\n    \n    // Expand window by moving right pointer\n    for (let right = 0; right < fruits.length; right++) {\n        \n    }\n}",
+      "action": "continue",
+      "next": "coding-add-fruit-ts"
+    },
+    {
+      "stepId": "coding-add-fruit-ts",
+      "mentorSays": "Inside the loop, add the current fruit type to our frequency map. This expands the window.",
+      "example": "function totalFruit(fruits: number[]): number {\n    let left: number = 0;\n    let maxLen: number = 0;\n    const freq: Record<number, number> = {};\n    \n    for (let right = 0; right < fruits.length; right++) {\n        // Add current fruit to frequency map\n        const type = fruits[right];\n        freq[type] = (freq[type] || 0) + 1;\n        \n    }\n}",
+      "action": "continue",
+      "next": "coding-shrink-window-ts"
+    },
+    {
+      "stepId": "coding-shrink-window-ts",
+      "mentorSays": "If we have more than 2 distinct types, we need to shrink the window from the left. Remove fruits until we're back to 2 types.",
+      "example": "function totalFruit(fruits: number[]): number {\n    let left: number = 0;\n    let maxLen: number = 0;\n    const freq: Record<number, number> = {};\n    \n    for (let right = 0; right < fruits.length; right++) {\n        const type = fruits[right];\n        freq[type] = (freq[type] || 0) + 1;\n        \n        // Shrink window if we have more than 2 distinct types\n        while (Object.keys(freq).length > 2) {\n            const leftType = fruits[left];\n            freq[leftType]--;\n            if (freq[leftType] === 0) {\n                delete freq[leftType];\n            }\n            left++;\n        }\n        \n    }\n}",
+      "action": "continue",
+      "next": "coding-update-maxlen-ts"
+    },
+    {
+      "stepId": "coding-update-maxlen-ts",
+      "mentorSays": "After potentially shrinking, update maxLen with the current window size. The window now has at most 2 distinct types.",
+      "example": "function totalFruit(fruits: number[]): number {\n    let left: number = 0;\n    let maxLen: number = 0;\n    const freq: Record<number, number> = {};\n    \n    for (let right = 0; right < fruits.length; right++) {\n        const type = fruits[right];\n        freq[type] = (freq[type] || 0) + 1;\n        \n        while (Object.keys(freq).length > 2) {\n            const leftType = fruits[left];\n            freq[leftType]--;\n            if (freq[leftType] === 0) {\n                delete freq[leftType];\n            }\n            left++;\n        }\n        \n        // Update maxLen with current window size\n        maxLen = Math.max(maxLen, right - left + 1);\n    }\n}",
+      "action": "continue",
+      "next": "coding-return-ts"
+    },
+    {
+      "stepId": "coding-return-ts",
+      "mentorSays": "Finally, return maxLen, which contains the maximum number of fruits we can collect.",
+      "example": "function totalFruit(fruits: number[]): number {\n    let left: number = 0;\n    let maxLen: number = 0;\n    const freq: Record<number, number> = {};\n    \n    for (let right = 0; right < fruits.length; right++) {\n        const type = fruits[right];\n        freq[type] = (freq[type] || 0) + 1;\n        \n        while (Object.keys(freq).length > 2) {\n            const leftType = fruits[left];\n            freq[leftType]--;\n            if (freq[leftType] === 0) {\n                delete freq[leftType];\n            }\n            left++;\n        }\n        \n        maxLen = Math.max(maxLen, right - left + 1);\n    }\n    \n    return maxLen;\n}",
+      "action": "continue",
+      "next": "test-code-ts"
+    },
+    {
+      "stepId": "test-code-ts",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** fruits = [1, 2, 1]\nExpected: 3 (all fruits, types {1, 2})\n\n**Test 2:** fruits = [0, 1, 2, 2]\nExpected: 3 (from [1, 2, 2], types {1, 2})\n\n**Test 3:** fruits = [1, 2, 3, 2, 2]\nExpected: 4 (from [2, 3, 2, 2], types {2, 3})\n\n**Test 4:** fruits = [3, 3, 3, 1, 2, 1, 1, 2, 3, 3, 4]\nExpected: 5 (from [1, 2, 1, 1, 2], types {1, 2})\n\n**Test 5:** fruits = [1]\nExpected: 1 (single fruit)\n\n**Test 6:** fruits = [1, 1, 1]\nExpected: 3 (all same type)\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: [1,2,1] → 3\nTest 2: [0,1,2,2] → 3\nTest 3: [1,2,3,2,2] → 4\nTest 4: [3,3,3,1,2,1,1,2,3,3,4] → 5\nTest 5: [1] → 1\nTest 6: [1,1,1] → 3",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "final",
+      "mentorSays": "🎉 Well done! You've successfully implemented the Fruit Into Baskets solution!\n\n**Time Complexity:** O(n)\n- We iterate through the array once with the right pointer\n- Each element is added and removed from the window at most once\n- Even though we have a nested while loop, each element is processed at most twice (once when added, once when removed)\n\n**Space Complexity:** O(1)\n- We only use a hash map that stores at most 2 fruit types (since we shrink when we have 3)\n- In the worst case, we store 2 key-value pairs, which is constant space\n\n**Key Takeaways:**\n1. **Sliding window with hash map**: Use a hash map to track distinct types and their frequencies in the current window\n2. **Shrink when invalid**: When we have more than 2 distinct types, shrink from the left until we're back to 2 types\n3. **Remove types completely**: When a type's frequency reaches 0, remove it from the map (not just set to 0)\n4. **Track maximum**: Update the maximum window size after ensuring the window is valid\n5. **At most K distinct**: This pattern generalizes to \"at most K distinct values\" - just change the condition from 2 to K\n\n**Related Practice Lessons:**\n- Longest Substring with At Most K Distinct Characters (LeetCode #340)\n- Minimum Window Substring (LeetCode #76)\n- Subarray Product Less Than K (LeetCode #713)\n\nKeep practicing sliding window lessons - they're a powerful technique for array and string lessons!",
+      "action": "continue"
+    }
+  ]
+}
+

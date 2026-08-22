@@ -1,0 +1,895 @@
+{
+  "id": "count-subarrays-size-k",
+  "title": "Count Subarrays of Size K",
+  "pattern": "sliding-window",
+  "difficulty": "easy",
+  "language": "javascript",
+  "status": "draft",
+  "flow": [
+    {
+      "stepId": "title",
+      "mentorSays": "At the end of this lesson, you will be able to:\n\n1. Understand what the Count Subarrays of Size K lesson asks for\n2. Convert average comparisons to sum comparisons efficiently\n3. Use a sliding window of fixed size to count subarrays\n4. Handle edge cases like k=1, k=n, and negative numbers\n5. Implement the solution step by step in your chosen language",
+      "action": "continue",
+      "next": "lesson-illustration"
+    },
+    {
+      "stepId": "lesson-illustration",
+      "mentorSays": "Perfect! Now let's understand what the Count Subarrays of Size K lesson is asking.\n\n**Lesson Definition:**\nGiven an integer array `nums`, an integer `k`, and an integer `threshold`, return the number of contiguous subarrays of size `k` whose average is greater than or equal to `threshold`.\n\n**Key Insight:**\nSince all subarrays have the same length `k`, checking if `average >= threshold` is equivalent to checking if `sum >= k * threshold`. This avoids floating-point division!\n\n**Example 1:** nums = [2, 2, 2, 2, 5, 5, 5, 8], k = 3, threshold = 4\n\nWe need to find subarrays of size 3 where average >= 4.\nSince average >= 4 means sum >= 3 * 4 = 12, we check for sum >= 12.\n\nLet's check each subarray of size 3:\n- [2, 2, 2] → sum = 6, avg = 2.0 < 4 ✗\n- [2, 2, 2] → sum = 6, avg = 2.0 < 4 ✗ (overlapping, different position)\n- [2, 2, 5] → sum = 9, avg = 3.0 < 4 ✗\n- [2, 5, 5] → sum = 12, avg = 4.0 >= 4 ✓\n- [5, 5, 5] → sum = 15, avg = 5.0 >= 4 ✓\n- [5, 5, 8] → sum = 18, avg = 6.0 >= 4 ✓\n\nCount: 3\n\n**Example 2:** nums = [11, 13, 17, 23, 29, 31, 7, 5, 2, 3], k = 3, threshold = 5\n\nWe check for sum >= 3 * 5 = 15.\n\nSubarrays of size 3:\n- [11, 13, 17] → sum = 41 >= 15 ✓\n- [13, 17, 23] → sum = 53 >= 15 ✓\n- [17, 23, 29] → sum = 69 >= 15 ✓\n- [23, 29, 31] → sum = 83 >= 15 ✓\n- [29, 31, 7] → sum = 67 >= 15 ✓\n- [31, 7, 5] → sum = 43 >= 15 ✓\n- [7, 5, 2] → sum = 14 < 15 ✗\n- [5, 2, 3] → sum = 10 < 15 ✗\n\nCount: 6\n\n**What makes this tricky:**\n1. The conversion from average to sum: `avg >= threshold` → `sum >= k * threshold`\n2. All subarrays have the same length, so we can use a fixed-size sliding window\n3. Edge cases: k=1 (single elements), k=n (entire array), negative numbers\n\n**Common pitfalls:**\n- Using floating-point division for averages (can cause precision issues)\n- Recalculating the entire sum for each window (inefficient)\n- Off-by-one errors when sliding the window\n- Not handling the case where k > nums.length (should return 0)",
+      "example": "Example 1:\nnums = [2, 2, 2, 2, 5, 5, 5, 8]\nk = 3, threshold = 4\n\nCheck: sum >= 3 * 4 = 12\n\nSubarrays:\n[2,2,2] → sum=6 ✗\n[2,2,5] → sum=9 ✗\n[2,5,5] → sum=12 ✓\n[5,5,5] → sum=15 ✓\n[5,5,8] → sum=18 ✓\n\nAnswer: 3\n\nExample 2:\nnums = [11, 13, 17, 23, 29, 31, 7, 5, 2, 3]\nk = 3, threshold = 5\n\nCheck: sum >= 15\n\nFirst 6 subarrays have sum >= 15\nLast 2 subarrays have sum < 15\n\nAnswer: 6",
+      "action": "continue",
+      "next": "thinking-challenge"
+    },
+    {
+      "stepId": "thinking-challenge",
+      "mentorSays": "Now that you understand what the lesson wants, here's the real question:\n\nHow would YOU count subarrays of size k with average >= threshold?\n\nThink about it for a moment. What approach feels natural to you?",
+      "choices": [
+        {
+          "label": "Use a sliding window of fixed size k, check sum >= k*threshold for each",
+          "next": "explore-sliding-window"
+        },
+        {
+          "label": "Check all possible subarrays of size k, calculate average for each",
+          "next": "explore-brute-force"
+        },
+        {
+          "label": "Use prefix sums to quickly calculate subarray sums",
+          "next": "explore-prefix-sum"
+        }
+      ]
+    },
+    {
+      "stepId": "explore-brute-force",
+      "mentorSays": "That's a straightforward approach! You're thinking: \"I'll check every possible subarray of size k and calculate its average.\"\n\nFor nums = [2, 2, 2, 2, 5, 5, 5, 8], k = 3, threshold = 4:\n- Check [2,2,2]: avg = 2.0 < 4 ✗\n- Check [2,2,2]: avg = 2.0 < 4 ✗\n- Check [2,2,5]: avg = 3.0 < 4 ✗\n- Check [2,5,5]: avg = 4.0 >= 4 ✓\n- ... and so on\n\nThis works! However, it's O(n*k) time because we recalculate the sum for each window. Also, using floating-point division can cause precision issues.\n\nThere's a more efficient O(n) approach using a sliding window. Would you like to learn that?",
+      "action": "continue",
+      "next": "explore-sliding-window"
+    },
+    {
+      "stepId": "explore-prefix-sum",
+      "mentorSays": "Great thinking! Prefix sums can help calculate subarray sums quickly.\n\nFor nums = [2, 2, 2, 2, 5, 5, 5, 8]:\nPrefix sums: [0, 2, 4, 6, 8, 13, 18, 23, 31]\n\nTo get sum of [2,5,5] (indices 3-5): prefix[6] - prefix[3] = 18 - 6 = 12 ✓\n\nThis works and is O(n) time! However, the sliding window approach is simpler and equally efficient for fixed-size windows. Would you like to learn that?",
+      "action": "continue",
+      "next": "explore-sliding-window"
+    },
+    {
+      "stepId": "explore-sliding-window",
+      "mentorSays": "Excellent choice! The sliding window approach is both efficient and elegant. Here's the core idea:\n\n**The Algorithm:**\n1. **Convert condition**: Instead of checking `average >= threshold`, check `sum >= k * threshold` (avoids floating-point division!)\n2. **Calculate initial window sum**: Sum of first k elements\n3. **Check initial window**: If sum >= k*threshold, increment count\n4. **Slide the window**: For each position from k to end:\n   - Remove leftmost element: `sum -= nums[i - k]`\n   - Add new element: `sum += nums[i]`\n   - Check condition: If `sum >= k * threshold`, increment count\n5. **Return count**\n\n**Why it works**: We maintain a window of size k and efficiently update the sum by removing one element and adding another, avoiding recalculating the entire sum each time!\n\n**Key insight**: Since all windows have the same size k, `average >= threshold` is equivalent to `sum >= k * threshold`. This avoids floating-point operations!\n\nLet's trace with nums = [2, 2, 2, 2, 5, 5, 5, 8], k = 3, threshold = 4:\n\nWe check: sum >= 3 * 4 = 12\n\n- **Initial**: sum = 2 + 2 + 2 = 6, count = 0 (6 < 12)\n- **i = 3**: Remove nums[0]=2, add nums[3]=2\n  - sum = 6 - 2 + 2 = 6, count = 0 (6 < 12)\n- **i = 4**: Remove nums[1]=2, add nums[4]=5\n  - sum = 6 - 2 + 5 = 9, count = 0 (9 < 12)\n- **i = 5**: Remove nums[2]=2, add nums[5]=5\n  - sum = 9 - 2 + 5 = 12, count = 1 ✓ (12 >= 12)\n- **i = 6**: Remove nums[3]=2, add nums[6]=5\n  - sum = 12 - 2 + 5 = 15, count = 2 ✓ (15 >= 12)\n- **i = 7**: Remove nums[4]=5, add nums[7]=8\n  - sum = 15 - 5 + 8 = 18, count = 3 ✓ (18 >= 12)\n\n**Return 3** ✓\n\nThis is O(n) time and O(1) space! Now let's code it step by step.",
+      "action": "continue",
+      "next": "language-selection"
+    },
+    {
+      "stepId": "language-selection",
+      "mentorSays": "Great! Now let's code this solution. Which programming language would you like to use?",
+      "choices": [
+        {
+          "label": "JavaScript",
+          "next": "variable-check-js"
+        },
+        {
+          "label": "Python",
+          "next": "variable-check-python"
+        },
+        {
+          "label": "Java",
+          "next": "variable-check-java"
+        },
+        {
+          "label": "C++",
+          "next": "variable-check-cpp"
+        },
+        {
+          "label": "TypeScript",
+          "next": "variable-check-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-check-js",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-js"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-js",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'sum' or 'count') and put data inside it.\n\nFor example, 'let sum = 0;' creates a variable that stores the number 0. Later, you can use that variable name to refer to it.",
+      "example": "let sum = 0;\nlet count = 0;\nlet thresholdSum = k * threshold;\n\nNow these variables store numbers\nWe can use them to track window sum and count",
+      "action": "continue",
+      "next": "function-check-js"
+    },
+    {
+      "stepId": "function-check-js",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-js"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-js",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.\n\nThink of it like a recipe: you provide ingredients (parameters), the function does the work, and gives you a result (return value).",
+      "example": "function add(a, b) {\n  return a + b;\n}\n\nadd(3, 5) returns 8\nadd(10, 20) returns 30",
+      "action": "continue",
+      "next": "parameter-check-js"
+    },
+    {
+      "stepId": "parameter-check-js",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "array-check-js"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-js",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'function numOfSubarrays(nums, k, threshold)', the 'nums', 'k', and 'threshold' are parameters - they're placeholders that will receive actual values when you call the function.\n\nWhen you call 'numOfSubarrays([2, 2, 2, 2, 5, 5, 5, 8], 3, 4)', the array and numbers go into the parameters.",
+      "example": "function numOfSubarrays(nums, k, threshold) {\n  // 'nums', 'k', 'threshold' are parameters\n}\n\n// When we call it:\nnumOfSubarrays([2, 2, 2, 2, 5, 5, 5, 8], 3, 4);\n// The array and numbers go into the parameters",
+      "action": "continue",
+      "next": "array-check-js"
+    },
+    {
+      "stepId": "array-check-js",
+      "mentorSays": "To solve this lesson, we'll need to work with arrays. Do you know what an array is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know arrays",
+          "next": "loop-check-js"
+        },
+        {
+          "label": "No, explain arrays",
+          "next": "array-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "array-explanation-js",
+      "mentorSays": "An array is like a list of items that keeps them in order. Each item has a position number called an 'index'. Array indices start counting from 0, not 1.\n\nFor example, nums = [2, 2, 2, 2, 5, 5, 5, 8] means:\n- nums[0] = 2 (first element, index 0)\n- nums[1] = 2 (second element, index 1)\n- nums[2] = 2 (third element, index 2)\n- nums[3] = 2 (fourth element, index 3)\n- nums[4] = 5 (fifth element, index 4)\n- ... and so on",
+      "example": "let nums = [2, 2, 2, 2, 5, 5, 5, 8];\n\nnums[0] = 2\nnums[1] = 2\nnums[2] = 2\nnums[3] = 2\nnums[4] = 5",
+      "action": "continue",
+      "next": "loop-check-js"
+    },
+    {
+      "stepId": "loop-check-js",
+      "mentorSays": "To solve this lesson, we'll need to use loops. Do you know what a loop is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know loops",
+          "next": "coding-start-js"
+        },
+        {
+          "label": "No, explain loops",
+          "next": "loop-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "loop-explanation-js",
+      "mentorSays": "A loop lets you repeat code multiple times. A 'for' loop runs code for each item in a sequence.\n\nFor example, 'for (let i = k; i < nums.length; i++)' means: start at k, keep going while i is less than the array length, and add 1 to i each time.",
+      "example": "for (let i = 0; i < 3; i++) {\n  console.log(i);\n}\n\nThis prints: 0, 1, 2",
+      "action": "continue",
+      "next": "coding-start-js"
+    },
+    {
+      "stepId": "coding-start-js",
+      "mentorSays": "Perfect! Let's implement the count subarrays solution in JavaScript. We'll create a function that takes an array, k, and threshold, and returns the count of subarrays with average >= threshold.",
+      "example": "function numOfSubarrays(nums, k, threshold) {\n  \n}",
+      "action": "continue",
+      "next": "coding-edge-case-js"
+    },
+    {
+      "stepId": "coding-edge-case-js",
+      "mentorSays": "First, let's handle the edge case: if k is greater than the array length, there are no valid subarrays, so return 0.",
+      "example": "function numOfSubarrays(nums, k, threshold) {\n  // Edge case: k is larger than array length\n  if (k > nums.length) {\n    return 0;\n  }\n}",
+      "action": "continue",
+      "next": "coding-calculate-threshold-sum-js"
+    },
+    {
+      "stepId": "coding-calculate-threshold-sum-js",
+      "mentorSays": "Now, calculate the threshold sum. Since we're checking if average >= threshold, and all subarrays have size k, we check if sum >= k * threshold. This avoids floating-point division!",
+      "example": "function numOfSubarrays(nums, k, threshold) {\n  if (k > nums.length) {\n    return 0;\n  }\n  \n  // Convert average condition to sum condition\n  // average >= threshold means sum >= k * threshold\n  let thresholdSum = k * threshold;\n}",
+      "action": "continue",
+      "next": "coding-init-sum-js"
+    },
+    {
+      "stepId": "coding-init-sum-js",
+      "mentorSays": "Calculate the sum of the first k elements (the initial window). This is our starting point.",
+      "example": "function numOfSubarrays(nums, k, threshold) {\n  if (k > nums.length) {\n    return 0;\n  }\n  \n  let thresholdSum = k * threshold;\n  \n  // Calculate initial window sum\n  let sum = 0;\n  for (let i = 0; i < k; i++) {\n    sum += nums[i];\n  }\n}",
+      "action": "continue",
+      "next": "coding-check-initial-js"
+    },
+    {
+      "stepId": "coding-check-initial-js",
+      "mentorSays": "Check if the initial window meets our condition. If sum >= thresholdSum, increment the count.",
+      "example": "function numOfSubarrays(nums, k, threshold) {\n  if (k > nums.length) {\n    return 0;\n  }\n  \n  let thresholdSum = k * threshold;\n  let sum = 0;\n  for (let i = 0; i < k; i++) {\n    sum += nums[i];\n  }\n  \n  // Check initial window\n  let count = (sum >= thresholdSum) ? 1 : 0;\n}",
+      "action": "continue",
+      "next": "coding-slide-window-js"
+    },
+    {
+      "stepId": "coding-slide-window-js",
+      "mentorSays": "Now, slide the window from position k to the end. For each position, we'll remove the leftmost element and add the new element.",
+      "example": "function numOfSubarrays(nums, k, threshold) {\n  if (k > nums.length) {\n    return 0;\n  }\n  \n  let thresholdSum = k * threshold;\n  let sum = 0;\n  for (let i = 0; i < k; i++) {\n    sum += nums[i];\n  }\n  \n  let count = (sum >= thresholdSum) ? 1 : 0;\n  \n  // Slide the window\n  for (let i = k; i < nums.length; i++) {\n    // Remove leftmost, add new element\n    sum = sum - nums[i - k] + nums[i];\n  }\n}",
+      "action": "continue",
+      "next": "coding-check-condition-js"
+    },
+    {
+      "stepId": "coding-check-condition-js",
+      "mentorSays": "Inside the loop, after updating the sum, check if it meets our condition. If sum >= thresholdSum, increment the count.",
+      "example": "function numOfSubarrays(nums, k, threshold) {\n  if (k > nums.length) {\n    return 0;\n  }\n  \n  let thresholdSum = k * threshold;\n  let sum = 0;\n  for (let i = 0; i < k; i++) {\n    sum += nums[i];\n  }\n  \n  let count = (sum >= thresholdSum) ? 1 : 0;\n  \n  for (let i = k; i < nums.length; i++) {\n    sum = sum - nums[i - k] + nums[i];\n    \n    // Check condition\n    if (sum >= thresholdSum) {\n      count++;\n    }\n  }\n  \n  return count;\n}",
+      "action": "continue",
+      "next": "test-code-js"
+    },
+    {
+      "stepId": "test-code-js",
+      "mentorSays": "Perfect! Now let's test your code with multiple test cases:\n\n**Test 1:** nums = [2, 2, 2, 2, 5, 5, 5, 8], k = 3, threshold = 4\nExpected: 3\n\n**Test 2:** nums = [11, 13, 17, 23, 29, 31, 7, 5, 2, 3], k = 3, threshold = 5\nExpected: 6\n\n**Test 3:** nums = [1, 1, 1, 1, 1], k = 1, threshold = 1\nExpected: 5 (each single element has avg = 1 >= 1)\n\n**Test 4:** nums = [1, 1, 1, 1, 1], k = 5, threshold = 2\nExpected: 0 (entire array avg = 1 < 2)\n\n**Test 5:** nums = [-1, -2, -3, -4, -5], k = 3, threshold = -3\nExpected: 3 (all subarrays have avg >= -3)\n\n**Test 6:** nums = [10], k = 1, threshold = 10\nExpected: 1\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: [2,2,2,2,5,5,5,8], k=3, threshold=4 → 3\nTest 2: [11,13,17,23,29,31,7,5,2,3], k=3, threshold=5 → 6\nTest 3: [1,1,1,1,1], k=1, threshold=1 → 5\nTest 4: [1,1,1,1,1], k=5, threshold=2 → 0\nTest 5: [-1,-2,-3,-4,-5], k=3, threshold=-3 → 3\nTest 6: [10], k=1, threshold=10 → 1",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-python",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-python"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-python",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'sum' or 'count') and put data inside it.\n\nFor example, 'sum = 0' creates a variable that stores the number 0. Later, you can use that variable name to refer to it.",
+      "example": "sum = 0\ncount = 0\nthreshold_sum = k * threshold\n\nNow these variables store numbers\nWe can use them to track window sum and count",
+      "action": "continue",
+      "next": "function-check-python"
+    },
+    {
+      "stepId": "function-check-python",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-python"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-python",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.\n\nThink of it like a recipe: you provide ingredients (parameters), the function does the work, and gives you a result (return value).",
+      "example": "def add(a, b):\n    return a + b\n\nadd(3, 5) returns 8\nadd(10, 20) returns 30",
+      "action": "continue",
+      "next": "parameter-check-python"
+    },
+    {
+      "stepId": "parameter-check-python",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "array-check-python"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-python",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'def num_of_subarrays(nums, k, threshold):', the 'nums', 'k', and 'threshold' are parameters - they're placeholders that will receive actual values when you call the function.\n\nWhen you call 'num_of_subarrays([2, 2, 2, 2, 5, 5, 5, 8], 3, 4)', the list and numbers go into the parameters.",
+      "example": "def num_of_subarrays(nums, k, threshold):\n  # 'nums', 'k', 'threshold' are parameters\n\n# When we call it:\nnum_of_subarrays([2, 2, 2, 2, 5, 5, 5, 8], 3, 4)\n# The list and numbers go into the parameters",
+      "action": "continue",
+      "next": "array-check-python"
+    },
+    {
+      "stepId": "array-check-python",
+      "mentorSays": "To solve this lesson, we'll need to work with lists. Do you know what a list is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know lists",
+          "next": "loop-check-python"
+        },
+        {
+          "label": "No, explain lists",
+          "next": "array-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "array-explanation-python",
+      "mentorSays": "A list is like an ordered collection of items. Each item has a position number called an 'index'. List indices start counting from 0, not 1.\n\nFor example, nums = [2, 2, 2, 2, 5, 5, 5, 8] means:\n- nums[0] = 2 (first element, index 0)\n- nums[1] = 2 (second element, index 1)\n- nums[2] = 2 (third element, index 2)\n- nums[3] = 2 (fourth element, index 3)\n- nums[4] = 5 (fifth element, index 4)\n- ... and so on",
+      "example": "nums = [2, 2, 2, 2, 5, 5, 5, 8]\n\nnums[0] = 2\nnums[1] = 2\nnums[2] = 2\nnums[3] = 2\nnums[4] = 5",
+      "action": "continue",
+      "next": "loop-check-python"
+    },
+    {
+      "stepId": "loop-check-python",
+      "mentorSays": "To solve this lesson, we'll need to use loops. Do you know what a loop is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know loops",
+          "next": "coding-start-python"
+        },
+        {
+          "label": "No, explain loops",
+          "next": "loop-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "loop-explanation-python",
+      "mentorSays": "A loop lets you repeat code multiple times. A 'for' loop in Python runs code for each item in a sequence.\n\nFor example, 'for i in range(k, len(nums)):' means: run the code for each index from k to the length of nums.",
+      "example": "for i in range(3):\n    print(i)\n\nThis prints: 0, 1, 2",
+      "action": "continue",
+      "next": "coding-start-python"
+    },
+    {
+      "stepId": "coding-start-python",
+      "mentorSays": "Perfect! Let's implement the count subarrays solution in Python. We'll create a function that takes a list, k, and threshold, and returns the count of subarrays with average >= threshold.",
+      "example": "def num_of_subarrays(nums, k, threshold):\n    \n    pass",
+      "action": "continue",
+      "next": "coding-edge-case-python"
+    },
+    {
+      "stepId": "coding-edge-case-python",
+      "mentorSays": "First, let's handle the edge case: if k is greater than the list length, there are no valid subarrays, so return 0.",
+      "example": "def num_of_subarrays(nums, k, threshold):\n    # Edge case: k is larger than list length\n    if k > len(nums):\n        return 0\n    \n    pass",
+      "action": "continue",
+      "next": "coding-calculate-threshold-sum-python"
+    },
+    {
+      "stepId": "coding-calculate-threshold-sum-python",
+      "mentorSays": "Now, calculate the threshold sum. Since we're checking if average >= threshold, and all subarrays have size k, we check if sum >= k * threshold. This avoids floating-point division!",
+      "example": "def num_of_subarrays(nums, k, threshold):\n    if k > len(nums):\n        return 0\n    \n    # Convert average condition to sum condition\n    # average >= threshold means sum >= k * threshold\n    threshold_sum = k * threshold\n    \n    pass",
+      "action": "continue",
+      "next": "coding-init-sum-python"
+    },
+    {
+      "stepId": "coding-init-sum-python",
+      "mentorSays": "Calculate the sum of the first k elements (the initial window). This is our starting point.",
+      "example": "def num_of_subarrays(nums, k, threshold):\n    if k > len(nums):\n        return 0\n    \n    threshold_sum = k * threshold\n    \n    # Calculate initial window sum\n    sum_val = sum(nums[:k])\n    \n    pass",
+      "action": "continue",
+      "next": "coding-check-initial-python"
+    },
+    {
+      "stepId": "coding-check-initial-python",
+      "mentorSays": "Check if the initial window meets our condition. If sum >= threshold_sum, set count to 1, otherwise 0.",
+      "example": "def num_of_subarrays(nums, k, threshold):\n    if k > len(nums):\n        return 0\n    \n    threshold_sum = k * threshold\n    sum_val = sum(nums[:k])\n    \n    # Check initial window\n    count = 1 if sum_val >= threshold_sum else 0\n    \n    pass",
+      "action": "continue",
+      "next": "coding-slide-window-python"
+    },
+    {
+      "stepId": "coding-slide-window-python",
+      "mentorSays": "Now, slide the window from position k to the end. For each position, we'll remove the leftmost element and add the new element.",
+      "example": "def num_of_subarrays(nums, k, threshold):\n    if k > len(nums):\n        return 0\n    \n    threshold_sum = k * threshold\n    sum_val = sum(nums[:k])\n    count = 1 if sum_val >= threshold_sum else 0\n    \n    # Slide the window\n    for i in range(k, len(nums)):\n        # Remove leftmost, add new element\n        sum_val = sum_val - nums[i - k] + nums[i]\n        \n        pass",
+      "action": "continue",
+      "next": "coding-check-condition-python"
+    },
+    {
+      "stepId": "coding-check-condition-python",
+      "mentorSays": "Inside the loop, after updating the sum, check if it meets our condition. If sum >= threshold_sum, increment the count.",
+      "example": "def num_of_subarrays(nums, k, threshold):\n    if k > len(nums):\n        return 0\n    \n    threshold_sum = k * threshold\n    sum_val = sum(nums[:k])\n    count = 1 if sum_val >= threshold_sum else 0\n    \n    for i in range(k, len(nums)):\n        sum_val = sum_val - nums[i - k] + nums[i]\n        \n        # Check condition\n        if sum_val >= threshold_sum:\n            count += 1\n    \n    return count",
+      "action": "continue",
+      "next": "test-code-python"
+    },
+    {
+      "stepId": "test-code-python",
+      "mentorSays": "Perfect! Now let's test your code with multiple test cases:\n\n**Test 1:** nums = [2, 2, 2, 2, 5, 5, 5, 8], k = 3, threshold = 4\nExpected: 3\n\n**Test 2:** nums = [11, 13, 17, 23, 29, 31, 7, 5, 2, 3], k = 3, threshold = 5\nExpected: 6\n\n**Test 3:** nums = [1, 1, 1, 1, 1], k = 1, threshold = 1\nExpected: 5 (each single element has avg = 1 >= 1)\n\n**Test 4:** nums = [1, 1, 1, 1, 1], k = 5, threshold = 2\nExpected: 0 (entire array avg = 1 < 2)\n\n**Test 5:** nums = [-1, -2, -3, -4, -5], k = 3, threshold = -3\nExpected: 3 (all subarrays have avg >= -3)\n\n**Test 6:** nums = [10], k = 1, threshold = 10\nExpected: 1\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: [2,2,2,2,5,5,5,8], k=3, threshold=4 → 3\nTest 2: [11,13,17,23,29,31,7,5,2,3], k=3, threshold=5 → 6\nTest 3: [1,1,1,1,1], k=1, threshold=1 → 5\nTest 4: [1,1,1,1,1], k=5, threshold=2 → 0\nTest 5: [-1,-2,-3,-4,-5], k=3, threshold=-3 → 3\nTest 6: [10], k=1, threshold=10 → 1",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-java",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-java"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-java",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'sum' or 'count') and put data inside it.\n\nFor example, 'int sum = 0;' creates a variable that stores the number 0. Later, you can use that variable name to refer to it.",
+      "example": "int sum = 0;\nint count = 0;\nint thresholdSum = k * threshold;\n\nNow these variables store numbers\nWe can use them to track window sum and count",
+      "action": "continue",
+      "next": "function-check-java"
+    },
+    {
+      "stepId": "function-check-java",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a method is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know methods",
+          "next": "parameter-check-java"
+        },
+        {
+          "label": "No, explain methods",
+          "next": "function-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-java",
+      "mentorSays": "A method (Java's version of a function) is a reusable block of code. You give it inputs (called parameters), and it can return an output.\n\nThink of it like a recipe: you provide ingredients (parameters), the method does the work, and gives you a result (return value).",
+      "example": "public int add(int a, int b) {\n    return a + b;\n}\n\nadd(3, 5) returns 8\nadd(10, 20) returns 30",
+      "action": "continue",
+      "next": "parameter-check-java"
+    },
+    {
+      "stepId": "parameter-check-java",
+      "mentorSays": "When we write a method, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "array-check-java"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-java",
+      "mentorSays": "Parameters are like variables that receive values when you call the method. When you write 'public int numOfSubarrays(int[] nums, int k, int threshold)', the 'nums', 'k', and 'threshold' are parameters - they're placeholders that will receive actual values when you call the method.\n\nWhen you call 'numOfSubarrays(new int[]{2, 2, 2, 2, 5, 5, 5, 8}, 3, 4)', the array and numbers go into the parameters.",
+      "example": "public int numOfSubarrays(int[] nums, int k, int threshold) {\n  // 'nums', 'k', 'threshold' are parameters\n}\n\n// When we call it:\nnumOfSubarrays(new int[]{2, 2, 2, 2, 5, 5, 5, 8}, 3, 4);\n// The array and numbers go into the parameters",
+      "action": "continue",
+      "next": "array-check-java"
+    },
+    {
+      "stepId": "array-check-java",
+      "mentorSays": "To solve this lesson, we'll need to work with arrays. Do you know what an array is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know arrays",
+          "next": "loop-check-java"
+        },
+        {
+          "label": "No, explain arrays",
+          "next": "array-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "array-explanation-java",
+      "mentorSays": "An array is like a list of items that keeps them in order. Each item has a position number called an 'index'. Array indices start counting from 0, not 1.\n\nFor example, int[] nums = {2, 2, 2, 2, 5, 5, 5, 8} means:\n- nums[0] = 2 (first element, index 0)\n- nums[1] = 2 (second element, index 1)\n- nums[2] = 2 (third element, index 2)\n- nums[3] = 2 (fourth element, index 3)\n- nums[4] = 5 (fifth element, index 4)\n- ... and so on",
+      "example": "int[] nums = {2, 2, 2, 2, 5, 5, 5, 8};\n\nnums[0] = 2\nnums[1] = 2\nnums[2] = 2\nnums[3] = 2\nnums[4] = 5",
+      "action": "continue",
+      "next": "loop-check-java"
+    },
+    {
+      "stepId": "loop-check-java",
+      "mentorSays": "To solve this lesson, we'll need to use loops. Do you know what a loop is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know loops",
+          "next": "coding-start-java"
+        },
+        {
+          "label": "No, explain loops",
+          "next": "loop-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "loop-explanation-java",
+      "mentorSays": "A loop lets you repeat code multiple times. A 'for' loop runs code for each item in a sequence.\n\nFor example, 'for (int i = k; i < nums.length; i++)' means: start at k, keep going while i is less than the array length, and add 1 to i each time.",
+      "example": "for (int i = 0; i < 3; i++) {\n    System.out.println(i);\n}\n\nThis prints: 0, 1, 2",
+      "action": "continue",
+      "next": "coding-start-java"
+    },
+    {
+      "stepId": "coding-start-java",
+      "mentorSays": "Perfect! Let's implement the count subarrays solution in Java. We'll create a method that takes an array, k, and threshold, and returns the count of subarrays with average >= threshold.",
+      "example": "public int numOfSubarrays(int[] nums, int k, int threshold) {\n    \n}",
+      "action": "continue",
+      "next": "coding-edge-case-java"
+    },
+    {
+      "stepId": "coding-edge-case-java",
+      "mentorSays": "First, let's handle the edge case: if k is greater than the array length, there are no valid subarrays, so return 0.",
+      "example": "public int numOfSubarrays(int[] nums, int k, int threshold) {\n    // Edge case: k is larger than array length\n    if (k > nums.length) {\n        return 0;\n    }\n}",
+      "action": "continue",
+      "next": "coding-calculate-threshold-sum-java"
+    },
+    {
+      "stepId": "coding-calculate-threshold-sum-java",
+      "mentorSays": "Now, calculate the threshold sum. Since we're checking if average >= threshold, and all subarrays have size k, we check if sum >= k * threshold. This avoids floating-point division!",
+      "example": "public int numOfSubarrays(int[] nums, int k, int threshold) {\n    if (k > nums.length) {\n        return 0;\n    }\n    \n    // Convert average condition to sum condition\n    // average >= threshold means sum >= k * threshold\n    int thresholdSum = k * threshold;\n}",
+      "action": "continue",
+      "next": "coding-init-sum-java"
+    },
+    {
+      "stepId": "coding-init-sum-java",
+      "mentorSays": "Calculate the sum of the first k elements (the initial window). This is our starting point.",
+      "example": "public int numOfSubarrays(int[] nums, int k, int threshold) {\n    if (k > nums.length) {\n        return 0;\n    }\n    \n    int thresholdSum = k * threshold;\n    \n    // Calculate initial window sum\n    int sum = 0;\n    for (int i = 0; i < k; i++) {\n        sum += nums[i];\n    }\n}",
+      "action": "continue",
+      "next": "coding-check-initial-java"
+    },
+    {
+      "stepId": "coding-check-initial-java",
+      "mentorSays": "Check if the initial window meets our condition. If sum >= thresholdSum, set count to 1, otherwise 0.",
+      "example": "public int numOfSubarrays(int[] nums, int k, int threshold) {\n    if (k > nums.length) {\n        return 0;\n    }\n    \n    int thresholdSum = k * threshold;\n    int sum = 0;\n    for (int i = 0; i < k; i++) {\n        sum += nums[i];\n    }\n    \n    // Check initial window\n    int count = (sum >= thresholdSum) ? 1 : 0;\n}",
+      "action": "continue",
+      "next": "coding-slide-window-java"
+    },
+    {
+      "stepId": "coding-slide-window-java",
+      "mentorSays": "Now, slide the window from position k to the end. For each position, we'll remove the leftmost element and add the new element.",
+      "example": "public int numOfSubarrays(int[] nums, int k, int threshold) {\n    if (k > nums.length) {\n        return 0;\n    }\n    \n    int thresholdSum = k * threshold;\n    int sum = 0;\n    for (int i = 0; i < k; i++) {\n        sum += nums[i];\n    }\n    \n    int count = (sum >= thresholdSum) ? 1 : 0;\n    \n    // Slide the window\n    for (int i = k; i < nums.length; i++) {\n        // Remove leftmost, add new element\n        sum = sum - nums[i - k] + nums[i];\n    }\n}",
+      "action": "continue",
+      "next": "coding-check-condition-java"
+    },
+    {
+      "stepId": "coding-check-condition-java",
+      "mentorSays": "Inside the loop, after updating the sum, check if it meets our condition. If sum >= thresholdSum, increment the count.",
+      "example": "public int numOfSubarrays(int[] nums, int k, int threshold) {\n    if (k > nums.length) {\n        return 0;\n    }\n    \n    int thresholdSum = k * threshold;\n    int sum = 0;\n    for (int i = 0; i < k; i++) {\n        sum += nums[i];\n    }\n    \n    int count = (sum >= thresholdSum) ? 1 : 0;\n    \n    for (int i = k; i < nums.length; i++) {\n        sum = sum - nums[i - k] + nums[i];\n        \n        // Check condition\n        if (sum >= thresholdSum) {\n            count++;\n        }\n    }\n    \n    return count;\n}",
+      "action": "continue",
+      "next": "test-code-java"
+    },
+    {
+      "stepId": "test-code-java",
+      "mentorSays": "Perfect! Now let's test your code with multiple test cases:\n\n**Test 1:** nums = [2, 2, 2, 2, 5, 5, 5, 8], k = 3, threshold = 4\nExpected: 3\n\n**Test 2:** nums = [11, 13, 17, 23, 29, 31, 7, 5, 2, 3], k = 3, threshold = 5\nExpected: 6\n\n**Test 3:** nums = [1, 1, 1, 1, 1], k = 1, threshold = 1\nExpected: 5 (each single element has avg = 1 >= 1)\n\n**Test 4:** nums = [1, 1, 1, 1, 1], k = 5, threshold = 2\nExpected: 0 (entire array avg = 1 < 2)\n\n**Test 5:** nums = [-1, -2, -3, -4, -5], k = 3, threshold = -3\nExpected: 3 (all subarrays have avg >= -3)\n\n**Test 6:** nums = [10], k = 1, threshold = 10\nExpected: 1\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: [2,2,2,2,5,5,5,8], k=3, threshold=4 → 3\nTest 2: [11,13,17,23,29,31,7,5,2,3], k=3, threshold=5 → 6\nTest 3: [1,1,1,1,1], k=1, threshold=1 → 5\nTest 4: [1,1,1,1,1], k=5, threshold=2 → 0\nTest 5: [-1,-2,-3,-4,-5], k=3, threshold=-3 → 3\nTest 6: [10], k=1, threshold=10 → 1",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-cpp",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-cpp"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-cpp",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'sum' or 'count') and put data inside it.\n\nFor example, 'int sum = 0;' creates a variable that stores the number 0. Later, you can use that variable name to refer to it.",
+      "example": "int sum = 0;\nint count = 0;\nint thresholdSum = k * threshold;\n\nNow these variables store numbers\nWe can use them to track window sum and count",
+      "action": "continue",
+      "next": "function-check-cpp"
+    },
+    {
+      "stepId": "function-check-cpp",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-cpp"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-cpp",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.\n\nThink of it like a recipe: you provide ingredients (parameters), the function does the work, and gives you a result (return value).",
+      "example": "int add(int a, int b) {\n    return a + b;\n}\n\nadd(3, 5) returns 8\nadd(10, 20) returns 30",
+      "action": "continue",
+      "next": "parameter-check-cpp"
+    },
+    {
+      "stepId": "parameter-check-cpp",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "array-check-cpp"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-cpp",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'int numOfSubarrays(vector<int>& nums, int k, int threshold)', the 'nums', 'k', and 'threshold' are parameters - they're placeholders that will receive actual values when you call the function.\n\nWhen you call 'numOfSubarrays({2, 2, 2, 2, 5, 5, 5, 8}, 3, 4)', the vector and numbers go into the parameters.",
+      "example": "int numOfSubarrays(vector<int>& nums, int k, int threshold) {\n  // 'nums', 'k', 'threshold' are parameters\n}\n\n// When we call it:\nnumOfSubarrays({2, 2, 2, 2, 5, 5, 5, 8}, 3, 4);\n// The vector and numbers go into the parameters",
+      "action": "continue",
+      "next": "array-check-cpp"
+    },
+    {
+      "stepId": "array-check-cpp",
+      "mentorSays": "To solve this lesson, we'll need to work with vectors (arrays). Do you know what a vector is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know vectors",
+          "next": "loop-check-cpp"
+        },
+        {
+          "label": "No, explain vectors",
+          "next": "array-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "array-explanation-cpp",
+      "mentorSays": "A vector is like a list of items that keeps them in order. Each item has a position number called an 'index'. Vector indices start counting from 0, not 1.\n\nFor example, vector<int> nums = {2, 2, 2, 2, 5, 5, 5, 8} means:\n- nums[0] = 2 (first element, index 0)\n- nums[1] = 2 (second element, index 1)\n- nums[2] = 2 (third element, index 2)\n- nums[3] = 2 (fourth element, index 3)\n- nums[4] = 5 (fifth element, index 4)\n- ... and so on",
+      "example": "vector<int> nums = {2, 2, 2, 2, 5, 5, 5, 8};\n\nnums[0] = 2\nnums[1] = 2\nnums[2] = 2\nnums[3] = 2\nnums[4] = 5",
+      "action": "continue",
+      "next": "loop-check-cpp"
+    },
+    {
+      "stepId": "loop-check-cpp",
+      "mentorSays": "To solve this lesson, we'll need to use loops. Do you know what a loop is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know loops",
+          "next": "coding-start-cpp"
+        },
+        {
+          "label": "No, explain loops",
+          "next": "loop-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "loop-explanation-cpp",
+      "mentorSays": "A loop lets you repeat code multiple times. A 'for' loop runs code for each item in a sequence.\n\nFor example, 'for (int i = k; i < nums.size(); i++)' means: start at k, keep going while i is less than the vector size, and add 1 to i each time.",
+      "example": "for (int i = 0; i < 3; i++) {\n    cout << i << endl;\n}\n\nThis prints: 0, 1, 2",
+      "action": "continue",
+      "next": "coding-start-cpp"
+    },
+    {
+      "stepId": "coding-start-cpp",
+      "mentorSays": "Perfect! Let's implement the count subarrays solution in C++. We'll create a function that takes a vector, k, and threshold, and returns the count of subarrays with average >= threshold.",
+      "example": "int numOfSubarrays(vector<int>& nums, int k, int threshold) {\n    \n}",
+      "action": "continue",
+      "next": "coding-edge-case-cpp"
+    },
+    {
+      "stepId": "coding-edge-case-cpp",
+      "mentorSays": "First, let's handle the edge case: if k is greater than the vector size, there are no valid subarrays, so return 0.",
+      "example": "int numOfSubarrays(vector<int>& nums, int k, int threshold) {\n    // Edge case: k is larger than vector size\n    if (k > nums.size()) {\n        return 0;\n    }\n}",
+      "action": "continue",
+      "next": "coding-calculate-threshold-sum-cpp"
+    },
+    {
+      "stepId": "coding-calculate-threshold-sum-cpp",
+      "mentorSays": "Now, calculate the threshold sum. Since we're checking if average >= threshold, and all subarrays have size k, we check if sum >= k * threshold. This avoids floating-point division!",
+      "example": "int numOfSubarrays(vector<int>& nums, int k, int threshold) {\n    if (k > nums.size()) {\n        return 0;\n    }\n    \n    // Convert average condition to sum condition\n    // average >= threshold means sum >= k * threshold\n    int thresholdSum = k * threshold;\n}",
+      "action": "continue",
+      "next": "coding-init-sum-cpp"
+    },
+    {
+      "stepId": "coding-init-sum-cpp",
+      "mentorSays": "Calculate the sum of the first k elements (the initial window). This is our starting point.",
+      "example": "int numOfSubarrays(vector<int>& nums, int k, int threshold) {\n    if (k > nums.size()) {\n        return 0;\n    }\n    \n    int thresholdSum = k * threshold;\n    \n    // Calculate initial window sum\n    int sum = 0;\n    for (int i = 0; i < k; i++) {\n        sum += nums[i];\n    }\n}",
+      "action": "continue",
+      "next": "coding-check-initial-cpp"
+    },
+    {
+      "stepId": "coding-check-initial-cpp",
+      "mentorSays": "Check if the initial window meets our condition. If sum >= thresholdSum, set count to 1, otherwise 0.",
+      "example": "int numOfSubarrays(vector<int>& nums, int k, int threshold) {\n    if (k > nums.size()) {\n        return 0;\n    }\n    \n    int thresholdSum = k * threshold;\n    int sum = 0;\n    for (int i = 0; i < k; i++) {\n        sum += nums[i];\n    }\n    \n    // Check initial window\n    int count = (sum >= thresholdSum) ? 1 : 0;\n}",
+      "action": "continue",
+      "next": "coding-slide-window-cpp"
+    },
+    {
+      "stepId": "coding-slide-window-cpp",
+      "mentorSays": "Now, slide the window from position k to the end. For each position, we'll remove the leftmost element and add the new element.",
+      "example": "int numOfSubarrays(vector<int>& nums, int k, int threshold) {\n    if (k > nums.size()) {\n        return 0;\n    }\n    \n    int thresholdSum = k * threshold;\n    int sum = 0;\n    for (int i = 0; i < k; i++) {\n        sum += nums[i];\n    }\n    \n    int count = (sum >= thresholdSum) ? 1 : 0;\n    \n    // Slide the window\n    for (int i = k; i < nums.size(); i++) {\n        // Remove leftmost, add new element\n        sum = sum - nums[i - k] + nums[i];\n    }\n}",
+      "action": "continue",
+      "next": "coding-check-condition-cpp"
+    },
+    {
+      "stepId": "coding-check-condition-cpp",
+      "mentorSays": "Inside the loop, after updating the sum, check if it meets our condition. If sum >= thresholdSum, increment the count.",
+      "example": "int numOfSubarrays(vector<int>& nums, int k, int threshold) {\n    if (k > nums.size()) {\n        return 0;\n    }\n    \n    int thresholdSum = k * threshold;\n    int sum = 0;\n    for (int i = 0; i < k; i++) {\n        sum += nums[i];\n    }\n    \n    int count = (sum >= thresholdSum) ? 1 : 0;\n    \n    for (int i = k; i < nums.size(); i++) {\n        sum = sum - nums[i - k] + nums[i];\n        \n        // Check condition\n        if (sum >= thresholdSum) {\n            count++;\n        }\n    }\n    \n    return count;\n}",
+      "action": "continue",
+      "next": "test-code-cpp"
+    },
+    {
+      "stepId": "test-code-cpp",
+      "mentorSays": "Perfect! Now let's test your code with multiple test cases:\n\n**Test 1:** nums = [2, 2, 2, 2, 5, 5, 5, 8], k = 3, threshold = 4\nExpected: 3\n\n**Test 2:** nums = [11, 13, 17, 23, 29, 31, 7, 5, 2, 3], k = 3, threshold = 5\nExpected: 6\n\n**Test 3:** nums = [1, 1, 1, 1, 1], k = 1, threshold = 1\nExpected: 5 (each single element has avg = 1 >= 1)\n\n**Test 4:** nums = [1, 1, 1, 1, 1], k = 5, threshold = 2\nExpected: 0 (entire array avg = 1 < 2)\n\n**Test 5:** nums = [-1, -2, -3, -4, -5], k = 3, threshold = -3\nExpected: 3 (all subarrays have avg >= -3)\n\n**Test 6:** nums = [10], k = 1, threshold = 10\nExpected: 1\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: [2,2,2,2,5,5,5,8], k=3, threshold=4 → 3\nTest 2: [11,13,17,23,29,31,7,5,2,3], k=3, threshold=5 → 6\nTest 3: [1,1,1,1,1], k=1, threshold=1 → 5\nTest 4: [1,1,1,1,1], k=5, threshold=2 → 0\nTest 5: [-1,-2,-3,-4,-5], k=3, threshold=-3 → 3\nTest 6: [10], k=1, threshold=10 → 1",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-ts",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-ts"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-ts",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'sum' or 'count') and put data inside it.\n\nFor example, 'let sum: number = 0;' creates a variable that stores the number 0. Later, you can use that variable name to refer to it.",
+      "example": "let sum: number = 0;\nlet count: number = 0;\nlet thresholdSum: number = k * threshold;\n\nNow these variables store numbers\nWe can use them to track window sum and count",
+      "action": "continue",
+      "next": "function-check-ts"
+    },
+    {
+      "stepId": "function-check-ts",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-ts"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-ts",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.\n\nThink of it like a recipe: you provide ingredients (parameters), the function does the work, and gives you a result (return value).",
+      "example": "function add(a: number, b: number): number {\n  return a + b;\n}\n\nadd(3, 5) returns 8\nadd(10, 20) returns 30",
+      "action": "continue",
+      "next": "parameter-check-ts"
+    },
+    {
+      "stepId": "parameter-check-ts",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "array-check-ts"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-ts",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'function numOfSubarrays(nums: number[], k: number, threshold: number): number', the 'nums', 'k', and 'threshold' are parameters - they're placeholders that will receive actual values when you call the function.\n\nWhen you call 'numOfSubarrays([2, 2, 2, 2, 5, 5, 5, 8], 3, 4)', the array and numbers go into the parameters.",
+      "example": "function numOfSubarrays(nums: number[], k: number, threshold: number): number {\n  // 'nums', 'k', 'threshold' are parameters\n}\n\n// When we call it:\nnumOfSubarrays([2, 2, 2, 2, 5, 5, 5, 8], 3, 4);\n// The array and numbers go into the parameters",
+      "action": "continue",
+      "next": "array-check-ts"
+    },
+    {
+      "stepId": "array-check-ts",
+      "mentorSays": "To solve this lesson, we'll need to work with arrays. Do you know what an array is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know arrays",
+          "next": "loop-check-ts"
+        },
+        {
+          "label": "No, explain arrays",
+          "next": "array-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "array-explanation-ts",
+      "mentorSays": "An array is like a list of items that keeps them in order. Each item has a position number called an 'index'. Array indices start counting from 0, not 1.\n\nFor example, let nums: number[] = [2, 2, 2, 2, 5, 5, 5, 8] means:\n- nums[0] = 2 (first element, index 0)\n- nums[1] = 2 (second element, index 1)\n- nums[2] = 2 (third element, index 2)\n- nums[3] = 2 (fourth element, index 3)\n- nums[4] = 5 (fifth element, index 4)\n- ... and so on",
+      "example": "let nums: number[] = [2, 2, 2, 2, 5, 5, 5, 8];\n\nnums[0] = 2\nnums[1] = 2\nnums[2] = 2\nnums[3] = 2\nnums[4] = 5",
+      "action": "continue",
+      "next": "loop-check-ts"
+    },
+    {
+      "stepId": "loop-check-ts",
+      "mentorSays": "To solve this lesson, we'll need to use loops. Do you know what a loop is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know loops",
+          "next": "coding-start-ts"
+        },
+        {
+          "label": "No, explain loops",
+          "next": "loop-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "loop-explanation-ts",
+      "mentorSays": "A loop lets you repeat code multiple times. A 'for' loop runs code for each item in a sequence.\n\nFor example, 'for (let i = k; i < nums.length; i++)' means: start at k, keep going while i is less than the array length, and add 1 to i each time.",
+      "example": "for (let i = 0; i < 3; i++) {\n  console.log(i);\n}\n\nThis prints: 0, 1, 2",
+      "action": "continue",
+      "next": "coding-start-ts"
+    },
+    {
+      "stepId": "coding-start-ts",
+      "mentorSays": "Perfect! Let's implement the count subarrays solution in TypeScript. We'll create a function that takes an array, k, and threshold, and returns the count of subarrays with average >= threshold.",
+      "example": "function numOfSubarrays(nums: number[], k: number, threshold: number): number {\n  \n}",
+      "action": "continue",
+      "next": "coding-edge-case-ts"
+    },
+    {
+      "stepId": "coding-edge-case-ts",
+      "mentorSays": "First, let's handle the edge case: if k is greater than the array length, there are no valid subarrays, so return 0.",
+      "example": "function numOfSubarrays(nums: number[], k: number, threshold: number): number {\n  // Edge case: k is larger than array length\n  if (k > nums.length) {\n    return 0;\n  }\n}",
+      "action": "continue",
+      "next": "coding-calculate-threshold-sum-ts"
+    },
+    {
+      "stepId": "coding-calculate-threshold-sum-ts",
+      "mentorSays": "Now, calculate the threshold sum. Since we're checking if average >= threshold, and all subarrays have size k, we check if sum >= k * threshold. This avoids floating-point division!",
+      "example": "function numOfSubarrays(nums: number[], k: number, threshold: number): number {\n  if (k > nums.length) {\n    return 0;\n  }\n  \n  // Convert average condition to sum condition\n  // average >= threshold means sum >= k * threshold\n  let thresholdSum: number = k * threshold;\n}",
+      "action": "continue",
+      "next": "coding-init-sum-ts"
+    },
+    {
+      "stepId": "coding-init-sum-ts",
+      "mentorSays": "Calculate the sum of the first k elements (the initial window). This is our starting point.",
+      "example": "function numOfSubarrays(nums: number[], k: number, threshold: number): number {\n  if (k > nums.length) {\n    return 0;\n  }\n  \n  let thresholdSum: number = k * threshold;\n  \n  // Calculate initial window sum\n  let sum: number = 0;\n  for (let i = 0; i < k; i++) {\n    sum += nums[i];\n  }\n}",
+      "action": "continue",
+      "next": "coding-check-initial-ts"
+    },
+    {
+      "stepId": "coding-check-initial-ts",
+      "mentorSays": "Check if the initial window meets our condition. If sum >= thresholdSum, set count to 1, otherwise 0.",
+      "example": "function numOfSubarrays(nums: number[], k: number, threshold: number): number {\n  if (k > nums.length) {\n    return 0;\n  }\n  \n  let thresholdSum: number = k * threshold;\n  let sum: number = 0;\n  for (let i = 0; i < k; i++) {\n    sum += nums[i];\n  }\n  \n  // Check initial window\n  let count: number = (sum >= thresholdSum) ? 1 : 0;\n}",
+      "action": "continue",
+      "next": "coding-slide-window-ts"
+    },
+    {
+      "stepId": "coding-slide-window-ts",
+      "mentorSays": "Now, slide the window from position k to the end. For each position, we'll remove the leftmost element and add the new element.",
+      "example": "function numOfSubarrays(nums: number[], k: number, threshold: number): number {\n  if (k > nums.length) {\n    return 0;\n  }\n  \n  let thresholdSum: number = k * threshold;\n  let sum: number = 0;\n  for (let i = 0; i < k; i++) {\n    sum += nums[i];\n  }\n  \n  let count: number = (sum >= thresholdSum) ? 1 : 0;\n  \n  // Slide the window\n  for (let i = k; i < nums.length; i++) {\n    // Remove leftmost, add new element\n    sum = sum - nums[i - k] + nums[i];\n  }\n}",
+      "action": "continue",
+      "next": "coding-check-condition-ts"
+    },
+    {
+      "stepId": "coding-check-condition-ts",
+      "mentorSays": "Inside the loop, after updating the sum, check if it meets our condition. If sum >= thresholdSum, increment the count.",
+      "example": "function numOfSubarrays(nums: number[], k: number, threshold: number): number {\n  if (k > nums.length) {\n    return 0;\n  }\n  \n  let thresholdSum: number = k * threshold;\n  let sum: number = 0;\n  for (let i = 0; i < k; i++) {\n    sum += nums[i];\n  }\n  \n  let count: number = (sum >= thresholdSum) ? 1 : 0;\n  \n  for (let i = k; i < nums.length; i++) {\n    sum = sum - nums[i - k] + nums[i];\n    \n    // Check condition\n    if (sum >= thresholdSum) {\n      count++;\n    }\n  }\n  \n  return count;\n}",
+      "action": "continue",
+      "next": "test-code-ts"
+    },
+    {
+      "stepId": "test-code-ts",
+      "mentorSays": "Perfect! Now let's test your code with multiple test cases:\n\n**Test 1:** nums = [2, 2, 2, 2, 5, 5, 5, 8], k = 3, threshold = 4\nExpected: 3\n\n**Test 2:** nums = [11, 13, 17, 23, 29, 31, 7, 5, 2, 3], k = 3, threshold = 5\nExpected: 6\n\n**Test 3:** nums = [1, 1, 1, 1, 1], k = 1, threshold = 1\nExpected: 5 (each single element has avg = 1 >= 1)\n\n**Test 4:** nums = [1, 1, 1, 1, 1], k = 5, threshold = 2\nExpected: 0 (entire array avg = 1 < 2)\n\n**Test 5:** nums = [-1, -2, -3, -4, -5], k = 3, threshold = -3\nExpected: 3 (all subarrays have avg >= -3)\n\n**Test 6:** nums = [10], k = 1, threshold = 10\nExpected: 1\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: [2,2,2,2,5,5,5,8], k=3, threshold=4 → 3\nTest 2: [11,13,17,23,29,31,7,5,2,3], k=3, threshold=5 → 6\nTest 3: [1,1,1,1,1], k=1, threshold=1 → 5\nTest 4: [1,1,1,1,1], k=5, threshold=2 → 0\nTest 5: [-1,-2,-3,-4,-5], k=3, threshold=-3 → 3\nTest 6: [10], k=1, threshold=10 → 1",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "final",
+      "mentorSays": "🎉 Well done! You've learned to think through the Count Subarrays of Size K lesson. You understand what the lesson asks for, how to convert average comparisons to sum comparisons efficiently, and how to use a sliding window of fixed size to count subarrays.\n\n**Key Takeaways:**\n1. **Average to Sum Conversion**: For fixed-size windows, `average >= threshold` is equivalent to `sum >= k * threshold`. This avoids floating-point precision issues!\n2. **Sliding Window Pattern**: Maintain a window of fixed size k, efficiently update the sum by removing one element and adding another.\n3. **Edge Cases**: Handle k > nums.length, k = 1, k = n, and negative numbers.\n\n**Time Complexity**: O(n) - we traverse the array once\n**Space Complexity**: O(1) - we only use a few variables\n\n**What to practice next:**\n- Maximum Average Subarray (similar sliding window with fixed size)\n- Minimum Size Subarray Sum (sliding window with variable size)\n\nThis kind of thinking—using sliding windows with fixed size—is essential for solving many array lessons. Keep practicing!",
+      "action": "continue"
+    }
+  ]
+}

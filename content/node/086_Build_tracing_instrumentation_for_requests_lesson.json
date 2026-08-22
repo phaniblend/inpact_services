@@ -1,0 +1,350 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-node-86",
+    "track": "node",
+    "lessonNum": 86,
+    "title": "Build tracing instrumentation for requests",
+    "shortName": "P86",
+    "intro": {
+      "tag": "LESSON #86",
+      "title": "Build tracing instrumentation for requests",
+      "body": "In this lesson, you will build a simple tracing instrumentation system to monitor HTTP requests in a Node.js application. You will learn how to generate unique trace IDs for each incoming request and log them along with the request method and URL. The core programming concept involves using middleware functions to intercept and augment requests in an Express.js server. You will work with key Node.js constructs like the crypto module for ID generation and console logging for output. By the end, you will understand how tracing helps in debugging and observing application flow in real-time.",
+      "usecase": "Tracing instrumentation is essential for monitoring and debugging distributed systems in production. Developers implement request tracing in microservices architectures to track user journeys across multiple services, such as an e-commerce checkout flow spanning authentication, inventory, and payment APIs. This enables teams to visualize performance bottlenecks in observability dashboards like Grafana or Jaeger, helping them quickly diagnose latency issues and improve user experience. In real-world applications, this pattern is used by companies like Netflix and Uber to ensure reliability and maintain service-level agreements (SLAs) for critical user-facing features."
+    },
+    "objectives": [
+      "Initialize a Node.js application with required dependencies for tracing",
+      "Configure a basic HTTP server with request logging middleware",
+      "Implement trace ID generation for incoming HTTP requests",
+      "Integrate trace context propagation across multiple request handlers",
+      "Construct structured log output containing trace metadata",
+      "Manipulate request and response objects to inject trace headers",
+      "Apply trace instrumentation to measure request processing time"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 10",
+        "title": "Import required Node.js modules",
+        "instruction": "Import the http module and uuid for generating unique trace IDs.",
+        "hint": "Use the require() function to import Node.js built-in modules and npm packages.",
+        "analogousExample": "// Similar: importing modules in Node.js\nconst fs = require('fs');\nconst path = require('path');",
+        "seedCode": "// Import the http module and uuid here",
+        "expectedOutcome": "The http module and uuid package are imported and ready to use.",
+        "successCriteria": [
+          "The http module and uuid are imported using require()."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure to import both http and uuid.",
+        "feedbackWrong": "Check the syntax for importing modules in Node.js. You need to import both http and uuid.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "require('http')",
+            "require('uuid')"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 10",
+        "title": "Create a basic HTTP server",
+        "instruction": "Create a basic HTTP server that listens on port 3000 and responds with a simple message. Use the http.createServer() method and server.listen().",
+        "hint": "Use the http module you imported. Call createServer() with a request handler function that writes a response. Then call listen() on the server with port 3000.",
+        "analogousExample": "// Similar: creating a basic server\nconst http = require('http');\nconst server = http.createServer((req, res) => {\n  res.writeHead(200, { 'Content-Type': 'text/plain' });\n  res.end('Hello from server!');\n});\nserver.listen(3000, () => {\n  console.log('Server listening on port 3000');\n});",
+        "seedCode": "// Import the http module and uuid here\nconst http = require('http');\nconst { v4: uuidv4 } = require('uuid');\n\n// Create your HTTP server here\n",
+        "expectedOutcome": "A functional HTTP server that starts and responds to requests on port 3000.",
+        "successCriteria": [
+          "Server is created with http.createServer(), listens on port 3000, and responds with a message."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure you're using http.createServer() and calling server.listen(3000).",
+        "feedbackWrong": "Check that you've created a server with http.createServer() and set it to listen on port 3000.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "createServer",
+            "listen",
+            "3000"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 10",
+        "title": "Define a function to generate trace IDs",
+        "instruction": "Create a function named generateTraceId that returns a unique trace ID using the uuidv4 function.",
+        "hint": "Define a function that calls uuidv4() and returns the result. You can use either a function declaration or arrow function syntax.",
+        "analogousExample": "// Example: a function that generates a unique ID\nfunction generateUniqueId() {\n  return uuidv4();\n}",
+        "seedCode": "// Import the http module and uuid here\nconst http = require('http');\nconst { v4: uuidv4 } = require('uuid');\n\n// Create your HTTP server here\n\n// Define your trace ID generation function here",
+        "expectedOutcome": "A function named generateTraceId is defined that returns a unique trace ID when called.",
+        "successCriteria": [
+          "The generateTraceId function is defined and returns the result of calling uuidv4()."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've defined a function, but make sure it returns the result of uuidv4() and is named generateTraceId.",
+        "feedbackWrong": "The function isn't defined correctly. Create a function named generateTraceId that returns uuidv4().",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "generateTraceId",
+            "uuidv4",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 10",
+        "title": "Add trace ID to incoming requests",
+        "instruction": "Inside your server's request handler, generate a trace ID for each incoming request and attach it to the request object as a property named 'traceId'.",
+        "hint": "Call your trace ID generation function to create a unique ID, then assign it to req.traceId within the request handler callback.",
+        "analogousExample": "// Example: attaching metadata to a request object\nserver.on('request', (req, res) => {\n  req.requestId = generateId();\n});",
+        "seedCode": "// Import the http module and uuid here\nconst http = require('http');\nconst { v4: uuidv4 } = require('uuid');\n\n// Create your HTTP server here\nconst server = http.createServer((req, res) => {\n  // Add trace ID generation and attachment here\n});\n\n// Define your trace ID generation function here\nfunction generateTraceId() {\n  return uuidv4();\n}",
+        "expectedOutcome": "Each incoming request will have a unique traceId property attached to its request object for tracking purposes.",
+        "successCriteria": [
+          "The server's request handler generates a trace ID using the generateTraceId function and attaches it as req.traceId"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're calling generateTraceId() and assigning the result to req.traceId within the request handler.",
+        "feedbackWrong": "The trace ID isn't being properly attached to requests. Check that you're generating the ID and assigning it to req.traceId inside the server's request handler.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "req.traceId",
+            "generateTraceId()"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 10",
+        "title": "Create a logging middleware function",
+        "instruction": "Create a function named 'logRequest' that takes 'req' and 'traceId' as parameters and logs the request method, URL, and trace ID to the console.",
+        "hint": "Define a function that uses console.log to output the request details in a readable format.",
+        "analogousExample": "// Example of a logging function\nfunction logRequest(req, traceId) {\n  console.log(`Method: ${req.method}, URL: ${req.url}, Trace ID: ${traceId}`);\n}",
+        "seedCode": "const http = require('http');\nconst { v4: uuidv4 } = require('uuid');\n\nconst server = http.createServer((req, res) => {\n  // Add trace ID generation and attachment here\n});\n\nfunction generateTraceId() {\n  return uuidv4();\n}\n\n// Create your logging middleware function here\n",
+        "expectedOutcome": "A function named 'logRequest' is defined that logs request details with the trace ID.",
+        "successCriteria": [
+          "The 'logRequest' function is defined with parameters 'req' and 'traceId', and it logs the request method, URL, and trace ID to the console."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your function logs all three details: request method, URL, and trace ID.",
+        "feedbackWrong": "The function isn't defined correctly. Check that it's named 'logRequest', takes 'req' and 'traceId' parameters, and logs the required details.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "function logRequest",
+            "req",
+            "traceId",
+            "console.log",
+            "method",
+            "url"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 10",
+        "title": "Integrate logging middleware into the server",
+        "instruction": "Modify the server callback to call the logging middleware function for every incoming request, passing the request and response objects.",
+        "hint": "Inside the server callback, call your logging middleware function before handling the request.",
+        "analogousExample": "// Example: calling a middleware function\nfunction loggingMiddleware(req, res) {\n  console.log('Request received');\n}\n\nconst server = http.createServer((req, res) => {\n  loggingMiddleware(req, res);\n  // Handle request...\n});",
+        "seedCode": "const http = require('http');\nconst { v4: uuidv4 } = require('uuid');\n\nconst server = http.createServer((req, res) => {\n  // Add trace ID generation and attachment here\n});\n\nfunction generateTraceId() {\n  return uuidv4();\n}\n\n// Create your logging middleware function here\n\n// Call your logging middleware function inside the server callback",
+        "expectedOutcome": "The server will now execute the logging middleware for each request before any other processing.",
+        "successCriteria": [
+          "The logging middleware function is called inside the server callback with req and res parameters."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're calling the logging middleware function inside the server callback with both req and res parameters.",
+        "feedbackWrong": "The logging middleware isn't properly integrated. Check that you're calling the function inside the server callback with the correct parameters.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "loggingMiddleware",
+            "req",
+            "res"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 10",
+        "title": "Add response time tracking",
+        "instruction": "Inside your logging middleware function, add code to calculate the response time by capturing the start time when the request begins and the end time when the response finishes.",
+        "hint": "Use Date.now() to get timestamps at the beginning and end of request processing, then calculate the difference.",
+        "analogousExample": "// Example: timing a function execution\nfunction timedOperation() {\n  const start = Date.now();\n  // Simulate work\n  for (let i = 0; i < 1000000; i++) {}\n  const end = Date.now();\n  const duration = end - start;\n  console.log(`Operation took ${duration}ms`);\n}",
+        "seedCode": "const http = require('http');\nconst { v4: uuidv4 } = require('uuid');\n\nconst server = http.createServer((req, res) => {\n  // Add trace ID generation and attachment here\n});\n\nfunction generateTraceId() {\n  return uuidv4();\n}\n\n// Create your logging middleware function here\nfunction loggingMiddleware(req, res) {\n  // Add response time tracking here\n}\n\n// Call your logging middleware function inside the server callback",
+        "expectedOutcome": "Your logging middleware function will now include timing logic to measure request duration.",
+        "successCriteria": [
+          "The loggingMiddleware function contains code that captures start and end timestamps and calculates the duration."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added some timing code, but make sure to capture both start and end times and calculate the difference.",
+        "feedbackWrong": "The loggingMiddleware function doesn't yet include response time tracking. Add code to measure the duration of request processing.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "Date.now()",
+            "start",
+            "end",
+            "duration"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 10",
+        "title": "Propagate trace IDs to downstream services",
+        "instruction": "Create a function named makeOutgoingRequest that accepts a traceId parameter and makes an HTTP request with that trace ID in the headers.",
+        "hint": "Use the http.request method to create an outgoing request. Add a 'X-Trace-Id' header with the provided traceId value.",
+        "analogousExample": "// Example function making an HTTP request with custom headers\nfunction makeApiCall(apiKey) {\n  const options = {\n    hostname: 'api.example.com',\n    path: '/data',\n    method: 'GET',\n    headers: {\n      'Authorization': `Bearer ${apiKey}`\n    }\n  };\n  \n  const req = http.request(options, (res) => {\n    // Handle response\n  });\n  \n  req.end();\n}",
+        "seedCode": "const http = require('http');\nconst { v4: uuidv4 } = require('uuid');\n\nconst server = http.createServer((req, res) => {\n  // Add trace ID generation and attachment here\n});\n\nfunction generateTraceId() {\n  return uuidv4();\n}\n\n// Create your logging middleware function here\nfunction loggingMiddleware(req, res) {\n  // Add response time tracking here\n}\n\n// Call your logging middleware function inside the server callback\n\n// Create your makeOutgoingRequest function here",
+        "expectedOutcome": "You'll have a function that can propagate trace IDs to downstream services by including them in HTTP request headers.",
+        "successCriteria": [
+          "The makeOutgoingRequest function is defined, accepts a traceId parameter, and creates an HTTP request with 'X-Trace-Id' header containing the traceId value."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started creating the function, but make sure it accepts a traceId parameter and includes it in the request headers as 'X-Trace-Id'.",
+        "feedbackWrong": "The function isn't properly defined yet. Create a function named makeOutgoingRequest that accepts traceId and makes an HTTP request with that trace ID in the headers.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "makeOutgoingRequest",
+            "traceId",
+            "headers",
+            "X-Trace-Id"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 10",
+        "title": "Make a sample downstream request",
+        "instruction": "Inside the server callback, call the makeOutgoingRequest function with the current request's trace ID to simulate a downstream API call.",
+        "hint": "You'll need to pass the trace ID (which should be attached to the request object) as an argument to makeOutgoingRequest.",
+        "analogousExample": "// Calling a function with data from the current context\nfunction processRequest(req) {\n    const userId = req.userId;\n    fetchUserData(userId);\n}",
+        "seedCode": "const http = require('http');\nconst { v4: uuidv4 } = require('uuid');\n\nconst server = http.createServer((req, res) => {\n    // Add trace ID generation and attachment here\n    // Call your logging middleware function here\n    // Add response time tracking here\n    // Propagate trace IDs to downstream services here\n    // Make a sample downstream request here\n});\n\nfunction generateTraceId() {\n    return uuidv4();\n}\n\n// Create your logging middleware function here\nfunction loggingMiddleware(req, res) {\n    // Add response time tracking here\n}\n\n// Create your makeOutgoingRequest function here\nfunction makeOutgoingRequest(traceId) {\n    // This function will make an HTTP request with the trace ID\n}",
+        "expectedOutcome": "The server will now initiate a downstream request when handling incoming requests, passing along the trace ID for context propagation.",
+        "successCriteria": [
+          "The server callback includes a call to makeOutgoingRequest with the trace ID from the request object."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're passing the trace ID from the request object to the makeOutgoingRequest function.",
+        "feedbackWrong": "The server callback should include a call to makeOutgoingRequest with the trace ID. Check that you're using the correct function name and passing the trace ID parameter.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "makeOutgoingRequest",
+            "traceId"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 10",
+        "title": "Test the complete tracing implementation",
+        "instruction": "Start the server by calling server.listen() on port 3000 and log a message indicating the server is running.",
+        "hint": "Use server.listen(3000, () => { console.log(...) }) to start the server and log a confirmation message.",
+        "analogousExample": "// Starting a basic HTTP server\nconst server = http.createServer((req, res) => {\n  res.end('Hello');\n});\nserver.listen(3000, () => {\n  console.log('Server running on port 3000');\n});",
+        "seedCode": "const http = require('http');\nconst { v4: uuidv4 } = require('uuid');\n\nconst server = http.createServer((req, res) => {\n    // Add trace ID generation and attachment here\n    // Call your logging middleware function here\n    // Add response time tracking here\n    // Propagate trace IDs to downstream services here\n    // Make a sample downstream request here\n});\n\nfunction generateTraceId() {\n    return uuidv4();\n}\n\n// Create your logging middleware function here\nfunction loggingMiddleware(req, res) {\n    // Add response time tracking here\n}\n\n// Create your makeOutgoingRequest function here\nfunction makeOutgoingRequest(traceId) {\n    // This function will make an HTTP request with the trace ID\n}\n\n// Start the server here",
+        "expectedOutcome": "The server will start and log a confirmation message, allowing you to test the tracing implementation by making requests.",
+        "successCriteria": [
+          "server.listen() is called with port 3000 and a callback that logs a server running message."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the server, but make sure to include a callback that logs a message when the server is ready.",
+        "feedbackWrong": "The server isn't started correctly. Use server.listen(3000, callback) to start it on port 3000.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "server.listen",
+            "3000",
+            "console.log"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import required Node.js modules",
+        "id": "step1"
+      },
+      {
+        "label": "Create a basic HTTP server",
+        "id": "step2"
+      },
+      {
+        "label": "Define a function to generate trace IDs",
+        "id": "step3"
+      },
+      {
+        "label": "Add trace ID to incoming requests",
+        "id": "step4"
+      },
+      {
+        "label": "Create a logging middleware function",
+        "id": "step5"
+      },
+      {
+        "label": "Integrate logging middleware into the server",
+        "id": "step6"
+      },
+      {
+        "label": "Add response time tracking",
+        "id": "step7"
+      },
+      {
+        "label": "Propagate trace IDs to downstream services",
+        "id": "step8"
+      },
+      {
+        "label": "Make a sample downstream request",
+        "id": "step9"
+      },
+      {
+        "label": "Test the complete tracing implementation",
+        "id": "step10"
+      }
+    ]
+  },
+  "source": "content"
+}

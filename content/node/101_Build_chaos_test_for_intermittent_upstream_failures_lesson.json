@@ -1,0 +1,425 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-node-101",
+    "track": "node",
+    "lessonNum": 101,
+    "title": "Build chaos test for intermittent upstream failures",
+    "shortName": "P101",
+    "intro": {
+      "tag": "LESSON #101",
+      "title": "Build chaos test for intermittent upstream failures",
+      "body": "In this lesson, you will build a chaos test that simulates intermittent failures in an upstream service, helping you understand how to make your Node.js applications more resilient. You will learn to use a simple Node.js script to randomly introduce errors or delays, mimicking real-world unreliable network conditions. The core programming concept involves using conditional logic and random number generation to control failure simulation. You will work with basic JavaScript constructs like Math.random(), setTimeout(), and error handling to create and run this test.",
+      "usecase": "Chaos testing for intermittent upstream failures is essential in distributed systems like e-commerce platforms, payment gateways, and API-driven services. Developers implement this pattern to simulate scenarios where third-party APIs, microservices, or databases become temporarily unavailable, ensuring their applications degrade gracefully. For example, an order processing dashboard might use chaos tests to verify it displays helpful error messages and retry options when the payment service flakes out, rather than crashing entirely. This proactive testing helps build resilient systems that maintain core functionality even during partial outages, directly improving user experience and business continuity."
+    },
+    "objectives": [
+      "Implement a basic Node.js server that simulates intermittent upstream service failures",
+      "Configure a chaos testing module to inject random failures into your application",
+      "Integrate failure probability controls to manipulate the frequency of simulated outages",
+      "Construct a monitoring endpoint to observe the application's behavior during chaos testing",
+      "Apply error handling patterns to gracefully manage upstream service disruptions",
+      "Initialize a test suite to validate your chaos testing implementation",
+      "Render a simple dashboard to visualize failure rates and system responses"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 12",
+        "title": "Import required Node.js modules",
+        "instruction": "Import the http, https, and fs modules using require() statements at the top of your file.",
+        "hint": "Use the require() function to import each module. For example, to import the http module, you would write: const http = require('http');",
+        "analogousExample": "// Example: importing modules in Node.js\nconst path = require('path');\nconst os = require('os');",
+        "seedCode": "// Import the required modules here",
+        "expectedOutcome": "The http, https, and fs modules are imported and available for use in your chaos test.",
+        "successCriteria": [
+          "The http, https, and fs modules are imported using require() statements."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've imported some modules, but make sure to import all three: http, https, and fs.",
+        "feedbackWrong": "The required modules aren't imported correctly. Use require() statements to import http, https, and fs.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "require('http')",
+            "require('https')",
+            "require('fs')"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 12",
+        "title": "Create configuration object for chaos test",
+        "instruction": "Create a configuration object named 'chaosConfig' with properties for failureRate, timeoutProbability, and errorProbability. Assign numeric values between 0 and 1 to each property.",
+        "hint": "Define an object with three properties. For example: { failureRate: 0.3, timeoutProbability: 0.2, errorProbability: 0.1 }",
+        "analogousExample": "// Similar: configuration object for an app\nconst appConfig = {\n  maxRetries: 3,\n  timeoutMs: 5000,\n  debugMode: false\n};",
+        "seedCode": "// Import the required modules here\n\n// Create your chaos configuration object here",
+        "expectedOutcome": "A configuration object is created with three numeric properties that will control the chaos test behavior.",
+        "successCriteria": [
+          "The 'chaosConfig' object exists with 'failureRate', 'timeoutProbability', and 'errorProbability' properties, each assigned a number between 0 and 1."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure all three properties (failureRate, timeoutProbability, errorProbability) are present with numeric values.",
+        "feedbackWrong": "The configuration object is missing or incomplete. Create an object named 'chaosConfig' with the three specified properties.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "chaosConfig",
+            "failureRate",
+            "timeoutProbability",
+            "errorProbability"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 12",
+        "title": "Define the chaos middleware function",
+        "instruction": "Define a function called chaosMiddleware that takes a config parameter and returns a middleware function.",
+        "hint": "The middleware function should have the signature (req, res, next) => { ... } and will contain the chaos injection logic.",
+        "analogousExample": "// Similar: middleware function pattern\nfunction loggingMiddleware(config) {\n  return (req, res, next) => {\n    console.log('Request:', req.url);\n    next();\n  };\n}",
+        "seedCode": "// Import the required modules here\n\n// Create your chaos configuration object here\n\n// Define your chaosMiddleware function here",
+        "expectedOutcome": "A chaosMiddleware function is defined that returns a middleware function.",
+        "successCriteria": [
+          "The chaosMiddleware function is defined with config parameter and returns a middleware function with (req, res, next) parameters."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure your function takes config as a parameter and returns another function with (req, res, next) parameters.",
+        "feedbackWrong": "The chaosMiddleware function isn't defined correctly. It should accept config and return a middleware function.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "chaosMiddleware",
+            "config",
+            "return",
+            "req",
+            "res",
+            "next"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 12",
+        "title": "Implement random failure injection logic",
+        "instruction": "Inside your chaosMiddleware function, add logic that uses Math.random() to randomly fail requests based on the configuration's failureRate property.",
+        "hint": "Generate a random number between 0 and 1 with Math.random(), then compare it to the failureRate value to decide whether to fail the request.",
+        "analogousExample": "// Example: random failure logic\nfunction randomFailure(failureRate) {\n  if (Math.random() < failureRate) {\n    throw new Error('Random failure injected');\n  }\n}",
+        "seedCode": "// Import the required modules here\n\n// Create your chaos configuration object here\n\n// Define your chaosMiddleware function here\nfunction chaosMiddleware(req, res, next) {\n  // Add random failure injection logic here\n}",
+        "expectedOutcome": "Your middleware will now have the core logic to simulate random upstream failures based on the configured failure probability.",
+        "successCriteria": [
+          "The chaosMiddleware function contains logic that uses Math.random() and compares it to a failureRate value to conditionally fail requests."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're using Math.random() and comparing it to the failureRate value from your configuration object.",
+        "feedbackWrong": "The random failure logic isn't implemented correctly. Remember to use Math.random() and compare it to the failureRate to decide when to fail requests.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "Math.random",
+            "failureRate",
+            "if",
+            "<"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 12",
+        "title": "Implement error response simulation",
+        "instruction": "Inside the chaosMiddleware function, add logic to return random HTTP error responses (500, 502, 503) based on the errorProbability from your configuration.",
+        "hint": "Generate a random number and compare it to config.errorProbability. If it's less, send a random error status code with a descriptive message.",
+        "analogousExample": "// Example: returning error responses\nif (Math.random() < config.errorProbability) {\n  const errors = [500, 502, 503];\n  const randomError = errors[Math.floor(Math.random() * errors.length)];\n  res.status(randomError).send('Simulated upstream error');\n  return;\n}",
+        "seedCode": "// Import the required modules here\n\n// Create your chaos configuration object here\n\n// Define your chaosMiddleware function here\nfunction chaosMiddleware(req, res, next) {\n  // Add random failure injection logic here\n  \n  // Add timeout simulation logic here\n  \n  // Add error response simulation logic here\n}",
+        "expectedOutcome": "The middleware will now simulate HTTP error responses from upstream services when triggered by the errorProbability.",
+        "successCriteria": [
+          "The chaosMiddleware function includes logic that returns random error status codes (500, 502, 503) based on errorProbability."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're using config.errorProbability and returning one of the specified error codes (500, 502, 503).",
+        "feedbackWrong": "The error simulation logic isn't quite right. Check that you're comparing against config.errorProbability and sending one of the three error status codes.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "errorProbability",
+            "500",
+            "502",
+            "503",
+            "res.status",
+            "Math.random"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 12",
+        "title": "Create a simple Express server",
+        "instruction": "Create an Express app instance and store it in a variable named 'app'.",
+        "hint": "Use the imported express module to create an application instance.",
+        "analogousExample": "// Creating an Express app instance\nconst app = express();",
+        "seedCode": "// Import the required modules here\n\n// Create your chaos configuration object here\n\n// Define your chaosMiddleware function here\nfunction chaosMiddleware(req, res, next) {\n  // Add random failure injection logic here\n  \n  // Add timeout simulation logic here\n  \n  // Add error response simulation logic here\n}\n\n// Create your Express app instance here",
+        "expectedOutcome": "An Express application instance is created and assigned to the 'app' variable.",
+        "successCriteria": [
+          "The Express app instance is created using express() and stored in a variable named 'app'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure you're creating the app instance with express() and storing it in a variable named 'app'.",
+        "feedbackWrong": "Let's focus on creating the Express app instance. Use the imported express module to create an application and assign it to a variable named 'app'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "const app",
+            "express()"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 12",
+        "title": "Apply chaos middleware to Express routes",
+        "instruction": "Use app.use() to apply the chaosMiddleware function to all routes in your Express app, passing your configuration object as an argument.",
+        "hint": "The app.use() method mounts middleware functions. Pass chaosMiddleware with your configuration object as an argument.",
+        "analogousExample": "// Similar: applying middleware with configuration\napp.use(loggerMiddleware({ level: 'debug' }));",
+        "seedCode": "// Import the required modules here\n\n// Create your chaos configuration object here\n\n// Define your chaosMiddleware function here\nfunction chaosMiddleware(req, res, next) {\n  // Add random failure injection logic here\n  \n  // Add timeout simulation logic here\n  \n  // Add error response simulation logic here\n}\n\n// Create your Express app instance here\n\n// Apply chaos middleware to all routes here",
+        "expectedOutcome": "The chaosMiddleware will be applied to all incoming requests, enabling chaos testing across your entire Express application.",
+        "successCriteria": [
+          "app.use() is called with chaosMiddleware and the configuration object as arguments."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're calling app.use() with both the middleware function and your configuration object.",
+        "feedbackWrong": "That doesn't look right. You need to use app.use() to apply the chaosMiddleware with your configuration.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "app.use",
+            "chaosMiddleware",
+            "config"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 12",
+        "title": "Add test endpoints to the server",
+        "instruction": "Add a GET endpoint for '/api/data' that returns a JSON response with a 'message' property set to 'Data endpoint'.",
+        "hint": "Use app.get() to define the route. Inside the route handler, use res.json() to send a JSON response.",
+        "analogousExample": "// Similar: a simple GET endpoint\napp.get('/api/example', (req, res) => {\n  res.json({ message: 'Example endpoint' });\n});",
+        "seedCode": "// Import the required modules here\n\n// Create your chaos configuration object here\n\n// Define your chaosMiddleware function here\nfunction chaosMiddleware(req, res, next) {\n  // Add random failure injection logic here\n  \n  // Add timeout simulation logic here\n  \n  // Add error response simulation logic here\n}\n\n// Create your Express app instance here\n\n// Apply chaos middleware to all routes here\n\n// Add a GET endpoint for '/api/data' here",
+        "expectedOutcome": "The server will have a '/api/data' endpoint that returns a JSON response, which will be affected by the chaos middleware.",
+        "successCriteria": [
+          "A GET route for '/api/data' is defined using app.get() and returns a JSON response with a 'message' property."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure the endpoint uses app.get() and returns a JSON response with a 'message' property.",
+        "feedbackWrong": "The endpoint wasn't added correctly. Check that you're using app.get() with the correct path and returning a JSON response.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "app.get",
+            "'/api/data'",
+            "res.json",
+            "message"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 12",
+        "title": "Create a test client function",
+        "instruction": "Create a function called testChaosServer that will make multiple requests to your Express server and collect statistics about the responses.",
+        "hint": "Define a function named testChaosServer that will use the http module to send requests to your server endpoint.",
+        "analogousExample": "// Example: A function that makes HTTP requests\nfunction testServer() {\n  // Implementation would go here\n}",
+        "seedCode": "// Import the required modules here\n\n// Create your chaos configuration object here\n\n// Define your chaosMiddleware function here\nfunction chaosMiddleware(req, res, next) {\n  // Add random failure injection logic here\n  \n  // Add timeout simulation logic here\n  \n  // Add error response simulation logic here\n}\n\n// Create your Express app instance here\n\n// Apply chaos middleware to all routes here\n\n// Add a GET endpoint for '/api/data' here\n\n// Create your testChaosServer function here",
+        "expectedOutcome": "A function named testChaosServer is defined in your code, ready to be implemented with request logic in the next steps.",
+        "successCriteria": [
+          "The code contains a function declaration or arrow function named testChaosServer."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you've created a function with the exact name 'testChaosServer'.",
+        "feedbackWrong": "The testChaosServer function hasn't been created yet. Please define a function with that name.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "testChaosServer",
+            "function"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 12",
+        "title": "Implement statistics collection in test client",
+        "instruction": "Inside your testChaosServer function, add variables to track the counts of successful responses, failures, timeouts, and errors.",
+        "hint": "Initialize four variables (e.g., successCount, failureCount, timeoutCount, errorCount) to zero before your test loop.",
+        "analogousExample": "// Example: tracking statistics in a test function\nfunction runTests() {\n  let successCount = 0;\n  let failureCount = 0;\n  let timeoutCount = 0;\n  let errorCount = 0;\n  // ... rest of test logic\n}",
+        "seedCode": "// Import the required modules here\n\n// Create your chaos configuration object here\n\n// Define your chaosMiddleware function here\nfunction chaosMiddleware(req, res, next) {\n  // Add random failure injection logic here\n  \n  // Add timeout simulation logic here\n  \n  // Add error response simulation logic here\n}\n\n// Create your Express app instance here\n\n// Apply chaos middleware to all routes here\n\n// Add a GET endpoint for '/api/data' here\n\n// Create your testChaosServer function here\nfunction testChaosServer() {\n  // Add statistics tracking variables here\n}",
+        "expectedOutcome": "Your testChaosServer function will have variables to track different types of responses during chaos testing.",
+        "successCriteria": [
+          "The testChaosServer function contains four variables initialized to zero for tracking success, failure, timeout, and error counts."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added some tracking variables, but make sure you have all four: success, failure, timeout, and error counts. Each should be initialized to zero.",
+        "feedbackWrong": "The testChaosServer function doesn't yet contain the statistics tracking variables. Add four variables (successCount, failureCount, timeoutCount, errorCount) initialized to zero inside the function.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "successCount",
+            "failureCount",
+            "timeoutCount",
+            "errorCount",
+            "testChaosServer",
+            "function",
+            "0"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 12",
+        "title": "Run the chaos test and display results",
+        "instruction": "Inside the testChaosServer function, start the Express server, run multiple test requests,",
+        "hint": "Call app.listen() to start the server, then use a loop or Promise.all() to make multiple requests to your test endpoint, and finally console.log the statistics you've been tracking.",
+        "analogousExample": "// Example of running a test and logging results\nfunction runTest() {\n  server.listen(3000, () => {\n    console.log('Server started');\n    \n    // Make multiple requests\n    for (let i = 0; i < 10; i++) {\n      fetch('http://localhost:3000/api/data')\n        .then(res => console.log(`Request ${i}: ${res.status}`))\n        .catch(err => console.log(`Request ${i}: ${err.message}`));\n    }\n    \n    // Log summary after delay\n    setTimeout(() => {\n      console.log('Test complete');\n      server.close();\n    }, 2000);\n  });\n}",
+        "seedCode": "// Import the required modules here\n\n// Create your chaos configuration object here\n\n// Define your chaosMiddleware function here\nfunction chaosMiddleware(req, res, next) {\n  // Add random failure injection logic here\n  \n  // Add timeout simulation logic here\n  \n  // Add error response simulation logic here\n}\n\n// Create your Express app instance here\n\n// Apply chaos middleware to all routes here\n\n// Add a GET endpoint for '/api/data' here\n\n// Create your testChaosServer function here\nfunction testChaosServer() {\n  // Add statistics tracking variables here\n  \n  // Start the server, run test requests, and log statistics here\n}",
+        "expectedOutcome": "The testChaosServer function should now be complete and ready to execute. When called, it will start the server, simulate multiple requests through the chaos middleware, and display statistics about failures, timeouts, and successful responses.",
+        "successCriteria": [
+          "The testChaosServer function includes server startup, multiple test requests to the '/api/data' endpoint, and console.log statements showing statistics about how the chaos middleware affected the requests."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've made progress, but the testChaosServer function isn't fully implemented yet. Make sure it includes: 1) Starting the Express server, 2) Making multiple test requests to the '/api/data' endpoint, and 3) Logging the statistics you've been tracking about failures, timeouts, and successful responses.",
+        "feedbackWrong": "The testChaosServer function doesn't yet implement the complete test execution. You need to add code that starts the server, runs multiple test requests through the chaos middleware, and logs the collected statistics showing how the chaos affected the requests.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "testChaosServer",
+            "listen",
+            "api/data",
+            "console.log",
+            "statistics"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step12",
+        "type": "question",
+        "phase": "Step 12 of 12",
+        "title": "log the collected statistics showing how the ",
+        "instruction": "log the collected statistics showing how the chaos middleware affected the requests.",
+        "hint": "Call app.listen() to start the server, then use a loop or Promise.all() to make multiple requests to your test endpoint, and finally console.log the statistics you've been tracking.",
+        "analogousExample": "// Example of running a test and logging results\nfunction runTest() {\n  server.listen(3000, () => {\n    console.log('Server started');\n    \n    // Make multiple requests\n    for (let i = 0; i < 10; i++) {\n      fetch('http://localhost:3000/api/data')\n        .then(res => console.log(`Request ${i}: ${res.status}`))\n        .catch(err => console.log(`Request ${i}: ${err.message}`));\n    }\n    \n    // Log summary after delay\n    setTimeout(() => {\n      console.log('Test complete');\n      server.close();\n    }, 2000);\n  });\n}",
+        "seedCode": "// Import the required modules here\n\n// Create your chaos configuration object here\n\n// Define your chaosMiddleware function here\nfunction chaosMiddleware(req, res, next) {\n  // Add random failure injection logic here\n  \n  // Add timeout simulation logic here\n  \n  // Add error response simulation logic here\n}\n\n// Create your Express app instance here\n\n// Apply chaos middleware to all routes here\n\n// Add a GET endpoint for '/api/data' here\n\n// Create your testChaosServer function here\nfunction testChaosServer() {\n  // Add statistics tracking variables here\n  \n  // Start the server, run test requests, and log statistics here\n}",
+        "expectedOutcome": "",
+        "successCriteria": [
+          "Complete the step as instructed."
+        ],
+        "feedbackCorrect": "Great! Step completed.",
+        "feedbackPartial": "Review the instruction and try again.",
+        "feedbackWrong": "Check the instruction and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "testChaosServer",
+            "listen",
+            "api/data",
+            "console.log",
+            "statistics"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import required Node.js modules",
+        "id": "step1"
+      },
+      {
+        "label": "Create configuration object for chaos test",
+        "id": "step2"
+      },
+      {
+        "label": "Define the chaos middleware function",
+        "id": "step3"
+      },
+      {
+        "label": "Implement random failure injection logic",
+        "id": "step4"
+      },
+      {
+        "label": "Implement error response simulation",
+        "id": "step5"
+      },
+      {
+        "label": "Create a simple Express server",
+        "id": "step6"
+      },
+      {
+        "label": "Apply chaos middleware to Express routes",
+        "id": "step7"
+      },
+      {
+        "label": "Add test endpoints to the server",
+        "id": "step8"
+      },
+      {
+        "label": "Create a test client function",
+        "id": "step9"
+      },
+      {
+        "label": "Implement statistics collection in test client",
+        "id": "step10"
+      },
+      {
+        "label": "Run the chaos test and display results",
+        "id": "step11"
+      },
+      {
+        "label": "log the collected statistics showing how the ",
+        "id": "step12"
+      }
+    ]
+  },
+  "source": "content"
+}

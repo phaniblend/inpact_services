@@ -1,0 +1,402 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-vue-83",
+    "track": "vue",
+    "lessonNum": 83,
+    "title": "Race Condition Fix",
+    "shortName": "P83",
+    "intro": {
+      "tag": "LESSON #83",
+      "title": "Race Condition Fix",
+      "body": "In this lesson, you will build a simple Vue app that fetches user data from a mock API to demonstrate and fix a race condition. You will learn how race conditions occur when multiple asynchronous operations compete, leading to unpredictable results. The main technologies involved are Vue's reactive state, the Composition API with ref, and asynchronous JavaScript using async/await. By the end, you will implement a fix using a cleanup function to ensure only the latest API response updates the UI.",
+      "usecase": "Race conditions frequently occur in modern web applications where multiple asynchronous operations compete for shared resources. In a dashboard application, this might manifest when users rapidly toggle between different date filters while charts are loading—causing outdated data to overwrite newer selections. Search interfaces with type-ahead suggestions can display results for stale queries if new requests complete out of order. Properly handling these scenarios ensures users always see accurate, consistent data regardless of interaction timing."
+    },
+    "objectives": [
+      "Implement a reactive data property to track the loading state of an asynchronous operation",
+      "Apply conditional rendering to display a loading indicator while data is being fetched",
+      "Construct a method that prevents duplicate API calls by checking the current loading state",
+      "Configure a watcher to trigger data fetching when a reactive dependency changes",
+      "Update component logic to cancel pending requests when new requests are initiated",
+      "Bind user interactions to methods that safely trigger asynchronous operations",
+      "Control the sequence of asynchronous operations to ensure data consistency"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 11",
+        "title": "Import Vue and ref from 'vue'",
+        "instruction": "Import Vue and the ref reactivity API from the 'vue' package.",
+        "hint": "Use the import statement to bring in both Vue and ref from the 'vue' module.",
+        "analogousExample": "// Importing from a module\nimport { createApp, ref } from 'vue'",
+        "seedCode": "// Import Vue and ref here",
+        "expectedOutcome": "You'll have the necessary imports to use Vue's reactivity system.",
+        "successCriteria": [
+          "Vue and ref are imported from 'vue'"
+        ],
+        "feedbackCorrect": "Great! You've imported Vue and ref correctly.",
+        "feedbackPartial": "You're close. Make sure you're importing both Vue and ref from 'vue'.",
+        "feedbackWrong": "Check the import statement. You need to import both Vue and ref from 'vue'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "Vue",
+            "ref",
+            "'vue'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 11",
+        "title": "Create the main Vue component",
+        "instruction": "Create a Vue component named 'RaceConditionFix' with a script setup section and a template that returns a root div element.",
+        "hint": "In Vue with script setup, you can create a component by writing a template and using the script setup syntax.",
+        "analogousExample": "// Example of a basic Vue component with script setup\n<script setup>\n// Component logic goes here\n</script>\n\n<template>\n  <div>\n    <!-- Component content goes here -->\n  </div>\n</template>",
+        "seedCode": "<script setup>\nimport { ref } from 'vue'\n</script>\n\n<template>\n  <div>\n    <!-- Component content will go here -->\n  </div>\n</template>",
+        "expectedOutcome": "A Vue component named 'RaceConditionFix' is created with script setup and a template containing a root div element.",
+        "successCriteria": [
+          "The component has a script setup section and a template with a root div element."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you have both the script setup section and a template with a root div element.",
+        "feedbackWrong": "The component structure isn't complete. Check that you have both script setup and template sections.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<script setup>",
+            "</script>",
+            "<template>",
+            "</template>",
+            "<div>",
+            "</div>"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 11",
+        "title": "Initialize reactive data with ref",
+        "instruction": "Inside the <script setup> section, initialize two reactive variables using ref: one named 'data' initialized as null, and another named 'loading' initialized as false.",
+        "hint": "Use the ref function to create reactive references. The first variable will hold fetched data, the second will track loading state.",
+        "analogousExample": "// Creating reactive state variables\nconst count = ref(0)\nconst isActive = ref(false)",
+        "seedCode": "<script setup>\nimport { ref } from 'vue'\n\n// Initialize reactive variables here\n</script>\n\n<template>\n  <div>\n    <!-- Component content will go here -->\n  </div>\n</template>",
+        "expectedOutcome": "You'll have two reactive variables ready to track data and loading status for the race condition demonstration.",
+        "successCriteria": [
+          "Two ref variables are created: 'data' initialized as null and 'loading' initialized as false."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've created at least one reactive variable, but you need both 'data' and 'loading' variables.",
+        "feedbackWrong": "The step requires creating two reactive variables using ref: 'data' initialized as null and 'loading' initialized as false.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "data",
+            "loading",
+            "ref",
+            "null",
+            "false"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 11",
+        "title": "Create a mock data fetching function",
+        "instruction": "Inside the script setup section, create an async function named fetchMockData that returns a promise resolving with mock user data after a random delay.",
+        "hint": "Use async/await with Math.random() to simulate network delays. Return a promise that resolves with an object containing user data.",
+        "analogousExample": "// Example async function with random delay\nasync function fetchMockData() {\n  const delay = Math.random() * 2000;\n  await new Promise(resolve => setTimeout(resolve, delay));\n  return { id: 1, name: 'Mock User' };\n}",
+        "seedCode": "<script setup>\nimport { ref } from 'vue'\n\n// Initialize reactive variables here\n\n// Create mock data fetching function here\n</script>\n\n<template>\n  <div>\n    <!-- Component content will go here -->\n  </div>\n</template>",
+        "expectedOutcome": "An async function named fetchMockData is created that simulates API calls with random delays.",
+        "successCriteria": [
+          "The fetchMockData function is defined as async, uses setTimeout with random delay, and returns a promise with mock data."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure your function is async, includes a random delay, and returns mock data.",
+        "feedbackWrong": "The function should be async, use setTimeout with random delay, and return mock data. Check the example.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "async",
+            "fetchMockData",
+            "setTimeout",
+            "Math.random",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 11",
+        "title": "Create a basic fetch handler without race condition protection",
+        "instruction": "Create an async function named fetchData that calls the mock fetch function and updates the reactive data variable.",
+        "hint": "Define an async function that calls the mock fetch function you created earlier and assigns its result to the reactive variable using .value.",
+        "analogousExample": "// Example async handler\nasync function fetchData() {\n  const result = await mockFetch();\n  data.value = result;\n}",
+        "seedCode": "<script setup>\nimport { ref } from 'vue'\n\n// Initialize reactive variables here\nconst data = ref(null)\n\n// Create mock data fetching function here\nconst mockFetch = async () => {\n  await new Promise(resolve => setTimeout(resolve, 1000))\n  return { id: 1, name: 'Sample Data' }\n}\n\n// Create async fetch handler here\n</script>\n\n<template>\n  <div>\n    <!-- Component content will go here -->\n  </div>\n</template>",
+        "expectedOutcome": "You'll have an async fetchData function that calls mockFetch and updates the data reactive variable.",
+        "successCriteria": [
+          "An async function named fetchData is defined that calls mockFetch and assigns the result to data.value"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure your function is async, calls mockFetch, and updates data.value with the result.",
+        "feedbackWrong": "The fetch handler isn't quite right. Create an async function named fetchData that calls mockFetch and updates the data reactive variable.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "async",
+            "fetchData",
+            "mockFetch",
+            "data.value"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 11",
+        "title": "Add a button to trigger data fetching",
+        "instruction": "In the template section, add a button element with the text 'Fetch Data' that calls the fetch handler when clicked.",
+        "hint": "Use the @click directive to bind the click event to your handler function.",
+        "analogousExample": "// Adding a button to trigger an action\n<button @click=\"handleClick\">Click me</button>",
+        "seedCode": "<script setup>\nimport { ref } from 'vue'\n\n// Initialize reactive variables here\nconst data = ref(null)\n\n// Create mock data fetching function here\nconst mockFetch = async () => {\n  await new Promise(resolve => setTimeout(resolve, 1000))\n  return { id: 1, name: 'Sample Data' }\n}\n\n// Create async fetch handler here\n</script>\n\n<template>\n  <div>\n    <!-- Add button here -->\n  </div>\n</template>",
+        "expectedOutcome": "A button labeled 'Fetch Data' appears in the UI that will trigger data fetching when clicked.",
+        "successCriteria": [
+          "The template contains a button element with the text 'Fetch Data' and an @click directive bound to the fetch handler."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added a button, but make sure it has the correct text and click handler binding.",
+        "feedbackWrong": "The button isn't properly configured. Check that it has the text 'Fetch Data' and an @click directive.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<button",
+            "Fetch Data",
+            "@click"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 11",
+        "title": "Display loading status and fetched data",
+        "instruction": "Add a loading indicator paragraph and a data display paragraph inside the template to show visual feedback during the fetch process.",
+        "hint": "You can use a paragraph element with text like 'Loading...' and another paragraph to display the fetched data value.",
+        "analogousExample": "// Example: displaying data in template\n<template>\n  <div>\n    <p v-if=\"loading\">Loading...</p>\n    <p v-else-if=\"data\">{{ data.name }}</p>\n  </div>\n</template>",
+        "seedCode": "<script setup>\nimport { ref } from 'vue'\n\n// Initialize reactive variables here\nconst data = ref(null)\n\n// Create mock data fetching function here\nconst mockFetch = async () => {\n  await new Promise(resolve => setTimeout(resolve, 1000))\n  return { id: 1, name: 'Sample Data' }\n}\n\n// Create async fetch handler here\n</script>\n\n<template>\n  <div>\n    <!-- Add button here -->\n    <!-- Add loading and data display here -->\n  </div>\n</template>",
+        "expectedOutcome": "The template will have placeholders for showing loading status and fetched data, though they won't be functional yet until the fetch handler is created.",
+        "successCriteria": [
+          "Two paragraph elements are added inside the template: one for loading status and one for displaying the fetched data."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added some template elements, but make sure to include both a loading indicator and a data display paragraph.",
+        "feedbackWrong": "The template doesn't contain the required loading and data display elements. Try adding two paragraph elements inside the div.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<p",
+            "Loading",
+            "{{",
+            "data"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 11",
+        "title": "Add a ref to track the latest request",
+        "instruction": "Initialize a ref to store the latest request identifier. Create a ref called 'latestRequestId' with an initial value of 0.",
+        "hint": "Use the ref function you imported earlier to create a reactive reference. This will help track which request is the most recent.",
+        "analogousExample": "// Creating a ref to track a value\nconst counter = ref(0)",
+        "seedCode": "<script setup>\nimport { ref } from 'vue'\n\n// Initialize reactive variables here\nconst data = ref(null)\n\n// Create mock data fetching function here\nconst mockFetch = async () => {\n  await new Promise(resolve => setTimeout(resolve, 1000))\n  return { id: 1, name: 'Sample Data' }\n}\n\n// Create async fetch handler here\n\n// Initialize ref to track latest request\n</script>\n\n<template>\n  <div>\n    <!-- Add button here -->\n    <!-- Add loading and data display here -->\n  </div>\n</template>",
+        "expectedOutcome": "You'll have a reactive reference called 'latestRequestId' that starts at 0, which will help prevent race conditions by tracking the most recent request.",
+        "successCriteria": [
+          "A ref named 'latestRequestId' is initialized with a value of 0"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're creating a ref called 'latestRequestId' with an initial value of 0.",
+        "feedbackWrong": "create a ref using the ref function to track the latest request identifier.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "latestRequestId",
+            "ref",
+            "0"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 11",
+        "title": "Modify the fetch handler to prevent race conditions",
+        "instruction": "Create an async fetch handler function named 'fetchData' that tracks the latest request using a ref to prevent race conditions.",
+        "hint": "Declare an async function that stores a request ID before calling mockFetch, then checks if it's still the latest request before updating data.",
+        "analogousExample": "// Example: async handler with request tracking\nasync function fetchData() {\n  const requestId = Date.now();\n  latestRequest.value = requestId;\n  \n  const result = await mockFetch();\n  \n  if (latestRequest.value === requestId) {\n    data.value = result;\n  }\n}",
+        "seedCode": "<script setup>\nimport { ref } from 'vue'\n\n// Initialize reactive variables here\nconst data = ref(null)\n\n// Create mock data fetching function here\nconst mockFetch = async () => {\n  await new Promise(resolve => setTimeout(resolve, 1000))\n  return { id: 1, name: 'Sample Data' }\n}\n\n// Create async fetch handler here\n\n// Initialize ref to track latest request\nconst latestRequest = ref(null)\n</script>\n\n<template>\n  <div>\n    <!-- Add button here -->\n    <!-- Add loading and data display here -->\n  </div>\n</template>",
+        "expectedOutcome": "The fetch handler will be implemented with request tracking to ensure only the latest request updates the data.",
+        "successCriteria": [
+          "An async function named 'fetchData' is created that stores a request ID, updates latestRequest, and only updates data if the request is still current."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure your fetchData function is async, stores a request ID, and checks latestRequest before updating data.",
+        "feedbackWrong": "The fetch handler isn't implemented correctly. Create an async function named fetchData that prevents race conditions by tracking requests.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "async",
+            "fetchData",
+            "latestRequest",
+            "requestId",
+            "mockFetch",
+            "data.value"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 11",
+        "title": "Test the race condition fix with multiple rapid cl",
+        "instruction": "Complete the fetch handler function to use the latestRequest ref for race condition protection,",
+        "hint": "Inside the fetch handler, assign a unique identifier to latestRequest.value before the async operation, then check if it still matches before updating data.",
+        "analogousExample": "// Example of race condition protection\nconst handleFetch = async () => {\n  const requestId = Symbol('request')\n  latestRequest.value = requestId\n  \n  const result = await mockFetch()\n  \n  if (latestRequest.value === requestId) {\n    data.value = result\n  }\n}",
+        "seedCode": "<script setup>\nimport { ref } from 'vue'\n\n// Initialize reactive variables here\nconst data = ref(null)\n\n// Create mock data fetching function here\nconst mockFetch = async () => {\n  await new Promise(resolve => setTimeout(resolve, 1000))\n  return { id: 1, name: 'Sample Data' }\n}\n\n// Create async fetch handler here\nconst handleFetch = async () => {\n  // Add race condition protection here\n}\n\n// Initialize ref to track latest request\nconst latestRequest = ref(null)\n</script>\n\n<template>\n  <div>\n    <!-- Add button here -->\n    <button @click=\"handleFetch\">Fetch Data</button>\n    <!-- Add loading and data display here -->\n    <div v-if=\"data\">Data: {{ data.name }}</div>\n  </div>\n</template>",
+        "expectedOutcome": "A complete fetch handler with race condition protection that ensures only the latest request's data is displayed when clicking rapidly.",
+        "successCriteria": [
+          "fetch handler function is defined",
+          "uses latestRequest ref for race condition protection",
+          "only updates data when request is still the latest"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure to check if the request is still the latest before updating the data.",
+        "feedbackWrong": "Try implementing the race condition protection pattern shown in the example.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "handleFetch",
+            "async",
+            "latestRequest",
+            "Symbol",
+            "requestId",
+            "if",
+            "data.value"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 11",
+        "title": "test by clicking the fetch button rapidly mul",
+        "instruction": "test by clicking the fetch button rapidly multiple times.",
+        "hint": "Inside the fetch handler, assign a unique identifier to latestRequest.value before the async operation, then check if it still matches before updating data.",
+        "analogousExample": "// Example of race condition protection\nconst handleFetch = async () => {\n  const requestId = Symbol('request')\n  latestRequest.value = requestId\n  \n  const result = await mockFetch()\n  \n  if (latestRequest.value === requestId) {\n    data.value = result\n  }\n}",
+        "seedCode": "<script setup>\nimport { ref } from 'vue'\n\n// Initialize reactive variables here\nconst data = ref(null)\n\n// Create mock data fetching function here\nconst mockFetch = async () => {\n  await new Promise(resolve => setTimeout(resolve, 1000))\n  return { id: 1, name: 'Sample Data' }\n}\n\n// Create async fetch handler here\nconst handleFetch = async () => {\n  // Add race condition protection here\n}\n\n// Initialize ref to track latest request\nconst latestRequest = ref(null)\n</script>\n\n<template>\n  <div>\n    <!-- Add button here -->\n    <button @click=\"handleFetch\">Fetch Data</button>\n    <!-- Add loading and data display here -->\n    <div v-if=\"data\">Data: {{ data.name }}</div>\n  </div>\n</template>",
+        "expectedOutcome": "",
+        "successCriteria": [
+          "Complete the step as instructed."
+        ],
+        "feedbackCorrect": "Great! Step completed.",
+        "feedbackPartial": "Review the instruction and try again.",
+        "feedbackWrong": "Check the instruction and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "handleFetch",
+            "async",
+            "latestRequest",
+            "Symbol",
+            "requestId",
+            "if",
+            "data.value"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import Vue and ref from 'vue'",
+        "id": "step1"
+      },
+      {
+        "label": "Create the main Vue component",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize reactive data with ref",
+        "id": "step3"
+      },
+      {
+        "label": "Create a mock data fetching function",
+        "id": "step4"
+      },
+      {
+        "label": "Create a basic fetch handler without race condition protection",
+        "id": "step5"
+      },
+      {
+        "label": "Add a button to trigger data fetching",
+        "id": "step6"
+      },
+      {
+        "label": "Display loading status and fetched data",
+        "id": "step7"
+      },
+      {
+        "label": "Add a ref to track the latest request",
+        "id": "step8"
+      },
+      {
+        "label": "Modify the fetch handler to prevent race conditions",
+        "id": "step9"
+      },
+      {
+        "label": "Test the race condition fix with multiple rapid cl",
+        "id": "step10"
+      },
+      {
+        "label": "test by clicking the fetch button rapidly mul",
+        "id": "step11"
+      }
+    ]
+  },
+  "source": "content"
+}

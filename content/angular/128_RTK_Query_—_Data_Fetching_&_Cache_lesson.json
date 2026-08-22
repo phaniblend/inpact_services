@@ -1,0 +1,482 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-angular-128",
+    "track": "angular",
+    "lessonNum": 128,
+    "title": "RTK Query — Data Fetching & Cache",
+    "shortName": "P128",
+    "intro": {
+      "tag": "LESSON #128",
+      "title": "RTK Query — Data Fetching & Cache",
+      "body": "In this lesson, you will build a simple Angular application that fetches and displays a list of posts from a mock API. You'll learn the core concept of RTK Query, a powerful data fetching and caching tool from Redux Toolkit, to manage server state efficiently. The main technologies involved are Angular for the UI framework, TypeScript for type safety, and RTK Query's API slices and hooks for handling HTTP requests and automatic caching. By the end, you'll understand how to set up RTK Query, fetch data, and leverage its built-in cache to avoid unnecessary network requests.",
+      "usecase": "RTK Query's data fetching and caching patterns are essential in modern web applications like e-commerce dashboards and social media feeds. In an e-commerce admin panel, you'd use RTK Query to fetch product listings, manage inventory updates, and cache user browsing history for instant navigation. Social platforms implement this to load comment threads, handle real-time notifications, and cache user profiles across different views. This approach eliminates redundant API calls, ensures consistent data across components, and provides seamless user experiences in data-intensive interfaces."
+    },
+    "objectives": [
+      "Configure an RTK Query API service with endpoints for fetching data",
+      "Integrate the RTK Query API service into your Angular application's store configuration",
+      "Initialize data fetching operations using RTK Query hooks in Angular components",
+      "Manipulate cached data by implementing automatic re-fetching and cache invalidation strategies",
+      "Bind fetched data to Angular component templates for dynamic rendering",
+      "Control loading and error states during data fetching operations",
+      "Update component state based on successful data retrieval from the cache"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 13",
+        "title": "Import Component and OnInit from Angular core",
+        "instruction": "Import Component and OnInit from '@angular/core'.",
+        "hint": "Use the import keyword with curly braces for the symbols and the module path in quotes.",
+        "analogousExample": "// Example: importing from Angular core\nimport { Component, OnInit } from '@angular/core';",
+        "seedCode": {
+          "App.tsx": "// Import Component and OnInit from '@angular/core' here",
+          "api.ts": "// api"
+        },
+        "expectedOutcome": "Component and OnInit are imported from '@angular/core'.",
+        "successCriteria": [
+          "Component and OnInit are imported from '@angular/core'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Import both Component and OnInit from '@angular/core'.",
+        "feedbackWrong": "Add an import for Component and OnInit from '@angular/core'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "Component",
+            "OnInit",
+            "@angular/core"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 13",
+        "title": "Import createApi and fetchBaseQuery from RTK Query",
+        "instruction": "Import createApi and fetchBaseQuery from '@reduxjs/toolkit/query/react'.",
+        "hint": "Add an import statement for createApi and fetchBaseQuery from the RTK Query package.",
+        "analogousExample": "// Example: importing RTK Query APIs\nimport { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';",
+        "seedCode": {
+          "App.tsx": "import { Component, OnInit } from '@angular/core';\n\n// Import createApi and fetchBaseQuery from '@reduxjs/toolkit/query/react' here",
+          "api.ts": "// api"
+        },
+        "expectedOutcome": "createApi and fetchBaseQuery are imported from '@reduxjs/toolkit/query/react'.",
+        "successCriteria": [
+          "createApi and fetchBaseQuery are imported from '@reduxjs/toolkit/query/react'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Import both createApi and fetchBaseQuery from '@reduxjs/toolkit/query/react'.",
+        "feedbackWrong": "Add an import for createApi and fetchBaseQuery from '@reduxjs/toolkit/query/react'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "createApi",
+            "fetchBaseQuery",
+            "@reduxjs/toolkit/query"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 13",
+        "title": "Create a new API service using createApi",
+        "instruction": "Create a new API service using createApi. Export a constant named api assigned to createApi with an empty configuration object for now.",
+        "hint": "Call createApi({}) and assign it to a constant (e.g. export const api = createApi({}). You will add baseQuery and endpoints in the next steps.",
+        "analogousExample": "// Example: creating an API service (this step only — config comes next)\nexport const api = createApi({});",
+        "seedCode": {
+          "App.tsx": "import { Component, OnInit } from '@angular/core';\nimport { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';\n\n// Create your API service with createApi here",
+          "api.ts": "// api"
+        },
+        "expectedOutcome": "An API service constant is created using createApi.",
+        "successCriteria": [
+          "createApi is called and assigned to an exported constant (e.g. export const api = createApi(...))."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Call createApi to create your API service constant (you will add baseQuery and endpoints in the next steps).",
+        "feedbackWrong": "Create an API service by calling createApi (e.g. export const api = createApi({})).",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "createApi",
+            "="
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 13",
+        "title": "Configure the base query and reducer path",
+        "instruction": "Inside the API service, configure the baseQuery using fetchBaseQuery with a base URL and define a reducerPath string.",
+        "hint": "Use fetchBaseQuery from @reduxjs/toolkit/query/react to set the base URL for your API endpoints. Provide a reducerPath property with a unique string identifier.",
+        "analogousExample": "// Example: configuring base query and reducer path\ncreateApi({\n  baseQuery: fetchBaseQuery({ baseUrl: 'https://api.example.com' }),\n  reducerPath: 'exampleApi',\n  endpoints: () => ({})\n})",
+        "seedCode": {
+          "App.tsx": "import { Component, OnInit } from '@angular/core';\nimport { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';\n\nexport const api = createApi({\n  // Configure baseQuery and reducerPath here\n});",
+          "api.ts": "// api"
+        },
+        "expectedOutcome": "The API service has baseQuery and reducerPath configured.",
+        "successCriteria": [
+          "The createApi call includes baseQuery configured with fetchBaseQuery and a reducerPath string property."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Add both baseQuery (using fetchBaseQuery) and reducerPath to the createApi call.",
+        "feedbackWrong": "Configure baseQuery with fetchBaseQuery and add a reducerPath property to the createApi call.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "baseQuery",
+            "fetchBaseQuery",
+            "reducerPath"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 13",
+        "title": "Define the endpoint structure",
+        "instruction": "Inside the createApi configuration object, add a 'endpoints' property with a builder callback that defines a query endpoint named 'getPosts' that returns an array of Post objects.",
+        "hint": "The endpoints property should be a function that receives a builder parameter and returns an object with your endpoint definitions. Use builder.query<Post[], void>() to define a query endpoint.",
+        "analogousExample": "// Example: defining a query endpoint\nendpoints: (builder) => ({\n  getUsers: builder.query<User[], void>({\n    query: () => '/users'\n  })\n})",
+        "seedCode": {
+          "App.tsx": "import { Component, OnInit } from '@angular/core';\nimport { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';\n\nexport const api = createApi({\n  baseQuery: fetchBaseQuery({ baseUrl: 'https://jsonplaceholder.typicode.com' }),\n  reducerPath: 'api',\n  // Add endpoints property below\n});",
+          "api.ts": "// api"
+        },
+        "expectedOutcome": "The API service has an endpoints property with a getPosts query endpoint.",
+        "successCriteria": [
+          "The endpoints property is added with a builder callback that returns an object containing a 'getPosts' query endpoint."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Add the endpoints property with a builder callback that defines a 'getPosts' query endpoint.",
+        "feedbackWrong": "Add the endpoints property with a builder callback that defines a 'getPosts' query endpoint.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "endpoints",
+            "builder",
+            "getPosts",
+            "builder.query"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 13",
+        "title": "Export hooks from the API service",
+        "instruction": "Export the auto-generated query hook (useGetPostsQuery) from the API service by adding it to the export statement.",
+        "hint": "The createApi function automatically generates hooks for each endpoint. You need to export them so components can use them.",
+        "analogousExample": "// Similar: exporting generated hooks\nimport { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';\n\nexport const api = createApi({\n  baseQuery: fetchBaseQuery({ baseUrl: '/api' }),\n  endpoints: (builder) => ({\n    getItems: builder.query({\n      query: () => 'items'\n    })\n  })\n});\n\nexport const { useGetItemsQuery } = api;",
+        "seedCode": {
+          "App.tsx": "import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';\n\n// Create the RTK Query API service below\nexport const api = createApi({\n  // Configure baseQuery and reducerPath here\n  // Add endpoints property below\n});\n\n// Export the generated hooks here",
+          "api.ts": "// api"
+        },
+        "expectedOutcome": "The API service will export a useGetPostsQuery hook that components can import to fetch posts data.",
+        "successCriteria": [
+          "The useGetPostsQuery hook is exported from the API service file."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're exporting the exact hook name (useGetPostsQuery) that will be generated from your endpoints.",
+        "feedbackWrong": "The hook export is missing or incorrect. Check that you're exporting the hook from the API service object.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "export",
+            "useGetPostsQuery",
+            "api"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 13",
+        "title": "Register the API service in the NgModule",
+        "instruction": "Open your Angular module file (typically app.module.ts) and add the 'api' service to the providers array.",
+        "hint": "Look for the @NgModule decorator in your module file. Inside the providers array, add the exported 'api' service from your RTK Query file.",
+        "analogousExample": "// Example: Adding a service to module providers\n@NgModule({\n  providers: [\n    MyDataService\n  ]\n})",
+        "seedCode": {
+          "App.tsx": "import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';\n\n// Create the RTK Query API service below\nexport const api = createApi({\n  // Configure baseQuery and reducerPath here\n  // Add endpoints property below\n});\n\n// Export the generated hooks here",
+          "api.ts": "// api"
+        },
+        "expectedOutcome": "The RTK Query API service will be available for dependency injection throughout your Angular application.",
+        "successCriteria": [
+          "The 'api' service is added to the providers array of your Angular module."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure the 'api' service is properly added to the providers array in your Angular module.",
+        "feedbackWrong": "The API service needs to be registered in the Angular module's providers array to be available for dependency injection.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "providers",
+            "api"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 13",
+        "title": "Create the main component",
+        "instruction": "Create a new Angular component class named 'PostListComponent' with the Component decorator and implement OnInit.",
+        "hint": "Use the @Component decorator from '@angular/core' and implement the OnInit interface.",
+        "analogousExample": "// Example component structure\nimport { Component, OnInit } from '@angular/core';\n\n@Component({\n  selector: 'app-example',\n  template: '<p>Example component</p>'\n})\nexport class ExampleComponent implements OnInit {\n  constructor() {}\n\n  ngOnInit() {}\n}",
+        "seedCode": {
+          "App.tsx": "import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';\n\n// Create the RTK Query API service below\nexport const api = createApi({\n  // Configure baseQuery and reducerPath here\n  // Add endpoints property below\n});\n\n// Export the generated hooks here\n\n// Create the PostListComponent below",
+          "api.ts": "// api"
+        },
+        "expectedOutcome": "A new Angular component class is created with proper structure and implements OnInit.",
+        "successCriteria": [
+          "Component class named 'PostListComponent' is created with @Component decorator and implements OnInit interface."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure your component has the @Component decorator and implements OnInit.",
+        "feedbackWrong": "The component wasn't created correctly. Check that you're using proper Angular component syntax.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "PostListComponent",
+            "@Component",
+            "implements",
+            "OnInit"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 13",
+        "title": "Inject the RTK Query hook in the component",
+        "instruction": "In the PostListComponent class constructor, inject the useGetPostsQuery hook from the API service.",
+        "hint": "Add a constructor parameter with the type of the useGetPostsQuery hook and assign it to a class property.",
+        "analogousExample": "// Example: injecting a service in Angular\nconstructor(private dataService: DataService) {}",
+        "seedCode": {
+          "App.tsx": "import { Component } from '@angular/core';\nimport { api } from './api.service';\n\n@Component({\n  selector: 'app-post-list',\n  template: '<div>Post list will appear here</div>'\n})\nexport class PostListComponent {\n  // Add constructor with injected hook here\n}",
+          "api.ts": "// api"
+        },
+        "expectedOutcome": "The component will have access to the RTK Query hook through dependency injection.",
+        "successCriteria": [
+          "The PostListComponent constructor injects the useGetPostsQuery hook and stores it in a class property."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you've properly injected the hook in the constructor.",
+        "feedbackWrong": "The hook injection is missing or incorrect. Check the constructor syntax and hook import.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "constructor",
+            "useGetPostsQuery",
+            "private"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 13",
+        "title": "Call the query hook to fetch data",
+        "instruction": "In the PostListComponent, call the injected query hook inside the ngOnInit lifecycle method to start data fetching.",
+        "hint": "Implement the OnInit interface and use ngOnInit to call the query hook when the component initializes.",
+        "analogousExample": "// Example: calling a query in ngOnInit\nimport { Component, OnInit } from '@angular/core';\n\n@Component({...})\nexport class ExampleComponent implements OnInit {\n  ngOnInit() {\n    this.queryHook();\n  }\n}",
+        "seedCode": {
+          "App.tsx": "import { Component, OnInit } from '@angular/core';\nimport { api } from './api.service';\n\n@Component({\n  selector: 'app-post-list',\n  template: '<div>Post list will appear here</div>'\n})\nexport class PostListComponent implements OnInit {\n  // Add constructor with injected hook here\n  \n  ngOnInit() {\n    // Call the query hook here\n  }\n}",
+          "api.ts": "// api"
+        },
+        "expectedOutcome": "The component will implement OnInit and call the query hook in ngOnInit to initiate data fetching.",
+        "successCriteria": [
+          "PostListComponent implements OnInit and calls the injected query hook inside ngOnInit."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you've both implemented the OnInit interface and called the query hook inside the ngOnInit method.",
+        "feedbackWrong": "The component doesn't properly implement OnInit or call the query hook in ngOnInit. Review how to implement lifecycle methods in Angular components.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "implements OnInit",
+            "ngOnInit",
+            "queryHook"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 13",
+        "title": "Create the component template structure",
+        "instruction": "Replace the placeholder template with a container div that will hold the fetched posts list.",
+        "hint": "Replace the existing template string with a div element that has a class for styling and will contain the posts.",
+        "analogousExample": "// Similar: basic template structure\n@Component({\n  selector: 'app-example',\n  template: '<div class=\"container\">Content goes here</div>'\n})",
+        "seedCode": {
+          "App.tsx": "import { Component, OnInit } from '@angular/core';\nimport { api } from './api.service';\n\n@Component({\n  selector: 'app-post-list',\n  template: '<div>Post list will appear here</div>'\n})\nexport class PostListComponent implements OnInit {\n  // Add constructor with injected hook here\n  \n  ngOnInit() {\n    // Call the query hook here\n  }\n}",
+          "api.ts": "// api"
+        },
+        "expectedOutcome": "The component template now has a proper container div ready to display the fetched posts data.",
+        "successCriteria": [
+          "The template contains a div element with a class attribute (e.g., 'post-container') instead of the placeholder text."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you replaced the entire template string with a div element.",
+        "feedbackWrong": "The template should be updated to a div container element, not just modified text.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "template",
+            "div",
+            "class"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step12",
+        "type": "question",
+        "phase": "Step 12 of 13",
+        "title": "Display loading state in the template",
+        "instruction": "In the component template, add an *ngIf directive to show a loading message when the data is being fetched. Use the query result's isLoading property.",
+        "hint": "The query hook returns an object with an isLoading property. Use *ngIf=\"queryResult.isLoading\" to conditionally show a loading message.",
+        "analogousExample": "// Similar: conditional loading message in Angular template\n<div *ngIf=\"data.isLoading\">\n  Loading data...\n</div>",
+        "seedCode": {
+          "App.tsx": "import { Component, OnInit } from '@angular/core';\nimport { api } from './api.service';\n\n@Component({\n  selector: 'app-post-list',\n  template: '<div>Post list will appear here</div>'\n})\nexport class PostListComponent implements OnInit {\n  // Add constructor with injected hook here\n  \n  ngOnInit() {\n    // Call the query hook here\n  }\n}",
+          "api.ts": "// api"
+        },
+        "expectedOutcome": "The template will conditionally display a loading message when the RTK Query fetch is in progress.",
+        "successCriteria": [
+          "The template contains an *ngIf directive that checks the isLoading property from the query result."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added some conditional logic, but make sure you're using *ngIf with the isLoading property from the query result.",
+        "feedbackWrong": "The loading state isn't properly implemented. Check that you're using *ngIf with the correct property from the query result.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "*ngIf",
+            "isLoading"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step13",
+        "type": "question",
+        "phase": "Step 13 of 13",
+        "title": "Display fetched data in the template",
+        "instruction": "In the component template, replace the placeholder div with an *ngFor directive to iterate over the posts array from the query result and display each post's title and body.",
+        "hint": "Use *ngFor=\"let post of posts\" on a container element, then interpolate post.title and post.body inside.",
+        "analogousExample": "// Example: displaying list items\n<ul>\n  <li *ngFor=\"let item of items\">\n    {{ item.name }}: {{ item.description }}\n  </li>\n</ul>",
+        "seedCode": {
+          "App.tsx": "import { Component, OnInit } from '@angular/core';\nimport { api } from './api.service';\n\n@Component({\n  selector: 'app-post-list',\n  template: '<div>Post list will appear here</div>'\n})\nexport class PostListComponent implements OnInit {\n  // Add constructor with injected hook here\n  \n  ngOnInit() {\n    // Call the query hook here\n  }\n}",
+          "api.ts": "// api"
+        },
+        "expectedOutcome": "The template will render a list of posts with their titles and bodies when data is fetched successfully.",
+        "successCriteria": [
+          "The template contains *ngFor iterating over posts and displays post.title and post.body."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added *ngFor but might be missing interpolation of post properties or the container element. Ensure you display both title and body.",
+        "feedbackWrong": "The template still shows the placeholder. Add *ngFor to iterate over posts and display their title and body.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "*ngFor",
+            "post.title",
+            "post.body"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import Component and OnInit from Angular core",
+        "id": "step1"
+      },
+      {
+        "label": "Import createApi and fetchBaseQuery from RTK Query",
+        "id": "step2"
+      },
+      {
+        "label": "Create a new API service using createApi",
+        "id": "step3"
+      },
+      {
+        "label": "Configure the base query and reducer path",
+        "id": "step4"
+      },
+      {
+        "label": "Define the endpoint structure",
+        "id": "step5"
+      },
+      {
+        "label": "Export hooks from the API service",
+        "id": "step6"
+      },
+      {
+        "label": "Register the API service in the NgModule",
+        "id": "step7"
+      },
+      {
+        "label": "Create the main component",
+        "id": "step8"
+      },
+      {
+        "label": "Inject the RTK Query hook in the component",
+        "id": "step9"
+      },
+      {
+        "label": "Call the query hook to fetch data",
+        "id": "step10"
+      },
+      {
+        "label": "Create the component template structure",
+        "id": "step11"
+      },
+      {
+        "label": "Display loading state in the template",
+        "id": "step12"
+      },
+      {
+        "label": "Display fetched data in the template",
+        "id": "step13"
+      }
+    ],
+    "answerShape": "multi-file"
+  },
+  "source": "content"
+}

@@ -1,0 +1,360 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-node-109",
+    "track": "node",
+    "lessonNum": 109,
+    "title": "Build usage quota tracking and enforcement",
+    "shortName": "P109",
+    "intro": {
+      "tag": "LESSON #109",
+      "title": "Build usage quota tracking and enforcement",
+      "body": "In this lesson, you will build a simple usage quota tracker and enforcer for a Node.js application. You will learn how to monitor and limit the number of times a specific action, like an API call, can be performed by a user. The core programming concept involves using a counter variable to track usage and conditional logic to enforce limits. You will work with basic JavaScript constructs like variables, if/else statements, and functions. By the end, you'll have a functional quota system that can block further actions once a limit is reached.",
+      "usecase": "Usage quota tracking is essential in SaaS platforms where customers pay based on consumption, like API services (Stripe, Twilio) that limit monthly requests. Developers implement this in billing dashboards showing usage meters, quota warnings, and upgrade prompts. This pattern also appears in cloud platforms (AWS, Google Cloud) that enforce resource limits and display usage analytics panels. Understanding quota enforcement helps build fair billing systems and prevent service abuse."
+    },
+    "objectives": [
+      "Implement a quota tracking system using in-memory storage",
+      "Configure quota limits for different user tiers",
+      "Apply quota validation middleware to API endpoints",
+      "Construct a usage reset mechanism for recurring periods",
+      "Initialize quota tracking for new user sessions",
+      "Update usage counters for specific user actions",
+      "Manipulate quota data to enforce usage limits"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 10",
+        "title": "Import required Node.js modules",
+        "instruction": "Import the fs (file system) and path modules using require() statements at the top of your file.",
+        "hint": "Use require('fs') and require('path') to import these core Node.js modules.",
+        "analogousExample": "// Importing modules in Node.js\nconst fs = require('fs');\nconst path = require('path');",
+        "seedCode": "// Import fs and path modules here",
+        "expectedOutcome": "The fs and path modules are imported and ready to use for file operations and path handling.",
+        "successCriteria": [
+          "fs and path modules are imported using require() statements."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you've imported both fs and path modules using require().",
+        "feedbackWrong": "The imports aren't quite right. Remember to use require() to import both the fs and path modules.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "require('fs')",
+            "require('path')"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 10",
+        "title": "Create quota configuration object",
+        "instruction": "Define a quotaConfig object with maxRequests and timeWindow properties. Set maxRequests to 100 and timeWindow to 3600000 (milliseconds).",
+        "hint": "Create a constant object with two numeric properties. For example: const config = { limit: 10, duration: 60000 };",
+        "analogousExample": "// Example: configuration object for rate limiting\nconst rateLimitConfig = {\n  maxRequests: 50,\n  timeWindow: 300000\n};",
+        "seedCode": "// Import fs and path modules here\n\n// Define quotaConfig object here",
+        "expectedOutcome": "A quotaConfig object with maxRequests: 100 and timeWindow: 3600000 properties is created.",
+        "successCriteria": [
+          "quotaConfig object exists with correct property names and values."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've created an object, but check that both properties (maxRequests and timeWindow) have the correct values.",
+        "feedbackWrong": "The quotaConfig object is missing or has incorrect properties. Review the instruction and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "quotaConfig",
+            "maxRequests",
+            "100",
+            "timeWindow",
+            "3600000"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 10",
+        "title": "Initialize usage tracking object",
+        "instruction": "Create a usageTracker object with requestCount and windowStart properties to track current usage.",
+        "hint": "Define a constant variable named usageTracker with an object containing requestCount (starting at 0) and windowStart (starting at the current time).",
+        "analogousExample": "// Example: tracking object for a different purpose\nconst sessionTracker = {\n  loginCount: 0,\n  lastLogin: Date.now()\n};",
+        "seedCode": "// Import fs and path modules here\n\n// Define quotaConfig object here\n\n// Create usageTracker object here",
+        "expectedOutcome": "A usageTracker object is created with requestCount and windowStart properties initialized.",
+        "successCriteria": [
+          "usageTracker object exists with requestCount set to 0 and windowStart set to Date.now()"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've created an object, but check that it has both requestCount and windowStart properties with correct initial values.",
+        "feedbackWrong": "The usageTracker object is missing or doesn't have the required structure. It should have requestCount and windowStart properties.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "usageTracker",
+            "requestCount",
+            "windowStart",
+            "Date.now()"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 10",
+        "title": "Create quota data file path",
+        "instruction": "Create a constant named 'quotaDataPath' that uses path.join() to create a file path for 'quota-data.json' in the current directory.",
+        "hint": "Use path.join() with __dirname and the filename 'quota-data.json' to create a platform-independent file path.",
+        "analogousExample": "// Example: creating a file path\nconst configPath = path.join(__dirname, 'config.json');",
+        "seedCode": "// Import fs and path modules here\n\n// Define quotaConfig object here\n\n// Create usageTracker object here\n\n// Create quota data file path here",
+        "expectedOutcome": "A constant named 'quotaDataPath' is created with the full path to 'quota-data.json'.",
+        "successCriteria": [
+          "The 'quotaDataPath' constant is defined using path.join() with __dirname and 'quota-data.json'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're using path.join() with __dirname and the filename 'quota-data.json'.",
+        "feedbackWrong": "The file path wasn't created correctly. Remember to use path.join() to combine __dirname with 'quota-data.json'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "quotaDataPath",
+            "path.join",
+            "__dirname",
+            "quota-data.json"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 10",
+        "title": "Define loadQuotaData function",
+        "instruction": "Create a function named loadQuotaData that reads quota data from the quotaFilePath and returns it, or returns the default usageTracker if the file doesn't exist.",
+        "hint": "Use fs.readFileSync with try-catch to handle missing files. If the file exists, parse the JSON; otherwise, return the usageTracker object.",
+        "analogousExample": "// Similar: reading data from a file with fallback\nfunction loadUserData() {\n  try {\n    const data = fs.readFileSync('./user-data.json', 'utf8');\n    return JSON.parse(data);\n  } catch (error) {\n    return { name: 'Guest', visits: 0 };\n  }\n}",
+        "seedCode": "// Import fs and path modules here\n\n// Define quotaConfig object here\n\n// Create usageTracker object here\n\n// Create quota data file path here\n\n// Define loadQuotaData function here",
+        "expectedOutcome": "A function that safely loads quota data from the file system, providing default values when the file is missing.",
+        "successCriteria": [
+          "The loadQuotaData function is defined, uses try-catch, reads from quotaFilePath, and returns either parsed JSON or the usageTracker object."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the function, but make sure it handles both the file reading and JSON parsing, and returns the usageTracker as a fallback.",
+        "feedbackWrong": "The function is missing or doesn't correctly handle file reading and error cases. Review the hint and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "loadQuotaData",
+            "try",
+            "catch",
+            "fs.readFileSync",
+            "quotaFilePath",
+            "JSON.parse",
+            "usageTracker"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 10",
+        "title": "Define saveQuotaData function",
+        "instruction": "Create a function named saveQuotaData that writes the usageTracker object to the quotaDataFile as JSON.",
+        "hint": "Use JSON.stringify to convert the object to a JSON string, then use fs.writeFileSync to write it to the file path.",
+        "analogousExample": "// Similar: function that saves data to a file\nfunction saveData(data, filePath) {\n  const jsonData = JSON.stringify(data, null, 2);\n  fs.writeFileSync(filePath, jsonData);\n}",
+        "seedCode": "// Import fs and path modules here\nconst fs = require('fs');\nconst path = require('path');\n\n// Define quotaConfig object here\nconst quotaConfig = {\n  maxBuilds: 100,\n  period: 'month'\n};\n\n// Create usageTracker object here\nconst usageTracker = {\n  currentBuilds: 0,\n  resetDate: null\n};\n\n// Create quota data file path here\nconst quotaDataFile = path.join(__dirname, 'quota-data.json');\n\n// Define loadQuotaData function here\nfunction loadQuotaData() {\n  if (fs.existsSync(quotaDataFile)) {\n    const data = fs.readFileSync(quotaDataFile, 'utf8');\n    Object.assign(usageTracker, JSON.parse(data));\n  }\n}\n\n// Define saveQuotaData function here",
+        "expectedOutcome": "A saveQuotaData function is created that will persist quota usage data to the file system.",
+        "successCriteria": [
+          "The saveQuotaData function is defined, uses JSON.stringify to convert usageTracker to JSON, and writes it to quotaDataFile using fs.writeFileSync."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the function, but make sure it properly converts usageTracker to JSON and writes it to the quotaDataFile path.",
+        "feedbackWrong": "The saveQuotaData function isn't defined correctly. It should write the usageTracker object as JSON to the quotaDataFile.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "saveQuotaData",
+            "JSON.stringify",
+            "usageTracker",
+            "writeFileSync",
+            "quotaDataFile"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 10",
+        "title": "Define checkQuota function",
+        "instruction": "Create a function named checkQuota that checks if a build request is allowed based on quota limits and updates the usage tracking.",
+        "hint": "The function should check if the current build count is below the maximum allowed, handle period resets, and update the usageTracker object.",
+        "analogousExample": "// Example: a function that checks and updates a limit\nfunction checkLimit(current, max) {\n  if (current < max) {\n    current++;\n    return true;\n  }\n  return false;\n}",
+        "seedCode": "// Import fs and path modules here\nconst fs = require('fs');\nconst path = require('path');\n\n// Define quotaConfig object here\nconst quotaConfig = {\n  maxBuilds: 100,\n  period: 'month'\n};\n\n// Create usageTracker object here\nconst usageTracker = {\n  currentBuilds: 0,\n  resetDate: null\n};\n\n// Create quota data file path here\nconst quotaDataFile = path.join(__dirname, 'quota-data.json');\n\n// Define loadQuotaData function here\nfunction loadQuotaData() {\n  if (fs.existsSync(quotaDataFile)) {\n    const data = fs.readFileSync(quotaDataFile, 'utf8');\n    Object.assign(usageTracker, JSON.parse(data));\n  }\n}\n\n// Define saveQuotaData function here\n\n// Define checkQuota function here\n",
+        "expectedOutcome": "A checkQuota function is defined that implements quota checking logic with time window reset handling.",
+        "successCriteria": [
+          "The checkQuota function exists, checks build count against quotaConfig.maxBuilds, handles period resets, and updates usageTracker.currentBuilds."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the checkQuota function, but make sure it properly checks the build count against the maximum and handles period resets.",
+        "feedbackWrong": "The checkQuota function is missing or doesn't implement the required quota checking logic. Review the function structure and quota validation requirements.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "checkQuota",
+            "function",
+            "quotaConfig.maxBuilds",
+            "usageTracker.currentBuilds",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 10",
+        "title": "Define enforceQuota middleware",
+        "instruction": "Create an Express middleware function named enforceQuota that uses the checkQuota function and responds with HTTP status 429 if the quota is exceeded.",
+        "hint": "Define a function that takes req, res, and next parameters. Inside, call checkQuota() and if it returns false, send a 429 status with an error message. Otherwise, call next() to continue.",
+        "analogousExample": "// Similar: middleware that checks authentication\nfunction requireAuth(req, res, next) {\n  if (!req.user) {\n    return res.status(401).send('Unauthorized');\n  }\n  next();\n}",
+        "seedCode": "const fs = require('fs');\nconst path = require('path');\n\nconst quotaConfig = {\n  maxBuilds: 100,\n  period: 'month'\n};\n\nconst usageTracker = {\n  currentBuilds: 0,\n  resetDate: null\n};\n\nconst quotaDataFile = path.join(__dirname, 'quota-data.json');\n\nfunction loadQuotaData() {\n  if (fs.existsSync(quotaDataFile)) {\n    const data = fs.readFileSync(quotaDataFile, 'utf8');\n    Object.assign(usageTracker, JSON.parse(data));\n  }\n}\n\n// Define saveQuotaData function here\n\n// Define checkQuota function here\n\n// Define enforceQuota middleware function here",
+        "expectedOutcome": "You will have a middleware function that can be used in an Express app to enforce build quotas.",
+        "successCriteria": [
+          "A function named enforceQuota is defined that calls checkQuota, sends a 429 response if quota is exceeded, and calls next() otherwise."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the enforceQuota function, but make sure it properly checks the quota and sends the correct HTTP response when exceeded.",
+        "feedbackWrong": "The enforceQuota middleware function is not defined correctly. It should check the quota and respond with 429 when exceeded.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "enforceQuota",
+            "checkQuota",
+            "429",
+            "next"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 10",
+        "title": "Create simple Express server",
+        "instruction": "Initialize an Express app instance and set up a basic GET route at '/' that returns a simple JSON response.",
+        "hint": "Use the Express module you imported earlier to create an app instance with express(). Then define a route using app.get() that sends a JSON response.",
+        "analogousExample": "// Similar: basic Express server setup\nconst express = require('express');\nconst app = express();\n\napp.get('/', (req, res) => {\n  res.json({ message: 'Hello World' });\n});",
+        "seedCode": "const fs = require('fs');\nconst path = require('path');\nconst express = require('express');\n\nconst quotaConfig = {\n  maxBuilds: 100,\n  period: 'month'\n};\n\nconst usageTracker = {\n  currentBuilds: 0,\n  resetDate: null\n};\n\nconst quotaDataFile = path.join(__dirname, 'quota-data.json');\n\nfunction loadQuotaData() {\n  if (fs.existsSync(quotaDataFile)) {\n    const data = fs.readFileSync(quotaDataFile, 'utf8');\n    Object.assign(usageTracker, JSON.parse(data));\n  }\n}\n\n// Define saveQuotaData function here\n\n// Define checkQuota function here\n\n// Define enforceQuota middleware function here\n\n// Initialize Express app and set up basic route here",
+        "expectedOutcome": "You will have a basic Express server ready with a root route that responds with JSON.",
+        "successCriteria": [
+          "An Express app instance is created and a GET route at '/' is defined that returns a JSON response."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you've both created the Express app instance and defined a GET route at '/' that returns JSON.",
+        "feedbackWrong": "The server setup is incomplete. Remember to create an Express app instance and define a GET route at '/' that returns JSON.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "express()",
+            "app.get",
+            "'/'",
+            "res.json"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 10",
+        "title": "Apply quota middleware to routes",
+        "instruction": "In your Express app, use app.use() to apply the enforceQuota middleware to all routes.",
+        "hint": "Add app.use(enforceQuota) before defining your routes to ensure quota checks happen on every request.",
+        "analogousExample": "// Applying middleware to all routes\napp.use(someMiddleware);",
+        "seedCode": "const fs = require('fs');\nconst path = require('path');\nconst express = require('express');\n\nconst quotaConfig = {\n  maxBuilds: 100,\n  period: 'month'\n};\n\nconst usageTracker = {\n  currentBuilds: 0,\n  resetDate: null\n};\n\nconst quotaDataFile = path.join(__dirname, 'quota-data.json');\n\nfunction loadQuotaData() {\n  if (fs.existsSync(quotaDataFile)) {\n    const data = fs.readFileSync(quotaDataFile, 'utf8');\n    Object.assign(usageTracker, JSON.parse(data));\n  }\n}\n\n// Define saveQuotaData function here\n\n// Define checkQuota function here\n\n// Define enforceQuota middleware function here\n\n// Initialize Express app and set up basic route here\n\n// Apply quota middleware to all routes\napp.use(enforceQuota);",
+        "expectedOutcome": "The enforceQuota middleware will be applied to all routes, ensuring quota checks happen on every request.",
+        "successCriteria": [
+          "app.use(enforceQuota) is added before route definitions."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're using app.use(enforceQuota) to apply the middleware.",
+        "feedbackWrong": "The quota middleware needs to be applied using app.use(enforceQuota) to work on all routes.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "app.use",
+            "enforceQuota"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import required Node.js modules",
+        "id": "step1"
+      },
+      {
+        "label": "Create quota configuration object",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize usage tracking object",
+        "id": "step3"
+      },
+      {
+        "label": "Create quota data file path",
+        "id": "step4"
+      },
+      {
+        "label": "Define loadQuotaData function",
+        "id": "step5"
+      },
+      {
+        "label": "Define saveQuotaData function",
+        "id": "step6"
+      },
+      {
+        "label": "Define checkQuota function",
+        "id": "step7"
+      },
+      {
+        "label": "Define enforceQuota middleware",
+        "id": "step8"
+      },
+      {
+        "label": "Create simple Express server",
+        "id": "step9"
+      },
+      {
+        "label": "Apply quota middleware to routes",
+        "id": "step10"
+      }
+    ]
+  },
+  "source": "content"
+}

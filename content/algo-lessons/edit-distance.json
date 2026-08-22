@@ -1,0 +1,895 @@
+{
+  "id": "edit-distance",
+  "title": "Edit distance",
+  "pattern": "dynamic-programming",
+  "difficulty": "hard",
+  "language": "javascript",
+  "status": "draft",
+  "flow": [
+    {
+      "stepId": "title",
+      "mentorSays": "At the end of this lesson, you will be able to:\n\n1. Understand what the Edit Distance (Levenshtein Distance) lesson asks for\n2. Use dynamic programming with a 2D table to find minimum edit operations\n3. Handle three operations: insert, delete, and replace\n4. Implement the solution step by step in your chosen language",
+      "action": "continue",
+      "next": "lesson-illustration"
+    },
+    {
+      "stepId": "lesson-illustration",
+      "mentorSays": "Edit Distance (Levenshtein Distance) is a classic HARD DP lesson.\n\nPROBLEM:\nTransform \"horse\" to \"ros\" with minimum operations.\nOperations: Insert, Delete, Replace\n\nLet's find the answer!\n\n2D DP TABLE:\ndp[i][j] = minimum operations to transform word1[0..i-1] to word2[0..j-1]\n\n       \"\"  r  o  s\n    \"\" 0   1  2  3\n    h  1   ?  ?  ?\n    o  2   ?  ?  ?\n    r  3   ?  ?  ?\n    s  4   ?  ?  ?\n    e  5   ?  ?  ?\n\nBASE CASES:\ndp[0][j] = j  (insert j characters)\ndp[i][0] = i  (delete i characters)\n\nFILL THE TABLE:\nFor each cell dp[i][j]:\n  If word1[i-1] == word2[j-1]:\n    dp[i][j] = dp[i-1][j-1]  (no operation needed)\n  Else:\n    dp[i][j] = 1 + min(\n      dp[i-1][j],    // delete from word1\n      dp[i][j-1],    // insert into word1\n      dp[i-1][j-1]   // replace in word1\n    )\n\nCOMPLETED TABLE:\n       \"\"  r  o  s\n    \"\" 0   1  2  3\n    h  1   1  2  3\n    o  2   2  1  2\n    r  3   2  2  2\n    s  4   3  3  2\n    e  5   4  4  3\n\nANSWER: dp[5][3] = 3\n\nTRACE BACK THE OPERATIONS:\n1. Replace 'h' with 'r': \"horse\" → \"rorse\"\n2. Delete 'r': \"rorse\" → \"rose\"\n3. Delete 'e': \"rose\" → \"ros\"\n\nTotal: 3 operations\n\nTIME: O(m × n) where m = len(word1), n = len(word2)\nSPACE: O(m × n) or O(n) with optimization",
+      "example": "word1 = \"horse\"\nword2 = \"ros\"\n\nFind minimum edit distance:\n- Replace 'h' with 'r' → \"rorse\"\n- Delete 'r' → \"orse\"\n- Delete 'o' → \"rse\"\n- Replace 's' with 'o' → \"roe\"\n- Replace 'e' with 's' → \"ros\"\n\nWait, optimal is 3:\n- Replace 'h' with 'r' → \"rorse\"\n- Delete 'r' → \"orse\"\n- Delete 'o' → \"rse\"\n- Delete 's' → \"re\"\n- Insert 'o' → \"roe\"\n- Insert 's' → \"ros\"\n\nActually: 3 operations\n\nAnother example:\nword1 = \"intention\"\nword2 = \"execution\"\n\nAnswer: 5\n\nAnother example:\nword1 = \"\"\nword2 = \"abc\"\n\nAnswer: 3 (insert 3 characters)",
+      "action": "continue",
+      "next": "thinking-challenge"
+    },
+    {
+      "stepId": "thinking-challenge",
+      "mentorSays": "Now that you understand what the lesson wants, here's the real question:\n\nHow would YOU find the minimum edit distance?\n\nThink about it for a moment. What approach feels natural to you?",
+      "choices": [
+        {
+          "label": "Use dynamic programming with a 2D table",
+          "next": "explore-dp"
+        },
+        {
+          "label": "Try all possible sequences of operations",
+          "next": "explore-brute-force"
+        },
+        {
+          "label": "Use recursion with memoization",
+          "next": "explore-recursion"
+        }
+      ]
+    },
+    {
+      "stepId": "explore-brute-force",
+      "mentorSays": "That's a straightforward approach! You're thinking: \"I'll try all possible sequences of insert, delete, and replace operations.\"\n\nThis works! However, it's exponential time complexity.\n\nWould you like to learn the dynamic programming approach which is O(m × n) time?",
+      "action": "continue",
+      "next": "explore-dp"
+    },
+    {
+      "stepId": "explore-recursion",
+      "mentorSays": "Great thinking! Recursion with memoization is essentially the same as bottom-up DP, just implemented differently.\n\nLet's learn the bottom-up DP approach which is more intuitive!",
+      "action": "continue",
+      "next": "explore-dp"
+    },
+    {
+      "stepId": "explore-dp",
+      "mentorSays": "Excellent choice! Dynamic programming with a 2D table is efficient and intuitive. Here's the core idea:\n\n1. **DP Table**: dp[i][j] = minimum edits to convert word1[0..i-1] to word2[0..j-1]\n2. **Base Cases**:\n   - dp[0][j] = j (insert j characters into empty string)\n   - dp[i][0] = i (delete i characters from word1)\n3. **Recurrence**: For each position (i, j):\n   - If word1[i-1] == word2[j-1]: dp[i][j] = dp[i-1][j-1] (characters match, no operation)\n   - Else: dp[i][j] = 1 + min(\n       dp[i-1][j],      // delete from word1\n       dp[i][j-1],      // insert into word1\n       dp[i-1][j-1]     // replace in word1\n     )\n4. **Result**: dp[m][n] where m = word1.length, n = word2.length\n\nLet's trace with word1=\"horse\", word2=\"ros\":\n\nBase cases:\n- dp[0][0] = 0, dp[0][1] = 1, dp[0][2] = 2, dp[0][3] = 3\n- dp[1][0] = 1, dp[2][0] = 2, dp[3][0] = 3, dp[4][0] = 4, dp[5][0] = 5\n\nFilling table:\n- dp[1][1]: 'h' != 'r' → 1 + min(dp[0][1]=1, dp[1][0]=1, dp[0][0]=0) = 1\n- dp[1][2]: 'h' != 'o' → 1 + min(dp[0][2]=2, dp[1][1]=1, dp[0][1]=1) = 2\n- dp[1][3]: 'h' != 's' → 1 + min(dp[0][3]=3, dp[1][2]=2, dp[0][2]=2) = 3\n- dp[2][1]: 'o' != 'r' → 1 + min(dp[1][1]=1, dp[2][0]=2, dp[1][0]=1) = 2\n- dp[2][2]: 'o' == 'o' → dp[1][1] = 1\n- dp[2][3]: 'o' != 's' → 1 + min(dp[1][3]=3, dp[2][2]=1, dp[1][2]=2) = 2\n- ... continue until dp[5][3] = 3\n\nAnswer: 3\n\nThis is O(m × n) time and O(m × n) space! Now let's code it step by step.",
+      "action": "continue",
+      "next": "language-selection"
+    },
+    {
+      "stepId": "language-selection",
+      "mentorSays": "Great! Now let's code this solution. Which programming language would you like to use?",
+      "choices": [
+        {
+          "label": "JavaScript",
+          "next": "variable-check-js"
+        },
+        {
+          "label": "Python",
+          "next": "variable-check-python"
+        },
+        {
+          "label": "Java",
+          "next": "variable-check-java"
+        },
+        {
+          "label": "C++",
+          "next": "variable-check-cpp"
+        },
+        {
+          "label": "TypeScript",
+          "next": "variable-check-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-check-js",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-js"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-js",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'dp' or 'm') and put data inside it.\n\nFor example, 'let m = word1.length;' creates a variable that stores the length.",
+      "example": "let m = word1.length;\n\nNow the variable refers to the length",
+      "action": "continue",
+      "next": "function-check-js"
+    },
+    {
+      "stepId": "function-check-js",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "array-check-js"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-js",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "function add(a, b) {\n  return a + b;\n}\n\nadd(3, 5) returns 8",
+      "action": "continue",
+      "next": "array-check-js"
+    },
+    {
+      "stepId": "array-check-js",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a 2D array is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know 2D arrays",
+          "next": "2d-dp-table-check-js"
+        },
+        {
+          "label": "No, explain 2D arrays",
+          "next": "array-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "2d-dp-table-check-js",
+      "mentorSays": "Do you understand 2D DP tables?",
+      "choices": [
+        {
+          "label": "Yes, I know 2d-dp-table",
+          "next": "three-choices-check-js"
+        },
+        {
+          "label": "No, explain 2d-dp-table",
+          "next": "2d-dp-table-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "three-choices-check-js",
+      "mentorSays": "Do you understand the three operations (insert, delete, replace)?",
+      "choices": [
+        {
+          "label": "Yes, I know three-choices",
+          "next": "coding-start-js"
+        },
+        {
+          "label": "No, explain three-choices",
+          "next": "three-choices-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "three-choices-explanation-js",
+      "mentorSays": "To transform word1 to word2, we have three choices at each step: 1) DELETE a character from word1, 2) INSERT a character into word1, 3) REPLACE a character in word1. We choose the operation that gives minimum cost.\n\n// Three operations for edit distance:\n// 1. DELETE: dp[i-1][j] + 1\n// 2. INSERT: dp[i][j-1] + 1\n// 3. REPLACE: dp[i-1][j-1] + 1\n\nlet minOps = Math.min(\n  dp[i-1][j] + 1,    // delete\n  dp[i][j-1] + 1,    // insert\n  dp[i-1][j-1] + 1   // replace\n);\n\nGot it?",
+      "example": "// Three operations for edit distance:\n// 1. DELETE: dp[i-1][j] + 1\n// 2. INSERT: dp[i][j-1] + 1\n// 3. REPLACE: dp[i-1][j-1] + 1\n\nlet minOps = Math.min(\n  dp[i-1][j] + 1,    // delete\n  dp[i][j-1] + 1,    // insert\n  dp[i-1][j-1] + 1   // replace\n);",
+      "action": "continue",
+      "next": "coding-start-js"
+    },
+    {
+      "stepId": "2d-dp-table-explanation-js",
+      "mentorSays": "A 2D DP table stores solutions for two-dimensional subproblems. For edit distance, dp[i][j] stores the minimum operations to transform word1[0..i-1] to word2[0..j-1]. We fill it row by row or column by column.\n\n// 2D DP table for edit distance:\n// dp[i][j] = min operations to transform word1[0..i-1] to word2[0..j-1]\n\nlet dp = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));\n\n// Base cases:\nfor (let i = 0; i <= m; i++) dp[i][0] = i;  // delete i chars\nfor (let j = 0; j <= n; j++) dp[0][j] = j;  // insert j chars\n\nGot it?",
+      "example": "// 2D DP table for edit distance:\n// dp[i][j] = min operations to transform word1[0..i-1] to word2[0..j-1]\n\nlet dp = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));\n\n// Base cases:\nfor (let i = 0; i <= m; i++) dp[i][0] = i;  // delete i chars\nfor (let j = 0; j <= n; j++) dp[0][j] = j;  // insert j chars",
+      "action": "continue",
+      "next": "coding-start-js"
+    },
+    {
+      "stepId": "array-explanation-js",
+      "mentorSays": "A 2D array is an array of arrays. Each element is itself an array. You can access elements using two indices: arr[i][j].",
+      "example": "let dp = [\n  [0, 0, 0],\n  [0, 0, 0]\n];\n\ndp[0][0] = 0\ndp[1][1] = 1",
+      "action": "continue",
+      "next": "coding-start-js"
+    },
+    {
+      "stepId": "coding-start-js",
+      "mentorSays": "Perfect! Let's implement edit distance in JavaScript. We'll use dynamic programming with a 2D table.",
+      "example": "function minDistance(word1, word2) {\n  // Your code here\n}",
+      "action": "continue",
+      "next": "coding-init-js"
+    },
+    {
+      "stepId": "coding-init-js",
+      "mentorSays": "First, get the lengths of both strings and create a 2D DP table. Initialize base cases: dp[0][j] = j (insert j characters) and dp[i][0] = i (delete i characters).",
+      "example": "function minDistance(word1, word2) {\n  const m = word1.length;\n  const n = word2.length;\n  \n  // dp[i][j] = min edits to convert word1[0..i-1] to word2[0..j-1]\n  const dp = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));\n  \n  // Base cases: empty string conversions\n  for (let i = 0; i <= m; i++) {\n    dp[i][0] = i;  // Delete i characters\n  }\n  for (let j = 0; j <= n; j++) {\n    dp[0][j] = j;  // Insert j characters\n  }",
+      "action": "continue",
+      "next": "coding-loop-js"
+    },
+    {
+      "stepId": "coding-loop-js",
+      "mentorSays": "Now, fill the DP table using nested loops. For each position, check if characters match.",
+      "example": "function minDistance(word1, word2) {\n  const m = word1.length;\n  const n = word2.length;\n  \n  const dp = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));\n  \n  for (let i = 0; i <= m; i++) {\n    dp[i][0] = i;\n  }\n  for (let j = 0; j <= n; j++) {\n    dp[0][j] = j;\n  }\n  \n  // Fill DP table\n  for (let i = 1; i <= m; i++) {\n    for (let j = 1; j <= n; j++) {\n      // Check if characters match\n    }\n  }",
+      "action": "continue",
+      "next": "coding-match-js"
+    },
+    {
+      "stepId": "coding-match-js",
+      "mentorSays": "If characters match, no operation needed: dp[i][j] = dp[i-1][j-1]. Otherwise, take the minimum of three operations: delete, insert, or replace.",
+      "example": "function minDistance(word1, word2) {\n  const m = word1.length;\n  const n = word2.length;\n  \n  const dp = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));\n  \n  for (let i = 0; i <= m; i++) {\n    dp[i][0] = i;\n  }\n  for (let j = 0; j <= n; j++) {\n    dp[0][j] = j;\n  }\n  \n  for (let i = 1; i <= m; i++) {\n    for (let j = 1; j <= n; j++) {\n      if (word1[i - 1] === word2[j - 1]) {\n        // Characters match: no operation needed\n        dp[i][j] = dp[i - 1][j - 1];\n      } else {\n        // Characters don't match: try delete, insert, or replace\n        dp[i][j] = 1 + Math.min(\n          dp[i - 1][j],      // delete from word1\n          dp[i][j - 1],      // insert into word1\n          dp[i - 1][j - 1]   // replace in word1\n        );\n      }\n    }\n  }",
+      "action": "continue",
+      "next": "coding-2d-initialization-js"
+    },
+    {
+      "stepId": "coding-2d-initialization-js",
+      "mentorSays": "Let's initialize the 2D DP table with base cases.\n\nBase cases:\n- dp[0][j] = j (need to insert j characters to transform empty string to word2[0..j-1])\n- dp[i][0] = i (need to delete i characters to transform word1[0..i-1] to empty string)\n\nThese form the first row and first column of our table!",
+      "example": "// Initialize 2D DP table\nlet dp = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));\n\n// Base cases:\nfor (let i = 0; i <= m; i++) dp[i][0] = i;\nfor (let j = 0; j <= n; j++) dp[0][j] = j;",
+      "action": "continue",
+      "next": "coding-three-operations-js"
+    },
+    {
+      "stepId": "coding-three-operations-js",
+      "mentorSays": "Now let's fill the table by considering three operations.\n\nFor each cell dp[i][j]:\n- If characters match: dp[i][j] = dp[i-1][j-1] (no operation)\n- Else: dp[i][j] = 1 + min(delete, insert, replace)\n  - DELETE: dp[i-1][j] + 1\n  - INSERT: dp[i][j-1] + 1\n  - REPLACE: dp[i-1][j-1] + 1\n\nWe choose the minimum cost operation!",
+      "example": "for (let i = 1; i <= m; i++) {\n  for (let j = 1; j <= n; j++) {\n    if (word1[i-1] === word2[j-1]) {\n      dp[i][j] = dp[i-1][j-1];\n    } else {\n      dp[i][j] = 1 + Math.min(\n        dp[i-1][j],    // delete\n        dp[i][j-1],    // insert\n        dp[i-1][j-1]   // replace\n      );\n    }\n  }\n}",
+      "action": "continue",
+      "next": "coding-return-js"
+    },
+    {
+      "stepId": "coding-return-js",
+      "mentorSays": "Finally, return dp[m][n], which contains the minimum edit distance to convert word1 to word2.",
+      "example": "function minDistance(word1, word2) {\n  const m = word1.length;\n  const n = word2.length;\n  \n  const dp = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));\n  \n  for (let i = 0; i <= m; i++) {\n    dp[i][0] = i;\n  }\n  for (let j = 0; j <= n; j++) {\n    dp[0][j] = j;\n  }\n  \n  for (let i = 1; i <= m; i++) {\n    for (let j = 1; j <= n; j++) {\n      if (word1[i - 1] === word2[j - 1]) {\n        dp[i][j] = dp[i - 1][j - 1];\n      } else {\n        dp[i][j] = 1 + Math.min(\n          dp[i - 1][j],\n          dp[i][j - 1],\n          dp[i - 1][j - 1]\n        );\n      }\n    }\n  }\n  \n  return dp[m][n];\n}",
+      "action": "continue",
+      "next": "test-code-js"
+    },
+    {
+      "stepId": "test-code-js",
+      "mentorSays": "Perfect! Now test your code with the example we used earlier:\n\nword1 = \"horse\"\nword2 = \"ros\"\n\nAfter calling minDistance(word1, word2), it should return:\n3\n\nTry it in your IDE or code editor!",
+      "example": "Test input:\nword1 = \"horse\"\nword2 = \"ros\"\n\nAfter minDistance(word1, word2):\n3",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-python",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-python"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-python",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'dp' or 'm') and put data inside it.\n\nFor example, 'm = len(word1)' creates a variable that stores the length.",
+      "example": "m = len(word1)\n\nNow the variable refers to the length",
+      "action": "continue",
+      "next": "function-check-python"
+    },
+    {
+      "stepId": "function-check-python",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "array-check-python"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-python",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "def add(a, b):\n    return a + b\n\nadd(3, 5) returns 8",
+      "action": "continue",
+      "next": "array-check-python"
+    },
+    {
+      "stepId": "array-check-python",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a 2D list is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know 2D lists",
+          "next": "2d-dp-table-check-python"
+        },
+        {
+          "label": "No, explain 2D lists",
+          "next": "array-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "2d-dp-table-check-python",
+      "mentorSays": "Do you understand 2D DP tables?",
+      "choices": [
+        {
+          "label": "Yes, I know 2d-dp-table",
+          "next": "three-choices-check-python"
+        },
+        {
+          "label": "No, explain 2d-dp-table",
+          "next": "2d-dp-table-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "three-choices-check-python",
+      "mentorSays": "Do you understand the three operations (insert, delete, replace)?",
+      "choices": [
+        {
+          "label": "Yes, I know three-choices",
+          "next": "coding-start-python"
+        },
+        {
+          "label": "No, explain three-choices",
+          "next": "three-choices-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "three-choices-explanation-python",
+      "mentorSays": "To transform word1 to word2, we have three choices at each step: 1) DELETE a character from word1, 2) INSERT a character into word1, 3) REPLACE a character in word1. We choose the operation that gives minimum cost.\n\n# Three operations for edit distance:\n# 1. DELETE: dp[i-1][j] + 1\n# 2. INSERT: dp[i][j-1] + 1\n# 3. REPLACE: dp[i-1][j-1] + 1\n\nmin_ops = min(\n    dp[i-1][j] + 1,    # delete\n    dp[i][j-1] + 1,    # insert\n    dp[i-1][j-1] + 1   # replace\n)\n\nGot it?",
+      "example": "# Three operations for edit distance:\n# 1. DELETE: dp[i-1][j] + 1\n# 2. INSERT: dp[i][j-1] + 1\n# 3. REPLACE: dp[i-1][j-1] + 1\n\nmin_ops = min(\n    dp[i-1][j] + 1,    # delete\n    dp[i][j-1] + 1,    # insert\n    dp[i-1][j-1] + 1   # replace\n)",
+      "action": "continue",
+      "next": "coding-start-python"
+    },
+    {
+      "stepId": "2d-dp-table-explanation-python",
+      "mentorSays": "A 2D DP table stores solutions for two-dimensional subproblems. For edit distance, dp[i][j] stores the minimum operations to transform word1[0..i-1] to word2[0..j-1]. We fill it row by row or column by column.\n\n# 2D DP table for edit distance:\n# dp[i][j] = min operations to transform word1[0..i-1] to word2[0..j-1]\n\ndp = [[0] * (n + 1) for _ in range(m + 1)]\n\n# Base cases:\nfor i in range(m + 1):\n    dp[i][0] = i  # delete i chars\nfor j in range(n + 1):\n    dp[0][j] = j  # insert j chars\n\nGot it?",
+      "example": "# 2D DP table for edit distance:\n# dp[i][j] = min operations to transform word1[0..i-1] to word2[0..j-1]\n\ndp = [[0] * (n + 1) for _ in range(m + 1)]\n\n# Base cases:\nfor i in range(m + 1):\n    dp[i][0] = i  # delete i chars\nfor j in range(n + 1):\n    dp[0][j] = j  # insert j chars",
+      "action": "continue",
+      "next": "coding-start-python"
+    },
+    {
+      "stepId": "array-explanation-python",
+      "mentorSays": "A 2D list is a list of lists. Each element is itself a list. You can access elements using two indices: arr[i][j].",
+      "example": "dp = [\n  [0, 0, 0],\n  [0, 0, 0]\n]\n\ndp[0][0] = 0\ndp[1][1] = 1",
+      "action": "continue",
+      "next": "coding-start-python"
+    },
+    {
+      "stepId": "coding-start-python",
+      "mentorSays": "Perfect! Let's implement edit distance in Python. We'll use dynamic programming with a 2D table.",
+      "example": "def min_distance(word1, word2):\n    # Your code here\n    pass",
+      "action": "continue",
+      "next": "coding-init-python"
+    },
+    {
+      "stepId": "coding-init-python",
+      "mentorSays": "First, get the lengths of both strings and create a 2D DP table. Initialize base cases: dp[0][j] = j (insert j characters) and dp[i][0] = i (delete i characters).",
+      "example": "def min_distance(word1, word2):\n    m = len(word1)\n    n = len(word2)\n    \n    # dp[i][j] = min edits to convert word1[0..i-1] to word2[0..j-1]\n    dp = [[0] * (n + 1) for _ in range(m + 1)]\n    \n    # Base cases: empty string conversions\n    for i in range(m + 1):\n        dp[i][0] = i  # Delete i characters\n    for j in range(n + 1):\n        dp[0][j] = j  # Insert j characters",
+      "action": "continue",
+      "next": "coding-loop-python"
+    },
+    {
+      "stepId": "coding-loop-python",
+      "mentorSays": "Now, fill the DP table using nested loops. For each position, check if characters match.",
+      "example": "def min_distance(word1, word2):\n    m = len(word1)\n    n = len(word2)\n    \n    dp = [[0] * (n + 1) for _ in range(m + 1)]\n    \n    for i in range(m + 1):\n        dp[i][0] = i\n    for j in range(n + 1):\n        dp[0][j] = j\n    \n    # Fill DP table\n    for i in range(1, m + 1):\n        for j in range(1, n + 1):\n            # Check if characters match\n            pass",
+      "action": "continue",
+      "next": "coding-match-python"
+    },
+    {
+      "stepId": "coding-match-python",
+      "mentorSays": "If characters match, no operation needed: dp[i][j] = dp[i-1][j-1]. Otherwise, take the minimum of three operations: delete, insert, or replace.",
+      "example": "def min_distance(word1, word2):\n    m = len(word1)\n    n = len(word2)\n    \n    dp = [[0] * (n + 1) for _ in range(m + 1)]\n    \n    for i in range(m + 1):\n        dp[i][0] = i\n    for j in range(n + 1):\n        dp[0][j] = j\n    \n    for i in range(1, m + 1):\n        for j in range(1, n + 1):\n            if word1[i - 1] == word2[j - 1]:\n                # Characters match: no operation needed\n                dp[i][j] = dp[i - 1][j - 1]\n            else:\n                # Characters don't match: try delete, insert, or replace\n                dp[i][j] = 1 + min(\n                    dp[i - 1][j],      # delete from word1\n                    dp[i][j - 1],      # insert into word1\n                    dp[i - 1][j - 1]   # replace in word1\n                )",
+      "action": "continue",
+      "next": "coding-2d-initialization-python"
+    },
+    {
+      "stepId": "coding-2d-initialization-python",
+      "mentorSays": "Let's initialize the 2D DP table with base cases.\n\nBase cases:\n- dp[0][j] = j (need to insert j characters to transform empty string to word2[0..j-1])\n- dp[i][0] = i (need to delete i characters to transform word1[0..i-1] to empty string)\n\nThese form the first row and first column of our table!",
+      "example": "// Initialize 2D DP table\nlet dp = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));\n\n// Base cases:\nfor (let i = 0; i <= m; i++) dp[i][0] = i;\nfor (let j = 0; j <= n; j++) dp[0][j] = j;",
+      "action": "continue",
+      "next": "coding-three-operations-python"
+    },
+    {
+      "stepId": "coding-three-operations-python",
+      "mentorSays": "Now let's fill the table by considering three operations.\n\nFor each cell dp[i][j]:\n- If characters match: dp[i][j] = dp[i-1][j-1] (no operation)\n- Else: dp[i][j] = 1 + min(delete, insert, replace)\n  - DELETE: dp[i-1][j] + 1\n  - INSERT: dp[i][j-1] + 1\n  - REPLACE: dp[i-1][j-1] + 1\n\nWe choose the minimum cost operation!",
+      "example": "for (let i = 1; i <= m; i++) {\n  for (let j = 1; j <= n; j++) {\n    if (word1[i-1] === word2[j-1]) {\n      dp[i][j] = dp[i-1][j-1];\n    } else {\n      dp[i][j] = 1 + Math.min(\n        dp[i-1][j],    // delete\n        dp[i][j-1],    // insert\n        dp[i-1][j-1]   // replace\n      );\n    }\n  }\n}",
+      "action": "continue",
+      "next": "coding-return-python"
+    },
+    {
+      "stepId": "coding-return-python",
+      "mentorSays": "Finally, return dp[m][n], which contains the minimum edit distance to convert word1 to word2.",
+      "example": "def min_distance(word1, word2):\n    m = len(word1)\n    n = len(word2)\n    \n    dp = [[0] * (n + 1) for _ in range(m + 1)]\n    \n    for i in range(m + 1):\n        dp[i][0] = i\n    for j in range(n + 1):\n        dp[0][j] = j\n    \n    for i in range(1, m + 1):\n        for j in range(1, n + 1):\n            if word1[i - 1] == word2[j - 1]:\n                dp[i][j] = dp[i - 1][j - 1]\n            else:\n                dp[i][j] = 1 + min(\n                    dp[i - 1][j],\n                    dp[i][j - 1],\n                    dp[i - 1][j - 1]\n                )\n    \n    return dp[m][n]",
+      "action": "continue",
+      "next": "test-code-python"
+    },
+    {
+      "stepId": "test-code-python",
+      "mentorSays": "Perfect! Now test your code with the example we used earlier:\n\nword1 = \"horse\"\nword2 = \"ros\"\n\nAfter calling min_distance(word1, word2), it should return:\n3\n\nTry it in your IDE or code editor!",
+      "example": "Test input:\nword1 = \"horse\"\nword2 = \"ros\"\n\nAfter min_distance(word1, word2):\n3",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-java",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-java"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-java",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'dp' or 'm') and put data inside it.\n\nFor example, 'int m = word1.length();' creates a variable that stores the length.",
+      "example": "int m = word1.length();\n\nNow the variable refers to the length",
+      "action": "continue",
+      "next": "function-check-java"
+    },
+    {
+      "stepId": "function-check-java",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a method is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know methods",
+          "next": "array-check-java"
+        },
+        {
+          "label": "No, explain methods",
+          "next": "function-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-java",
+      "mentorSays": "A method is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "public int add(int a, int b) {\n    return a + b;\n}\n\nadd(3, 5) returns 8",
+      "action": "continue",
+      "next": "array-check-java"
+    },
+    {
+      "stepId": "array-check-java",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a 2D array is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know 2D arrays",
+          "next": "2d-dp-table-check-java"
+        },
+        {
+          "label": "No, explain 2D arrays",
+          "next": "array-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "2d-dp-table-check-java",
+      "mentorSays": "Do you understand 2D DP tables?",
+      "choices": [
+        {
+          "label": "Yes, I know 2d-dp-table",
+          "next": "three-choices-check-java"
+        },
+        {
+          "label": "No, explain 2d-dp-table",
+          "next": "2d-dp-table-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "three-choices-check-java",
+      "mentorSays": "Do you understand the three operations (insert, delete, replace)?",
+      "choices": [
+        {
+          "label": "Yes, I know three-choices",
+          "next": "coding-start-java"
+        },
+        {
+          "label": "No, explain three-choices",
+          "next": "three-choices-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "three-choices-explanation-java",
+      "mentorSays": "To transform word1 to word2, we have three choices at each step: 1) DELETE a character from word1, 2) INSERT a character into word1, 3) REPLACE a character in word1. We choose the operation that gives minimum cost.\n\n// Three operations for edit distance:\n// 1. DELETE: dp[i-1][j] + 1\n// 2. INSERT: dp[i][j-1] + 1\n// 3. REPLACE: dp[i-1][j-1] + 1\n\nint minOps = Math.min(\n    Math.min(dp[i-1][j] + 1, dp[i][j-1] + 1),\n    dp[i-1][j-1] + 1\n);\n\nGot it?",
+      "example": "// Three operations for edit distance:\n// 1. DELETE: dp[i-1][j] + 1\n// 2. INSERT: dp[i][j-1] + 1\n// 3. REPLACE: dp[i-1][j-1] + 1\n\nint minOps = Math.min(\n    Math.min(dp[i-1][j] + 1, dp[i][j-1] + 1),\n    dp[i-1][j-1] + 1\n);",
+      "action": "continue",
+      "next": "coding-start-java"
+    },
+    {
+      "stepId": "2d-dp-table-explanation-java",
+      "mentorSays": "A 2D DP table stores solutions for two-dimensional subproblems. For edit distance, dp[i][j] stores the minimum operations to transform word1[0..i-1] to word2[0..j-1]. We fill it row by row or column by column.\n\n// 2D DP table for edit distance:\n// dp[i][j] = min operations to transform word1[0..i-1] to word2[0..j-1]\n\nint[][] dp = new int[m + 1][n + 1];\n\n// Base cases:\nfor (int i = 0; i <= m; i++) dp[i][0] = i;  // delete i chars\nfor (int j = 0; j <= n; j++) dp[0][j] = j;  // insert j chars\n\nGot it?",
+      "example": "// 2D DP table for edit distance:\n// dp[i][j] = min operations to transform word1[0..i-1] to word2[0..j-1]\n\nint[][] dp = new int[m + 1][n + 1];\n\n// Base cases:\nfor (int i = 0; i <= m; i++) dp[i][0] = i;  // delete i chars\nfor (int j = 0; j <= n; j++) dp[0][j] = j;  // insert j chars",
+      "action": "continue",
+      "next": "coding-start-java"
+    },
+    {
+      "stepId": "array-explanation-java",
+      "mentorSays": "A 2D array is an array of arrays. Each element is itself an array. You can access elements using two indices: arr[i][j].",
+      "example": "int[][] dp = new int[2][3];\n\ndp[0][0] = 0;\ndp[1][1] = 1;",
+      "action": "continue",
+      "next": "coding-start-java"
+    },
+    {
+      "stepId": "coding-start-java",
+      "mentorSays": "Perfect! Let's implement edit distance in Java. We'll use dynamic programming with a 2D table.",
+      "example": "public int minDistance(String word1, String word2) {\n    // Your code here\n}",
+      "action": "continue",
+      "next": "coding-init-java"
+    },
+    {
+      "stepId": "coding-init-java",
+      "mentorSays": "First, get the lengths of both strings and create a 2D DP table. Initialize base cases: dp[0][j] = j (insert j characters) and dp[i][0] = i (delete i characters).",
+      "example": "public int minDistance(String word1, String word2) {\n    int m = word1.length();\n    int n = word2.length();\n    \n    // dp[i][j] = min edits to convert word1[0..i-1] to word2[0..j-1]\n    int[][] dp = new int[m + 1][n + 1];\n    \n    // Base cases: empty string conversions\n    for (int i = 0; i <= m; i++) {\n        dp[i][0] = i;  // Delete i characters\n    }\n    for (int j = 0; j <= n; j++) {\n        dp[0][j] = j;  // Insert j characters\n    }",
+      "action": "continue",
+      "next": "coding-loop-java"
+    },
+    {
+      "stepId": "coding-loop-java",
+      "mentorSays": "Now, fill the DP table using nested loops. For each position, check if characters match.",
+      "example": "public int minDistance(String word1, String word2) {\n    int m = word1.length();\n    int n = word2.length();\n    \n    int[][] dp = new int[m + 1][n + 1];\n    \n    for (int i = 0; i <= m; i++) {\n        dp[i][0] = i;\n    }\n    for (int j = 0; j <= n; j++) {\n        dp[0][j] = j;\n    }\n    \n    // Fill DP table\n    for (int i = 1; i <= m; i++) {\n        for (int j = 1; j <= n; j++) {\n            // Check if characters match\n        }\n    }",
+      "action": "continue",
+      "next": "coding-match-java"
+    },
+    {
+      "stepId": "coding-match-java",
+      "mentorSays": "If characters match, no operation needed: dp[i][j] = dp[i-1][j-1]. Otherwise, take the minimum of three operations: delete, insert, or replace.",
+      "example": "public int minDistance(String word1, String word2) {\n    int m = word1.length();\n    int n = word2.length();\n    \n    int[][] dp = new int[m + 1][n + 1];\n    \n    for (int i = 0; i <= m; i++) {\n        dp[i][0] = i;\n    }\n    for (int j = 0; j <= n; j++) {\n        dp[0][j] = j;\n    }\n    \n    for (int i = 1; i <= m; i++) {\n        for (int j = 1; j <= n; j++) {\n            if (word1.charAt(i - 1) == word2.charAt(j - 1)) {\n                // Characters match: no operation needed\n                dp[i][j] = dp[i - 1][j - 1];\n            } else {\n                // Characters don't match: try delete, insert, or replace\n                dp[i][j] = 1 + Math.min(\n                    dp[i - 1][j],      // delete from word1\n                    dp[i][j - 1],      // insert into word1\n                    dp[i - 1][j - 1]   // replace in word1\n                );\n            }\n        }\n    }",
+      "action": "continue",
+      "next": "coding-2d-initialization-java"
+    },
+    {
+      "stepId": "coding-2d-initialization-java",
+      "mentorSays": "Let's initialize the 2D DP table with base cases.\n\nBase cases:\n- dp[0][j] = j (need to insert j characters to transform empty string to word2[0..j-1])\n- dp[i][0] = i (need to delete i characters to transform word1[0..i-1] to empty string)\n\nThese form the first row and first column of our table!",
+      "example": "// Initialize 2D DP table\nlet dp = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));\n\n// Base cases:\nfor (let i = 0; i <= m; i++) dp[i][0] = i;\nfor (let j = 0; j <= n; j++) dp[0][j] = j;",
+      "action": "continue",
+      "next": "coding-three-operations-java"
+    },
+    {
+      "stepId": "coding-three-operations-java",
+      "mentorSays": "Now let's fill the table by considering three operations.\n\nFor each cell dp[i][j]:\n- If characters match: dp[i][j] = dp[i-1][j-1] (no operation)\n- Else: dp[i][j] = 1 + min(delete, insert, replace)\n  - DELETE: dp[i-1][j] + 1\n  - INSERT: dp[i][j-1] + 1\n  - REPLACE: dp[i-1][j-1] + 1\n\nWe choose the minimum cost operation!",
+      "example": "for (let i = 1; i <= m; i++) {\n  for (let j = 1; j <= n; j++) {\n    if (word1[i-1] === word2[j-1]) {\n      dp[i][j] = dp[i-1][j-1];\n    } else {\n      dp[i][j] = 1 + Math.min(\n        dp[i-1][j],    // delete\n        dp[i][j-1],    // insert\n        dp[i-1][j-1]   // replace\n      );\n    }\n  }\n}",
+      "action": "continue",
+      "next": "coding-return-java"
+    },
+    {
+      "stepId": "coding-return-java",
+      "mentorSays": "Finally, return dp[m][n], which contains the minimum edit distance to convert word1 to word2.",
+      "example": "public int minDistance(String word1, String word2) {\n    int m = word1.length();\n    int n = word2.length();\n    \n    int[][] dp = new int[m + 1][n + 1];\n    \n    for (int i = 0; i <= m; i++) {\n        dp[i][0] = i;\n    }\n    for (int j = 0; j <= n; j++) {\n        dp[0][j] = j;\n    }\n    \n    for (int i = 1; i <= m; i++) {\n        for (int j = 1; j <= n; j++) {\n            if (word1.charAt(i - 1) == word2.charAt(j - 1)) {\n                dp[i][j] = dp[i - 1][j - 1];\n            } else {\n                dp[i][j] = 1 + Math.min(\n                    dp[i - 1][j],\n                    dp[i][j - 1],\n                    dp[i - 1][j - 1]\n                );\n            }\n        }\n    }\n    \n    return dp[m][n];\n}",
+      "action": "continue",
+      "next": "test-code-java"
+    },
+    {
+      "stepId": "test-code-java",
+      "mentorSays": "Perfect! Now test your code with the example we used earlier:\n\nword1 = \"horse\"\nword2 = \"ros\"\n\nAfter calling minDistance(word1, word2), it should return:\n3\n\nTry it in your IDE or code editor!",
+      "example": "Test input:\nword1 = \"horse\"\nword2 = \"ros\"\n\nAfter minDistance(word1, word2):\n3",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-cpp",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-cpp"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-cpp",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'dp' or 'm') and put data inside it.\n\nFor example, 'int m = word1.length();' creates a variable that stores the length.",
+      "example": "int m = word1.length();\n\nNow the variable refers to the length",
+      "action": "continue",
+      "next": "function-check-cpp"
+    },
+    {
+      "stepId": "function-check-cpp",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "array-check-cpp"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-cpp",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "int add(int a, int b) {\n    return a + b;\n}\n\nadd(3, 5) returns 8",
+      "action": "continue",
+      "next": "array-check-cpp"
+    },
+    {
+      "stepId": "array-check-cpp",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a 2D vector is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know 2D vectors",
+          "next": "2d-dp-table-check-cpp"
+        },
+        {
+          "label": "No, explain 2D vectors",
+          "next": "array-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "2d-dp-table-check-cpp",
+      "mentorSays": "Do you understand 2D DP tables?",
+      "choices": [
+        {
+          "label": "Yes, I know 2d-dp-table",
+          "next": "three-choices-check-cpp"
+        },
+        {
+          "label": "No, explain 2d-dp-table",
+          "next": "2d-dp-table-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "three-choices-check-cpp",
+      "mentorSays": "Do you understand the three operations (insert, delete, replace)?",
+      "choices": [
+        {
+          "label": "Yes, I know three-choices",
+          "next": "coding-start-cpp"
+        },
+        {
+          "label": "No, explain three-choices",
+          "next": "three-choices-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "three-choices-explanation-cpp",
+      "mentorSays": "To transform word1 to word2, we have three choices at each step: 1) DELETE a character from word1, 2) INSERT a character into word1, 3) REPLACE a character in word1. We choose the operation that gives minimum cost.\n\n// Three operations for edit distance:\n// 1. DELETE: dp[i-1][j] + 1\n// 2. INSERT: dp[i][j-1] + 1\n// 3. REPLACE: dp[i-1][j-1] + 1\n\nint minOps = min(\n    min(dp[i-1][j] + 1, dp[i][j-1] + 1),\n    dp[i-1][j-1] + 1\n);\n\nGot it?",
+      "example": "// Three operations for edit distance:\n// 1. DELETE: dp[i-1][j] + 1\n// 2. INSERT: dp[i][j-1] + 1\n// 3. REPLACE: dp[i-1][j-1] + 1\n\nint minOps = min(\n    min(dp[i-1][j] + 1, dp[i][j-1] + 1),\n    dp[i-1][j-1] + 1\n);",
+      "action": "continue",
+      "next": "coding-start-cpp"
+    },
+    {
+      "stepId": "2d-dp-table-explanation-cpp",
+      "mentorSays": "A 2D DP table stores solutions for two-dimensional subproblems. For edit distance, dp[i][j] stores the minimum operations to transform word1[0..i-1] to word2[0..j-1]. We fill it row by row or column by column.\n\n// 2D DP table for edit distance:\n// dp[i][j] = min operations to transform word1[0..i-1] to word2[0..j-1]\n\nvector<vector<int>> dp(m + 1, vector<int>(n + 1, 0));\n\n// Base cases:\nfor (int i = 0; i <= m; i++) dp[i][0] = i;  // delete i chars\nfor (int j = 0; j <= n; j++) dp[0][j] = j;  // insert j chars\n\nGot it?",
+      "example": "// 2D DP table for edit distance:\n// dp[i][j] = min operations to transform word1[0..i-1] to word2[0..j-1]\n\nvector<vector<int>> dp(m + 1, vector<int>(n + 1, 0));\n\n// Base cases:\nfor (int i = 0; i <= m; i++) dp[i][0] = i;  // delete i chars\nfor (int j = 0; j <= n; j++) dp[0][j] = j;  // insert j chars",
+      "action": "continue",
+      "next": "coding-start-cpp"
+    },
+    {
+      "stepId": "array-explanation-cpp",
+      "mentorSays": "A 2D vector is a vector of vectors. Each element is itself a vector. You can access elements using two indices: arr[i][j].",
+      "example": "vector<vector<int>> dp(2, vector<int>(3, 0));\n\ndp[0][0] = 0;\ndp[1][1] = 1;",
+      "action": "continue",
+      "next": "coding-start-cpp"
+    },
+    {
+      "stepId": "coding-start-cpp",
+      "mentorSays": "Perfect! Let's implement edit distance in C++. We'll use dynamic programming with a 2D table.",
+      "example": "int minDistance(string word1, string word2) {\n    // Your code here\n}",
+      "action": "continue",
+      "next": "coding-init-cpp"
+    },
+    {
+      "stepId": "coding-init-cpp",
+      "mentorSays": "First, get the lengths of both strings and create a 2D DP table. Initialize base cases: dp[0][j] = j (insert j characters) and dp[i][0] = i (delete i characters).",
+      "example": "int minDistance(string word1, string word2) {\n    int m = word1.length();\n    int n = word2.length();\n    \n    // dp[i][j] = min edits to convert word1[0..i-1] to word2[0..j-1]\n    vector<vector<int>> dp(m + 1, vector<int>(n + 1, 0));\n    \n    // Base cases: empty string conversions\n    for (int i = 0; i <= m; i++) {\n        dp[i][0] = i;  // Delete i characters\n    }\n    for (int j = 0; j <= n; j++) {\n        dp[0][j] = j;  // Insert j characters\n    }",
+      "action": "continue",
+      "next": "coding-loop-cpp"
+    },
+    {
+      "stepId": "coding-loop-cpp",
+      "mentorSays": "Now, fill the DP table using nested loops. For each position, check if characters match.",
+      "example": "int minDistance(string word1, string word2) {\n    int m = word1.length();\n    int n = word2.length();\n    \n    vector<vector<int>> dp(m + 1, vector<int>(n + 1, 0));\n    \n    for (int i = 0; i <= m; i++) {\n        dp[i][0] = i;\n    }\n    for (int j = 0; j <= n; j++) {\n        dp[0][j] = j;\n    }\n    \n    // Fill DP table\n    for (int i = 1; i <= m; i++) {\n        for (int j = 1; j <= n; j++) {\n            // Check if characters match\n        }\n    }",
+      "action": "continue",
+      "next": "coding-match-cpp"
+    },
+    {
+      "stepId": "coding-match-cpp",
+      "mentorSays": "If characters match, no operation needed: dp[i][j] = dp[i-1][j-1]. Otherwise, take the minimum of three operations: delete, insert, or replace.",
+      "example": "int minDistance(string word1, string word2) {\n    int m = word1.length();\n    int n = word2.length();\n    \n    vector<vector<int>> dp(m + 1, vector<int>(n + 1, 0));\n    \n    for (int i = 0; i <= m; i++) {\n        dp[i][0] = i;\n    }\n    for (int j = 0; j <= n; j++) {\n        dp[0][j] = j;\n    }\n    \n    for (int i = 1; i <= m; i++) {\n        for (int j = 1; j <= n; j++) {\n            if (word1[i - 1] == word2[j - 1]) {\n                // Characters match: no operation needed\n                dp[i][j] = dp[i - 1][j - 1];\n            } else {\n                // Characters don't match: try delete, insert, or replace\n                dp[i][j] = 1 + min(\n                    dp[i - 1][j],      // delete from word1\n                    dp[i][j - 1],      // insert into word1\n                    dp[i - 1][j - 1]   // replace in word1\n                );\n            }\n        }\n    }",
+      "action": "continue",
+      "next": "coding-2d-initialization-cpp"
+    },
+    {
+      "stepId": "coding-2d-initialization-cpp",
+      "mentorSays": "Let's initialize the 2D DP table with base cases.\n\nBase cases:\n- dp[0][j] = j (need to insert j characters to transform empty string to word2[0..j-1])\n- dp[i][0] = i (need to delete i characters to transform word1[0..i-1] to empty string)\n\nThese form the first row and first column of our table!",
+      "example": "// Initialize 2D DP table\nlet dp = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));\n\n// Base cases:\nfor (let i = 0; i <= m; i++) dp[i][0] = i;\nfor (let j = 0; j <= n; j++) dp[0][j] = j;",
+      "action": "continue",
+      "next": "coding-three-operations-cpp"
+    },
+    {
+      "stepId": "coding-three-operations-cpp",
+      "mentorSays": "Now let's fill the table by considering three operations.\n\nFor each cell dp[i][j]:\n- If characters match: dp[i][j] = dp[i-1][j-1] (no operation)\n- Else: dp[i][j] = 1 + min(delete, insert, replace)\n  - DELETE: dp[i-1][j] + 1\n  - INSERT: dp[i][j-1] + 1\n  - REPLACE: dp[i-1][j-1] + 1\n\nWe choose the minimum cost operation!",
+      "example": "for (let i = 1; i <= m; i++) {\n  for (let j = 1; j <= n; j++) {\n    if (word1[i-1] === word2[j-1]) {\n      dp[i][j] = dp[i-1][j-1];\n    } else {\n      dp[i][j] = 1 + Math.min(\n        dp[i-1][j],    // delete\n        dp[i][j-1],    // insert\n        dp[i-1][j-1]   // replace\n      );\n    }\n  }\n}",
+      "action": "continue",
+      "next": "coding-return-cpp"
+    },
+    {
+      "stepId": "coding-return-cpp",
+      "mentorSays": "Finally, return dp[m][n], which contains the minimum edit distance to convert word1 to word2.",
+      "example": "int minDistance(string word1, string word2) {\n    int m = word1.length();\n    int n = word2.length();\n    \n    vector<vector<int>> dp(m + 1, vector<int>(n + 1, 0));\n    \n    for (int i = 0; i <= m; i++) {\n        dp[i][0] = i;\n    }\n    for (int j = 0; j <= n; j++) {\n        dp[0][j] = j;\n    }\n    \n    for (int i = 1; i <= m; i++) {\n        for (int j = 1; j <= n; j++) {\n            if (word1[i - 1] == word2[j - 1]) {\n                dp[i][j] = dp[i - 1][j - 1];\n            } else {\n                dp[i][j] = 1 + min(\n                    dp[i - 1][j],\n                    dp[i][j - 1],\n                    dp[i - 1][j - 1]\n                );\n            }\n        }\n    }\n    \n    return dp[m][n];\n}",
+      "action": "continue",
+      "next": "test-code-cpp"
+    },
+    {
+      "stepId": "test-code-cpp",
+      "mentorSays": "Perfect! Now test your code with the example we used earlier:\n\nword1 = \"horse\"\nword2 = \"ros\"\n\nAfter calling minDistance(word1, word2), it should return:\n3\n\nTry it in your IDE or code editor!",
+      "example": "Test input:\nword1 = \"horse\"\nword2 = \"ros\"\n\nAfter minDistance(word1, word2):\n3",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-ts",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-ts"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-ts",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'dp' or 'm') and put data inside it.\n\nFor example, 'let m: number = word1.length;' creates a variable that stores the length.",
+      "example": "let m: number = word1.length;\n\nNow the variable refers to the length",
+      "action": "continue",
+      "next": "function-check-ts"
+    },
+    {
+      "stepId": "function-check-ts",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "array-check-ts"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-ts",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "function add(a: number, b: number): number {\n  return a + b;\n}\n\nadd(3, 5) returns 8",
+      "action": "continue",
+      "next": "array-check-ts"
+    },
+    {
+      "stepId": "array-check-ts",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a 2D array is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know 2D arrays",
+          "next": "2d-dp-table-check-ts"
+        },
+        {
+          "label": "No, explain 2D arrays",
+          "next": "array-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "2d-dp-table-check-ts",
+      "mentorSays": "Do you understand 2D DP tables?",
+      "choices": [
+        {
+          "label": "Yes, I know 2d-dp-table",
+          "next": "three-choices-check-ts"
+        },
+        {
+          "label": "No, explain 2d-dp-table",
+          "next": "2d-dp-table-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "three-choices-check-ts",
+      "mentorSays": "Do you understand the three operations (insert, delete, replace)?",
+      "choices": [
+        {
+          "label": "Yes, I know three-choices",
+          "next": "coding-start-ts"
+        },
+        {
+          "label": "No, explain three-choices",
+          "next": "three-choices-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "three-choices-explanation-ts",
+      "mentorSays": "To transform word1 to word2, we have three choices at each step: 1) DELETE a character from word1, 2) INSERT a character into word1, 3) REPLACE a character in word1. We choose the operation that gives minimum cost.\n\n// Three operations for edit distance:\n// 1. DELETE: dp[i-1][j] + 1\n// 2. INSERT: dp[i][j-1] + 1\n// 3. REPLACE: dp[i-1][j-1] + 1\n\nlet minOps = Math.min(\n  Math.min(dp[i-1][j] + 1, dp[i][j-1] + 1),\n  dp[i-1][j-1] + 1\n);\n\nGot it?",
+      "example": "// Three operations for edit distance:\n// 1. DELETE: dp[i-1][j] + 1\n// 2. INSERT: dp[i][j-1] + 1\n// 3. REPLACE: dp[i-1][j-1] + 1\n\nlet minOps = Math.min(\n  Math.min(dp[i-1][j] + 1, dp[i][j-1] + 1),\n  dp[i-1][j-1] + 1\n);",
+      "action": "continue",
+      "next": "coding-start-ts"
+    },
+    {
+      "stepId": "2d-dp-table-explanation-ts",
+      "mentorSays": "A 2D DP table stores solutions for two-dimensional subproblems. For edit distance, dp[i][j] stores the minimum operations to transform word1[0..i-1] to word2[0..j-1]. We fill it row by row or column by column.\n\n// 2D DP table for edit distance:\n// dp[i][j] = min operations to transform word1[0..i-1] to word2[0..j-1]\n\nlet dp: number[][] = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));\n\n// Base cases:\nfor (let i = 0; i <= m; i++) dp[i][0] = i;  // delete i chars\nfor (let j = 0; j <= n; j++) dp[0][j] = j;  // insert j chars\n\nGot it?",
+      "example": "// 2D DP table for edit distance:\n// dp[i][j] = min operations to transform word1[0..i-1] to word2[0..j-1]\n\nlet dp: number[][] = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));\n\n// Base cases:\nfor (let i = 0; i <= m; i++) dp[i][0] = i;  // delete i chars\nfor (let j = 0; j <= n; j++) dp[0][j] = j;  // insert j chars",
+      "action": "continue",
+      "next": "coding-start-ts"
+    },
+    {
+      "stepId": "array-explanation-ts",
+      "mentorSays": "A 2D array is an array of arrays. Each element is itself an array. You can access elements using two indices: arr[i][j].",
+      "example": "let dp: number[][] = [\n  [0, 0, 0],\n  [0, 0, 0]\n];\n\ndp[0][0] = 0\ndp[1][1] = 1",
+      "action": "continue",
+      "next": "coding-start-ts"
+    },
+    {
+      "stepId": "coding-start-ts",
+      "mentorSays": "Perfect! Let's implement edit distance in TypeScript. We'll use dynamic programming with a 2D table.",
+      "example": "function minDistance(word1: string, word2: string): number {\n  // Your code here\n}",
+      "action": "continue",
+      "next": "coding-init-ts"
+    },
+    {
+      "stepId": "coding-init-ts",
+      "mentorSays": "First, get the lengths of both strings and create a 2D DP table. Initialize base cases: dp[0][j] = j (insert j characters) and dp[i][0] = i (delete i characters).",
+      "example": "function minDistance(word1: string, word2: string): number {\n  const m: number = word1.length;\n  const n: number = word2.length;\n  \n  // dp[i][j] = min edits to convert word1[0..i-1] to word2[0..j-1]\n  const dp: number[][] = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));\n  \n  // Base cases: empty string conversions\n  for (let i = 0; i <= m; i++) {\n    dp[i][0] = i;  // Delete i characters\n  }\n  for (let j = 0; j <= n; j++) {\n    dp[0][j] = j;  // Insert j characters\n  }",
+      "action": "continue",
+      "next": "coding-loop-ts"
+    },
+    {
+      "stepId": "coding-loop-ts",
+      "mentorSays": "Now, fill the DP table using nested loops. For each position, check if characters match.",
+      "example": "function minDistance(word1: string, word2: string): number {\n  const m: number = word1.length;\n  const n: number = word2.length;\n  \n  const dp: number[][] = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));\n  \n  for (let i = 0; i <= m; i++) {\n    dp[i][0] = i;\n  }\n  for (let j = 0; j <= n; j++) {\n    dp[0][j] = j;\n  }\n  \n  // Fill DP table\n  for (let i = 1; i <= m; i++) {\n    for (let j = 1; j <= n; j++) {\n      // Check if characters match\n    }\n  }",
+      "action": "continue",
+      "next": "coding-match-ts"
+    },
+    {
+      "stepId": "coding-match-ts",
+      "mentorSays": "If characters match, no operation needed: dp[i][j] = dp[i-1][j-1]. Otherwise, take the minimum of three operations: delete, insert, or replace.",
+      "example": "function minDistance(word1: string, word2: string): number {\n  const m: number = word1.length;\n  const n: number = word2.length;\n  \n  const dp: number[][] = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));\n  \n  for (let i = 0; i <= m; i++) {\n    dp[i][0] = i;\n  }\n  for (let j = 0; j <= n; j++) {\n    dp[0][j] = j;\n  }\n  \n  for (let i = 1; i <= m; i++) {\n    for (let j = 1; j <= n; j++) {\n      if (word1[i - 1] === word2[j - 1]) {\n        // Characters match: no operation needed\n        dp[i][j] = dp[i - 1][j - 1];\n      } else {\n        // Characters don't match: try delete, insert, or replace\n        dp[i][j] = 1 + Math.min(\n          dp[i - 1][j],      // delete from word1\n          dp[i][j - 1],      // insert into word1\n          dp[i - 1][j - 1]   // replace in word1\n        );\n      }\n    }\n  }",
+      "action": "continue",
+      "next": "coding-2d-initialization-ts"
+    },
+    {
+      "stepId": "coding-2d-initialization-ts",
+      "mentorSays": "Let's initialize the 2D DP table with base cases.\n\nBase cases:\n- dp[0][j] = j (need to insert j characters to transform empty string to word2[0..j-1])\n- dp[i][0] = i (need to delete i characters to transform word1[0..i-1] to empty string)\n\nThese form the first row and first column of our table!",
+      "example": "// Initialize 2D DP table\nlet dp = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));\n\n// Base cases:\nfor (let i = 0; i <= m; i++) dp[i][0] = i;\nfor (let j = 0; j <= n; j++) dp[0][j] = j;",
+      "action": "continue",
+      "next": "coding-three-operations-ts"
+    },
+    {
+      "stepId": "coding-three-operations-ts",
+      "mentorSays": "Now let's fill the table by considering three operations.\n\nFor each cell dp[i][j]:\n- If characters match: dp[i][j] = dp[i-1][j-1] (no operation)\n- Else: dp[i][j] = 1 + min(delete, insert, replace)\n  - DELETE: dp[i-1][j] + 1\n  - INSERT: dp[i][j-1] + 1\n  - REPLACE: dp[i-1][j-1] + 1\n\nWe choose the minimum cost operation!",
+      "example": "for (let i = 1; i <= m; i++) {\n  for (let j = 1; j <= n; j++) {\n    if (word1[i-1] === word2[j-1]) {\n      dp[i][j] = dp[i-1][j-1];\n    } else {\n      dp[i][j] = 1 + Math.min(\n        dp[i-1][j],    // delete\n        dp[i][j-1],    // insert\n        dp[i-1][j-1]   // replace\n      );\n    }\n  }\n}",
+      "action": "continue",
+      "next": "coding-return-ts"
+    },
+    {
+      "stepId": "coding-return-ts",
+      "mentorSays": "Finally, return dp[m][n], which contains the minimum edit distance to convert word1 to word2.",
+      "example": "function minDistance(word1: string, word2: string): number {\n  const m: number = word1.length;\n  const n: number = word2.length;\n  \n  const dp: number[][] = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));\n  \n  for (let i = 0; i <= m; i++) {\n    dp[i][0] = i;\n  }\n  for (let j = 0; j <= n; j++) {\n    dp[0][j] = j;\n  }\n  \n  for (let i = 1; i <= m; i++) {\n    for (let j = 1; j <= n; j++) {\n      if (word1[i - 1] === word2[j - 1]) {\n        dp[i][j] = dp[i - 1][j - 1];\n      } else {\n        dp[i][j] = 1 + Math.min(\n          dp[i - 1][j],\n          dp[i][j - 1],\n          dp[i - 1][j - 1]\n        );\n      }\n    }\n  }\n  \n  return dp[m][n];\n}",
+      "action": "continue",
+      "next": "test-code-ts"
+    },
+    {
+      "stepId": "test-code-ts",
+      "mentorSays": "Perfect! Now test your code with the example we used earlier:\n\nword1 = \"horse\"\nword2 = \"ros\"\n\nAfter calling minDistance(word1, word2), it should return:\n3\n\nTry it in your IDE or code editor!",
+      "example": "Test input:\nword1 = \"horse\"\nword2 = \"ros\"\n\nAfter minDistance(word1, word2):\n3",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "final",
+      "mentorSays": "🎉 Well done! You've learned edit distance (Levenshtein distance). You understand how to use dynamic programming with a 2D table to find the minimum operations needed to convert one string to another!\n\nThis is O(m × n) time and O(m × n) space - excellent for string transformation lessons! Keep practicing!",
+      "action": "continue"
+    }
+  ]
+}

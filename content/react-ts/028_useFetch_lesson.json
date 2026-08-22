@@ -1,0 +1,346 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-react-ts-28",
+    "track": "react-ts",
+    "lessonNum": 28,
+    "title": "useFetch",
+    "shortName": "P28",
+    "intro": {
+      "tag": "LESSON #28",
+      "title": "useFetch",
+      "body": "In this lesson you will build a reusable `useFetch` hook that calls an API and tracks **data**, **loading**, and **error**. First you will meet **TypeScript generics**: the hook cannot know the JSON shape in advance, so you will name that unknown type **`T`** and describe the hook's return value with **`FetchResponse<T>`** — where **`data`** is **`T | null`**. Then you wire **`useState`**, **`useEffect`**, and **`fetch`**, and render loading state in a small **App** demo.",
+      "usecase": "The useFetch pattern is essential for any React application that displays dynamic data from an API. Centralizing fetch + loading + error in a hook keeps components small and reusable across dashboards, product lists, and profile screens."
+    },
+    "objectives": [
+      "Define a generic interface for async hook results: data as T | null, plus loading and error fields",
+      "Declare useFetch<T>(url) with a return type tied to that interface",
+      "Implement state and an async fetch helper inside the hook",
+      "Trigger fetches when the URL changes using useEffect",
+      "Return live state from the hook and consume it in a component with conditional UI"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 10",
+        "title": "Import React, useState, and useEffect",
+        "instruction": "Import **React** (default import), and **useState** and **useEffect** (named imports), from `'react'`.",
+        "hint": "Correct pattern: `import React, { useState, useEffect } from 'react';` — not `{ React, useState }` (React is usually the default import).",
+        "analogousExample": "// Example: default + named hooks\nimport React, { useState, useEffect } from 'react';",
+        "seedCode": "// Import React, useState, and useEffect from 'react' here\n\n",
+        "expectedOutcome": "The file can use JSX (React) plus both hooks.",
+        "successCriteria": [
+          "React, useState, and useEffect are imported from 'react' with valid syntax."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You need the default React import and two named hooks: useState and useEffect.",
+        "feedbackWrong": "Use: `import React, { useState, useEffect } from 'react';`",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "React",
+            "useState",
+            "useEffect",
+            "'react'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 10",
+        "title": "Define FetchResponse<T> (generic result shape)",
+        "instruction": "Below the import, define a TypeScript interface **`FetchResponse<T>`** with three properties: **`data`** typed as **`T | null`**, **`loading`** as **`boolean`**, and **`error`** as **`string | null`**. The **`<T>`** is a **type parameter**: it stands for “whatever JSON shape this fetch will return” — you will plug in a concrete type (or let inference help) when you call the hook later.",
+        "hint": "Syntax: `interface FetchResponse<T> { ... }`. **`T`** must appear in angle brackets on the interface name so TypeScript knows `data` can use `T`. This is not the browser's `Response` class from `fetch` — it's *your* name for “what the hook returns.”",
+        "analogousExample": "// Generic box: contents type T\ninterface Box<T> {\n  value: T | null;\n}\n\n// Your turn: FetchResponse<T> with data, loading, error",
+        "seedCode": "import React, { useState, useEffect } from 'react';\n\n// Define FetchResponse<T> here:\n// - data: T | null\n// - loading: boolean\n// - error: string | null\n\n",
+        "expectedOutcome": "You have a reusable, generic description of the hook's return shape.",
+        "successCriteria": [
+          "An interface FetchResponse<T> declares data (T | null), loading (boolean), and error (string | null)."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Check: `interface FetchResponse<T>`, `data` uses `T | null`, and both `loading` and `error` use the right types.",
+        "feedbackWrong": "Define `interface FetchResponse<T> { ... }` with the three fields and types above. Without `<T>` on the interface, `T` in `data` is unknown to the compiler.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "interface",
+            "FetchResponse",
+            "<T>",
+            "data",
+            "T|null",
+            "loading",
+            "boolean",
+            "error",
+            "string|null"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.75
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 10",
+        "title": "Declare useFetch<T> with the correct return type",
+        "instruction": "Declare a function **`useFetch`** that is generic in **`T`**, takes one parameter **`url`** of type **`string`**, and is annotated to return **`FetchResponse<T>`**. For this step only, the body may return a **stub object**: `{ data: null, loading: false, error: null }` — you will replace the placeholder with real state in the following steps.",
+        "hint": "Signature shape: `function useFetch<T>(url: string): FetchResponse<T> { ... }`. The `<T>` on **`useFetch`** ties the caller's type argument to **`FetchResponse<T>`**.",
+        "analogousExample": "// Stub until you add state\nfunction useFetch<T>(url: string): FetchResponse<T> {\n  return { data: null, loading: false, error: null };\n}",
+        "seedCode": "import React, { useState, useEffect } from 'react';\n\ninterface FetchResponse<T> {\n  data: T | null;\n  loading: boolean;\n  error: string | null;\n}\n\n// Declare useFetch<T>(url: string): FetchResponse<T> with a stub return\n",
+        "expectedOutcome": "The hook exists and type-checks: URL in, FetchResponse<T> out.",
+        "successCriteria": [
+          "useFetch is generic, takes url: string, return type is FetchResponse<T>, stub return matches the three fields."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Ensure both **`useFetch`** and **`FetchResponse`** use the same **`<T>`** and the return object includes data, loading, and error.",
+        "feedbackWrong": "Add `function useFetch<T>(url: string): FetchResponse<T>` and return `{ data: null, loading: false, error: null }` for now.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "function",
+            "useFetch",
+            "<T>",
+            "url",
+            "string",
+            "FetchResponse",
+            "return",
+            "data",
+            "loading",
+            "error",
+            "null",
+            "false"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.75
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 10",
+        "title": "Initialize data, loading, and error with useState",
+        "instruction": "Inside **`useFetch`**, replace the hard-coded stub values by initializing three pieces of state: **`data`** with **`useState<T | null>(null)`**, **`loading`** with **`useState<boolean>(false)`** (or `useState(false)`), and **`error`** with **`useState<string | null>(null)`**. Keep returning the stub object for one more step, or return `{ data, loading, error }` if you already prefer — the next steps will focus on fetching.",
+        "hint": "You need `setData`, `setLoading`, and `setError` from destructuring. Generic on data: `useState<T | null>(null)`.",
+        "analogousExample": "const [data, setData] = useState<T | null>(null);\nconst [loading, setLoading] = useState(false);\nconst [error, setError] = useState<string | null>(null);",
+        "seedCode": "import React, { useState, useEffect } from 'react';\n\ninterface FetchResponse<T> {\n  data: T | null;\n  loading: boolean;\n  error: string | null;\n}\n\nfunction useFetch<T>(url: string): FetchResponse<T> {\n  // Add three useState calls here (data, loading, error)\n\n  return { data: null, loading: false, error: null };\n}\n",
+        "expectedOutcome": "Hook holds typed state for the three fields.",
+        "successCriteria": [
+          "Three useState calls exist with types T | null, boolean, and string | null (or equivalent inference) for data, loading, error."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Make sure `data` uses `T | null` in useState's generic.",
+        "feedbackWrong": "Add useState for data (typed with T), loading, and error inside useFetch.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "useState",
+            "data",
+            "loading",
+            "error",
+            "T|null",
+            "boolean",
+            "string|null"
+          ],
+          "partialThreshold": 0.45,
+          "correctThreshold": 0.72
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 10",
+        "title": "Add the fetchData async helper",
+        "instruction": "Inside **`useFetch`**, define an **`async`** function **`fetchData`** that accepts a **`string`** URL, calls **`fetch(url)`**, reads JSON with **`.json()`**, and uses your setters to update **`data`**, **`loading`**, and **`error`** (start loading true, clear error; on success set data and loading false; on failure set error message and loading false). You can use **`try` / `catch`**.",
+        "hint": "Pattern: set loading true → try { const res = await fetch(u); const json = await res.json(); setData(json); } catch (e) { setError(...); } finally { setLoading(false); }",
+        "analogousExample": "async function fetchData(targetUrl: string) {\n  try {\n    setLoading(true);\n    const res = await fetch(targetUrl);\n    const json = await res.json();\n    setData(json);\n    setError(null);\n  } catch (e) {\n    setError(e instanceof Error ? e.message : 'Request failed');\n  } finally {\n    setLoading(false);\n  }\n}",
+        "seedCode": "import React, { useState, useEffect } from 'react';\n\ninterface FetchResponse<T> {\n  data: T | null;\n  loading: boolean;\n  error: string | null;\n}\n\nfunction useFetch<T>(url: string): FetchResponse<T> {\n  const [data, setData] = useState<T | null>(null);\n  const [loading, setLoading] = useState(false);\n  const [error, setError] = useState<string | null>(null);\n\n  // Define async function fetchData(targetUrl: string) here\n\n  return { data, loading, error };\n}\n",
+        "expectedOutcome": "Fetch logic is encapsulated in one async helper using setters.",
+        "successCriteria": [
+          "An async fetchData(url) uses fetch, await, and updates the three state fields appropriately."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Ensure you await fetch and response.json(), and toggle loading around the attempt.",
+        "feedbackWrong": "Add `async function fetchData(…)` inside the hook with fetch + try/catch + setters.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "async",
+            "fetchData",
+            "fetch",
+            "await",
+            "json",
+            "setData",
+            "setLoading",
+            "setError"
+          ],
+          "partialThreshold": 0.45,
+          "correctThreshold": 0.72
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 10",
+        "title": "Run fetch when the URL changes (useEffect)",
+        "instruction": "Add **`useEffect`** that calls **`fetchData(url)`** when **`url`** changes. Put **`url`** in the dependency array: **`[url]`**.",
+        "hint": "useEffect(() => { fetchData(url); }, [url]); — eslint rules of hooks: call useEffect at top level of the hook, not inside fetchData.",
+        "analogousExample": "useEffect(() => {\n  fetchData(url);\n}, [url]);",
+        "seedCode": "import React, { useState, useEffect } from 'react';\n\ninterface FetchResponse<T> {\n  data: T | null;\n  loading: boolean;\n  error: string | null;\n}\n\nfunction useFetch<T>(url: string): FetchResponse<T> {\n  const [data, setData] = useState<T | null>(null);\n  const [loading, setLoading] = useState(false);\n  const [error, setError] = useState<string | null>(null);\n\n  async function fetchData(targetUrl: string) {\n    try {\n      setLoading(true);\n      const res = await fetch(targetUrl);\n      const json = await res.json();\n      setData(json);\n      setError(null);\n    } catch (e) {\n      setError(e instanceof Error ? e.message : 'Request failed');\n    } finally {\n      setLoading(false);\n    }\n  }\n\n  // useEffect(() => { ... }, [url]) here\n\n  return { data, loading, error };\n}\n",
+        "expectedOutcome": "Changing `url` from a parent re-runs the request.",
+        "successCriteria": [
+          "useEffect calls fetchData with the hook's url and lists url in the dependency array."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Include [url] as the second argument to useEffect.",
+        "feedbackWrong": "Add useEffect that invokes fetchData(url) and depends on [url].",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "useEffect",
+            "fetchData",
+            "url",
+            "[url]"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.75
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 10",
+        "title": "Return the live state object",
+        "instruction": "Ensure **`return { data, loading, error }`** uses your **state variables** (not fresh literals). If you already do, this step is a quick check.",
+        "hint": "Return must match `FetchResponse<T>`: same three keys, variables not `null`/`false` literals unless you intentionally reset.",
+        "analogousExample": "return { data, loading, error };",
+        "seedCode": "import React, { useState, useEffect } from 'react';\n\ninterface FetchResponse<T> {\n  data: T | null;\n  loading: boolean;\n  error: string | null;\n}\n\nfunction useFetch<T>(url: string): FetchResponse<T> {\n  const [data, setData] = useState<T | null>(null);\n  const [loading, setLoading] = useState(false);\n  const [error, setError] = useState<string | null>(null);\n\n  async function fetchData(targetUrl: string) {\n    try {\n      setLoading(true);\n      const res = await fetch(targetUrl);\n      const json = await res.json();\n      setData(json);\n      setError(null);\n    } catch (e) {\n      setError(e instanceof Error ? e.message : 'Request failed');\n    } finally {\n      setLoading(false);\n    }\n  }\n\n  useEffect(() => {\n    fetchData(url);\n  }, [url]);\n\n  // Return data, loading, error (variables)\n  return { data: null, loading: false, error: null };\n}\n",
+        "expectedOutcome": "Consumers of the hook see updated state after fetch completes.",
+        "successCriteria": [
+          "Return statement uses the data, loading, and error state bindings."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Replace any `{ data: null, ... }` stub with `{ data, loading, error }`.",
+        "feedbackWrong": "Return the three state variables by name: `{ data, loading, error }`.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "return",
+            "data",
+            "loading",
+            "error"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.72
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 10",
+        "title": "Add the App component shell",
+        "instruction": "Below the hook, define a function component **`App`** that returns a **`div`** containing an **`h1`** (e.g. \"useFetch demo\"). Export **`App`** as default at the bottom of the file.",
+        "hint": "`function App() { return ( <div>...</div> ); }` then `export default App;`",
+        "analogousExample": "function App() {\n  return (\n    <div>\n      <h1>useFetch demo</h1>\n    </div>\n  );\n}\n\nexport default App;",
+        "seedCode": "import React, { useState, useEffect } from 'react';\n\ninterface FetchResponse<T> {\n  data: T | null;\n  loading: boolean;\n  error: string | null;\n}\n\nfunction useFetch<T>(url: string): FetchResponse<T> {\n  const [data, setData] = useState<T | null>(null);\n  const [loading, setLoading] = useState(false);\n  const [error, setError] = useState<string | null>(null);\n\n  async function fetchData(targetUrl: string) {\n    try {\n      setLoading(true);\n      const res = await fetch(targetUrl);\n      const json = await res.json();\n      setData(json);\n      setError(null);\n    } catch (e) {\n      setError(e instanceof Error ? e.message : 'Request failed');\n    } finally {\n      setLoading(false);\n    }\n  }\n\n  useEffect(() => {\n    fetchData(url);\n  }, [url]);\n\n  return { data, loading, error };\n}\n\n// Create App below and export default\n",
+        "expectedOutcome": "Preview can mount a default export component.",
+        "successCriteria": [
+          "App exists, returns JSX with div + h1, default export App."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Add `export default App;` at the end.",
+        "feedbackWrong": "Define `function App()` with JSX and export it as default.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "App",
+            "return",
+            "<div",
+            "<h1",
+            "export",
+            "default"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.75
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 10",
+        "title": "Call useFetch with a type argument and sample URL",
+        "instruction": "Inside **`App`**, call **`useFetch`** with a **type argument** for the JSONPlaceholder todo shape and pass the URL **`https://jsonplaceholder.typicode.com/todos/1`**. Destructure **`data`**, **`loading`**, and **`error`**. Example type (you can paste inline): `{ userId: number; id: number; title: string; completed: boolean }`.",
+        "hint": "`const { data, loading, error } = useFetch<{ userId: number; id: number; title: string; completed: boolean }>(\"https://...\");`",
+        "analogousExample": "type Todo = { userId: number; id: number; title: string; completed: boolean };\nconst { data, loading } = useFetch<Todo>(url);\n",
+        "seedCode": "import React, { useState, useEffect } from 'react';\n\ninterface FetchResponse<T> {\n  data: T | null;\n  loading: boolean;\n  error: string | null;\n}\n\nfunction useFetch<T>(url: string): FetchResponse<T> {\n  const [data, setData] = useState<T | null>(null);\n  const [loading, setLoading] = useState(false);\n  const [error, setError] = useState<string | null>(null);\n\n  async function fetchData(targetUrl: string) {\n    try {\n      setLoading(true);\n      const res = await fetch(targetUrl);\n      const json = await res.json();\n      setData(json);\n      setError(null);\n    } catch (e) {\n      setError(e instanceof Error ? e.message : 'Request failed');\n    } finally {\n      setLoading(false);\n    }\n  }\n\n  useEffect(() => {\n    fetchData(url);\n  }, [url]);\n\n  return { data, loading, error };\n}\n\nfunction App() {\n  // useFetch<...>(url) and destructure data, loading, error\n\n  return (\n    <div>\n      <h1>useFetch demo</h1>\n    </div>\n  );\n}\n\nexport default App;\n",
+        "expectedOutcome": "App receives typed data from the hook for the sample endpoint.",
+        "successCriteria": [
+          "useFetch is called with a generic type and the jsonplaceholder URL; data, loading, and error are destructured."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Add `<{ ... }>` between useFetch and the parenthesis with the URL string.",
+        "feedbackWrong": "Call `useFetch<YourTodoShape>('https://jsonplaceholder.typicode.com/todos/1')` at the top of App and destructure all three fields.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "useFetch",
+            "<",
+            "jsonplaceholder.typicode.com",
+            "todos/1",
+            "data",
+            "loading",
+            "error"
+          ],
+          "partialThreshold": 0.45,
+          "correctThreshold": 0.72
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 10",
+        "title": "Show loading (and optional error / title) in the UI",
+        "instruction": "In **`App`'s** JSX, under the **`h1`**, show **loading** with a ternary: when **`loading`**, render **`<p>Loading...</p>`**; optionally show **`error`** when present; when **`data`** exists, render **`data.title`** in a **`<p>`**.",
+        "hint": "{loading ? <p>Loading...</p> : null} then similar blocks for error and data?.title",
+        "analogousExample": "{loading && <p>Loading...</p>}\n{error && <p>{error}</p>}\n{data && <p>{data.title}</p>}",
+        "seedCode": "import React, { useState, useEffect } from 'react';\n\ninterface FetchResponse<T> {\n  data: T | null;\n  loading: boolean;\n  error: string | null;\n}\n\nfunction useFetch<T>(url: string): FetchResponse<T> {\n  const [data, setData] = useState<T | null>(null);\n  const [loading, setLoading] = useState(false);\n  const [error, setError] = useState<string | null>(null);\n\n  async function fetchData(targetUrl: string) {\n    try {\n      setLoading(true);\n      const res = await fetch(targetUrl);\n      const json = await res.json();\n      setData(json);\n      setError(null);\n    } catch (e) {\n      setError(e instanceof Error ? e.message : 'Request failed');\n    } finally {\n      setLoading(false);\n    }\n  }\n\n  useEffect(() => {\n    fetchData(url);\n  }, [url]);\n\n  return { data, loading, error };\n}\n\nfunction App() {\n  const { data, loading, error } = useFetch<{ userId: number; id: number; title: string; completed: boolean }>(\n    'https://jsonplaceholder.typicode.com/todos/1'\n  );\n\n  return (\n    <div>\n      <h1>useFetch demo</h1>\n      {/* loading / error / data.title here */}\n    </div>\n  );\n}\n\nexport default App;\n",
+        "expectedOutcome": "Learner sees loading text, then the todo title after fetch.",
+        "successCriteria": [
+          "JSX reacts to loading and displays data.title when available."
+        ],
+        "feedbackCorrect": "You're done — solid work tying generics to a real fetch hook.",
+        "feedbackPartial": "Use `data?.title` or guard with `data &&` so TypeScript is happy.",
+        "feedbackWrong": "Add conditional UI for loading and show `data.title` when loaded.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "loading",
+            "Loading",
+            "data",
+            "title"
+          ],
+          "partialThreshold": 0.45,
+          "correctThreshold": 0.68
+        }
+      }
+    ],
+    "sideItems": [
+      { "label": "Intro", "id": "intro" },
+      { "label": "Objectives", "id": "objectives" },
+      { "label": "Import React, useState, and useEffect", "id": "step1" },
+      { "label": "Define FetchResponse<T> (generic result shape)", "id": "step2" },
+      { "label": "Declare useFetch<T> with the correct return type", "id": "step3" },
+      { "label": "Initialize data, loading, and error with useState", "id": "step4" },
+      { "label": "Add the fetchData async helper", "id": "step5" },
+      { "label": "Run fetch when the URL changes (useEffect)", "id": "step6" },
+      { "label": "Return the live state object", "id": "step7" },
+      { "label": "Add the App component shell", "id": "step8" },
+      { "label": "Call useFetch with a type argument and sample URL", "id": "step9" },
+      { "label": "Show loading (and optional error / title) in the UI", "id": "step10" }
+    ]
+  },
+  "source": "content"
+}

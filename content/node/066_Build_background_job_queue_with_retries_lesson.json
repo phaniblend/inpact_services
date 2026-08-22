@@ -1,0 +1,352 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-node-66",
+    "track": "node",
+    "lessonNum": 66,
+    "title": "Build background job queue with retries",
+    "shortName": "P66",
+    "intro": {
+      "tag": "LESSON #66",
+      "title": "Build background job queue with retries",
+      "body": "In this lesson, you will build a simple background job queue system in Node.js that can process tasks asynchronously, outside of your main application flow. You'll learn how to implement retry logic, which automatically re-attempts failed jobs a set number of times before marking them as permanently failed. The core programming concepts involved are asynchronous programming, event-driven architecture, and error handling. You'll use key Node.js constructs like Promises, setTimeout for delays, and basic data structures to manage the job queue. By the end, you'll have a foundational understanding of how background processing and resilience patterns work in server-side applications.",
+      "usecase": "Background job queues with retries are essential in production applications where reliability matters. When you upload a profile picture on social media, the platform uses a job queue to resize and optimize your image in the background while keeping the UI responsive. E-commerce sites queue order confirmation emails and inventory updates, ensuring they retry if the email service is temporarily down. This pattern prevents user-facing delays and handles failures gracefully in real-world systems."
+    },
+    "objectives": [
+      "Construct a basic job queue using an array to manage background tasks",
+      "Implement job processing logic that executes tasks asynchronously",
+      "Configure retry mechanisms with exponential backoff for failed jobs",
+      "Initialize job status tracking to monitor execution progress",
+      "Integrate error handling to manage job failures gracefully",
+      "Manipulate queue operations to add, process, and remove jobs",
+      "Apply job prioritization to control execution order"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 10",
+        "title": "Import required Node.js modules",
+        "instruction": "Import the 'events' and 'fs' modules using Node.js's built-in require() syntax.",
+        "hint": "Use require('moduleName') to import each module. These are core Node.js modules, so no npm installation is needed.",
+        "analogousExample": "// Example: importing built-in modules\nconst path = require('path');\nconst http = require('http');",
+        "seedCode": "// Import the events and fs modules here\n",
+        "expectedOutcome": "The code will have the events and fs modules imported and ready to use for building the job queue.",
+        "successCriteria": [
+          "The events and fs modules are imported using require() statements."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've imported one module, but remember to import both 'events' and 'fs' modules as specified.",
+        "feedbackWrong": "The imports don't match the required modules. Please import both 'events' and 'fs' modules using require().",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "require('events')",
+            "require('fs')"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 10",
+        "title": "Create JobQueue class definition",
+        "instruction": "Define a class named JobQueue with a constructor that initializes an empty array property called 'jobs'.",
+        "hint": "Use the 'class' keyword followed by the class name, then define a constructor method that sets this.jobs to an empty array.",
+        "analogousExample": "// Example class definition\nclass TaskList {\n  constructor() {\n    this.tasks = [];\n  }\n}",
+        "seedCode": "// Import the events and fs modules here\n\n// Define the JobQueue class here",
+        "expectedOutcome": "A JobQueue class is defined with a constructor that initializes a 'jobs' property as an empty array.",
+        "successCriteria": [
+          "JobQueue class is defined with a constructor that sets this.jobs to an empty array."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started defining the class, but make sure to include the constructor and initialize this.jobs as an empty array.",
+        "feedbackWrong": "The class definition is missing or incorrect. Remember to use the 'class' keyword and define a constructor that sets this.jobs to [].",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "class",
+            "JobQueue",
+            "constructor",
+            "this.jobs",
+            "[]"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 10",
+        "title": "Initialize queue and event emitter",
+        "instruction": "Inside the JobQueue constructor, initialize an empty array property named 'queue' and create an EventEmitter instance stored in a property named 'emitter'.",
+        "hint": "Use 'this.queue = []' and 'this.emitter = new EventEmitter()' within the constructor.",
+        "analogousExample": "// Similar: initializing properties in a class constructor\nclass TaskManager {\n  constructor() {\n    this.tasks = [];\n    this.eventBus = new EventEmitter();\n  }\n}",
+        "seedCode": "// Import the events and fs modules here\n\n// Define the JobQueue class here\nclass JobQueue {\n  constructor() {\n    // Initialize queue and event emitter here\n  }\n}",
+        "expectedOutcome": "The JobQueue constructor now sets up internal data structures: an empty array for jobs and an EventEmitter for event-driven communication.",
+        "successCriteria": [
+          "The JobQueue class has a constructor that initializes 'this.queue' as an empty array and 'this.emitter' as a new EventEmitter instance."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure both properties are initialized in the constructor: 'this.queue = []' and 'this.emitter = new EventEmitter()'.",
+        "feedbackWrong": "The constructor should initialize both 'queue' as an empty array and 'emitter' as a new EventEmitter instance. Check your syntax and property names.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "this.queue = []",
+            "this.emitter = new EventEmitter()"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 10",
+        "title": "Add job to the queue",
+        "instruction": "Inside the JobQueue class, create a method named addJob that accepts jobData as a parameter and adds it to the queue array.",
+        "hint": "Define a method that pushes the jobData onto the queue array you initialized earlier.",
+        "analogousExample": "// Similar: a method that adds items to an array\nclass TaskList {\n  constructor() {\n    this.tasks = [];\n  }\n  addTask(task) {\n    this.tasks.push(task);\n  }\n}",
+        "seedCode": "// Import the events and fs modules here\n\n// Define the JobQueue class here\nclass JobQueue {\n  constructor() {\n    // Initialize queue and event emitter here\n    this.queue = [];\n    this.emitter = new EventEmitter();\n  }\n  \n  // Create the addJob method here\n}",
+        "expectedOutcome": "The JobQueue class will have an addJob method that can accept job data and add it to the internal queue array.",
+        "successCriteria": [
+          "The addJob method is defined inside the JobQueue class, accepts jobData as a parameter, and pushes it to this.queue."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your addJob method accepts jobData as a parameter and pushes it to this.queue.",
+        "feedbackWrong": "The addJob method should be defined inside the JobQueue class and add job data to the queue array.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "addJob",
+            "jobData",
+            "this.queue.push"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 10",
+        "title": "Handle job completion events",
+        "instruction": "In the JobQueue class, add event listeners inside the constructor to handle 'jobCompleted' and 'jobFailed' events. Log appropriate messages to the console for each event.",
+        "hint": "Use this.emitter.on() to listen for events. The listeners should be added in the constructor after initializing the emitter.",
+        "analogousExample": "// Example: Adding event listeners in a class constructor\nclass App {\n  constructor() {\n    this.emitter = new EventEmitter();\n    this.emitter.on('dataReady', () => console.log('Data is ready!'));\n    this.emitter.on('error', () => console.log('An error occurred.'));\n  }\n}",
+        "seedCode": "// Import the events and fs modules here\nconst EventEmitter = require('events');\nconst fs = require('fs');\n\n// Define the JobQueue class here\nclass JobQueue {\n  constructor() {\n    // Initialize queue and event emitter here\n    this.queue = [];\n    this.emitter = new EventEmitter();\n    // Add event listeners for job completion and failure here\n  }\n  \n  // Create the addJob method here\n  addJob(job) {\n    this.queue.push(job);\n    this.emitter.emit('jobAdded');\n  }\n  \n  // Create the processNextJob method here\n  processNextJob() {\n    if (this.queue.length === 0) return;\n    const job = this.queue.shift();\n    // Execute job with retry logic will go here\n  }\n  \n  // Create the executeJob method here\n}",
+        "expectedOutcome": "The JobQueue constructor now includes event listeners that log messages when jobs complete or fail.",
+        "successCriteria": [
+          "Event listeners for 'jobCompleted' and 'jobFailed' are added in the constructor using this.emitter.on(), and each logs a relevant console message."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you've added both event listeners (for 'jobCompleted' and 'jobFailed') and that each logs a message to the console.",
+        "feedbackWrong": "The event listeners are missing or incorrect. Remember to use this.emitter.on() in the constructor to listen for 'jobCompleted' and 'jobFailed' events, and log appropriate messages for each.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "this.emitter.on",
+            "'jobCompleted'",
+            "'jobFailed'",
+            "console.log"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 10",
+        "title": "Start the job processor",
+        "instruction": "Create a start method in the JobQueue class that continuously processes jobs from the queue by calling processNextJob.",
+        "hint": "Add a method named start that uses setInterval to repeatedly call processNextJob.",
+        "analogousExample": "// Similar: a method that runs a task continuously\nclass TaskRunner {\n  start() {\n    setInterval(() => {\n      this.runTask();\n    }, 1000);\n  }\n}",
+        "seedCode": "const EventEmitter = require('events');\nconst fs = require('fs');\n\nclass JobQueue {\n  constructor() {\n    this.queue = [];\n    this.emitter = new EventEmitter();\n  }\n  \n  addJob(job) {\n    this.queue.push(job);\n    this.emitter.emit('jobAdded');\n  }\n  \n  processNextJob() {\n    if (this.queue.length === 0) return;\n    const job = this.queue.shift();\n  }\n  \n  // Create the start method here\n}",
+        "expectedOutcome": "The JobQueue class will have a start method that continuously processes jobs.",
+        "successCriteria": [
+          "The start method is defined and uses setInterval to call processNextJob."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added a start method, but it doesn't yet continuously call processNextJob. Make sure to use setInterval.",
+        "feedbackWrong": "The start method is missing or doesn't continuously process jobs. Add a method named start that uses setInterval to call processNextJob.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "start",
+            "setInterval",
+            "processNextJob"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 10",
+        "title": "Create sample job functions",
+        "instruction": "Create two example job functions: one that simulates a successful job and one that simulates a failing job with retries.",
+        "hint": "Define two separate functions that return promises. The successful job can resolve immediately, while the failing job should reject to simulate errors.",
+        "analogousExample": "// Example job functions\nfunction successfulJob() {\n  return new Promise((resolve) => {\n    resolve('Job completed successfully');\n  });\n}\n\nfunction failingJob() {\n  return new Promise((_, reject) => {\n    reject(new Error('Job failed'));\n  });\n}",
+        "seedCode": "const EventEmitter = require('events');\nconst fs = require('fs');\n\nclass JobQueue {\n  constructor() {\n    this.queue = [];\n    this.emitter = new EventEmitter();\n  }\n  \n  addJob(job) {\n    this.queue.push(job);\n    this.emitter.emit('jobAdded');\n  }\n  \n  processNextJob() {\n    if (this.queue.length === 0) return;\n    const job = this.queue.shift();\n  }\n  \n  // Create the start method here\n}\n\n// Create your sample job functions below",
+        "expectedOutcome": "Two job functions are defined: one that resolves successfully and one that rejects to simulate failure.",
+        "successCriteria": [
+          "The successfulJob function returns a promise that resolves, and the failingJob function returns a promise that rejects."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've created one job function, but need both successful and failing examples.",
+        "feedbackWrong": "The job functions are missing or don't return promises. Both functions should return promises that resolve or reject.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "successfulJob",
+            "failingJob",
+            "Promise",
+            "resolve",
+            "reject"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 10",
+        "title": "Initialize and configure job queue",
+        "instruction": "Create an instance of JobQueue, configure it with a maximum retry limit of 3, and add event listeners for 'jobCompleted' and 'jobFailed' events.",
+        "hint": "Instantiate the JobQueue class, set a retryLimit property on it, and use the emitter.on() method to add listeners that log appropriate messages.",
+        "analogousExample": "// Example: creating and configuring an instance\nconst myQueue = new JobQueue();\nmyQueue.maxRetries = 3;\nmyQueue.emitter.on('jobDone', (job) => {\n  console.log(`Job ${job.id} completed`);\n});",
+        "seedCode": "const EventEmitter = require('events');\nconst fs = require('fs');\n\nclass JobQueue {\n  constructor() {\n    this.queue = [];\n    this.emitter = new EventEmitter();\n  }\n  \n  addJob(job) {\n    this.queue.push(job);\n    this.emitter.emit('jobAdded');\n  }\n  \n  processNextJob() {\n    if (this.queue.length === 0) return;\n    const job = this.queue.shift();\n  }\n  \n  // Create the start method here\n}\n\n// Create your sample job functions below\n\n// Initialize and configure the job queue here",
+        "expectedOutcome": "A JobQueue instance is created with retry configuration and event listeners that log job status.",
+        "successCriteria": [
+          "JobQueue instance is created with retryLimit set to 3, and event listeners for 'jobCompleted' and 'jobFailed' are added with appropriate logging."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure you've created the JobQueue instance, set retryLimit to 3, and added both event listeners.",
+        "feedbackWrong": "Let's review: create a JobQueue instance, set its retryLimit property to 3, and add event listeners for 'jobCompleted' and 'jobFailed' that log messages.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "new JobQueue()",
+            "retryLimit",
+            "emitter.on",
+            "'jobCompleted'",
+            "'jobFailed'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 10",
+        "title": "Add jobs to the queue",
+        "instruction": "Add three sample jobs to the queue using the addJob method you created earlier.",
+        "hint": "Call the addJob method on your job queue instance with different job objects.",
+        "analogousExample": "// Adding items to a list\nconst tasks = [];\ntasks.push('Task 1');\ntasks.push('Task 2');\ntasks.push('Task 3');",
+        "seedCode": "const EventEmitter = require('events');\nconst fs = require('fs');\n\nclass JobQueue {\n  constructor() {\n    this.queue = [];\n    this.emitter = new EventEmitter();\n  }\n  \n  addJob(job) {\n    this.queue.push(job);\n    this.emitter.emit('jobAdded');\n  }\n  \n  processNextJob() {\n    if (this.queue.length === 0) return;\n    const job = this.queue.shift();\n  }\n  \n  // Create the start method here\n}\n\n// Create your sample job functions below\n\n// Initialize and configure the job queue here\n\n// Add three sample jobs to the queue",
+        "expectedOutcome": "The queue should contain three different job objects ready for processing.",
+        "successCriteria": [
+          "Three calls to addJob with different job objects are added to the code."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added some jobs, but make sure you add exactly three different job objects to properly test the queue functionality.",
+        "feedbackWrong": "The jobs weren't added correctly. Remember to call the addJob method three times with different job objects.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "addJob",
+            "addJob",
+            "addJob"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 10",
+        "title": "Start processing jobs",
+        "instruction": "Call the start method on your job queue instance to begin processing the queued jobs.",
+        "hint": "After initializing your job queue and adding jobs, you need to call the start method to trigger the processing.",
+        "analogousExample": "// Starting a process\nconst queue = new JobQueue();\nqueue.addJob({ type: 'email', data: { to: 'user@example.com' } });\nqueue.start();",
+        "seedCode": "const EventEmitter = require('events');\nconst fs = require('fs');\n\nclass JobQueue {\n  constructor() {\n    this.queue = [];\n    this.emitter = new EventEmitter();\n  }\n  \n  addJob(job) {\n    this.queue.push(job);\n    this.emitter.emit('jobAdded');\n  }\n  \n  processNextJob() {\n    if (this.queue.length === 0) return;\n    const job = this.queue.shift();\n  }\n  \n  // Create the start method here\n}\n\n// Create your sample job functions below\n\n// Initialize and configure the job queue here\n\n// Add three sample jobs to the queue\n\n// Call the start method here",
+        "expectedOutcome": "The job queue will begin processing the queued jobs, executing them with retry logic and emitting completion events.",
+        "successCriteria": [
+          "The start method is called on the job queue instance after jobs have been added."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're calling the start method on your job queue instance after adding jobs.",
+        "feedbackWrong": "The job queue isn't starting. You need to call the start method on your job queue instance to begin processing.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "start()",
+            "queue.start"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import required Node.js modules",
+        "id": "step1"
+      },
+      {
+        "label": "Create JobQueue class definition",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize queue and event emitter",
+        "id": "step3"
+      },
+      {
+        "label": "Add job to the queue",
+        "id": "step4"
+      },
+      {
+        "label": "Handle job completion events",
+        "id": "step5"
+      },
+      {
+        "label": "Start the job processor",
+        "id": "step6"
+      },
+      {
+        "label": "Create sample job functions",
+        "id": "step7"
+      },
+      {
+        "label": "Initialize and configure job queue",
+        "id": "step8"
+      },
+      {
+        "label": "Add jobs to the queue",
+        "id": "step9"
+      },
+      {
+        "label": "Start processing jobs",
+        "id": "step10"
+      }
+    ]
+  },
+  "source": "content"
+}

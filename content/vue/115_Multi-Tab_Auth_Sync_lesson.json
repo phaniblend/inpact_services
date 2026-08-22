@@ -1,0 +1,360 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-vue-115",
+    "track": "vue",
+    "lessonNum": 115,
+    "title": "Multi-Tab Auth Sync",
+    "shortName": "P115",
+    "intro": {
+      "tag": "LESSON #115",
+      "title": "Multi-Tab Auth Sync",
+      "body": "In this lesson, you will build a Vue application that keeps a user's login status synchronized across multiple browser tabs. You will learn how to use the browser's localStorage API to share authentication state between tabs. The core concept involves listening for storage events to detect changes made in other tabs and updating your app's reactive state accordingly. You'll implement this by creating a Vue composable to manage the auth state and a component to display the login status. This will help you understand real-time state synchronization in a multi-tab environment using Vue's reactivity system.",
+      "usecase": "Multi-tab auth sync is essential for modern web applications where users frequently open multiple tabs. In banking dashboards, e-commerce sites, or collaborative tools like Google Workspace, logging out in one tab should immediately reflect across all open tabs to prevent security risks. This pattern ensures consistent authentication state in applications with real-time features like chat platforms or project management tools where session management is critical. Developers implement this to provide secure, seamless user experiences when switching between different views of the same application."
+    },
+    "objectives": [
+      "Implement a Vue composable to manage authentication state across browser tabs",
+      "Configure event listeners to detect authentication changes in other tabs",
+      "Initialize reactive authentication state that persists across tab sessions",
+      "Bind authentication state updates to localStorage synchronization",
+      "Construct a mechanism to broadcast authentication changes to other tabs",
+      "Integrate the multi-tab auth sync system into a Vue component",
+      "Manipulate authentication state and observe synchronized updates across tabs"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 10",
+        "title": "Import Vue and required composition APIs (ref, onMounted, onUnmounted)",
+        "instruction": "Import Vue, ref, onMounted, and onUnmounted from 'vue'.",
+        "hint": "Use the import statement to bring in the necessary Vue APIs for reactivity and lifecycle management.",
+        "analogousExample": "// Example: importing Vue composition APIs\nimport { ref, onMounted } from 'vue'",
+        "seedCode": "// Import Vue, ref, onMounted, and onUnmounted from 'vue'",
+        "expectedOutcome": "The Vue framework and required composition APIs are imported and ready for use in the component.",
+        "successCriteria": [
+          "Vue, ref, onMounted, and onUnmounted are imported from 'vue'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure you're importing all four items: Vue, ref, onMounted, and onUnmounted from 'vue'.",
+        "feedbackWrong": "Check your import statement. You need to import Vue, ref, onMounted, and onUnmounted from 'vue'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "vue",
+            "ref",
+            "onMounted",
+            "onUnmounted"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 10",
+        "title": "Create the main Vue component",
+        "instruction": "Create and export a default Vue component named 'AuthSyncApp' with a setup function.",
+        "hint": "Use the Vue 3 Composition API syntax with a setup function inside the component definition.",
+        "analogousExample": "// Example Vue component structure\nexport default {\n  name: 'ExampleComponent',\n  setup() {\n    // Component logic here\n    return {\n      // Return reactive data and methods\n    }\n  }\n}",
+        "seedCode": "// Import Vue, ref, onMounted, and onUnmounted from 'vue'\n\n// Create and export a default Vue component named 'AuthSyncApp' with a setup function",
+        "expectedOutcome": "A Vue component named 'AuthSyncApp' is defined and exported as default with a setup function.",
+        "successCriteria": [
+          "The component is named 'AuthSyncApp', exported as default, and contains a setup function."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure the component is named 'AuthSyncApp', exported as default, and has a setup function.",
+        "feedbackWrong": "The component structure isn't quite right. Check that you've named it 'AuthSyncApp', exported it as default, and included a setup function.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "AuthSyncApp",
+            "export default",
+            "setup()"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 10",
+        "title": "Initialize reactive authentication state",
+        "instruction": "Inside the setup function of your AuthSyncApp component, use the ref function to create a reactive state variable named isAuthenticated and initialize it to false.",
+        "hint": "Remember that ref creates reactive references. You'll need to call ref(false) and assign it to a variable.",
+        "analogousExample": "// Creating reactive state in Vue\nconst count = ref(0);\nconst isVisible = ref(false);",
+        "seedCode": "// Import Vue, ref, onMounted, and onUnmounted from 'vue'\n\n// Create and export a default Vue component named 'AuthSyncApp' with a setup function\nexport default {\n  name: 'AuthSyncApp',\n  setup() {\n    // Initialize isAuthenticated state here\n    \n    return {};\n  }\n};",
+        "expectedOutcome": "You'll have a reactive isAuthenticated state variable that tracks whether the user is authenticated, starting with false.",
+        "successCriteria": [
+          "The setup function contains a const isAuthenticated = ref(false) declaration."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're using ref() to create the reactive state and initializing it to false.",
+        "feedbackWrong": "Let's focus on creating the reactive state. You need to use ref(false) to create a reactive variable named isAuthenticated inside the setup function.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "isAuthenticated",
+            "ref",
+            "false"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 10",
+        "title": "Create storage event handler for cross-tab sync",
+        "instruction": "Inside the setup function, define a function named handleStorageChange that takes an event parameter and updates the isAuthenticated ref when the localStorage 'auth' key changes.",
+        "hint": "The function should check if event.key equals 'auth' and update isAuthenticated.value accordingly.",
+        "analogousExample": "// Example: storage event handler\nfunction handleStorageChange(event) {\n  if (event.key === 'theme') {\n    document.body.className = event.newValue;\n  }\n}",
+        "seedCode": "// Import Vue, ref, onMounted, and onUnmounted from 'vue'\n\n// Create and export a default Vue component named 'AuthSyncApp' with a setup function\nexport default {\n  name: 'AuthSyncApp',\n  setup() {\n    // Initialize isAuthenticated state here\n    const isAuthenticated = ref(false);\n    \n    // Define handleStorageChange function here\n    \n    return {};\n  }\n};",
+        "expectedOutcome": "You will have a handleStorageChange function that responds to storage events and updates authentication state.",
+        "successCriteria": [
+          "A handleStorageChange function is defined inside setup, checks event.key, and updates isAuthenticated.value."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've defined a function, but make sure it checks event.key and updates isAuthenticated.value.",
+        "feedbackWrong": "The handleStorageChange function is missing or doesn't properly handle storage events.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "handleStorageChange",
+            "function",
+            "event",
+            "key",
+            "auth",
+            "isAuthenticated.value"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 10",
+        "title": "Set up event listener for storage events",
+        "instruction": "Inside the setup function, use the imported onMounted hook to add an event listener for 'storage' events on the window object, calling your handleStorageChange function. Also use onUnmounted to remove the same listener when the component unmounts.",
+        "hint": "Remember to pass the same function reference to both addEventListener and removeEventListener.",
+        "analogousExample": "// Example of lifecycle hooks with event listeners\nonMounted(() => {\n  window.addEventListener('resize', handleResize);\n});\nonUnmounted(() => {\n  window.removeEventListener('resize', handleResize);\n});",
+        "seedCode": "// Import Vue, ref, onMounted, and onUnmounted from 'vue'\n\n// Create and export a default Vue component named 'AuthSyncApp' with a setup function\nexport default {\n  name: 'AuthSyncApp',\n  setup() {\n    // Initialize isAuthenticated state here\n    const isAuthenticated = ref(false);\n    \n    // Define handleStorageChange function here\n    \n    // Add onMounted and onUnmounted hooks here to set up and clean up the storage event listener\n    \n    return {};\n  }\n};",
+        "expectedOutcome": "The component will now listen for storage events when mounted and stop listening when unmounted.",
+        "successCriteria": [
+          "onMounted and onUnmounted hooks are used to add and remove a 'storage' event listener on window, calling handleStorageChange."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're using both onMounted and onUnmounted, and that the event type is 'storage'.",
+        "feedbackWrong": "The storage event listener isn't properly set up. Check that you're using onMounted and onUnmounted with window.addEventListener and window.removeEventListener.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "onMounted",
+            "addEventListener",
+            "'storage'",
+            "onUnmounted",
+            "removeEventListener"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 10",
+        "title": "Create login handler function",
+        "instruction": "Inside the setup function, create a function named 'login' that sets isAuthenticated to true and stores the authentication state in localStorage.",
+        "hint": "Define a function that updates the reactive state and persists it to localStorage with a key like 'authState'.",
+        "analogousExample": "// Example: a function that updates state and localStorage\nfunction login() {\n  isAuthenticated.value = true;\n  localStorage.setItem('authState', 'true');\n}",
+        "seedCode": "// Import Vue, ref, onMounted, and onUnmounted from 'vue'\n\n// Create and export a default Vue component named 'AuthSyncApp' with a setup function\nexport default {\n  name: 'AuthSyncApp',\n  setup() {\n    // Initialize isAuthenticated state here\n    const isAuthenticated = ref(false);\n    \n    // Define handleStorageChange function here\n    \n    // Add onMounted and onUnmounted hooks here to set up and clean up the storage event listener\n    \n    // Create login handler function here\n    \n    return {};\n  }\n};",
+        "expectedOutcome": "The login function will update the authentication state and persist it to localStorage, enabling cross-tab synchronization.",
+        "successCriteria": [
+          "A function named 'login' is defined that sets isAuthenticated.value to true and calls localStorage.setItem with appropriate key/value."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure your function sets isAuthenticated to true and stores the value in localStorage.",
+        "feedbackWrong": "The login function is missing or doesn't properly update state and localStorage.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "login",
+            "isAuthenticated.value = true",
+            "localStorage.setItem"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 10",
+        "title": "Create logout handler function",
+        "instruction": "Inside your component's setup function, create a logout handler function named 'logout' that sets isAuthenticated to false and updates localStorage with the new authentication state.",
+        "hint": "The function should update the reactive state and also persist the change to localStorage so other tabs can sync.",
+        "analogousExample": "// Example: a logout handler\nfunction logout() {\n  isAuthenticated.value = false;\n  localStorage.setItem('auth', 'false');\n}",
+        "seedCode": "// Import Vue, ref, onMounted, and onUnmounted from 'vue'\n\n// Create and export a default Vue component named 'AuthSyncApp' with a setup function\nexport default {\n  name: 'AuthSyncApp',\n  setup() {\n    // Initialize isAuthenticated state here\n    const isAuthenticated = ref(false);\n    \n    // Define handleStorageChange function here\n    \n    // Add onMounted and onUnmounted hooks here to set up and clean up the storage event listener\n    \n    // Create login handler function here\n    \n    // Create logout handler function here\n    \n    return {};\n  }\n};",
+        "expectedOutcome": "You'll have a logout function that updates both local state and localStorage, enabling cross-tab synchronization when logging out.",
+        "successCriteria": [
+          "A function named 'logout' is defined that sets isAuthenticated to false and updates localStorage with the key 'auth' and value 'false'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've created a logout function, but make sure it both updates isAuthenticated.value and sets localStorage with key 'auth' and value 'false'.",
+        "feedbackWrong": "The logout handler is missing or doesn't properly update both the reactive state and localStorage.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "logout",
+            "isAuthenticated.value",
+            "false",
+            "localStorage.setItem",
+            "'auth'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 10",
+        "title": "Add main container and authentication status display",
+        "instruction": "In the return statement of your setup function, add a <div> container with a class of 'auth-app' that contains a <p> element displaying the current authentication status. Use the isAuthenticated ref value to show either 'Authenticated' or 'Not authenticated'.",
+        "hint": "Remember to use the isAuthenticated ref value inside the template. You can use a ternary operator or a computed property to determine the displayed text.",
+        "analogousExample": "// Example: returning a container with dynamic content\nreturn {\n  isAuthenticated\n};\n// In template:\n// <div class=\"auth-app\">\n//   <p>{{ isAuthenticated ? 'Authenticated' : 'Not authenticated' }}</p>\n// </div>",
+        "seedCode": "// Import Vue, ref, onMounted, and onUnmounted from 'vue'\nimport { ref, onMounted, onUnmounted } from 'vue';\n\n// Create and export a default Vue component named 'AuthSyncApp' with a setup function\nexport default {\n  name: 'AuthSyncApp',\n  setup() {\n    // Initialize isAuthenticated state here\n    const isAuthenticated = ref(false);\n    \n    // Define handleStorageChange function here\n    const handleStorageChange = (event) => {\n      if (event.key === 'auth' && event.newValue) {\n        isAuthenticated.value = JSON.parse(event.newValue);\n      }\n    };\n    \n    // Add onMounted and onUnmounted hooks here to set up and clean up the storage event listener\n    onMounted(() => {\n      window.addEventListener('storage', handleStorageChange);\n    });\n    \n    onUnmounted(() => {\n      window.removeEventListener('storage', handleStorageChange);\n    });\n    \n    // Create login handler function here\n    const login = () => {\n      isAuthenticated.value = true;\n      localStorage.setItem('auth', JSON.stringify(true));\n    };\n    \n    // Create logout handler function here\n    const logout = () => {\n      isAuthenticated.value = false;\n      localStorage.setItem('auth', JSON.stringify(false));\n    };\n    \n    return {\n      isAuthenticated,\n      login,\n      logout\n    };\n  }\n};",
+        "expectedOutcome": "The component returns a div with class 'auth-app' containing a paragraph that dynamically displays the authentication status based on isAuthenticated.",
+        "successCriteria": [
+          "The return statement includes a div with class 'auth-app' and a paragraph that shows 'Authenticated' when isAuthenticated is true and 'Not authenticated' when false."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added some structure, but make sure to include both the div with class 'auth-app' and the paragraph that dynamically displays the authentication status based on isAuthenticated.",
+        "feedbackWrong": "The return statement doesn't yet include the required container and authentication status display. Review the instruction to add a div with class 'auth-app' and a paragraph showing the authentication status.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<div",
+            "class=\"auth-app\"",
+            "<p",
+            "isAuthenticated",
+            "Authenticated",
+            "Not authenticated"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 10",
+        "title": "Add login button and wire it to the login handler",
+        "instruction": "In the template section of your component, add a button element with the text 'Login' and bind its click event to the login handler using @click.",
+        "hint": "Use the @click directive to call the login function when the button is clicked.",
+        "analogousExample": "// Example: button with click handler\n<button @click=\"handleClick\">Click me</button>",
+        "seedCode": "import { ref, onMounted, onUnmounted } from 'vue';\n\nexport default {\n  name: 'AuthSyncApp',\n  setup() {\n    const isAuthenticated = ref(false);\n    \n    const handleStorageChange = (event) => {\n      if (event.key === 'auth' && event.newValue) {\n        isAuthenticated.value = JSON.parse(event.newValue);\n      }\n    };\n    \n    onMounted(() => {\n      window.addEventListener('storage', handleStorageChange);\n    });\n    \n    onUnmounted(() => {\n      window.removeEventListener('storage', handleStorageChange);\n    });\n    \n    const login = () => {\n      isAuthenticated.value = true;\n      localStorage.setItem('auth', JSON.stringify(true));\n    };\n    \n    const logout = () => {\n      isAuthenticated.value = false;\n      localStorage.setItem('auth', JSON.stringify(false));\n    };\n    \n    return {\n      isAuthenticated,\n      login,\n      logout\n    };\n  },\n  template: `\n    <div>\n      <p>Authentication status: {{ isAuthenticated ? 'Logged in' : 'Logged out' }}</p>\n      <!-- Add login button here -->\n    </div>\n  `\n};",
+        "expectedOutcome": "A 'Login' button appears in the UI that, when clicked, triggers the login function to update authentication state and sync across tabs.",
+        "successCriteria": [
+          "The template contains a button element with text 'Login' and an @click binding to the login function."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You added a button, but make sure it has the text 'Login' and uses @click=\"login\".",
+        "feedbackWrong": "The login button is missing or not properly connected to the login handler.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<button",
+            "@click=\"login\"",
+            "Login"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 10",
+        "title": "Add logout button and wire it to the logout handler",
+        "instruction": "Add a logout button next to the login button in your template, binding its click event to the logout handler.",
+        "hint": "Use the @click directive to call the logout function when the button is clicked.",
+        "analogousExample": "<!-- Similar: button with click handler -->\n<button @click=\"logout\">Logout</button>",
+        "seedCode": "import { ref, onMounted, onUnmounted } from 'vue';\n\nexport default {\n  name: 'AuthSyncApp',\n  setup() {\n    const isAuthenticated = ref(false);\n    \n    const handleStorageChange = (event) => {\n      if (event.key === 'auth' && event.newValue) {\n        isAuthenticated.value = JSON.parse(event.newValue);\n      }\n    };\n    \n    onMounted(() => {\n      window.addEventListener('storage', handleStorageChange);\n    });\n    \n    onUnmounted(() => {\n      window.removeEventListener('storage', handleStorageChange);\n    });\n    \n    const login = () => {\n      isAuthenticated.value = true;\n      localStorage.setItem('auth', JSON.stringify(true));\n    };\n    \n    const logout = () => {\n      isAuthenticated.value = false;\n      localStorage.setItem('auth', JSON.stringify(false));\n    };\n    \n    return {\n      isAuthenticated,\n      login,\n      logout\n    };\n  },\n  template: `\n    <div>\n      <p>Authentication status: {{ isAuthenticated ? 'Logged in' : 'Logged out' }}</p>\n      <button @click=\"login\">Login</button>\n      <!-- Add logout button here -->\n    </div>\n  `\n};",
+        "expectedOutcome": "A logout button appears next to the login button, and clicking it triggers the logout function.",
+        "successCriteria": [
+          "The template includes a logout button with @click=\"logout\" binding."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You added a button, but it might not be correctly bound to the logout handler. Check the @click directive.",
+        "feedbackWrong": "The logout button is missing or not properly connected to the logout function.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "@click=\"logout\"",
+            "button",
+            "logout"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import Vue and required composition APIs (ref, onMounted, onUnmounted)",
+        "id": "step1"
+      },
+      {
+        "label": "Create the main Vue component",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize reactive authentication state",
+        "id": "step3"
+      },
+      {
+        "label": "Create storage event handler for cross-tab sync",
+        "id": "step4"
+      },
+      {
+        "label": "Set up event listener for storage events",
+        "id": "step5"
+      },
+      {
+        "label": "Create login handler function",
+        "id": "step6"
+      },
+      {
+        "label": "Create logout handler function",
+        "id": "step7"
+      },
+      {
+        "label": "Add main container and authentication status display",
+        "id": "step8"
+      },
+      {
+        "label": "Add login button and wire it to the login handler",
+        "id": "step9"
+      },
+      {
+        "label": "Add logout button and wire it to the logout handler",
+        "id": "step10"
+      }
+    ]
+  },
+  "source": "content"
+}

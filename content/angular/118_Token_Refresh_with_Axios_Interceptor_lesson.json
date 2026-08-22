@@ -1,0 +1,393 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-angular-118",
+    "track": "angular",
+    "lessonNum": 118,
+    "title": "Token Refresh with Axios Interceptor",
+    "shortName": "P118",
+    "intro": {
+      "tag": "LESSON #118",
+      "title": "Token Refresh with Axios Interceptor",
+      "body": "In this lesson, you will build a secure Angular application that automatically refreshes expired authentication tokens using Axios interceptors. You will learn the core concept of interceptors, which are functions that can modify HTTP requests and responses globally before they are sent or handled. The main technologies involved are Angular for the framework, TypeScript for type-safe code, and the Axios library for making HTTP requests. By the end, you will have a working interceptor that detects 401 errors, requests a new token, and retries the original request seamlessly.",
+      "usecase": "Token refresh interceptors are essential in any Angular application that requires persistent user authentication, such as enterprise dashboards, e-commerce platforms, or banking portals. When users interact with data tables, submit forms, or navigate between protected routes, their access tokens expire silently in the background. This pattern ensures uninterrupted sessions in admin panels where users filter reports or edit records for extended periods. Without automatic token refresh, users would face disruptive logout experiences during critical workflows like submitting multi-step forms or analyzing real-time analytics."
+    },
+    "objectives": [
+      "Implement an Angular service that configures Axios with a base URL and default headers",
+      "Construct an Axios interceptor to attach an authorization token to outgoing requests",
+      "Configure a second interceptor to detect 401 Unauthorized responses and trigger token refresh",
+      "Integrate a token refresh mechanism that makes a POST request to obtain new credentials",
+      "Apply retry logic to re-attempt the original failed request after successful token refresh",
+      "Initialize the interceptors when the Angular application starts using an APP_INITIALIZER",
+      "Manipulate HTTP request and response objects within the interceptor chain to control authentication flow"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 11",
+        "title": "Import required Angular modules and Axios",
+        "instruction": "In your app.module.ts file, import HttpClientModule from '@angular/common/http'. In your auth.service.ts file, import HttpClient, Injectable from '@angular/core', and axios from 'axios'.",
+        "hint": "You'll need to create the auth.service.ts file if it doesn't exist yet. Use the correct import syntax for each package.",
+        "analogousExample": "// Importing modules and services in Angular\nimport { HttpClientModule } from '@angular/common/http';\nimport { Injectable } from '@angular/core';\nimport axios from 'axios';",
+        "seedCode": "// app.module.ts\n\n// auth.service.ts\n",
+        "expectedOutcome": "The necessary Angular HTTP modules and Axios library are imported for handling HTTP requests and creating interceptors.",
+        "successCriteria": [
+          "HttpClientModule is imported in app.module.ts. HttpClient, Injectable, and axios are imported in auth.service.ts."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've imported some required items, but check if you're missing HttpClientModule, HttpClient, Injectable, or axios. Make sure each import statement uses the correct syntax and source.",
+        "feedbackWrong": "The imports don't match what's needed. Review the instruction: HttpClientModule should be imported in app.module.ts, while HttpClient, Injectable, and axios should be imported in auth.service.ts.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "HttpClientModule",
+            "HttpClient",
+            "Injectable",
+            "axios"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 11",
+        "title": "Create an authentication service",
+        "instruction": "Create an AuthService class with the @Injectable decorator in auth.service.ts.",
+        "hint": "Use the @Injectable decorator to make the service available for dependency injection.",
+        "analogousExample": "// Example: a basic service\n@Injectable({\n  providedIn: 'root'\n})\nexport class ExampleService {\n  constructor() {}\n}",
+        "seedCode": "// app.module.ts\n\n// auth.service.ts\n\n// Add your AuthService class here",
+        "expectedOutcome": "The AuthService class is created with the @Injectable decorator.",
+        "successCriteria": [
+          "AuthService class exists with @Injectable decorator and is exported."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've created a service, but make sure it has the @Injectable decorator and is exported.",
+        "feedbackWrong": "The AuthService class with @Injectable decorator is not found. Try creating the service class with the proper decorator.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "@Injectable",
+            "AuthService",
+            "export",
+            "class"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 11",
+        "title": "Initialize token state in the service",
+        "instruction": "Inside the AuthService class, add three private properties: accessToken (string), refreshToken (string), and tokenExpiration (Date). Initialize them with empty/placeholder values.",
+        "hint": "Use TypeScript syntax: private propertyName: type = initialValue; For strings, use empty string ''; for Date, use null or a placeholder.",
+        "analogousExample": "// Example: properties in a service class\nclass UserService {\n  private username: string = '';\n  private lastLogin: Date = new Date();\n  private isActive: boolean = false;\n}",
+        "seedCode": "// auth.service.ts\n\nimport { Injectable } from '@angular/core';\n\n@Injectable({\n  providedIn: 'root'\n})\nexport class AuthService {\n  // Add your AuthService class here\n  // Add token properties here\n}",
+        "expectedOutcome": "The AuthService will have defined properties to store token data, ready for use in token refresh logic.",
+        "successCriteria": [
+          "AuthService contains three private properties: accessToken (string), refreshToken (string), and tokenExpiration (Date), each initialized."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added some token properties, but not all three required ones. Make sure to add accessToken (string), refreshToken (string), and tokenExpiration (Date) properties, all initialized.",
+        "feedbackWrong": "The AuthService doesn't have the required token properties. Add three private properties: accessToken (string), refreshToken (string), and tokenExpiration (Date), each with initial values.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "accessToken",
+            "refreshToken",
+            "tokenExpiration",
+            "private",
+            "string",
+            "Date"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 11",
+        "title": "Create login method in AuthService",
+        "instruction": "Inside the AuthService class, add a login method that makes an HTTP POST request to obtain initial tokens. The method should take credentials as parameters and return an Observable.",
+        "hint": "Use Angular's HttpClient to make a POST request. The method should accept username and password parameters and return this.http.post(...).",
+        "analogousExample": "// Example: A method that makes an HTTP POST request\nlogin(username: string, password: string): Observable<any> {\n  return this.http.post('/api/login', { username, password });\n}",
+        "seedCode": "import { Injectable } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\nimport { Observable } from 'rxjs';\n\n@Injectable({\n  providedIn: 'root'\n})\nexport class AuthService {\n  constructor(private http: HttpClient) {}\n\n  // Add login method here\n}",
+        "expectedOutcome": "The AuthService will have a login method that can be called to authenticate users and retrieve tokens.",
+        "successCriteria": [
+          "AuthService contains a login method that accepts username and password parameters, makes an HTTP POST request, and returns an Observable."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added a method, but make sure it accepts credentials parameters, uses HttpClient for POST request, and returns an Observable.",
+        "feedbackWrong": "The login method is missing or doesn't match the required structure. Review the example and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "login",
+            "username",
+            "password",
+            "http.post",
+            "Observable"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 11",
+        "title": "Create token refresh method in AuthService",
+        "instruction": "Add a refreshToken method to the AuthService that returns an Observable<string> and contains a placeholder for refresh logic.",
+        "hint": "The method should be public and return an Observable of type string. Inside the method, you can return an empty observable for now.",
+        "analogousExample": "// Example: a method returning Observable\nrefreshToken(): Observable<string> {\n  return this.http.post<string>('/refresh', {});\n}",
+        "seedCode": "import { Injectable } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\nimport { Observable } from 'rxjs';\n\n@Injectable({\n  providedIn: 'root'\n})\nexport class AuthService {\n  constructor(private http: HttpClient) {}\n\n  // Add login method here\n\n  // Add refreshToken method here\n}",
+        "expectedOutcome": "The AuthService will have a refreshToken method that returns Observable<string>.",
+        "successCriteria": [
+          "The refreshToken method is defined with return type Observable<string> and is placed inside the AuthService class."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You added a method, but check the return type or method signature. It should be refreshToken(): Observable<string>.",
+        "feedbackWrong": "The refreshToken method is missing or incorrectly defined. Ensure it's a public method inside AuthService that returns Observable<string>.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "refreshToken",
+            "Observable<string>",
+            "AuthService"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 11",
+        "title": "Set up Axios instance with base configuration",
+        "instruction": "Create a new file named 'axios-config.ts' in the same directory as your service and export a configured Axios instance with a base URL and default headers.",
+        "hint": "Import Axios, create an instance with axios.create(), and set baseURL and headers properties. Export this instance as a constant.",
+        "analogousExample": "// Example: creating a configured Axios instance\nimport axios from 'axios';\n\nconst apiClient = axios.create({\n  baseURL: 'https://api.example.com',\n  headers: {\n    'Content-Type': 'application/json'\n  }\n});\n\nexport default apiClient;",
+        "seedCode": "import { Injectable } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\nimport { Observable } from 'rxjs';\n\n@Injectable({\n  providedIn: 'root'\n})\nexport class AuthService {\n  constructor(private http: HttpClient) {}\n\n  // Add login method here\n\n  // Add refreshToken method here\n}",
+        "expectedOutcome": "You'll have a separate Axios configuration file that exports a pre-configured Axios instance ready for API requests.",
+        "successCriteria": [
+          "A new 'axios-config.ts' file exists with a configured Axios instance that has baseURL and headers set, and the instance is exported."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your Axios instance has both baseURL and headers configured, and that it's properly exported.",
+        "feedbackWrong": "The Axios instance configuration is missing or incomplete. Remember to create a new file, import Axios, configure it with baseURL and headers, and export the instance.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "axios.create",
+            "baseURL",
+            "headers",
+            "export"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 11",
+        "title": "Create request interceptor to add authorization header",
+        "instruction": "In the AuthService, add an Axios request interceptor that injects the access token into the Authorization header of outgoing requests.",
+        "hint": "Use axiosInstance.interceptors.request.use() to add an interceptor. The interceptor function should check if a token exists and add it to the request headers.",
+        "analogousExample": "// Example: Adding a request interceptor\naxiosInstance.interceptors.request.use(\n  (config) => {\n    const token = localStorage.getItem('token');\n    if (token) {\n      config.headers.Authorization = `Bearer ${token}`;\n    }\n    return config;\n  },\n  (error) => Promise.reject(error)\n);",
+        "seedCode": "import { Injectable } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\nimport { Observable } from 'rxjs';\nimport axios from 'axios';\n\n@Injectable({\n  providedIn: 'root'\n})\nexport class AuthService {\n  private accessToken: string | null = null;\n  private refreshToken: string | null = null;\n  private axiosInstance = axios.create({\n    baseURL: 'https://api.example.com'\n  });\n\n  constructor(private http: HttpClient) {}\n\n  login(credentials: { username: string; password: string }): Observable<any> {\n    return this.http.post('https://api.example.com/login', credentials);\n  }\n\n  refreshToken(): Observable<any> {\n    return this.http.post('https://api.example.com/refresh', {\n      refreshToken: this.refreshToken\n    });\n  }\n\n  // Add request interceptor here\n}",
+        "expectedOutcome": "The AuthService now has a request interceptor that automatically adds the Authorization header with the access token to all outgoing requests made through the axiosInstance.",
+        "successCriteria": [
+          "The axiosInstance has a request interceptor that checks for an access token and adds it to the request headers as 'Bearer {token}'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added an interceptor, but make sure it properly checks for the token and adds it to the Authorization header with the 'Bearer ' prefix.",
+        "feedbackWrong": "The request interceptor is missing or incomplete. Remember to use axiosInstance.interceptors.request.use() to add the interceptor function.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "interceptors.request.use",
+            "config.headers.Authorization",
+            "Bearer",
+            "accessToken"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 11",
+        "title": "Create response interceptor to handle token refresh",
+        "instruction": "In your AuthService, add an Axios response interceptor that checks for 401 errors and triggers the token refresh method.",
+        "hint": "Use the axiosInstance.interceptors.response.use() method. The interceptor should check if the response status is 401, then call refreshToken() and retry the original request.",
+        "analogousExample": "// Example response interceptor\naxiosInstance.interceptors.response.use(\n  (response) => response,\n  async (error) => {\n    if (error.response?.status === 401) {\n      // Handle token refresh logic\n    }\n    return Promise.reject(error);\n  }\n);",
+        "seedCode": "import { Injectable } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\nimport { Observable } from 'rxjs';\nimport axios from 'axios';\n\n@Injectable({\n  providedIn: 'root'\n})\nexport class AuthService {\n  private accessToken: string | null = null;\n  private refreshToken: string | null = null;\n  private axiosInstance = axios.create({\n    baseURL: 'https://api.example.com'\n  });\n\n  constructor(private http: HttpClient) {}\n\n  login(credentials: { username: string; password: string }): Observable<any> {\n    return this.http.post('https://api.example.com/login', credentials);\n  }\n\n  refreshToken(): Observable<any> {\n    return this.http.post('https://api.example.com/refresh', {\n      refreshToken: this.refreshToken\n    });\n  }\n\n  // Add response interceptor here\n}",
+        "expectedOutcome": "The AuthService now has a response interceptor that detects 401 errors and will handle token refresh logic.",
+        "successCriteria": [
+          "A response interceptor is added to axiosInstance that checks for 401 status and includes logic to call refreshToken()."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added a response interceptor, but make sure it checks for 401 status and includes the token refresh logic.",
+        "feedbackWrong": "The response interceptor is missing or doesn't properly handle 401 errors with token refresh logic.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "interceptors.response.use",
+            "401",
+            "refreshToken"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 11",
+        "title": "Implement retry logic for failed requests",
+        "instruction": "In the AuthService, add a private method named 'retryRequest' that takes the original request configuration and returns a Promise that retries the request with the updated access token.",
+        "hint": "The method should use the axios instance to make a new request with the same configuration, but with the updated authorization header.",
+        "analogousExample": "// Example: retry method in a service\nprivate retryRequest(config: any): Promise<any> {\n  config.headers['Authorization'] = `Bearer ${this.accessToken}`;\n  return this.axiosInstance.request(config);\n}",
+        "seedCode": "import { Injectable } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\nimport { Observable } from 'rxjs';\nimport axios from 'axios';\n\n@Injectable({\n  providedIn: 'root'\n})\nexport class AuthService {\n  private accessToken: string | null = null;\n  private refreshToken: string | null = null;\n  private axiosInstance = axios.create({\n    baseURL: 'https://api.example.com'\n  });\n\n  constructor(private http: HttpClient) {}\n\n  login(credentials: { username: string; password: string }): Observable<any> {\n    return this.http.post('https://api.example.com/login', credentials);\n  }\n\n  refreshToken(): Observable<any> {\n    return this.http.post('https://api.example.com/refresh', {\n      refreshToken: this.refreshToken\n    });\n  }\n\n  // Add response interceptor here\n\n  // Add retryRequest method here\n}",
+        "expectedOutcome": "The AuthService will have a private method that can retry failed requests with an updated token.",
+        "successCriteria": [
+          "A private method named 'retryRequest' is added to AuthService that accepts a request configuration and returns a Promise."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added a method, but check that it's private, named 'retryRequest', accepts a configuration parameter, and returns a Promise using the axios instance.",
+        "feedbackWrong": "The retry logic method is missing or incorrect. Make sure to add a private method named 'retryRequest' that takes the original request configuration and returns a Promise.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "private",
+            "retryRequest",
+            "config",
+            "Promise",
+            "axiosInstance"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 11",
+        "title": "Create a component to demonstrate authentication",
+        "instruction": "Create a new Angular component named 'AuthDemoComponent' with a basic template structure.",
+        "hint": "Use the Angular CLI command 'ng generate component auth-demo' or manually create the component files with a template that includes a heading.",
+        "analogousExample": "// Example: creating a basic Angular component\n@Component({\n  selector: 'app-example',\n  template: '<h2>Example Component</h2>'\n})\nexport class ExampleComponent {}",
+        "seedCode": "import { Injectable } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\nimport { Observable } from 'rxjs';\nimport axios from 'axios';\n\n@Injectable({\n  providedIn: 'root'\n})\nexport class AuthService {\n  private accessToken: string | null = null;\n  private refreshToken: string | null = null;\n  private axiosInstance = axios.create({\n    baseURL: 'https://api.example.com'\n  });\n\n  constructor(private http: HttpClient) {}\n\n  login(credentials: { username: string; password: string }): Observable<any> {\n    return this.http.post('https://api.example.com/login', credentials);\n  }\n\n  refreshToken(): Observable<any> {\n    return this.http.post('https://api.example.com/refresh', {\n      refreshToken: this.refreshToken\n    });\n  }\n\n  // Add response interceptor here\n\n  // Add retryRequest method here\n}\n\n// Create AuthDemoComponent here",
+        "expectedOutcome": "A new Angular component named 'AuthDemoComponent' is created with a basic template structure.",
+        "successCriteria": [
+          "The component is defined with the correct name and includes a template with at least one element (e.g., a heading)."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've created a component, but make sure it's named exactly 'AuthDemoComponent' and includes a template with at least one element.",
+        "feedbackWrong": "The component wasn't created correctly. Ensure you define a class named 'AuthDemoComponent' with the @Component decorator and a template.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "AuthDemoComponent",
+            "@Component",
+            "template"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 11",
+        "title": "Add login form and bind to AuthService",
+        "instruction": "In the AuthDemoComponent template, add a login form with username and password input fields and a submit button that calls the AuthService login method.",
+        "hint": "Use Angular's template syntax with ngModel for two-way binding and (ngSubmit) to handle form submission.",
+        "analogousExample": "// Example login form in Angular\n<form (ngSubmit)=\"onSubmit()\">\n  <input type=\"text\" [(ngModel)]=\"username\" name=\"username\" placeholder=\"Username\">\n  <input type=\"password\" [(ngModel)]=\"password\" name=\"password\" placeholder=\"Password\">\n  <button type=\"submit\">Login</button>\n</form>",
+        "seedCode": "import { Injectable } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\nimport { Observable } from 'rxjs';\nimport axios from 'axios';\n\n@Injectable({\n  providedIn: 'root'\n})\nexport class AuthService {\n  private accessToken: string | null = null;\n  private refreshToken: string | null = null;\n  private axiosInstance = axios.create({\n    baseURL: 'https://api.example.com'\n  });\n\n  constructor(private http: HttpClient) {}\n\n  login(credentials: { username: string; password: string }): Observable<any> {\n    return this.http.post('https://api.example.com/login', credentials);\n  }\n\n  refreshToken(): Observable<any> {\n    return this.http.post('https://api.example.com/refresh', {\n      refreshToken: this.refreshToken\n    });\n  }\n\n  // Add response interceptor here\n\n  // Add retryRequest method here\n}\n\n// Create AuthDemoComponent here\n// Add login form template with input fields and submit button",
+        "expectedOutcome": "A functional login form is added to the AuthDemoComponent template with proper form binding and submission handling.",
+        "successCriteria": [
+          "The AuthDemoComponent template contains a form with username and password inputs using ngModel and a submit button wired to the AuthService login method."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you have both input fields with ngModel and the form submission properly connected to the AuthService.",
+        "feedbackWrong": "The login form is missing or incomplete. Check that you have both input fields and the form submission is properly implemented.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "form",
+            "(ngSubmit)",
+            "[(ngModel)]",
+            "username",
+            "password",
+            "submit"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import required Angular modules and Axios",
+        "id": "step1"
+      },
+      {
+        "label": "Create an authentication service",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize token state in the service",
+        "id": "step3"
+      },
+      {
+        "label": "Create login method in AuthService",
+        "id": "step4"
+      },
+      {
+        "label": "Create token refresh method in AuthService",
+        "id": "step5"
+      },
+      {
+        "label": "Set up Axios instance with base configuration",
+        "id": "step6"
+      },
+      {
+        "label": "Create request interceptor to add authorization header",
+        "id": "step7"
+      },
+      {
+        "label": "Create response interceptor to handle token refresh",
+        "id": "step8"
+      },
+      {
+        "label": "Implement retry logic for failed requests",
+        "id": "step9"
+      },
+      {
+        "label": "Create a component to demonstrate authentication",
+        "id": "step10"
+      },
+      {
+        "label": "Add login form and bind to AuthService",
+        "id": "step11"
+      }
+    ]
+  },
+  "source": "content"
+}

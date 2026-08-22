@@ -1,0 +1,402 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-node-70",
+    "track": "node",
+    "lessonNum": 70,
+    "title": "Build job status tracking endpoint",
+    "shortName": "P70",
+    "intro": {
+      "tag": "LESSON #70",
+      "title": "Build job status tracking endpoint",
+      "body": "In this lesson, you will build a Node.js endpoint that tracks the status of a background job, such as a file upload or data processing task. You will learn to use Express.js to create a GET route that returns real-time job status updates. The core concept involves managing and updating a job's state (like 'pending', 'processing', or 'completed') in memory. You'll work with basic JavaScript objects to store job data and use route parameters to fetch specific job information. By the end, you'll have a functional API endpoint that simulates job status tracking for a simple application.",
+      "usecase": "This pattern is essential for building backend services that monitor long-running tasks, such as data processing jobs, file uploads, or report generation. In real-world applications, you'll see it powering status dashboards in cloud platforms like AWS or Azure, where users track the progress of deployments or batch jobs. It's also used in e-commerce order tracking systems, allowing customers to see real-time updates on their shipments. As a developer, implementing a robust status endpoint ensures your API provides clear, reliable feedback for asynchronous operations."
+    },
+    "objectives": [
+      "Construct a basic Express server with a dedicated route for job status tracking",
+      "Implement an in-memory data structure to store job status information",
+      "Configure a GET endpoint that retrieves and returns the current status of a specific job",
+      "Initialize a POST endpoint to create new job tracking entries with initial status values",
+      "Manipulate job status data by implementing a PATCH endpoint for status updates",
+      "Integrate route parameters to handle dynamic job ID lookups in status requests",
+      "Apply proper HTTP status codes and JSON response formatting for all endpoint operations"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 11",
+        "title": "Import required Node.js modules",
+        "instruction": "Import the http module for creating the server and the url module for parsing request URLs.",
+        "hint": "Use the require() function to import Node.js built-in modules. The http module is named 'http' and the url module is named 'url'.",
+        "analogousExample": "// Similar: importing built-in modules\nconst fs = require('fs');\nconst path = require('path');",
+        "seedCode": "// Import the http and url modules here",
+        "expectedOutcome": "The http and url modules are imported and available for use in your server code.",
+        "successCriteria": [
+          "The http and url modules are imported using require() statements."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've imported one module, but you need both http and url. Make sure you have two require() statements.",
+        "feedbackWrong": "The imports are missing or incorrect. You need to import both the http and url modules using require() statements.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "require('http')",
+            "require('url')"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 11",
+        "title": "Create the job status data store",
+        "instruction": "Initialize an array variable named 'jobs' to store job objects. Each job object should have 'id', 'status', and 'timestamp' properties.",
+        "hint": "Create an empty array using const or let, and assign it to a variable named 'jobs'.",
+        "analogousExample": "// Example: initializing an array to store data\nconst users = [];",
+        "seedCode": "// Import the http and url modules here\n\n// Initialize the jobs array here",
+        "expectedOutcome": "An empty array named 'jobs' is created to store job status objects.",
+        "successCriteria": [
+          "The 'jobs' array variable is declared and initialized as an empty array."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you've declared a variable named 'jobs' and set it to an empty array.",
+        "feedbackWrong": "The jobs array wasn't created correctly. Try initializing an empty array with the name 'jobs'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "jobs",
+            "[]"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 11",
+        "title": "Define helper function to generate job IDs",
+        "instruction": "Create a function named generateJobId that returns a unique ID string using the current timestamp.",
+        "hint": "You can use Date.now() to get the current timestamp in milliseconds and convert it to a string.",
+        "analogousExample": "// Example of a simple ID generation function\nfunction generateUniqueId() {\n  return 'id-' + Date.now();\n}",
+        "seedCode": "// Import the http and url modules here\n\n// Initialize the jobs array here\n\n// Create the generateJobId function here",
+        "expectedOutcome": "The generateJobId function should be defined and ready to generate unique IDs for new build jobs.",
+        "successCriteria": [
+          "The generateJobId function is defined and returns a string based on the current timestamp."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure your function is named generateJobId and returns a string value using Date.now().",
+        "feedbackWrong": "The generateJobId function is not properly defined. It should be a function that returns a unique string ID using the current timestamp.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "generateJobId",
+            "Date.now()",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 11",
+        "title": "Define helper function to add new jobs",
+        "instruction": "Create a function named 'addJob' that takes a 'projectName' parameter and adds a new job object to the 'jobs' array. The job object should have an 'id' (generated using the existing 'generateJobId' function), 'projectName', 'status' (set to 'pending'), and 'createdAt' (set to the current date/time using 'new Date()').",
+        "hint": "Define the function, then inside it create a job object with the required properties and push it into the 'jobs' array.",
+        "analogousExample": "// Example: function that adds an item to an array\nfunction addItem(name) {\n  const newItem = {\n    id: generateId(),\n    name: name,\n    status: 'new',\n    createdAt: new Date()\n  };\n  items.push(newItem);\n}",
+        "seedCode": "// Import the http and url modules here\n\n// Initialize the jobs array here\n\n// Create the generateJobId function here\n\n// Create the addJob function here",
+        "expectedOutcome": "A function 'addJob' is defined that creates structured job objects and adds them to the data store.",
+        "successCriteria": [
+          "The 'addJob' function exists, takes a 'projectName' parameter, creates a job object with 'id', 'projectName', 'status', and 'createdAt' properties, and pushes it to the 'jobs' array."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure your function creates a complete job object with all required properties (id, projectName, status, createdAt) and pushes it to the 'jobs' array.",
+        "feedbackWrong": "The function doesn't meet all requirements. Check that it takes a 'projectName' parameter, creates a job object with all required properties, and adds it to the 'jobs' array.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "addJob",
+            "projectName",
+            "generateJobId",
+            "pending",
+            "new Date()",
+            "jobs.push"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 11",
+        "title": "Define helper function to get job by ID",
+        "instruction": "Create a function named getJobById that takes an id parameter and returns the job object with that ID from the jobs array, or null if not found.",
+        "hint": "You can use the Array.find() method to search for a job where job.id matches the provided id parameter.",
+        "analogousExample": "// Similar: finding an item by ID in an array\nfunction findItemById(items, id) {\n  return items.find(item => item.id === id) || null;\n}",
+        "seedCode": "// Import the http and url modules here\n\n// Initialize the jobs array here\n\n// Create the generateJobId function here\n\n// Create the addJob function here\n\n// Create the getJobById function here",
+        "expectedOutcome": "A getJobById function that can retrieve a specific job from the data store using its ID.",
+        "successCriteria": [
+          "The getJobById function is defined, takes an id parameter, searches the jobs array for a matching job, and returns the job object or null."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your function properly searches the jobs array and handles the case when no job is found (return null).",
+        "feedbackWrong": "The function isn't quite right. Remember to create a function named getJobById that searches the jobs array for a job with the matching ID and returns it or null.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "getJobById",
+            "id",
+            "jobs",
+            "find",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 11",
+        "title": "Define helper function to update job status",
+        "instruction": "Create a function named updateJobStatus that takes a jobId and a newStatus as parameters, updates the status of the matching job in the jobs array, and returns the updated job object.",
+        "hint": "Find the job by ID, update its status property, and return the job. You can use the getJobById function to find the job.",
+        "analogousExample": "// Similar: function that updates an object in an array\nfunction updateItemStatus(itemId, newStatus) {\n  const item = items.find(i => i.id === itemId);\n  if (item) {\n    item.status = newStatus;\n    return item;\n  }\n  return null;\n}",
+        "seedCode": "// Import the http and url modules here\n\n// Initialize the jobs array here\n\n// Create the generateJobId function here\n\n// Create the addJob function here\n\n// Create the getJobById function here\n\n// Create the updateJobStatus function here",
+        "expectedOutcome": "A function named updateJobStatus that updates a job's status and returns the updated job object.",
+        "successCriteria": [
+          "The updateJobStatus function is defined, takes jobId and newStatus parameters, updates the job's status, and returns the job object."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your function updates the job's status property and returns the updated job object.",
+        "feedbackWrong": "The function doesn't seem to match the requirements. It should take jobId and newStatus parameters, update the matching job's status, and return the updated object.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "updateJobStatus",
+            "jobId",
+            "newStatus",
+            "status",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 11",
+        "title": "Create the HTTP server",
+        "instruction": "Create the HTTP server using http.createServer() and assign it to a constant named 'server'. Define the request handler function inside createServer() that will process incoming requests.",
+        "hint": "Use the http module you imported earlier. The createServer() method takes a callback function with request and response parameters.",
+        "analogousExample": "// Creating a basic HTTP server\nconst server = http.createServer((req, res) => {\n  // Request handling logic will go here\n});",
+        "seedCode": "// Import the http and url modules here\n\n// Initialize the jobs array here\n\n// Create the generateJobId function here\n\n// Create the addJob function here\n\n// Create the getJobById function here\n\n// Create the updateJobStatus function here\n\n// Create the HTTP server here",
+        "expectedOutcome": "You will have a server constant that holds an HTTP server instance with a basic request handler function defined.",
+        "successCriteria": [
+          "The server constant is created using http.createServer() with a request handler callback function."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure you're using http.createServer() and assigning it to a constant named 'server' with a callback function.",
+        "feedbackWrong": "The server wasn't created correctly. Remember to use http.createServer() with a callback function that handles requests.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "const",
+            "server",
+            "=",
+            "http.createServer",
+            "(",
+            "req",
+            "res",
+            ")"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 11",
+        "title": "Parse request URL and method",
+        "instruction": "Inside your server's request handler, parse the incoming request URL to extract the pathname and store the HTTP method for routing decisions.",
+        "hint": "Use the url module's parse method on req.url to get a URL object, then access its pathname property. The HTTP method is available as req.method.",
+        "analogousExample": "// Example: parsing URL and method in a request handler\nfunction handleRequest(req, res) {\n  const parsedUrl = url.parse(req.url, true);\n  const pathname = parsedUrl.pathname;\n  const method = req.method;\n  // Use pathname and method for routing\n}",
+        "seedCode": "// Import the http and url modules here\nconst http = require('http');\nconst url = require('url');\n\n// Initialize the jobs array here\nconst jobs = [];\n\n// Create the generateJobId function here\nfunction generateJobId() {\n  return 'job_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);\n}\n\n// Create the addJob function here\nfunction addJob(jobName) {\n  const newJob = {\n    id: generateJobId(),\n    name: jobName,\n    status: 'pending',\n    createdAt: new Date().toISOString()\n  };\n  jobs.push(newJob);\n  return newJob;\n}\n\n// Create the getJobById function here\nfunction getJobById(jobId) {\n  return jobs.find(job => job.id === jobId);\n}\n\n// Create the updateJobStatus function here\nfunction updateJobStatus(jobId, newStatus) {\n  const job = getJobById(jobId);\n  if (job) {\n    job.status = newStatus;\n    job.updatedAt = new Date().toISOString();\n    return true;\n  }\n  return false;\n}\n\n// Create the HTTP server here\nconst server = http.createServer((req, res) => {\n  // Parse request URL and method here\n});",
+        "expectedOutcome": "Your server's request handler will now have access to the request pathname and method, which you'll use in the next step to implement routing.",
+        "successCriteria": [
+          "The request handler includes code that parses req.url to get pathname and stores req.method in a variable."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're parsing the URL correctly and storing both the pathname and method. Check that you're using url.parse() and accessing the right properties.",
+        "feedbackWrong": "The request handler doesn't yet parse the URL or extract the method. Remember to use the url module's parse method on req.url and access req.method for the HTTP method.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "url.parse",
+            "req.url",
+            "pathname",
+            "req.method"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 11",
+        "title": "Implement GET endpoint for job status",
+        "instruction": "Inside the server's request handler, add logic to handle GET requests to '/api/jobs/:id' by extracting the job ID from the URL path and returning the job's status as JSON.",
+        "hint": "Check if the request method is 'GET' and the parsed URL pathname starts with '/api/jobs/'. Extract the job ID from the pathname, use getJobById to find the job, and respond with JSON.",
+        "analogousExample": "// Example: handling a GET request for a resource\nif (req.method === 'GET' && parsedUrl.pathname.startsWith('/api/resource/')) {\n  const resourceId = parsedUrl.pathname.split('/').pop();\n  const resource = findResourceById(resourceId);\n  if (resource) {\n    res.writeHead(200, { 'Content-Type': 'application/json' });\n    res.end(JSON.stringify(resource));\n  } else {\n    res.writeHead(404, { 'Content-Type': 'application/json' });\n    res.end(JSON.stringify({ error: 'Resource not found' }));\n  }\n}",
+        "seedCode": "const http = require('http');\nconst url = require('url');\n\nconst jobs = [];\n\nfunction generateJobId() {\n  return 'job_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);\n}\n\nfunction addJob(jobName) {\n  const newJob = {\n    id: generateJobId(),\n    name: jobName,\n    status: 'pending',\n    createdAt: new Date().toISOString()\n  };\n  jobs.push(newJob);\n  return newJob;\n}\n\nfunction getJobById(jobId) {\n  return jobs.find(job => job.id === jobId);\n}\n\nfunction updateJobStatus(jobId, newStatus) {\n  const job = getJobById(jobId);\n  if (job) {\n    job.status = newStatus;\n    job.updatedAt = new Date().toISOString();\n    return true;\n  }\n  return false;\n}\n\nconst server = http.createServer((req, res) => {\n  const parsedUrl = url.parse(req.url, true);\n  const { pathname } = parsedUrl;\n  const method = req.method;\n  \n  // Add GET endpoint logic for /api/jobs/:id here\n});",
+        "expectedOutcome": "The server will respond to GET requests at '/api/jobs/:id' with the job's status in JSON format, or a 404 error if the job is not found.",
+        "successCriteria": [
+          "The request handler includes logic to check for GET method and '/api/jobs/' path, extracts the job ID, uses getJobById to find the job, and responds with appropriate JSON and status codes."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure to handle both success (200) and not found (404) cases with proper JSON responses.",
+        "feedbackWrong": "The GET endpoint logic is missing or incorrect. Check the request method, URL path, and how you extract the job ID.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "GET",
+            "/api/jobs/",
+            "getJobById",
+            "JSON.stringify",
+            "writeHead",
+            "200",
+            "404"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 11",
+        "title": "Implement POST endpoint to update job status",
+        "instruction": "Inside the server callback, add logic to handle POST requests to /api/jobs/:id by extracting the job ID from the URL path and the new status from the request body,",
+        "hint": "Check if the request method is 'POST' and the pathname starts with '/api/jobs/'. Extract the job ID from the pathname, read the request body to get the new status, then call updateJobStatus with those values.",
+        "analogousExample": "// Example: handling a POST request to update a resource\nif (method === 'POST' && pathname.startsWith('/api/resource/')) {\n  const resourceId = pathname.split('/')[3];\n  let body = '';\n  req.on('data', chunk => body += chunk);\n  req.on('end', () => {\n    const data = JSON.parse(body);\n    // Update logic here\n  });\n}",
+        "seedCode": "const http = require('http');\nconst url = require('url');\n\nconst jobs = [];\n\nfunction generateJobId() {\n  return 'job_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);\n}\n\nfunction addJob(jobName) {\n  const newJob = {\n    id: generateJobId(),\n    name: jobName,\n    status: 'pending',\n    createdAt: new Date().toISOString()\n  };\n  jobs.push(newJob);\n  return newJob;\n}\n\nfunction getJobById(jobId) {\n  return jobs.find(job => job.id === jobId);\n}\n\nfunction updateJobStatus(jobId, newStatus) {\n  const job = getJobById(jobId);\n  if (job) {\n    job.status = newStatus;\n    job.updatedAt = new Date().toISOString();\n    return true;\n  }\n  return false;\n}\n\nconst server = http.createServer((req, res) => {\n  const parsedUrl = url.parse(req.url, true);\n  const { pathname } = parsedUrl;\n  const method = req.method;\n  \n  // Add GET endpoint logic for /api/jobs/:id here\n  \n  // Add POST endpoint logic for /api/jobs/:id here\n});",
+        "expectedOutcome": "The server will now handle POST requests to update job statuses by reading the job ID from the URL and new status from the request body.",
+        "successCriteria": [
+          "POST requests to /api/jobs/:id are handled, the job ID is extracted from the URL path, the new status is read from the request body, and updateJobStatus is called with these values."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're checking for POST method, extracting the job ID from the pathname, reading the request body, and calling updateJobStatus with the correct parameters.",
+        "feedbackWrong": "The POST endpoint logic is missing or incorrect. Remember to handle POST requests to /api/jobs/:id by extracting the job ID and new status, then updating the job using the updateJobStatus function.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "POST",
+            "pathname",
+            "startsWith",
+            "/api/jobs/",
+            "on('data'",
+            "on('end'",
+            "updateJobStatus"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 11",
+        "title": "call updateJobStatus to update the job",
+        "instruction": "call updateJobStatus to update the job.",
+        "hint": "Check if the request method is 'POST' and the pathname starts with '/api/jobs/'. Extract the job ID from the pathname, read the request body to get the new status, then call updateJobStatus with those values.",
+        "analogousExample": "// Example: handling a POST request to update a resource\nif (method === 'POST' && pathname.startsWith('/api/resource/')) {\n  const resourceId = pathname.split('/')[3];\n  let body = '';\n  req.on('data', chunk => body += chunk);\n  req.on('end', () => {\n    const data = JSON.parse(body);\n    // Update logic here\n  });\n}",
+        "seedCode": "const http = require('http');\nconst url = require('url');\n\nconst jobs = [];\n\nfunction generateJobId() {\n  return 'job_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);\n}\n\nfunction addJob(jobName) {\n  const newJob = {\n    id: generateJobId(),\n    name: jobName,\n    status: 'pending',\n    createdAt: new Date().toISOString()\n  };\n  jobs.push(newJob);\n  return newJob;\n}\n\nfunction getJobById(jobId) {\n  return jobs.find(job => job.id === jobId);\n}\n\nfunction updateJobStatus(jobId, newStatus) {\n  const job = getJobById(jobId);\n  if (job) {\n    job.status = newStatus;\n    job.updatedAt = new Date().toISOString();\n    return true;\n  }\n  return false;\n}\n\nconst server = http.createServer((req, res) => {\n  const parsedUrl = url.parse(req.url, true);\n  const { pathname } = parsedUrl;\n  const method = req.method;\n  \n  // Add GET endpoint logic for /api/jobs/:id here\n  \n  // Add POST endpoint logic for /api/jobs/:id here\n});",
+        "expectedOutcome": "",
+        "successCriteria": [
+          "Complete the step as instructed."
+        ],
+        "feedbackCorrect": "Great! Step completed.",
+        "feedbackPartial": "Review the instruction and try again.",
+        "feedbackWrong": "Check the instruction and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "POST",
+            "pathname",
+            "startsWith",
+            "/api/jobs/",
+            "on('data'",
+            "on('end'",
+            "updateJobStatus"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import required Node.js modules",
+        "id": "step1"
+      },
+      {
+        "label": "Create the job status data store",
+        "id": "step2"
+      },
+      {
+        "label": "Define helper function to generate job IDs",
+        "id": "step3"
+      },
+      {
+        "label": "Define helper function to add new jobs",
+        "id": "step4"
+      },
+      {
+        "label": "Define helper function to get job by ID",
+        "id": "step5"
+      },
+      {
+        "label": "Define helper function to update job status",
+        "id": "step6"
+      },
+      {
+        "label": "Create the HTTP server",
+        "id": "step7"
+      },
+      {
+        "label": "Parse request URL and method",
+        "id": "step8"
+      },
+      {
+        "label": "Implement GET endpoint for job status",
+        "id": "step9"
+      },
+      {
+        "label": "Implement POST endpoint to update job status",
+        "id": "step10"
+      },
+      {
+        "label": "call updateJobStatus to update the job",
+        "id": "step11"
+      }
+    ]
+  },
+  "source": "content"
+}

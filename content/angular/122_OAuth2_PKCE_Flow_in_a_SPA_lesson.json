@@ -1,0 +1,440 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-angular-122",
+    "track": "angular",
+    "lessonNum": 122,
+    "title": "OAuth2 PKCE Flow in a SPA",
+    "shortName": "P122",
+    "intro": {
+      "tag": "LESSON #122",
+      "title": "OAuth2 PKCE Flow in a SPA",
+      "body": "In this lesson, you will build a simple Angular Single Page Application (SPA) that securely authenticates users using the OAuth2 Proof Key for Code Exchange (PKCE) flow. You will learn the core concept of OAuth2 authorization, which allows your app to request limited access to a user's data on another service without handling their password directly. The main technologies involved are Angular for the frontend framework, TypeScript for type-safe code, and the Angular HTTP client to communicate with an OAuth2 authorization server. By the end, you'll understand how to generate a code verifier and challenge, redirect users for login, and exchange an authorization code for an access token securely.",
+      "usecase": "The OAuth2 PKCE flow is essential for securing single-page applications that integrate with third-party services like Google, Microsoft, or GitHub. Developers implement this pattern when building dashboards that display authenticated user data, such as project management tools that sync with external APIs. For example, a financial analytics SPA might use PKCE to securely obtain tokens for accessing banking APIs, then display personalized charts and transaction panels. This flow ensures that sensitive user data remains protected while enabling seamless, interactive experiences in modern web applications."
+    },
+    "objectives": [
+      "Implement the PKCE code verifier and challenge generation in an Angular service",
+      "Configure Angular routing to handle OAuth2 authorization code redirects",
+      "Construct HTTP requests to the authorization server with required PKCE parameters",
+      "Integrate token exchange logic to swap authorization codes for access tokens",
+      "Initialize and manage authentication state using Angular services",
+      "Apply route guards to protect application routes based on authentication status",
+      "Manipulate HTTP interceptors to attach access tokens to outgoing API requests"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 11",
+        "title": "Import required Angular modules and services",
+        "instruction": "In the AppModule file (app.module.ts), import the following: Component, OnInit, HttpClient, HttpClientModule, CommonModule, and FormsModule from their respective Angular packages.",
+        "hint": "Use the import statement syntax: import { ModuleOrService } from '@angular/package';. You'll need to import from '@angular/core', '@angular/common', '@angular/common/http', and '@angular/forms'.",
+        "analogousExample": "// Example: importing multiple modules\nimport { Component, OnInit } from '@angular/core';\nimport { CommonModule } from '@angular/common';\nimport { HttpClientModule, HttpClient } from '@angular/common/http';\nimport { FormsModule } from '@angular/forms';",
+        "seedCode": {
+          "App.tsx": "// app.module.ts - Add your imports here\n\n// No other code yet",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "The AppModule file will have all the necessary imports for implementing OAuth2 PKCE flow in your Angular SPA.",
+        "successCriteria": [
+          "Component, OnInit, HttpClient, HttpClientModule, CommonModule, and FormsModule are all imported with correct syntax from their respective Angular packages."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've imported some of the required modules, but not all. Check that you have Component, OnInit, HttpClient, HttpClientModule, CommonModule, and FormsModule imported from their correct packages.",
+        "feedbackWrong": "The imports are missing or incorrect. You need to import Component, OnInit, HttpClient, HttpClientModule, CommonModule, and FormsModule from '@angular/core', '@angular/common', '@angular/common/http', and '@angular/forms'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "Component",
+            "OnInit",
+            "HttpClient",
+            "HttpClientModule",
+            "CommonModule",
+            "FormsModule",
+            "@angular/core",
+            "@angular/common",
+            "@angular/common/http",
+            "@angular/forms"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 11",
+        "title": "Create OAuth configuration interface",
+        "instruction": "Create a TypeScript interface named OAuthConfig with the following properties: clientId (string), authEndpoint (string), tokenEndpoint (string), redirectUri (string), and scopes (string array).",
+        "hint": "Define an interface using the 'interface' keyword followed by the interface name and property definitions with their types.",
+        "analogousExample": "// Example: Interface for user configuration\ninterface UserConfig {\n  username: string;\n  email: string;\n  roles: string[];\n}",
+        "seedCode": {
+          "App.tsx": "// app.module.ts - Add your imports here\n\n// Create your OAuthConfig interface here",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "You should have a properly defined OAuthConfig interface with all required properties and their types.",
+        "successCriteria": [
+          "The OAuthConfig interface exists with clientId (string), authEndpoint (string), tokenEndpoint (string), redirectUri (string), and scopes (string[]) properties."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've created an interface, but some properties are missing or have incorrect types. Make sure to include clientId, authEndpoint, tokenEndpoint, redirectUri, and scopes with the correct types.",
+        "feedbackWrong": "The OAuthConfig interface is not properly defined. You need to create an interface with the specified properties and their TypeScript types.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "interface",
+            "OAuthConfig",
+            "clientId",
+            "authEndpoint",
+            "tokenEndpoint",
+            "redirectUri",
+            "scopes",
+            "string",
+            "string[]"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 11",
+        "title": "Create OAuth service with configuration",
+        "instruction": "Create an Angular service class named OAuthService with a private config property of type OAuthConfig and initialize it with sample values in the constructor.",
+        "hint": "Use the @Injectable decorator to make it an Angular service. Define a private property 'config' with the OAuthConfig type and assign it in the constructor.",
+        "analogousExample": "// Example service with configuration\n@Injectable({\n  providedIn: 'root'\n})\nexport class DataService {\n  private apiUrl: string;\n  \n  constructor() {\n    this.apiUrl = 'https://api.example.com';\n  }\n}",
+        "seedCode": {
+          "App.tsx": "// app.module.ts - Add your imports here\n\n// Create your OAuthConfig interface here\n\n// Create your OAuthService class here",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "An OAuthService class is created with a private config property properly typed and initialized.",
+        "successCriteria": [
+          "The OAuthService class is defined with @Injectable decorator, has a private config property of type OAuthConfig, and initializes it with sample values in the constructor."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you have: 1) @Injectable decorator, 2) private config property with OAuthConfig type, 3) constructor initialization with sample values.",
+        "feedbackWrong": "The service isn't properly set up. Review the requirements: create an Angular service class with private config property and initialize it.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "OAuthService",
+            "@Injectable",
+            "private config",
+            "OAuthConfig",
+            "constructor"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 11",
+        "title": "Add PKCE code verifier generation method",
+        "instruction": "In your OAuthService class, add a method named generateCodeVerifier that returns a secure random string.",
+        "hint": "You can use the crypto API to generate random bytes and convert them to a base64url-encoded string.",
+        "analogousExample": "// Example: a method that generates a random string\nclass ExampleService {\n  generateRandomString(): string {\n    const array = new Uint8Array(32);\n    crypto.getRandomValues(array);\n    return btoa(String.fromCharCode(...array)).replace(/\\+/g, '-').replace(/\\//g, '_').replace(/=/g, '');\n  }\n}",
+        "seedCode": {
+          "App.tsx": "// app.module.ts - Add your imports here\n\n// Create your OAuthConfig interface here\n\n// Create your OAuthService class here\n\n@Injectable({\n  providedIn: 'root'\n})\nexport class OAuthService {\n  constructor(private config: OAuthConfig) {}\n\n  // Add your generateCodeVerifier method here\n}",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "The OAuthService class now has a generateCodeVerifier method that creates a secure random string for PKCE.",
+        "successCriteria": [
+          "The generateCodeVerifier method is defined in OAuthService and returns a string."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure the method is named generateCodeVerifier and returns a string.",
+        "feedbackWrong": "The method is missing or doesn't match the requirements. Check that you've added generateCodeVerifier to OAuthService with a string return type.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "generateCodeVerifier",
+            "string",
+            "crypto",
+            "getRandomValues"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 11",
+        "title": "Initialize PKCE state in OAuth service",
+        "instruction": "In your OAuthService class, add two private properties: codeVerifier and codeChallenge, both initialized to null and typed as string | null.",
+        "hint": "Use TypeScript's private modifier and type annotations. These properties will store the PKCE state temporarily.",
+        "analogousExample": "// Similar: private state properties in a service\nprivate currentUser: User | null = null;\nprivate authToken: string | null = null;",
+        "seedCode": {
+          "App.tsx": "// app.module.ts - Add your imports here\n\n// Create your OAuthConfig interface here\n\n// Create your OAuthService class here\n\n@Injectable({\n  providedIn: 'root'\n})\nexport class OAuthService {\n  constructor(private config: OAuthConfig) {}\n\n  // Add your generateCodeVerifier method here\n\n  // Add your generateCodeChallenge method here\n\n  // Add your private PKCE state properties here\n}",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "The OAuthService will have private properties to store the PKCE code verifier and challenge, ready for use in later steps.",
+        "successCriteria": [
+          "OAuthService contains private properties codeVerifier and codeChallenge, both typed as string | null and initialized to null."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure both properties are private, typed as string | null, and initialized to null.",
+        "feedbackWrong": "The properties are missing or incorrectly defined. They should be private, typed as string | null, and initialized to null.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "private",
+            "codeVerifier",
+            "codeChallenge",
+            "string | null",
+            "= null"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 11",
+        "title": "Create authorization URL builder method",
+        "instruction": "In your OAuthService class, add a public method named buildAuthUrl that returns a string containing the complete OAuth2 authorization URL with PKCE parameters.",
+        "hint": "Construct the URL by combining the authorization endpoint from your config with query parameters like client_id, redirect_uri, response_type, scope, code_challenge, and code_challenge_method.",
+        "analogousExample": "// Similar: URL builder method in a service\nbuildProfileUrl(userId: string): string {\n  return `${this.config.apiUrl}/users/${userId}`;\n}",
+        "seedCode": {
+          "App.tsx": "// app.module.ts - Add your imports here\n\n// Create your OAuthConfig interface here\n\n// Create your OAuthService class here\n\n@Injectable({\n  providedIn: 'root'\n})\nexport class OAuthService {\n  constructor(private config: OAuthConfig) {}\n\n  // Add your generateCodeVerifier method here\n\n  // Add your generateCodeChallenge method here\n\n  // Add your private PKCE state properties here\n\n  // Add your buildAuthUrl method here\n}",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "The OAuthService now has a buildAuthUrl method that constructs the authorization URL with all required PKCE parameters.",
+        "successCriteria": [
+          "The buildAuthUrl method exists in OAuthService, returns a string URL, and includes PKCE parameters (code_challenge and code_challenge_method)."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added a method, but it might be missing some required PKCE parameters or not returning a complete URL. Check that you include code_challenge and code_challenge_method.",
+        "feedbackWrong": "The buildAuthUrl method is not present or doesn't return a proper authorization URL with PKCE parameters.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "buildAuthUrl",
+            "string",
+            "code_challenge",
+            "code_challenge_method"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 11",
+        "title": "Create main AppComponent with OAuth service injection",
+        "instruction": "Create the main AppComponent class that implements OnInit and injects OAuthService in its constructor.",
+        "hint": "Use the @Component decorator with selector 'app-root' and template '<p>OAuth2 PKCE Flow</p>'. Implement OnInit and add a constructor parameter for OAuthService.",
+        "analogousExample": "// Example: Component with service injection\n@Component({\n  selector: 'app-example',\n  template: '<p>Example Component</p>'\n})\nexport class ExampleComponent implements OnInit {\n  constructor(private exampleService: ExampleService) {}\n\n  ngOnInit() {\n    console.log('Component initialized');\n  }\n}",
+        "seedCode": {
+          "App.tsx": "// app.module.ts - Add your imports here\n\n// Create your OAuthConfig interface here\n\n// Create your OAuthService class here\n\n@Injectable({\n  providedIn: 'root'\n})\nexport class OAuthService {\n  constructor(private config: OAuthConfig) {}\n\n  // Add your generateCodeVerifier method here\n\n  // Add your generateCodeChallenge method here\n\n  // Add your private PKCE state properties here\n\n  // Add your buildAuthUrl method here\n}\n\n// Create your AppComponent class here",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "The AppComponent is created with proper dependency injection setup, ready to use OAuthService methods.",
+        "successCriteria": [
+          "AppComponent class exists with @Component decorator, implements OnInit, and has constructor injection for OAuthService."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure your component has the @Component decorator, implements OnInit, and injects OAuthService in the constructor.",
+        "feedbackWrong": "The component isn't properly set up. Review how to create Angular components with service dependency injection.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "@Component",
+            "AppComponent",
+            "implements OnInit",
+            "constructor",
+            "OAuthService"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 11",
+        "title": "Add component state for authorization URL",
+        "instruction": "In your AppComponent class, add a public property named 'authUrl' with type 'string' to store the generated authorization URL.",
+        "hint": "Declare the property inside the AppComponent class body, similar to how you'd add any class property in TypeScript.",
+        "analogousExample": "// Example: adding a string property to a component\nclass ExampleComponent {\n  public statusMessage: string = '';\n}",
+        "seedCode": {
+          "App.tsx": "// app.module.ts - Add your imports here\n\n// Create your OAuthConfig interface here\n\n// Create your OAuthService class here\n\n@Injectable({\n  providedIn: 'root'\n})\nexport class OAuthService {\n  constructor(private config: OAuthConfig) {}\n\n  // Add your generateCodeVerifier method here\n\n  // Add your generateCodeChallenge method here\n\n  // Add your private PKCE state properties here\n\n  // Add your buildAuthUrl method here\n}\n\n// Create your AppComponent class here\n@Component({\n  selector: 'app-root',\n  template: ''\n})\nexport class AppComponent {\n  constructor(private oauthService: OAuthService) {}\n  \n  // Add your authUrl property here\n}",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "The AppComponent will have a property ready to hold the authorization URL string that will be generated later in the OAuth flow.",
+        "successCriteria": [
+          "AppComponent has a public 'authUrl' property declared with type 'string'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure the property is declared as 'public authUrl: string' inside the AppComponent class.",
+        "feedbackWrong": "The authUrl property wasn't properly added. Remember to declare it as a public string property within the AppComponent class.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "authUrl",
+            "string",
+            "AppComponent"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 11",
+        "title": "Implement initialization to generate PKCE values",
+        "instruction": "In your AppComponent class, implement the ngOnInit() lifecycle hook to generate the code verifier, code challenge, and build the authorization URL using your OAuthService methods.",
+        "hint": "Remember to call the generateCodeVerifier(), generateCodeChallenge(), and buildAuthUrl() methods from your OAuthService instance and assign the result to your authUrl property.",
+        "analogousExample": "// Example: implementing ngOnInit in a component\nimport { Component, OnInit } from '@angular/core';\n\n@Component({\n  selector: 'app-example',\n  template: ''\n})\nexport class ExampleComponent implements OnInit {\n  constructor(private service: SomeService) {}\n\n  ngOnInit() {\n    const result = this.service.doSomething();\n    this.someProperty = result;\n  }\n}",
+        "seedCode": {
+          "App.tsx": "import { Component, OnInit } from '@angular/core';\nimport { OAuthService } from './oauth.service';\nimport { OAuthConfig } from './oauth-config.interface';\n\n@Component({\n  selector: 'app-root',\n  template: ''\n})\nexport class AppComponent implements OnInit {\n  authUrl: string = '';\n\n  constructor(private oauthService: OAuthService) {}\n\n  ngOnInit() {\n    // Generate PKCE values and build authorization URL here\n  }\n}",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "The AppComponent will now automatically generate PKCE values and build the authorization URL when the component initializes.",
+        "successCriteria": [
+          "AppComponent implements OnInit with ngOnInit() method that calls OAuthService methods to generate code verifier, code challenge, and build authUrl."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're calling all three methods: generateCodeVerifier(), generateCodeChallenge(), and buildAuthUrl(). Also ensure you're assigning the result to the authUrl property.",
+        "feedbackWrong": "The ngOnInit method isn't properly implemented. Remember to implement the OnInit interface and add the ngOnInit() method that calls the OAuthService methods to generate PKCE values.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "ngOnInit",
+            "generateCodeVerifier",
+            "generateCodeChallenge",
+            "buildAuthUrl",
+            "authUrl"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 11",
+        "title": "Create basic component template structure",
+        "instruction": "In the AppComponent's template, add a container div with a heading and paragraph explaining the OAuth PKCE flow.",
+        "hint": "Use the template property in the @Component decorator to add HTML structure. Include a div, an h1 heading, and a p paragraph.",
+        "analogousExample": "// Example: Basic component template structure\n@Component({\n  selector: 'app-example',\n  template: `<div>\n    <h1>Welcome</h1>\n    <p>This is a description.</p>\n  </div>`\n})",
+        "seedCode": {
+          "App.tsx": "import { Component, OnInit } from '@angular/core';\nimport { OAuthService } from './oauth.service';\nimport { OAuthConfig } from './oauth-config.interface';\n\n@Component({\n  selector: 'app-root',\n  template: ''\n})\nexport class AppComponent implements OnInit {\n  authUrl: string = '';\n\n  constructor(private oauthService: OAuthService) {}\n\n  ngOnInit() {\n    // Generate PKCE values and build authorization URL here\n  }\n}",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "The AppComponent template will have a div container with a heading and paragraph describing the OAuth PKCE flow.",
+        "successCriteria": [
+          "The template contains a div element with an h1 heading and a p paragraph with OAuth PKCE flow explanation."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you've included all required elements: a div container, h1 heading, and p paragraph.",
+        "feedbackWrong": "The template structure is incomplete or missing required elements. Check that you've added a div with heading and paragraph.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<div>",
+            "<h1>",
+            "<p>",
+            "OAuth",
+            "PKCE"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 11",
+        "title": "Add authorization button with OAuth URL",
+        "instruction": "In the AppComponent template, add a button element with a click handler that redirects to the authUrl using window.location.href.",
+        "hint": "Use Angular's event binding syntax (click) to call a method that performs the redirect.",
+        "analogousExample": "// Example: Button with click handler\n<button (click)=\"redirectToAuth()\">Login with OAuth</button>",
+        "seedCode": {
+          "App.tsx": "import { Component, OnInit } from '@angular/core';\nimport { OAuthService } from './oauth.service';\nimport { OAuthConfig } from './oauth-config.interface';\n\n@Component({\n  selector: 'app-root',\n  template: ''\n})\nexport class AppComponent implements OnInit {\n  authUrl: string = '';\n\n  constructor(private oauthService: OAuthService) {}\n\n  ngOnInit() {\n    // Generate PKCE values and build authorization URL here\n  }\n\n  redirectToAuth() {\n    // Add redirect logic here\n  }\n}",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "The component will have a functional button that initiates the OAuth2 PKCE flow when clicked.",
+        "successCriteria": [
+          "Button element is added to the template with (click) event binding that calls redirectToAuth method, which uses window.location.href to redirect to authUrl."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added a button, but make sure it has the correct click handler and redirect logic using window.location.href.",
+        "feedbackWrong": "The button or redirect logic is missing. Review the step instructions carefully.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<button",
+            "(click)",
+            "redirectToAuth",
+            "window.location.href",
+            "authUrl"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import required Angular modules and services",
+        "id": "step1"
+      },
+      {
+        "label": "Create OAuth configuration interface",
+        "id": "step2"
+      },
+      {
+        "label": "Create OAuth service with configuration",
+        "id": "step3"
+      },
+      {
+        "label": "Add PKCE code verifier generation method",
+        "id": "step4"
+      },
+      {
+        "label": "Initialize PKCE state in OAuth service",
+        "id": "step5"
+      },
+      {
+        "label": "Create authorization URL builder method",
+        "id": "step6"
+      },
+      {
+        "label": "Create main AppComponent with OAuth service injection",
+        "id": "step7"
+      },
+      {
+        "label": "Add component state for authorization URL",
+        "id": "step8"
+      },
+      {
+        "label": "Implement initialization to generate PKCE values",
+        "id": "step9"
+      },
+      {
+        "label": "Create basic component template structure",
+        "id": "step10"
+      },
+      {
+        "label": "Add authorization button with OAuth URL",
+        "id": "step11"
+      }
+    ],
+    "answerShape": "multi-file"
+  },
+  "source": "content"
+}

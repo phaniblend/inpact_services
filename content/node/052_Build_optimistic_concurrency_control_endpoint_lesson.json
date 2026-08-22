@@ -1,0 +1,364 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-node-52",
+    "track": "node",
+    "lessonNum": 52,
+    "title": "Build optimistic concurrency control endpoint",
+    "shortName": "P52",
+    "intro": {
+      "tag": "LESSON #52",
+      "title": "Build optimistic concurrency control endpoint",
+      "body": "In this lesson, you will build a Node.js API endpoint that implements optimistic concurrency control. This technique prevents data conflicts when multiple users try to update the same resource simultaneously, without locking the database. You will learn to use version numbers (like timestamps or counters) to detect and handle update collisions. The main technologies involved are Express.js for routing, a simple in-memory data store, and conditional logic in JavaScript. By the end, you'll have a functional endpoint that safely manages concurrent updates in a web application.",
+      "usecase": "Optimistic concurrency control is essential in collaborative editing tools like Google Docs or Figma, where multiple users edit the same document simultaneously. It prevents data loss when two users submit conflicting changes to shared resources like project management tickets in Jira or Trello cards. This pattern also protects inventory systems in e-commerce platforms during high-traffic sales events, ensuring customers don't oversell limited stock items. Developers implement these endpoints to maintain data integrity in any multi-user application where race conditions could corrupt critical business data."
+    },
+    "objectives": [
+      "Implement a version tracking mechanism for data entities",
+      "Construct an endpoint that validates client-supplied version numbers",
+      "Apply conditional logic to handle version conflicts in update operations",
+      "Configure HTTP response codes for successful updates and version conflicts",
+      "Manipulate data persistence only when version checks pass",
+      "Integrate version validation middleware into the request flow",
+      "Initialize version tracking for new data entities"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 10",
+        "title": "Import required Node.js modules",
+        "instruction": "Import the http module for creating the server and the url module for parsing request URLs.",
+        "hint": "Use the require() function to import Node.js built-in modules.",
+        "analogousExample": "// Example: importing built-in modules\nconst fs = require('fs');\nconst path = require('path');",
+        "seedCode": "// Import the http and url modules here",
+        "expectedOutcome": "The http and url modules are imported and ready to use.",
+        "successCriteria": [
+          "The http and url modules are imported using require()."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you import both the http and url modules using require().",
+        "feedbackWrong": "Check the syntax: you need to use require('module_name') to import Node.js built-in modules.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "require('http')",
+            "require('url')"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 10",
+        "title": "Initialize the data store with version tracking",
+        "instruction": "Create a data store object named 'dataStore' that contains an 'items' array with at least one sample item. Each item should have 'id', 'name', and 'version' properties. Initialize the version to 1.",
+        "hint": "You can create a simple JavaScript object with an items array containing objects that have id, name, and version fields.",
+        "analogousExample": "// Example: Creating a simple data store\nconst dataStore = {\n  items: [\n    { id: 1, name: 'Sample Item', version: 1 }\n  ]\n};",
+        "seedCode": "// Import the http and url modules here\n\n// Create your data store object below\n",
+        "expectedOutcome": "A dataStore object is created with an items array containing at least one item that has id, name, and version properties.",
+        "successCriteria": [
+          "The dataStore object exists with an items array containing objects that have id, name, and version properties."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've created a data store, but make sure it has an 'items' array with at least one item containing 'id', 'name', and 'version' properties.",
+        "feedbackWrong": "The data store wasn't created correctly. Create an object named 'dataStore' with an 'items' array containing objects that have id, name, and version properties.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "dataStore",
+            "items",
+            "id",
+            "name",
+            "version"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 10",
+        "title": "Create the HTTP server instance",
+        "instruction": "Create an HTTP server using http.createServer() and define a request handling function that logs the request method and URL.",
+        "hint": "Call http.createServer() and pass it a function that takes request and response parameters. Inside that function, log req.method and req.url to the console.",
+        "analogousExample": "// Example: creating a basic HTTP server\nconst server = http.createServer((req, res) => {\n  console.log(`${req.method} ${req.url}`);\n});",
+        "seedCode": "// Import the http and url modules here\nconst http = require('http');\nconst url = require('url');\n\n// Create your data store object below\nconst dataStore = {\n  items: {},\n  versions: {}\n};\n\n// Create your HTTP server here\n",
+        "expectedOutcome": "The server instance is created and ready to handle incoming HTTP requests with basic logging.",
+        "successCriteria": [
+          "An HTTP server is created using http.createServer() with a request handler that logs the method and URL."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure you're using http.createServer() and logging both the request method and URL.",
+        "feedbackWrong": "The server wasn't created correctly. Remember to use http.createServer() and define a function that handles requests.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "createServer",
+            "req.method",
+            "req.url",
+            "console.log"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 10",
+        "title": "Parse request URL and method",
+        "instruction": "Inside the server request handler function, parse the request URL to extract the pathname and get the HTTP method from the request object.",
+        "hint": "Use the url.parse() method on the request.url property to get a URL object, then access its pathname. The HTTP method is available as request.method.",
+        "analogousExample": "// Example: parsing URL and method in a request handler\nfunction handleRequest(req, res) {\n  const parsedUrl = url.parse(req.url, true);\n  const pathname = parsedUrl.pathname;\n  const method = req.method;\n}",
+        "seedCode": "const http = require('http');\nconst url = require('url');\n\nconst dataStore = {\n  items: {},\n  versions: {}\n};\n\nconst server = http.createServer((req, res) => {\n  // Parse the request URL to get pathname and extract the HTTP method here\n});",
+        "expectedOutcome": "The server handler will be able to identify which resource is being requested and what action (GET, PUT, etc.) should be performed.",
+        "successCriteria": [
+          "The request handler contains code that parses req.url to get pathname and accesses req.method."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're extracting both the pathname from the parsed URL and the HTTP method from the request object.",
+        "feedbackWrong": "The request handler needs to parse the URL and extract the method. Use url.parse() on req.url and access req.method.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "url.parse",
+            "req.url",
+            "pathname",
+            "req.method"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 10",
+        "title": "Handle GET requests to retrieve items",
+        "instruction": "Inside the request handler, add an if statement to check if the request method is 'GET' and the pathname starts with '/items/'. If true, extract the item ID from the pathname and retrieve the item from dataStore.items.",
+        "hint": "Use req.method and parsedUrl.pathname to check the request. The item ID will be after '/items/' in the pathname. Access the item with dataStore.items[id].",
+        "analogousExample": "// Example: checking a GET request and extracting an ID\nif (req.method === 'GET' && pathname.startsWith('/items/')) {\n  const id = pathname.split('/')[2];\n  const item = items[id];\n}",
+        "seedCode": "const http = require('http');\nconst url = require('url');\n\nconst dataStore = {\n  items: {},\n  versions: {}\n};\n\nconst server = http.createServer((req, res) => {\n  // Parse the request URL to get pathname and extract the HTTP method here\n  const parsedUrl = url.parse(req.url, true);\n  const pathname = parsedUrl.pathname;\n  \n  // Add your GET request handling logic here\n});",
+        "expectedOutcome": "The server will now detect GET requests to item endpoints and extract the item ID for retrieval.",
+        "successCriteria": [
+          "An if statement checks for GET method and '/items/' pathname, extracts the item ID, and attempts to retrieve it from dataStore.items."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're checking both the method and pathname, and extracting the ID correctly.",
+        "feedbackWrong": "The GET request handling isn't implemented correctly. Check the method, pathname, and ID extraction.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "if",
+            "req.method",
+            "'GET'",
+            "pathname",
+            "startsWith",
+            "'/items/'",
+            "split",
+            "dataStore.items"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 10",
+        "title": "Extract request body for PUT operations",
+        "instruction": "Inside the server callback, add logic to collect and parse the request body data when the HTTP method is PUT.",
+        "hint": "You'll need to listen for the 'data' and 'end' events on the request object to accumulate the body chunks, then parse the JSON.",
+        "analogousExample": "// Example: collecting request body\nfunction handleRequest(req, res) {\n  if (req.method === 'POST') {\n    let body = '';\n    req.on('data', chunk => body += chunk);\n    req.on('end', () => {\n      const data = JSON.parse(body);\n      // Process data\n    });\n  }\n}",
+        "seedCode": "const http = require('http');\nconst url = require('url');\n\nconst dataStore = {\n  items: {},\n  versions: {}\n};\n\nconst server = http.createServer((req, res) => {\n  const parsedUrl = url.parse(req.url, true);\n  const pathname = parsedUrl.pathname;\n  \n  // Add your GET request handling logic here\n  \n  // Add request body collection for PUT requests here\n});",
+        "expectedOutcome": "The server will be able to receive and parse JSON request bodies for PUT operations.",
+        "successCriteria": [
+          "The code includes logic that collects request body data chunks and parses JSON when the HTTP method is PUT."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started collecting the request body, but make sure to handle both the 'data' and 'end' events and parse the JSON. Also ensure this only runs for PUT requests.",
+        "feedbackWrong": "The request body collection logic is missing or incorrect. Remember to accumulate body chunks and parse JSON specifically for PUT requests.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "req.on",
+            "data",
+            "end",
+            "JSON.parse",
+            "PUT"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 10",
+        "title": "Implement optimistic concurrency check",
+        "instruction": "Inside the server request handler, add logic to compare the client-provided version from the request body with the server's current version before allowing an update.",
+        "hint": "Check if the version in the request body matches the version stored in dataStore.versions for that item ID.",
+        "analogousExample": "// Similar: checking version before update\nif (clientVersion !== serverVersion) {\n  // Reject the update\n  res.writeHead(409, { 'Content-Type': 'application/json' });\n  res.end(JSON.stringify({ error: 'Version conflict' }));\n  return;\n}",
+        "seedCode": "const http = require('http');\nconst url = require('url');\n\nconst dataStore = {\n  items: {},\n  versions: {}\n};\n\nconst server = http.createServer((req, res) => {\n  const parsedUrl = url.parse(req.url, true);\n  const pathname = parsedUrl.pathname;\n  \n  // Add your GET request handling logic here\n  \n  // Add request body collection for PUT requests here\n  \n  // Add optimistic concurrency check here\n});",
+        "expectedOutcome": "The server will now compare versions before processing updates, preventing conflicts when multiple clients try to update the same item.",
+        "successCriteria": [
+          "Code includes a version comparison check that returns a 409 conflict response when versions don't match."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're comparing the client version from the request body with the server version from dataStore.versions.",
+        "feedbackWrong": "The optimistic concurrency check isn't implemented correctly. You need to compare versions and return a 409 response when they don't match.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "if",
+            "version",
+            "!=",
+            "409",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 10",
+        "title": "Handle successful updates with version increment",
+        "instruction": "Inside the request handler, after the optimistic concurrency check, add the update logic that runs when version numbers match. This should update the item in dataStore.items and increment its version in dataStore.versions.",
+        "hint": "When the client's version matches the stored version, update the item's data and increment the version number by 1 for future requests.",
+        "analogousExample": "// Similar: updating data with version tracking\nif (clientVersion === storedVersion) {\n  dataStore.items[id] = newData;\n  dataStore.versions[id] = storedVersion + 1;\n}",
+        "seedCode": "const http = require('http');\nconst url = require('url');\n\nconst dataStore = {\n  items: {},\n  versions: {}\n};\n\nconst server = http.createServer((req, res) => {\n  const parsedUrl = url.parse(req.url, true);\n  const pathname = parsedUrl.pathname;\n  \n  // Add your GET request handling logic here\n  \n  // Add request body collection for PUT requests here\n  \n  // Add optimistic concurrency check here\n  \n  // Add update logic with version increment here\n});",
+        "expectedOutcome": "The server will now properly handle successful updates by modifying the stored item and incrementing its version number when the client's version matches.",
+        "successCriteria": [
+          "The update logic is implemented inside the request handler, updates dataStore.items, and increments dataStore.versions when version numbers match."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added some update logic, but make sure you're both updating the item in dataStore.items and incrementing the version in dataStore.versions when the client version matches the stored version.",
+        "feedbackWrong": "The update logic with version increment isn't properly implemented. Look at the analogous example - you need to check if versions match, then update the item data and increment the version number.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "dataStore.items",
+            "dataStore.versions",
+            "increment",
+            "version",
+            "update"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 10",
+        "title": "Handle concurrency conflicts with error response",
+        "instruction": "In the server's request handler, add an else clause after the optimistic concurrency check to return a 409 Conflict response when the client's version doesn't match the server's version.",
+        "hint": "After checking if (clientVersion === serverVersion), add an else block that sets the response status code to 409 and sends a JSON error message.",
+        "analogousExample": "// Example: handling a version mismatch\nif (clientVersion === serverVersion) {\n  // Update logic here\n} else {\n  res.writeHead(409, { 'Content-Type': 'application/json' });\n  res.end(JSON.stringify({ error: 'Version conflict' }));\n}",
+        "seedCode": "const http = require('http');\nconst url = require('url');\n\nconst dataStore = {\n  items: {},\n  versions: {}\n};\n\nconst server = http.createServer((req, res) => {\n  const parsedUrl = url.parse(req.url, true);\n  const pathname = parsedUrl.pathname;\n  \n  // Add your GET request handling logic here\n  \n  // Add request body collection for PUT requests here\n  \n  // Add optimistic concurrency check here\n  \n  // Add update logic with version increment here\n  \n  // Add concurrency conflict error response here\n});",
+        "expectedOutcome": "The server will properly respond with a 409 status code and error message when a client tries to update an item with an outdated version.",
+        "successCriteria": [
+          "The else clause returns a 409 status with a JSON error object when version mismatch occurs."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're setting the status code to 409 and returning a JSON error message in the else block.",
+        "feedbackWrong": "The concurrency conflict handling isn't quite right. You need to add an else clause after the version check that returns a 409 status with a JSON error object.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "else",
+            "409",
+            "writeHead",
+            "JSON.stringify",
+            "error"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 10",
+        "title": "Start the server and handle requests",
+        "instruction": "Start the server listening on port 3000 and log a message to the console when it's ready.",
+        "hint": "Call the server.listen() method with the port number and a callback function that logs a message.",
+        "analogousExample": "// Starting a basic HTTP server\nconst server = http.createServer((req, res) => {\n  res.end('Hello');\n});\nserver.listen(3000, () => {\n  console.log('Server running on port 3000');\n});",
+        "seedCode": "const http = require('http');\nconst url = require('url');\n\nconst dataStore = {\n  items: {},\n  versions: {}\n};\n\nconst server = http.createServer((req, res) => {\n  const parsedUrl = url.parse(req.url, true);\n  const pathname = parsedUrl.pathname;\n  \n  // Add your GET request handling logic here\n  \n  // Add request body collection for PUT requests here\n  \n  // Add optimistic concurrency check here\n  \n  // Add update logic with version increment here\n  \n  // Add concurrency conflict error response here\n});\n\n// Start the server here",
+        "expectedOutcome": "The server will be operational and ready to handle incoming HTTP requests on port 3000.",
+        "successCriteria": [
+          "The server is started on port 3000 with a console log message indicating it's running."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the server, but make sure to include a console log message when it's ready.",
+        "feedbackWrong": "The server isn't properly started. Check that you're calling server.listen() with the correct port and callback.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "server.listen",
+            "3000",
+            "console.log"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import required Node.js modules",
+        "id": "step1"
+      },
+      {
+        "label": "Initialize the data store with version tracking",
+        "id": "step2"
+      },
+      {
+        "label": "Create the HTTP server instance",
+        "id": "step3"
+      },
+      {
+        "label": "Parse request URL and method",
+        "id": "step4"
+      },
+      {
+        "label": "Handle GET requests to retrieve items",
+        "id": "step5"
+      },
+      {
+        "label": "Extract request body for PUT operations",
+        "id": "step6"
+      },
+      {
+        "label": "Implement optimistic concurrency check",
+        "id": "step7"
+      },
+      {
+        "label": "Handle successful updates with version increment",
+        "id": "step8"
+      },
+      {
+        "label": "Handle concurrency conflicts with error response",
+        "id": "step9"
+      },
+      {
+        "label": "Start the server and handle requests",
+        "id": "step10"
+      }
+    ]
+  },
+  "source": "content"
+}

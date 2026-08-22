@@ -1,0 +1,471 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-algorithms-95",
+    "track": "algorithms",
+    "lessonNum": 95,
+    "title": "Combination Sum",
+    "shortName": "P95",
+    "intro": {
+      "tag": "LESSON #95",
+      "title": "Combination Sum",
+      "body": "In this lesson, you'll build a function that solves the Combination Sum lesson, where you find all unique combinations of numbers from an array that sum to a target value. You'll learn the core concept of backtracking, which is a systematic way to explore all possible solutions by building combinations incrementally and undoing choices that don't lead to valid results. The main technologies involved are JavaScript arrays, recursion, and array manipulation methods. This beginner-friendly lesson will guide you through implementing the algorithm step-by-step, helping you understand how to generate and validate combinations efficiently.",
+      "usecase": "The combination sum algorithm is essential for solving resource allocation and constraint-based selection lessons in real applications. In e-commerce, it helps find product bundles that match a customer's budget while maximizing value. In financial software, it identifies investment portfolios that reach target returns with available capital. Developers use this pattern in recommendation engines, shopping cart optimizers, and budget planning tools where users need to explore all possible combinations that meet specific criteria."
+    },
+    "objectives": [
+      "Implement a recursive backtracking function to explore candidate combinations",
+      "Construct a base case to validate when a target sum is achieved",
+      "Manipulate arrays to build and store valid combination sequences",
+      "Initialize and update parameters to track current sum and index position",
+      "Control recursion depth by pruning branches that exceed the target sum",
+      "Integrate sorting to handle duplicate combinations efficiently",
+      "Render the final solution by returning all valid combinations"
+    ],
+    "steps": [
+      {
+        "type": "reasoning",
+        "id": "step1",
+        "phase": "Step 1 of 19",
+        "title": "Introduction",
+        "content": {
+          "body": "Welcome! Today we'll solve Combination Sum, a classic algorithm lesson. You'll learn how to find all unique combinations in an array that add up to a target number. This builds on the 'remember what we've seen' approach but with a twist for combinations.",
+          "title": "Introduction"
+        }
+      },
+      {
+        "type": "reasoning",
+        "id": "step2",
+        "phase": "Step 2 of 19",
+        "title": "What you'll learn",
+        "content": {
+          "body": "By the end, you'll be able to:\n1. Explain why brute force checking all combinations is inefficient\n2. Apply backtracking with a hashmap to track seen combinations\n3. Implement the Combination Sum algorithm in JavaScript\n4. Avoid duplicate combinations in your results\n5. Understand when to add to vs check your lookup structure",
+          "title": "What you'll learn"
+        }
+      },
+      {
+        "type": "discovery",
+        "id": "step3",
+        "phase": "Step 3 of 19",
+        "title": "Try it",
+        "content": {
+          "body": "(No content)",
+          "title": "Try it",
+          "prompt": "Find combinations of [2,3,6,7] that add to 7",
+          "exampleArray": [
+            2,
+            3,
+            6,
+            7
+          ],
+          "target": 7,
+          "successMessage": "Great! You found [7] and [2,2,3] (if you allowed reusing numbers)."
+        }
+      },
+      {
+        "type": "discovery",
+        "id": "step4",
+        "phase": "Step 4 of 19",
+        "title": "Try a bigger array",
+        "content": {
+          "body": "(No content)",
+          "title": "Try a bigger array",
+          "prompt": "Find combinations of [2,3,5] that add to 8",
+          "exampleArray": [
+            2,
+            3,
+            5
+          ],
+          "target": 8,
+          "successMessage": "Well done! You found [2,2,2,2], [2,3,3], and [3,5]."
+        }
+      },
+      {
+        "type": "discovery",
+        "id": "step5",
+        "phase": "Step 5 of 19",
+        "title": "One more",
+        "content": {
+          "body": "(No content)",
+          "title": "One more",
+          "prompt": "Find combinations of [2,4,6,8] that add to 10",
+          "exampleArray": [
+            2,
+            4,
+            6,
+            8
+          ],
+          "target": 10,
+          "successMessage": "Excellent! You found combinations like [2,2,2,2,2], [2,2,2,4], [2,4,4], [2,8], [4,6], and more."
+        }
+      },
+      {
+        "type": "reflection",
+        "id": "step6",
+        "phase": "Step 6 of 19",
+        "title": "What you did",
+        "content": {
+          "body": "What you just did was explore all possible combinations - that's essentially brute force. You tried different groupings of numbers until you found ones that sum to the target. This becomes extremely slow with larger arrays.",
+          "title": "What you did"
+        }
+      },
+      {
+        "type": "scale-problem",
+        "id": "step7",
+        "phase": "Step 7 of 19",
+        "title": "Why it gets hard",
+        "content": {
+          "body": "With an array of 10 numbers where we can reuse elements, the number of possible combinations explodes. Checking every combination would take forever. We need a smarter method that remembers what we've tried. Can't figure it out? Click Show me on the next step.",
+          "title": "Why it gets hard"
+        }
+      },
+      {
+        "type": "concept-bridge",
+        "id": "step8",
+        "phase": "Step 8 of 19",
+        "title": "Key idea",
+        "content": {
+          "body": "Remember what we have already seen. For Combination Sum, we need to track not just individual numbers, but combinations we've explored. We'll use backtracking with a hashmap to avoid duplicate work and ensure unique combinations in our results.",
+          "title": "Key idea",
+          "visualMetaphor": "Think of it like a recipe notebook: we write down partial combinations we're building, and we check if we've already found a complete combination before adding it to our results."
+        }
+      },
+      {
+        "type": "reveal-idea",
+        "id": "step9",
+        "phase": "Step 9 of 19",
+        "title": "The approach",
+        "content": {
+          "body": "We'll use backtracking with a hashmap approach: start with an empty combination, try adding each candidate number, track the current sum, and when we hit the target, we add a sorted version of the combination to our hashmap to ensure uniqueness.",
+          "title": "The approach",
+          "showMeFirst": true,
+          "illustratedExample": "For [2,3,6,7], target 7:\n1. Start with [] sum=0\n2. Try adding 2 → [2] sum=2\n3. Try adding 2 → [2,2] sum=4\n4. Try adding 2 → [2,2,2] sum=6\n5. Try adding 2 → [2,2,2,2] sum=8 (too big, backtrack)\n6. Try adding 3 → [2,2,3] sum=7 (found! Add to results)\n7. Backtrack and continue...\n8. Try path starting with 3 → [3,3,3] sum=9 (too big)\n9. Try path starting with 7 → [7] sum=7 (found!)\nWe use a Set to store stringified sorted combinations to avoid duplicates."
+        }
+      },
+      {
+        "type": "flow-explainer",
+        "id": "step10",
+        "phase": "Step 10 of 19",
+        "title": "Steps",
+        "content": {
+          "body": "1. Sort the candidates array\n2. Create a results array and a Set for seen combinations\n3. Define a backtrack function that takes current combination, start index, and current sum\n4. If current sum equals target, add sorted combination to results if not seen\n5. If current sum exceeds target, return (backtrack)\n6. Otherwise, for each candidate from start index:\n   - Add candidate to current combination\n   - Recursively call backtrack with updated sum\n   - Remove candidate (backtrack)\n7. Return results",
+          "title": "Steps"
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 19",
+        "title": "Set up the function",
+        "instruction": "Create the main function that takes candidates and target parameters. Initialize an empty array for results and a Set for seen combinations.",
+        "hint": "Remember to sort the candidates array first.",
+        "analogousExample": "",
+        "seedCode": "function combinationSum(candidates, target) {\n  // Your code here\n}",
+        "expectedOutcome": "Function structure with sorted candidates, results array, and seen Set",
+        "successCriteria": [],
+        "feedbackCorrect": "Perfect! You've set up the basic structure.",
+        "feedbackPartial": "Good start, but don't forget to sort the candidates.",
+        "feedbackWrong": "Let's try again. We need: sort candidates, create results array, and create a Set.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "sort",
+            "results",
+            "Set"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step12",
+        "type": "question",
+        "phase": "Step 12 of 19",
+        "title": "Define the backtrack function",
+        "instruction": "Inside combinationSum, define a backtrack function that takes current combination array, start index, and current sum as parameters.",
+        "hint": "This will be a helper function that we'll fill in next.",
+        "analogousExample": "",
+        "seedCode": "function combinationSum(candidates, target) {\n  candidates.sort((a, b) => a - b);\n  const results = [];\n  const seen = new Set();\n  \n  function backtrack(combination, start, sum) {\n    // We'll fill this in next\n  }\n}",
+        "expectedOutcome": "Backtrack function defined with three parameters",
+        "successCriteria": [],
+        "feedbackCorrect": "Great! The backtrack function is ready to be implemented.",
+        "feedbackPartial": "Almost there - make sure you have all three parameters.",
+        "feedbackWrong": "Remember: backtrack needs combination array, start index, and current sum.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "backtrack",
+            "combination",
+            "start",
+            "sum"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step13",
+        "type": "question",
+        "phase": "Step 13 of 19",
+        "title": "Handle target match",
+        "instruction": "In the backtrack function, add the base case: if current sum equals target, create a sorted copy of the combination, convert it to a string key, check if it's in the seen Set, and if not, add to results and seen.",
+        "hint": "Use JSON.stringify on the sorted combination for the key.",
+        "analogousExample": "",
+        "seedCode": "function combinationSum(candidates, target) {\n  candidates.sort((a, b) => a - b);\n  const results = [];\n  const seen = new Set();\n  \n  function backtrack(combination, start, sum) {\n    if (sum === target) {\n      // Create sorted copy and check if seen\n      const sortedComb = [...combination].sort((a, b) => a - b);\n      const key = JSON.stringify(sortedComb);\n      if (!seen.has(key)) {\n        seen.add(key);\n        results.push(sortedComb);\n      }\n      return;\n    }\n  }\n}",
+        "expectedOutcome": "Base case for when sum equals target",
+        "successCriteria": [],
+        "feedbackCorrect": "Excellent! You're handling duplicate combinations properly.",
+        "feedbackPartial": "Good, but make sure to sort the combination and create a string key.",
+        "feedbackWrong": "Remember: when sum equals target, we need to check if we've seen this combination before adding it.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "sum === target",
+            "sort",
+            "JSON.stringify",
+            "seen.has",
+            "results.push"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step14",
+        "type": "question",
+        "phase": "Step 14 of 19",
+        "title": "Add overflow check",
+        "instruction": "Add another base case: if current sum exceeds target, return immediately (backtrack).",
+        "hint": "This should come before the recursive loop.",
+        "analogousExample": "",
+        "seedCode": "function combinationSum(candidates, target) {\n  candidates.sort((a, b) => a - b);\n  const results = [];\n  const seen = new Set();\n  \n  function backtrack(combination, start, sum) {\n    if (sum > target) return;\n    \n    if (sum === target) {\n      const sortedComb = [...combination].sort((a, b) => a - b);\n      const key = JSON.stringify(sortedComb);\n      if (!seen.has(key)) {\n        seen.add(key);\n        results.push(sortedComb);\n      }\n      return;\n    }\n  }\n}",
+        "expectedOutcome": "Early return when sum exceeds target",
+        "successCriteria": [],
+        "feedbackCorrect": "Perfect! This prevents unnecessary recursion.",
+        "feedbackPartial": "Almost - make sure to check if sum > target.",
+        "feedbackWrong": "We need to stop exploring if the current sum is already too large.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "sum > target",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step15",
+        "type": "question",
+        "phase": "Step 15 of 19",
+        "title": "Implement the recursive loop",
+        "instruction": "Add a for loop that iterates from start index through candidates. For each candidate, push it to combination, recursively call backtrack with updated sum,",
+        "hint": "Remember to update the sum by adding the candidate value.",
+        "analogousExample": "",
+        "seedCode": "function combinationSum(candidates, target) {\n  candidates.sort((a, b) => a - b);\n  const results = [];\n  const seen = new Set();\n  \n  function backtrack(combination, start, sum) {\n    if (sum > target) return;\n    \n    if (sum === target) {\n      const sortedComb = [...combination].sort((a, b) => a - b);\n      const key = JSON.stringify(sortedComb);\n      if (!seen.has(key)) {\n        seen.add(key);\n        results.push(sortedComb);\n      }\n      return;\n    }\n    \n    for (let i = start; i < candidates.length; i++) {\n      combination.push(candidates[i]);\n      backtrack(combination, i, sum + candidates[i]);\n      combination.pop();\n    }\n  }\n}",
+        "expectedOutcome": "Complete backtrack function with recursive loop",
+        "successCriteria": [],
+        "feedbackCorrect": "Excellent! The backtracking logic is complete.",
+        "feedbackPartial": "Good progress - make sure you're passing the right parameters to backtrack.",
+        "feedbackWrong": "Remember: we need to try each candidate, update the sum, recurse, then backtrack.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "for",
+            "let i = start",
+            "combination.push",
+            "backtrack",
+            "combination.pop"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step16",
+        "type": "question",
+        "phase": "Step 16 of 19",
+        "title": "pop it from combination",
+        "instruction": "pop it from combination.",
+        "hint": "Remember to update the sum by adding the candidate value.",
+        "analogousExample": "",
+        "seedCode": "function combinationSum(candidates, target) {\n  candidates.sort((a, b) => a - b);\n  const results = [];\n  const seen = new Set();\n  \n  function backtrack(combination, start, sum) {\n    if (sum > target) return;\n    \n    if (sum === target) {\n      const sortedComb = [...combination].sort((a, b) => a - b);\n      const key = JSON.stringify(sortedComb);\n      if (!seen.has(key)) {\n        seen.add(key);\n        results.push(sortedComb);\n      }\n      return;\n    }\n    \n    for (let i = start; i < candidates.length; i++) {\n      combination.push(candidates[i]);\n      backtrack(combination, i, sum + candidates[i]);\n      combination.pop();\n    }\n  }\n}",
+        "expectedOutcome": "",
+        "successCriteria": [
+          "Complete the step as instructed."
+        ],
+        "feedbackCorrect": "Great! Step completed.",
+        "feedbackPartial": "Review the instruction and try again.",
+        "feedbackWrong": "Check the instruction and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "for",
+            "let i = start",
+            "combination.push",
+            "backtrack",
+            "combination.pop"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step17",
+        "type": "question",
+        "phase": "Step 17 of 19",
+        "title": "Start the backtracking and return results",
+        "instruction": "Call the backtrack function with initial empty combination, start index 0, and sum 0.",
+        "hint": "Make sure to call backtrack before returning results.",
+        "analogousExample": "",
+        "seedCode": "function combinationSum(candidates, target) {\n  candidates.sort((a, b) => a - b);\n  const results = [];\n  const seen = new Set();\n  \n  function backtrack(combination, start, sum) {\n    if (sum > target) return;\n    \n    if (sum === target) {\n      const sortedComb = [...combination].sort((a, b) => a - b);\n      const key = JSON.stringify(sortedComb);\n      if (!seen.has(key)) {\n        seen.add(key);\n        results.push(sortedComb);\n      }\n      return;\n    }\n    \n    for (let i = start; i < candidates.length; i++) {\n      combination.push(candidates[i]);\n      backtrack(combination, i, sum + candidates[i]);\n      combination.pop();\n    }\n  }\n  \n  backtrack([], 0, 0);\n  return results;\n}",
+        "expectedOutcome": "Complete working solution",
+        "successCriteria": [],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Almost there - don't forget to start the backtracking process.",
+        "feedbackWrong": "We need to call backtrack with initial values and return the results.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "backtrack([], 0, 0)",
+            "return results"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step18",
+        "type": "question",
+        "phase": "Step 18 of 19",
+        "title": "return the results array",
+        "instruction": "return the results array.",
+        "hint": "Make sure to call backtrack before returning results.",
+        "analogousExample": "",
+        "seedCode": "function combinationSum(candidates, target) {\n  candidates.sort((a, b) => a - b);\n  const results = [];\n  const seen = new Set();\n  \n  function backtrack(combination, start, sum) {\n    if (sum > target) return;\n    \n    if (sum === target) {\n      const sortedComb = [...combination].sort((a, b) => a - b);\n      const key = JSON.stringify(sortedComb);\n      if (!seen.has(key)) {\n        seen.add(key);\n        results.push(sortedComb);\n      }\n      return;\n    }\n    \n    for (let i = start; i < candidates.length; i++) {\n      combination.push(candidates[i]);\n      backtrack(combination, i, sum + candidates[i]);\n      combination.pop();\n    }\n  }\n  \n  backtrack([], 0, 0);\n  return results;\n}",
+        "expectedOutcome": "",
+        "successCriteria": [
+          "Complete the step as instructed."
+        ],
+        "feedbackCorrect": "Great! Step completed.",
+        "feedbackPartial": "Review the instruction and try again.",
+        "feedbackWrong": "Check the instruction and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "backtrack([], 0, 0)",
+            "return results"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "type": "complete",
+        "id": "step19",
+        "phase": "Step 19 of 19",
+        "title": "Done",
+        "content": {
+          "body": "Great work! You've learned how to solve Combination Sum using backtracking with a hashmap to track seen combinations. Key takeaways:\n1. We use a Set to remember combinations we've already found\n2. We sort and stringify combinations for easy comparison\n3. Backtracking lets us explore all possibilities efficiently\n4. We check the hashmap before adding to results to avoid duplicates\nRemember: the hashmap stores stringified sorted combinations as keys, and we check it only when we find a valid combination (sum equals target).",
+          "title": "Done"
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Introduction",
+        "id": "step1"
+      },
+      {
+        "label": "What you'll learn",
+        "id": "step2"
+      },
+      {
+        "label": "Try it",
+        "id": "step3"
+      },
+      {
+        "label": "Try a bigger array",
+        "id": "step4"
+      },
+      {
+        "label": "One more",
+        "id": "step5"
+      },
+      {
+        "label": "What you did",
+        "id": "step6"
+      },
+      {
+        "label": "Why it gets hard",
+        "id": "step7"
+      },
+      {
+        "label": "Key idea",
+        "id": "step8"
+      },
+      {
+        "label": "The approach",
+        "id": "step9"
+      },
+      {
+        "label": "Steps",
+        "id": "step10"
+      },
+      {
+        "label": "Set up the function",
+        "id": "step11"
+      },
+      {
+        "label": "Define the backtrack function",
+        "id": "step12"
+      },
+      {
+        "label": "Handle target match",
+        "id": "step13"
+      },
+      {
+        "label": "Add overflow check",
+        "id": "step14"
+      },
+      {
+        "label": "Implement the recursive loop",
+        "id": "step15"
+      },
+      {
+        "label": "pop it from combination",
+        "id": "step16"
+      },
+      {
+        "label": "Start the backtracking and return results",
+        "id": "step17"
+      },
+      {
+        "label": "return the results array",
+        "id": "step18"
+      },
+      {
+        "label": "Done",
+        "id": "step19"
+      }
+    ],
+    "algorithmFamily": "array-hashmap",
+    "familyTeachingProfile": {
+      "mentalModel": "Remember what we have already seen",
+      "conceptBridge": "Show the learner how to use a lookup structure (e.g. object or Map) to remember seen values and avoid re-scanning.",
+      "visualMetaphor": "A notebook where we write down what we've seen and check it in one step.",
+      "commonConfusions": [
+        "What do we store as key vs value?",
+        "When do we check the structure vs add to it?"
+      ]
+    }
+  },
+  "source": "content"
+}

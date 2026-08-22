@@ -1,0 +1,426 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-algorithms-34",
+    "track": "algorithms",
+    "lessonNum": 34,
+    "title": "Permutation in String",
+    "shortName": "P34",
+    "intro": {
+      "tag": "LESSON #34",
+      "title": "Permutation in String",
+      "body": "In this lesson, you will build a function that checks if one string contains a permutation (rearrangement) of another string as a contiguous substring. You will learn the sliding window technique, a core algorithm pattern for efficiently comparing substrings without recalculating everything from scratch. The main constructs involved are strings, arrays, hash maps (or objects) for character frequency counting, and loops. This beginner-friendly lesson will guide you step-by-step through implementing this pattern in JavaScript to solve the lesson.",
+      "usecase": "The permutation in string algorithm is essential for text analysis features in real applications. For example, plagiarism detection tools use this pattern to identify rearranged content by checking if document sections contain permutations of source material. In search engines, it helps implement 'fuzzy search' where users might mistype words but the system still finds relevant results by detecting character rearrangements. Security systems also apply this technique to identify suspicious patterns in log files where malicious actors might rearrange attack signatures to evade detection."
+    },
+    "objectives": [
+      "Implement a sliding window algorithm to detect permutations",
+      "Construct a character frequency map for string comparison",
+      "Initialize and update window boundaries for efficient traversal",
+      "Manipulate frequency counts during window movement",
+      "Apply permutation checking logic to validate substring matches",
+      "Configure edge case handling for varying input lengths",
+      "Integrate all components into a complete permutation detection function"
+    ],
+    "steps": [
+      {
+        "type": "reasoning",
+        "id": "step1",
+        "phase": "Step 1 of 18",
+        "title": "Let's begin",
+        "content": {
+          "body": "Have you ever tried to find all possible arrangements of letters in a word? That's what permutations are about. Today, we'll learn how to check if one string contains any permutation of another string using backtracking—a powerful technique for exploring possibilities.",
+          "title": "Let's begin"
+        }
+      },
+      {
+        "type": "reasoning",
+        "id": "step2",
+        "phase": "Step 2 of 18",
+        "title": "What you'll learn",
+        "content": {
+          "body": "1. Apply backtracking to generate permutations.\n2. Implement a recursive function that tries choices and undoes them.\n3. Explain when and why we need to backtrack.\n4. Build a solution to check for permutation in a string.",
+          "title": "What you'll learn"
+        }
+      },
+      {
+        "type": "discovery",
+        "id": "step3",
+        "phase": "Step 3 of 18",
+        "title": "Try it",
+        "content": {
+          "body": "Let's start with a small example. Suppose we have the string 'ab' and we want to find all its permutations. What are all the possible arrangements of these two letters?",
+          "title": "Try it",
+          "visualMetaphor": "Imagine you're exploring paths in a maze. Each letter choice is a step down a path."
+        }
+      },
+      {
+        "type": "discovery",
+        "id": "step4",
+        "phase": "Step 4 of 18",
+        "title": "Explore a path",
+        "content": {
+          "body": "Start with 'a'. What's the next letter you can choose? After picking 'a', you only have 'b' left. That gives you 'ab'. Now, what if you started with 'b' instead?",
+          "title": "Explore a path",
+          "visualMetaphor": "You're at a fork in the maze: left path chooses 'a', right path chooses 'b'."
+        }
+      },
+      {
+        "type": "discovery",
+        "id": "step5",
+        "phase": "Step 5 of 18",
+        "title": "What happens after exploring?",
+        "content": {
+          "body": "After you form 'ab' from the 'a' path, you've reached the end. But there might be other arrangements. How do you find 'ba'? You need to go back and try the other starting letter.",
+          "title": "What happens after exploring?",
+          "visualMetaphor": "When a path ends, you backtrack to the last choice point and try a different branch."
+        }
+      },
+      {
+        "type": "reflection",
+        "id": "step6",
+        "phase": "Step 6 of 18",
+        "title": "What you did",
+        "content": {
+          "body": "You manually tried each starting letter, explored what came after, and when you finished one arrangement, you mentally went back to try another. That's the essence of backtracking: try a choice, explore further, then undo to try other options.",
+          "title": "What you did"
+        }
+      },
+      {
+        "type": "scale-problem",
+        "id": "step7",
+        "phase": "Step 7 of 18",
+        "title": "Why it gets hard",
+        "content": {
+          "body": "Now imagine a string like 'abcde'—it has 120 permutations! Doing this manually is tedious. We need a systematic way to generate all permutations without missing any or repeating work. That's where backtracking as an algorithm shines.",
+          "title": "Why it gets hard"
+        }
+      },
+      {
+        "type": "concept-bridge",
+        "id": "step8",
+        "phase": "Step 8 of 18",
+        "title": "Key idea",
+        "content": {
+          "body": "Backtracking follows a simple pattern: try → recurse → undo. You make a choice (like picking a letter), recursively explore the remaining choices, and then undo that choice to try other possibilities. This ensures we explore all branches of our decision tree.",
+          "title": "Key idea",
+          "visualMetaphor": "Think of exploring a maze: go down one path, if it's a dead end, backtrack to the last junction and try another path."
+        }
+      },
+      {
+        "type": "reveal-idea",
+        "id": "step9",
+        "phase": "Step 9 of 18",
+        "title": "The approach",
+        "content": {
+          "body": "To solve 'Permutation in String', we'll generate all permutations of the smaller string using backtracking, then check if any permutation exists as a substring in the larger string. The backtracking algorithm will build permutations step-by-step, undoing choices to explore all arrangements.",
+          "title": "The approach",
+          "visualMetaphor": "Like a depth-first search in a tree of letter choices: go deep to form a permutation, then backtrack to explore other branches."
+        }
+      },
+      {
+        "type": "flow-explainer",
+        "id": "step10",
+        "phase": "Step 10 of 18",
+        "title": "Steps",
+        "content": {
+          "body": "1. Start with an empty current permutation and a list of available letters.\n2. For each available letter, add it to the current permutation.\n3. Recursively call the function with the updated permutation and remaining letters.\n4. After the recursive call returns, remove the last added letter (undo) to try the next available letter.\n5. When no letters are left, we have a complete permutation—check if it's in the larger string.\n6. If any permutation is found, return true; otherwise, after exploring all, return false.",
+          "title": "Steps"
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 18",
+        "title": "Set up the function",
+        "instruction": "Create a function called permute that takes three parameters: current (an array representing the permutation being built), remaining (an array of letters left to use), and allPermutations (an array to store complete permutations). Start by defining this function.",
+        "hint": "Use function permute(current, remaining, allPermutations) { }",
+        "analogousExample": "",
+        "seedCode": "function permute(current, remaining, allPermutations) {\n  // We'll fill this in later steps\n}",
+        "expectedOutcome": "A function definition with three parameters.",
+        "successCriteria": [],
+        "feedbackCorrect": "Great! You've set up the backtracking function structure.",
+        "feedbackPartial": "You're close. Make sure the function has exactly three parameters: current, remaining, and allPermutations.",
+        "feedbackWrong": "Let's try again. Define a function named permute with three parameters as described.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "function",
+            "permute",
+            "current",
+            "remaining",
+            "allPermutations"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step12",
+        "type": "question",
+        "phase": "Step 12 of 18",
+        "title": "Add base case",
+        "instruction": "Inside permute, add the base case: if remaining is empty (no letters left), we have a complete permutation. Push a joined string of current into allPermutations and return.",
+        "hint": "Check if remaining.length === 0, then use allPermutations.push(current.join('')) and return.",
+        "analogousExample": "",
+        "seedCode": "function permute(current, remaining, allPermutations) {\n  if (remaining.length === 0) {\n    allPermutations.push(current.join(''));\n    return;\n  }\n}",
+        "expectedOutcome": "Function with base case that stores complete permutations.",
+        "successCriteria": [],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Almost. Ensure you're checking remaining.length, pushing current.join(''), and returning.",
+        "feedbackWrong": "Remember: when no letters are left, store the permutation as a string and stop further recursion.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "remaining.length",
+            "=== 0",
+            "push",
+            "current.join",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step13",
+        "type": "question",
+        "phase": "Step 13 of 18",
+        "title": "Loop through remaining letters",
+        "instruction": "After the base case, add a for loop to iterate through each letter in remaining. This is where we try each possible choice.",
+        "hint": "Use for (let i = 0; i < remaining.length; i++) { }",
+        "analogousExample": "",
+        "seedCode": "function permute(current, remaining, allPermutations) {\n  if (remaining.length === 0) {\n    allPermutations.push(current.join(''));\n    return;\n  }\n  for (let i = 0; i < remaining.length; i++) {\n    // We'll add more in next steps\n  }\n}",
+        "expectedOutcome": "A for loop that iterates over indices of remaining.",
+        "successCriteria": [],
+        "feedbackCorrect": "Good! The loop will let us try each available letter.",
+        "feedbackPartial": "Check your loop syntax. It should iterate i from 0 to remaining.length - 1.",
+        "feedbackWrong": "We need a loop to go through each letter. Use a standard for loop with index i.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "for",
+            "let i",
+            "remaining.length",
+            "i++"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step14",
+        "type": "question",
+        "phase": "Step 14 of 18",
+        "title": "Make a choice",
+        "instruction": "Inside the loop, make a choice: pick the current letter from remaining, add it to current, and create a new array of the remaining letters (excluding the chosen one).",
+        "hint": "Use const chosen = remaining[i]; current.push(chosen); const newRemaining = remaining.slice(0, i).concat(remaining.slice(i + 1));",
+        "analogousExample": "",
+        "seedCode": "function permute(current, remaining, allPermutations) {\n  if (remaining.length === 0) {\n    allPermutations.push(current.join(''));\n    return;\n  }\n  for (let i = 0; i < remaining.length; i++) {\n    const chosen = remaining[i];\n    current.push(chosen);\n    const newRemaining = remaining.slice(0, i).concat(remaining.slice(i + 1));\n    // We'll add recursion next\n  }\n}",
+        "expectedOutcome": "Code that selects a letter, updates current, and creates newRemaining.",
+        "successCriteria": [],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Make sure you're correctly extracting chosen, pushing to current, and building newRemaining without the chosen letter.",
+        "feedbackWrong": "Focus on: pick remaining[i], add to current, and create a new array with that letter removed.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "chosen",
+            "current.push",
+            "slice",
+            "concat"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step15",
+        "type": "question",
+        "phase": "Step 15 of 18",
+        "title": "Recurse and undo",
+        "instruction": "Now, recursively call permute with the updated current and newRemaining. After the recursive call, undo the choice by popping the last element from current. This is the backtracking step.",
+        "hint": "Call permute(current, newRemaining, allPermutations); then current.pop();",
+        "analogousExample": "",
+        "seedCode": "function permute(current, remaining, allPermutations) {\n  if (remaining.length === 0) {\n    allPermutations.push(current.join(''));\n    return;\n  }\n  for (let i = 0; i < remaining.length; i++) {\n    const chosen = remaining[i];\n    current.push(chosen);\n    const newRemaining = remaining.slice(0, i).concat(remaining.slice(i + 1));\n    permute(current, newRemaining, allPermutations);\n    current.pop();\n  }\n}",
+        "expectedOutcome": "Complete backtracking function with recursion and undo step.",
+        "successCriteria": [],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Almost there. Ensure you're calling permute with the right arguments and popping from current after.",
+        "feedbackWrong": "Remember: after exploring recursively, remove the last added letter to backtrack.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "permute",
+            "current",
+            "newRemaining",
+            "allPermutations",
+            "current.pop"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step16",
+        "type": "question",
+        "phase": "Step 16 of 18",
+        "title": "Check for permutation in string",
+        "instruction": "Finally, create the main function checkInclusion(s1, s2) that uses permute to generate all permutations of s1,",
+        "hint": "Split s1 into array, call permute([], s1Array, permutations), then use permutations.some(p => s2.includes(p)).",
+        "analogousExample": "",
+        "seedCode": "function checkInclusion(s1, s2) {\n  const permutations = [];\n  const s1Array = s1.split('');\n  permute([], s1Array, permutations);\n  return permutations.some(p => s2.includes(p));\n}\n\nfunction permute(current, remaining, allPermutations) {\n  if (remaining.length === 0) {\n    allPermutations.push(current.join(''));\n    return;\n  }\n  for (let i = 0; i < remaining.length; i++) {\n    const chosen = remaining[i];\n    current.push(chosen);\n    const newRemaining = remaining.slice(0, i).concat(remaining.slice(i + 1));\n    permute(current, newRemaining, allPermutations);\n    current.pop();\n  }\n}",
+        "expectedOutcome": "Complete solution that generates permutations and checks for inclusion.",
+        "successCriteria": [],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Check your main function: it should generate permutations and check if any is in s2.",
+        "feedbackWrong": "Review: generate all permutations of s1, then see if s2 contains any of them.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "checkInclusion",
+            "permutations",
+            "s1.split",
+            "permute",
+            "some",
+            "includes"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step17",
+        "type": "question",
+        "phase": "Step 17 of 18",
+        "title": "checks if any exists as a substring in s2. Re",
+        "instruction": "checks if any exists as a substring in s2. Return true if found, false otherwise.",
+        "hint": "Split s1 into array, call permute([], s1Array, permutations), then use permutations.some(p => s2.includes(p)).",
+        "analogousExample": "",
+        "seedCode": "function checkInclusion(s1, s2) {\n  const permutations = [];\n  const s1Array = s1.split('');\n  permute([], s1Array, permutations);\n  return permutations.some(p => s2.includes(p));\n}\n\nfunction permute(current, remaining, allPermutations) {\n  if (remaining.length === 0) {\n    allPermutations.push(current.join(''));\n    return;\n  }\n  for (let i = 0; i < remaining.length; i++) {\n    const chosen = remaining[i];\n    current.push(chosen);\n    const newRemaining = remaining.slice(0, i).concat(remaining.slice(i + 1));\n    permute(current, newRemaining, allPermutations);\n    current.pop();\n  }\n}",
+        "expectedOutcome": "",
+        "successCriteria": [
+          "Complete the step as instructed."
+        ],
+        "feedbackCorrect": "Great! Step completed.",
+        "feedbackPartial": "Review the instruction and try again.",
+        "feedbackWrong": "Check the instruction and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "checkInclusion",
+            "permutations",
+            "s1.split",
+            "permute",
+            "some",
+            "includes"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "type": "complete",
+        "id": "step18",
+        "phase": "Step 18 of 18",
+        "title": "Done",
+        "content": {
+          "body": "You've successfully implemented a backtracking algorithm to check for permutation in a string! Remember: backtracking is about exploring choices (try), going deeper (recurse), and undoing to try other options (undo). This pattern is useful for many lessons where you need to explore all possibilities, like generating permutations, combinations, or solving puzzles. Keep practicing to recognize when backtracking applies!",
+          "title": "Done"
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Let's begin",
+        "id": "step1"
+      },
+      {
+        "label": "What you'll learn",
+        "id": "step2"
+      },
+      {
+        "label": "Try it",
+        "id": "step3"
+      },
+      {
+        "label": "Explore a path",
+        "id": "step4"
+      },
+      {
+        "label": "What happens after exploring?",
+        "id": "step5"
+      },
+      {
+        "label": "What you did",
+        "id": "step6"
+      },
+      {
+        "label": "Why it gets hard",
+        "id": "step7"
+      },
+      {
+        "label": "Key idea",
+        "id": "step8"
+      },
+      {
+        "label": "The approach",
+        "id": "step9"
+      },
+      {
+        "label": "Steps",
+        "id": "step10"
+      },
+      {
+        "label": "Set up the function",
+        "id": "step11"
+      },
+      {
+        "label": "Add base case",
+        "id": "step12"
+      },
+      {
+        "label": "Loop through remaining letters",
+        "id": "step13"
+      },
+      {
+        "label": "Make a choice",
+        "id": "step14"
+      },
+      {
+        "label": "Recurse and undo",
+        "id": "step15"
+      },
+      {
+        "label": "Check for permutation in string",
+        "id": "step16"
+      },
+      {
+        "label": "checks if any exists as a substring in s2. Re",
+        "id": "step17"
+      },
+      {
+        "label": "Done",
+        "id": "step18"
+      }
+    ],
+    "algorithmFamily": "backtracking",
+    "familyTeachingProfile": {
+      "mentalModel": "Try a choice, explore, then undo if it doesn't lead to a solution",
+      "conceptBridge": "Introduce try → recurse → undo; emphasize that we explore all options by undoing.",
+      "visualMetaphor": "Explore a path; if it dead-ends, go back and try another branch.",
+      "commonConfusions": [
+        "When do we backtrack?",
+        "What do we undo?"
+      ]
+    }
+  },
+  "source": "content"
+}

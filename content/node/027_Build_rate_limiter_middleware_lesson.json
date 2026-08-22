@@ -1,0 +1,352 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-node-27",
+    "track": "node",
+    "lessonNum": 27,
+    "title": "Build rate limiter middleware",
+    "shortName": "P27",
+    "intro": {
+      "tag": "LESSON #27",
+      "title": "Build rate limiter middleware",
+      "body": "In this lesson, you will build a rate limiter middleware for a Node.js application to control how many requests a client can make within a specific time window. You will learn the core concept of middleware, which intercepts and processes HTTP requests before they reach your route handlers. The main technologies involved include Express.js for the web framework, JavaScript for logic, and in-memory storage to track request counts. By the end, you'll have a functional middleware that helps prevent server overload from too many rapid requests.",
+      "usecase": "Rate limiting is essential for protecting APIs from abuse and ensuring fair resource allocation across users. In real-world applications, you'll implement rate limiters in Node.js middleware to prevent DDoS attacks on e-commerce checkout endpoints, throttle API calls from third-party integrations in SaaS platforms, and manage request bursts to payment processing services. This pattern appears in social media platforms that limit post creation, ride-sharing apps that control driver location updates, and banking systems that restrict transaction attempts. As a developer, you'll add rate limiting to secure your backend services while maintaining performance for legitimate users."
+    },
+    "objectives": [
+      "Construct a basic rate limiter middleware function in Node.js",
+      "Configure rate limiting parameters such as window size and maximum requests",
+      "Implement request tracking using an in-memory store",
+      "Apply the middleware to specific routes in an Express application",
+      "Manipulate response headers to communicate rate limit status",
+      "Integrate error handling for exceeded rate limits",
+      "Initialize and test the rate limiter with different client scenarios"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 10",
+        "title": "Import required Node.js modules",
+        "instruction": "Import the 'http' module for creating a server and the 'url' module for parsing request URLs.",
+        "hint": "Use the require() function to import Node.js built-in modules.",
+        "analogousExample": "// Example: importing built-in modules\nconst fs = require('fs');\nconst path = require('path');",
+        "seedCode": "// Import the required modules here",
+        "expectedOutcome": "The 'http' and 'url' modules are imported and available for use in your rate limiter middleware.",
+        "successCriteria": [
+          "Both 'http' and 'url' modules are imported using require()."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've imported one module, but remember to import both 'http' and 'url' modules.",
+        "feedbackWrong": "The imports are incorrect. Make sure to import both 'http' and 'url' modules using require().",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "require('http')",
+            "require('url')"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 10",
+        "title": "Create the Express server setup",
+        "instruction": "Initialize an Express application and define the server port.",
+        "hint": "Create a constant for the Express app and define a port number (e.g., 3000).",
+        "analogousExample": "// Similar: basic Express setup\nconst express = require('express');\nconst app = express();\nconst PORT = 3000;",
+        "seedCode": "const express = require('express');\n\n// Initialize Express app and define port here",
+        "expectedOutcome": "You should have an Express app instance and a port constant defined.",
+        "successCriteria": [
+          "An Express app is initialized and a port constant is defined."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure you've both initialized the Express app and defined a port constant.",
+        "feedbackWrong": "Check that you've initialized the Express app and defined a port constant.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "express()",
+            "PORT",
+            "3000"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 10",
+        "title": "Define the rate limit storage object",
+        "instruction": "Create an empty object to store IP addresses and their request counts. Declare it as a constant variable named 'requestStore'.",
+        "hint": "You can create an empty object using curly braces {}.",
+        "analogousExample": "// Example: creating an empty object for storage\nconst userSessions = {};",
+        "seedCode": "const express = require('express');\n\n// Initialize Express app and define port here\n\n// Create the rate limit storage object here",
+        "expectedOutcome": "An empty object named 'requestStore' is created to track request counts per IP address.",
+        "successCriteria": [
+          "The code contains a constant variable named 'requestStore' initialized as an empty object."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you've created an empty object named 'requestStore'.",
+        "feedbackWrong": "The storage object wasn't created correctly. You need to declare a constant variable named 'requestStore' and initialize it as an empty object using {}.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "requestStore",
+            "=",
+            "{}"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 10",
+        "title": "Set rate limiting configuration variables",
+        "instruction": "Define two constants for your rate limiter: one for the time window (in milliseconds) and another for the maximum number of requests allowed within that window.",
+        "hint": "Use the const keyword to create two variables. Name them descriptively, like WINDOW_MS and MAX_REQUESTS.",
+        "analogousExample": "// Similar: configuration constants for an app\nconst MAX_USERS = 100;\nconst SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes in milliseconds",
+        "seedCode": "const express = require('express');\n\n// Initialize Express app and define port here\n\n// Create the rate limit storage object here\n\n// Define rate limiting configuration variables here",
+        "expectedOutcome": "Two constants are defined with clear names and appropriate numeric values for time window and request limit.",
+        "successCriteria": [
+          "Constants WINDOW_MS and MAX_REQUESTS are defined with numeric values."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You defined one constant, but you need both WINDOW_MS and MAX_REQUESTS.",
+        "feedbackWrong": "The configuration variables aren't defined correctly. Make sure you create two constants with appropriate names and values.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "WINDOW_MS",
+            "MAX_REQUESTS",
+            "const"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 10",
+        "title": "Create the rate limiter middleware function",
+        "instruction": "Define a middleware function named 'rateLimiter' that takes 'req', 'res', and 'next' as parameters.",
+        "hint": "Create a function that will intercept requests and responses. Use the standard Express middleware signature.",
+        "analogousExample": "// Example middleware function\nfunction logger(req, res, next) {\n  console.log(`${req.method} ${req.url}`);\n  next();\n}",
+        "seedCode": "const express = require('express');\n\n// Initialize Express app and define port here\n\n// Create the rate limit storage object here\n\n// Define rate limiting configuration variables here\n\n// Define the rate limiter middleware function here",
+        "expectedOutcome": "You will have a middleware function skeleton ready to implement rate limiting logic in the next steps.",
+        "successCriteria": [
+          "A function named 'rateLimiter' is defined with parameters (req, res, next)."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure you've defined a function named 'rateLimiter' with three parameters: req, res, and next.",
+        "feedbackWrong": "The middleware function isn't properly defined. Create a function named 'rateLimiter' that accepts req, res, and next as parameters.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "rateLimiter",
+            "req",
+            "res",
+            "next"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 10",
+        "title": "Extract client IP address from request",
+        "instruction": "Inside your rate limiter middleware function, extract the client's IP address from the request object and store it in a variable named 'clientIP'.",
+        "hint": "You can access the IP address via 'req.ip' in Express. If behind a proxy, you might need 'req.headers['x-forwarded-for']' or 'req.connection.remoteAddress', but for simplicity, use 'req.ip'.",
+        "analogousExample": "// Example: extracting IP from request\nfunction logIP(req, res, next) {\n    const clientIP = req.ip;\n    console.log('Request from IP:', clientIP);\n    next();\n}",
+        "seedCode": "const express = require('express');\n\n// Initialize Express app and define port here\n\n// Create the rate limit storage object here\n\n// Define rate limiting configuration variables here\n\n// Define the rate limiter middleware function here\nfunction rateLimiter(req, res, next) {\n    // Extract client IP address here\n}",
+        "expectedOutcome": "The middleware function now includes a 'clientIP' variable that holds the client's IP address from the request.",
+        "successCriteria": [
+          "The rate limiter function contains a 'clientIP' variable assigned from 'req.ip'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're using 'req.ip' to get the IP and storing it in a variable named 'clientIP' inside the middleware function.",
+        "feedbackWrong": "The IP address extraction isn't correct. Inside the rate limiter function, use 'const clientIP = req.ip;' to get the client's IP from the request.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "clientIP",
+            "req.ip"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 10",
+        "title": "Check if IP exists in storage and clean old entries",
+        "instruction": "Inside the rateLimiter function, look up the client's IP address in the storage object and remove any entries older than the time window.",
+        "hint": "Access the storage object using the IP as a key. If the IP exists, filter its array to keep only entries within the time window (current time minus windowMs).",
+        "analogousExample": "// Example: Filtering array by time window\nconst now = Date.now();\nconst windowMs = 60000;\nif (storage[ip]) {\n    storage[ip] = storage[ip].filter(timestamp => now - timestamp < windowMs);\n}",
+        "seedCode": "const express = require('express');\n\n// Initialize Express app and define port here\n\n// Create the rate limit storage object here\n\n// Define rate limiting configuration variables here\n\n// Define the rate limiter middleware function here\nfunction rateLimiter(req, res, next) {\n    // Extract client IP address here\n    const clientIP = req.ip || req.connection.remoteAddress;\n    \n    // Check if IP exists in storage and clean old entries\n    \n}",
+        "expectedOutcome": "The rateLimiter function now includes logic to look up the IP in storage and filter out old timestamps.",
+        "successCriteria": [
+          "The code accesses storage[clientIP] and filters its array to remove timestamps older than the time window."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're filtering the array based on the time window.",
+        "feedbackWrong": "That doesn't look right. Try accessing storage[clientIP] and filtering its array to keep only recent timestamps.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "storage[",
+            "filter",
+            "Date.now()",
+            "windowMs"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 10",
+        "title": "Enforce the rate limit rule",
+        "instruction": "Inside the rateLimiter function, check if the request count for the client's IP exceeds the limit. If it does, respond with a 429 status code and a 'Too Many Requests' message.",
+        "hint": "Compare the current request count against the limit variable. Use res.status(429).send() to send the error response.",
+        "analogousExample": "// Similar: checking a limit and responding with an error\nfunction checkLimit(count, limit) {\n    if (count > limit) {\n        return { error: 'Limit exceeded', status: 429 };\n    }\n    return { success: true };\n}",
+        "seedCode": "const express = require('express');\n\n// Initialize Express app and define port here\n\n// Create the rate limit storage object here\n\n// Define rate limiting configuration variables here\n\n// Define the rate limiter middleware function here\nfunction rateLimiter(req, res, next) {\n    // Extract client IP address here\n    const clientIP = req.ip || req.connection.remoteAddress;\n    \n    // Check if IP exists in storage and clean old entries\n    \n    // Check if request count exceeds the limit and respond with 429 status if it does\n    \n}",
+        "expectedOutcome": "The rateLimiter function now includes logic to enforce the rate limit by checking the request count and sending a 429 response when the limit is exceeded.",
+        "successCriteria": [
+          "The rateLimiter function contains an if statement that checks if the request count exceeds the limit and uses res.status(429).send() to send an error response."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're comparing the request count against the limit variable and using res.status(429).send() to send the error response.",
+        "feedbackWrong": "The rate limiting logic isn't implemented correctly. You need to check if the request count exceeds the limit and respond with a 429 status code and message.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "if",
+            "count",
+            "limit",
+            "res.status(429)",
+            "send"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 10",
+        "title": "Update request count for current IP",
+        "instruction": "Inside the rateLimiter function, after the enforcement check, increment the request count for the current IP and store the current timestamp.",
+        "hint": "You can add a new entry to the storage object for the clientIP with count set to 1 and timestamp set to Date.now() if it doesn't exist, or increment the count if it does.",
+        "analogousExample": "// Similar: tracking user actions\nfunction trackUserAction(userId) {\n    if (!userActions[userId]) {\n        userActions[userId] = { count: 1, timestamp: Date.now() };\n    } else {\n        userActions[userId].count++;\n        userActions[userId].timestamp = Date.now();\n    }\n}",
+        "seedCode": "const express = require('express');\n\n// Initialize Express app and define port here\n\n// Create the rate limit storage object here\n\n// Define rate limiting configuration variables here\n\n// Define the rate limiter middleware function here\nfunction rateLimiter(req, res, next) {\n    // Extract client IP address here\n    const clientIP = req.ip || req.connection.remoteAddress;\n    \n    // Check if IP exists in storage and clean old entries\n    \n    // Check if request count exceeds the limit and respond with 429 status if it does\n    \n    // Update request count for current IP here\n}",
+        "expectedOutcome": "The rateLimiter function will now track successful requests by updating the count and timestamp for each IP address.",
+        "successCriteria": [
+          "The rateLimiter function increments the request count and updates the timestamp for the clientIP in the storage object."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're both incrementing the count and updating the timestamp for the clientIP.",
+        "feedbackWrong": "The request tracking isn't working correctly. Check that you're updating both the count and timestamp properties for the clientIP in the storage object.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "clientIP",
+            "count",
+            "timestamp",
+            "Date.now()"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 10",
+        "title": "Apply middleware and create test routes",
+        "instruction": "Apply the rate limiter middleware to all routes and create a test route that returns a simple message.",
+        "hint": "Use app.use() to apply the middleware globally, then define a GET route with app.get() that sends a response.",
+        "analogousExample": "// Applying middleware and creating a route\napp.use(rateLimiter);\napp.get('/test', (req, res) => {\n  res.send('Rate limited route working!');\n});",
+        "seedCode": "const express = require('express');\n\n// Initialize Express app and define port here\n\n// Create the rate limit storage object here\n\n// Define rate limiting configuration variables here\n\n// Define the rate limiter middleware function here\nfunction rateLimiter(req, res, next) {\n    // Extract client IP address here\n    const clientIP = req.ip || req.connection.remoteAddress;\n    \n    // Check if IP exists in storage and clean old entries\n    \n    // Check if request count exceeds the limit and respond with 429 status if it does\n    \n    // Update request count for current IP here\n}\n\n// Apply middleware and create test routes here",
+        "expectedOutcome": "The rate limiter middleware will be applied to all routes, and a test route will be available to verify the setup.",
+        "successCriteria": [
+          "The rateLimiter middleware is applied using app.use(), and a GET route is defined that sends a response."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you've both applied the middleware with app.use() and created a GET route.",
+        "feedbackWrong": "Check the instructions. You need to apply the middleware and create a test route.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "app.use",
+            "rateLimiter",
+            "app.get",
+            "send"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import required Node.js modules",
+        "id": "step1"
+      },
+      {
+        "label": "Create the Express server setup",
+        "id": "step2"
+      },
+      {
+        "label": "Define the rate limit storage object",
+        "id": "step3"
+      },
+      {
+        "label": "Set rate limiting configuration variables",
+        "id": "step4"
+      },
+      {
+        "label": "Create the rate limiter middleware function",
+        "id": "step5"
+      },
+      {
+        "label": "Extract client IP address from request",
+        "id": "step6"
+      },
+      {
+        "label": "Check if IP exists in storage and clean old entries",
+        "id": "step7"
+      },
+      {
+        "label": "Enforce the rate limit rule",
+        "id": "step8"
+      },
+      {
+        "label": "Update request count for current IP",
+        "id": "step9"
+      },
+      {
+        "label": "Apply middleware and create test routes",
+        "id": "step10"
+      }
+    ]
+  },
+  "source": "content"
+}

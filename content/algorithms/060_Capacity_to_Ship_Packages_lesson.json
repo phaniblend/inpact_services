@@ -1,0 +1,432 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-algorithms-60",
+    "track": "algorithms",
+    "lessonNum": 60,
+    "title": "Capacity to Ship Packages",
+    "shortName": "P60",
+    "intro": {
+      "tag": "LESSON #60",
+      "title": "Capacity to Ship Packages",
+      "body": "In this lesson, you will build a function that calculates the minimum capacity needed for a ship to transport all packages within a given number of days. You will learn the core programming concept of binary search to efficiently find the optimal capacity between the maximum weight and the total sum of weights. The main technologies involved are JavaScript functions, arrays, and loops. This beginner-friendly lesson will guide you step-by-step through implementing the algorithm and testing it with example inputs.",
+      "usecase": "The Capacity to Ship Packages algorithm is essential for logistics and delivery systems like Amazon, FedEx, or food delivery apps. It helps determine the minimum truck capacity needed to ship all orders within a given deadline, optimizing fleet efficiency. Developers implement this in dashboard features that calculate delivery schedules, warehouse management systems that allocate resources, and route planning tools that balance load distribution. This pattern also appears in manufacturing systems scheduling production batches and cloud computing platforms allocating server resources to handle workloads within time constraints."
+    },
+    "objectives": [
+      "Implement a function to calculate the total weight of packages",
+      "Construct a binary search algorithm to find the minimum ship capacity",
+      "Apply a validation check to ensure capacity meets daily shipping constraints",
+      "Initialize and manipulate variables to track current capacity and days needed",
+      "Configure the algorithm to handle edge cases like single packages or maximum weight limits",
+      "Integrate the capacity calculation with the binary search to solve the shipping lesson",
+      "Render test cases to verify the algorithm's correctness with different package arrays"
+    ],
+    "steps": [
+      {
+        "type": "reasoning",
+        "id": "step1",
+        "phase": "Step 1 of 17",
+        "title": "Welcome",
+        "content": {
+          "body": "Shipping packages efficiently is a real-world challenge. In this lesson, you'll learn how to determine the minimum ship capacity needed to deliver all packages within a given number of days. We'll use a clever approach to avoid checking every possible capacity one by one.",
+          "title": "Welcome"
+        }
+      },
+      {
+        "type": "reasoning",
+        "id": "step2",
+        "phase": "Step 2 of 17",
+        "title": "What you'll learn",
+        "content": {
+          "body": "By the end of this lesson, you'll be able to:\n1. Explain why checking every possible capacity is inefficient.\n2. Apply binary search to find the minimum valid capacity.\n3. Implement a function that calculates if a given capacity can ship all packages within the days limit.\n4. Combine the validation check with binary search to solve the lesson.",
+          "title": "What you'll learn"
+        }
+      },
+      {
+        "type": "discovery",
+        "id": "step3",
+        "phase": "Step 3 of 17",
+        "title": "Try it",
+        "content": {
+          "body": "Let's start with a small example. You have packages with weights [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] and need to ship them in 5 days. The ship's capacity must be at least as heavy as the heaviest single package. What's the smallest capacity that works?",
+          "title": "Try it",
+          "prompt": "Try capacity 15. Can all packages be shipped in 5 days?",
+          "exampleArray": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10
+          ],
+          "target": 5,
+          "successMessage": "Good thinking! With capacity 15, the shipping might look like: Day1: 1+2+3+4+5=15, Day2: 6+7=13, Day3: 8+9=17 (oops, that's over 15!). So 15 doesn't work. You just tested one capacity manually."
+        }
+      },
+      {
+        "type": "discovery",
+        "id": "step4",
+        "phase": "Step 4 of 17",
+        "title": "Try another",
+        "content": {
+          "body": "(No content)",
+          "title": "Try another",
+          "prompt": "What about capacity 20? Can all packages be shipped in 5 days?",
+          "exampleArray": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10
+          ],
+          "target": 5,
+          "successMessage": "Nice! With capacity 20, it could work: Day1: 1+2+3+4+5=15, Day2: 6+7=13, Day3: 8+9=17, Day4: 10. That's 4 days, so yes, 20 works in 5 days. You found a working capacity!"
+        }
+      },
+      {
+        "type": "discovery",
+        "id": "step5",
+        "phase": "Step 5 of 17",
+        "title": "One more",
+        "content": {
+          "body": "(No content)",
+          "title": "One more",
+          "prompt": "Is there a capacity between 15 and 20 that also works? Try 18.",
+          "exampleArray": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10
+          ],
+          "target": 5,
+          "successMessage": "Let's check 18: Day1: 1+2+3+4+5=15, Day2: 6+7=13, Day3: 8+9=17 (over 18? No, 17 ≤ 18), Day4: 10. That's 4 days! So 18 works too. You're testing capacities one by one to find the minimum."
+        }
+      },
+      {
+        "type": "reflection",
+        "id": "step6",
+        "phase": "Step 6 of 17",
+        "title": "What you did",
+        "content": {
+          "body": "You just performed a brute force search: you picked capacities (like 15, 20, 18) and checked if they work by simulating the shipping day by day. This manual checking works for small examples.",
+          "title": "What you did"
+        }
+      },
+      {
+        "type": "scale-problem",
+        "id": "step7",
+        "phase": "Step 7 of 17",
+        "title": "Why it gets hard",
+        "content": {
+          "body": "In real lessons, package weights can be large (up to 500) and counts high (up to 5×10^4). The possible capacities range from the heaviest package to the sum of all packages—that could be millions of values! Checking each one is far too slow. We need a smarter method. Can't figure it out? Click Show me on the next step.",
+          "title": "Why it gets hard"
+        }
+      },
+      {
+        "type": "concept-bridge",
+        "id": "step8",
+        "phase": "Step 8 of 17",
+        "title": "Key idea",
+        "content": {
+          "body": "Remember what we have already seen: if a capacity works, all larger capacities also work (because a bigger ship can handle the same packages). If a capacity fails, all smaller capacities also fail. This creates a sorted pattern: [fail, fail, ..., fail, work, work, ...]. We can use binary search to find the first working capacity instead of checking every single one.",
+          "title": "Key idea",
+          "visualMetaphor": "Imagine testing ship sizes. Once you find a size that works, you know all bigger ships will work too. Once you find a size that fails, all smaller ships will fail. This lets you eliminate half the possibilities each time you test a size."
+        }
+      },
+      {
+        "type": "reveal-idea",
+        "id": "step9",
+        "phase": "Step 9 of 17",
+        "title": "The approach",
+        "content": {
+          "body": "We'll use binary search on the capacity range. For each midpoint capacity, we check if it can ship all packages within the days limit. Based on the result, we eliminate half the search space.",
+          "title": "The approach",
+          "showMeFirst": true,
+          "illustratedExample": "For packages [1,2,3,4,5,6,7,8,9,10], days=5:\n- Min capacity = 10 (heaviest package), max = 55 (sum of all).\n- Midpoint = (10+55)/2 ≈ 32. Check: with capacity 32, we can ship in 4 days (1-10 on day1, rest easily). So 32 works.\n- Since 32 works, we search lower half (10-31). New midpoint = 20. Check: 20 works (as you saw).\n- Search lower half (10-19). Midpoint = 14. Check: 14 fails (day1: 1+2+3+4+5=15 > 14).\n- Search upper half (15-19). Midpoint = 17. Check: 17 works? Day1: 1+2+3+4+5=15, Day2: 6+7=13, Day3: 8+9=17, Day4: 10 → 4 days, works!\n- Continue until we find minimum working capacity = 15."
+        }
+      },
+      {
+        "type": "flow-explainer",
+        "id": "step10",
+        "phase": "Step 10 of 17",
+        "title": "Steps",
+        "content": {
+          "body": "1. Find the minimum possible capacity (heaviest package) and maximum possible capacity (sum of all packages).\n2. While min capacity ≤ max capacity:\n   a. Calculate mid capacity.\n   b. Check if mid capacity can ship all packages within given days.\n   c. If yes, search lower half (try smaller capacities).\n   d. If no, search upper half (try larger capacities).\n3. Return the minimum capacity that works.\n\nThe key is the check function: iterate through packages, accumulate weight until adding the next package would exceed capacity, then start a new day.",
+          "title": "Steps"
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 17",
+        "title": "Set up the function",
+        "instruction": "Create the main function skeleton. It should take weights array and days integer as parameters and return the minimum capacity.",
+        "hint": "Start with function shipWithinDays(weights, days) { }",
+        "analogousExample": "",
+        "seedCode": "",
+        "expectedOutcome": "Function declaration with parameters",
+        "successCriteria": [],
+        "feedbackCorrect": "Great! You've set up the function structure.",
+        "feedbackPartial": "You're close. Make sure you have both parameters: weights and days.",
+        "feedbackWrong": "Remember to define a function with two parameters.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "function",
+            "shipWithinDays",
+            "weights",
+            "days"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step12",
+        "type": "question",
+        "phase": "Step 12 of 17",
+        "title": "Find min and max capacity",
+        "instruction": "Inside the function, calculate the minimum possible capacity (heaviest package) and maximum possible capacity (sum of all packages). Store them in variables.",
+        "hint": "Use Math.max(...weights) for minCapacity and reduce for sum.",
+        "analogousExample": "",
+        "seedCode": "function shipWithinDays(weights, days) {\n  // Step 2: Calculate min and max capacity\n  \n}",
+        "expectedOutcome": "Variables minCapacity and maxCapacity defined",
+        "successCriteria": [],
+        "feedbackCorrect": "Perfect! You've identified the search range boundaries.",
+        "feedbackPartial": "Almost there. Check that you're calculating both the maximum weight and the total sum.",
+        "feedbackWrong": "Remember: minCapacity is the heaviest package, maxCapacity is the sum of all packages.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "minCapacity",
+            "maxCapacity",
+            "Math.max",
+            "reduce",
+            "sum"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step13",
+        "type": "question",
+        "phase": "Step 13 of 17",
+        "title": "Create the canShip helper function",
+        "instruction": "Define a helper function canShip(capacity) that returns true if the given capacity can ship all packages within the days limit. Start with the function declaration.",
+        "hint": "function canShip(capacity) { } inside the main function.",
+        "analogousExample": "",
+        "seedCode": "function shipWithinDays(weights, days) {\n  const minCapacity = Math.max(...weights);\n  const maxCapacity = weights.reduce((sum, w) => sum + w, 0);\n  \n  // Step 3: Create canShip helper\n  \n}",
+        "expectedOutcome": "Helper function canShip defined",
+        "successCriteria": [],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Good start. Make sure the function takes a capacity parameter.",
+        "feedbackWrong": "Remember to define a function that accepts a capacity parameter.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "function",
+            "canShip",
+            "capacity"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step14",
+        "type": "question",
+        "phase": "Step 14 of 17",
+        "title": "Implement canShip logic",
+        "instruction": "Inside canShip, implement the day counting logic. Initialize currentWeight = 0 and neededDays = 1. Loop through weights, adding each weight to currentWeight. If adding exceeds capacity, start a new day.",
+        "hint": "Use a for loop and check if currentWeight + weight > capacity.",
+        "analogousExample": "",
+        "seedCode": "function shipWithinDays(weights, days) {\n  const minCapacity = Math.max(...weights);\n  const maxCapacity = weights.reduce((sum, w) => sum + w, 0);\n  \n  function canShip(capacity) {\n    // Step 4: Implement the shipping simulation\n    \n  }\n}",
+        "expectedOutcome": "canShip function with proper weight accumulation and day counting",
+        "successCriteria": [],
+        "feedbackCorrect": "Well done! This correctly simulates the shipping process.",
+        "feedbackPartial": "You're on the right track. Make sure you're counting days correctly when capacity is exceeded.",
+        "feedbackWrong": "Remember to track current weight and increment days when you exceed capacity.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "currentWeight",
+            "neededDays",
+            "for",
+            "if",
+            ">",
+            "capacity"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step15",
+        "type": "question",
+        "phase": "Step 15 of 17",
+        "title": "Implement binary search",
+        "instruction": "After canShip, implement binary search between minCapacity and maxCapacity. Use a while loop to find the minimum working capacity.",
+        "hint": "while (minCapacity <= maxCapacity) { calculate mid; if (canShip(mid)) update max; else update min; }",
+        "analogousExample": "",
+        "seedCode": "function shipWithinDays(weights, days) {\n  const minCapacity = Math.max(...weights);\n  const maxCapacity = weights.reduce((sum, w) => sum + w, 0);\n  \n  function canShip(capacity) {\n    let currentWeight = 0;\n    let neededDays = 1;\n    \n    for (let weight of weights) {\n      if (currentWeight + weight > capacity) {\n        neededDays++;\n        currentWeight = 0;\n      }\n      currentWeight += weight;\n    }\n    \n    return neededDays <= days;\n  }\n  \n  // Step 5: Binary search implementation\n  \n}",
+        "expectedOutcome": "Binary search loop that finds minimum capacity",
+        "successCriteria": [],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Almost there. Check your loop condition and how you update min/max based on canShip result.",
+        "feedbackWrong": "Remember: if canShip(mid) is true, search lower half; if false, search upper half.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "while",
+            "mid",
+            "Math.floor",
+            "canShip",
+            "minCapacity",
+            "maxCapacity"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step16",
+        "type": "question",
+        "phase": "Step 16 of 17",
+        "title": "Return the result",
+        "instruction": "After the binary search loop, return the minimum capacity that works.",
+        "hint": "Return minCapacity (or the variable storing the result).",
+        "analogousExample": "",
+        "seedCode": "function shipWithinDays(weights, days) {\n  const minCapacity = Math.max(...weights);\n  const maxCapacity = weights.reduce((sum, w) => sum + w, 0);\n  \n  function canShip(capacity) {\n    let currentWeight = 0;\n    let neededDays = 1;\n    \n    for (let weight of weights) {\n      if (currentWeight + weight > capacity) {\n        neededDays++;\n        currentWeight = 0;\n      }\n      currentWeight += weight;\n    }\n    \n    return neededDays <= days;\n  }\n  \n  let left = minCapacity;\n  let right = maxCapacity;\n  \n  while (left <= right) {\n    const mid = Math.floor((left + right) / 2);\n    \n    if (canShip(mid)) {\n      right = mid - 1;\n    } else {\n      left = mid + 1;\n    }\n  }\n  \n  // Step 6: Return the result\n  \n}",
+        "expectedOutcome": "Return statement with correct value",
+        "successCriteria": [],
+        "feedbackCorrect": "Excellent! Your function now returns the minimum capacity.",
+        "feedbackPartial": "Close! Make sure you're returning the correct variable.",
+        "feedbackWrong": "After the binary search, left will contain the minimum working capacity.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "return",
+            "left"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "type": "complete",
+        "id": "step17",
+        "phase": "Step 17 of 17",
+        "title": "Done",
+        "content": {
+          "body": "Congratulations! You've implemented an efficient solution to the ship capacity lesson. Key takeaways:\n1. Binary search works when you have a sorted pattern of failures then successes.\n2. The canShip function simulates the shipping process to validate a capacity.\n3. By eliminating half the search space each time, we go from O(n) to O(log n) checks.\n\nRemember: This pattern of 'find minimum valid value using binary search' appears in many optimization lessons. The validation function (canShip) is specific to the lesson, but the binary search framework remains the same.",
+          "title": "Done"
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Welcome",
+        "id": "step1"
+      },
+      {
+        "label": "What you'll learn",
+        "id": "step2"
+      },
+      {
+        "label": "Try it",
+        "id": "step3"
+      },
+      {
+        "label": "Try another",
+        "id": "step4"
+      },
+      {
+        "label": "One more",
+        "id": "step5"
+      },
+      {
+        "label": "What you did",
+        "id": "step6"
+      },
+      {
+        "label": "Why it gets hard",
+        "id": "step7"
+      },
+      {
+        "label": "Key idea",
+        "id": "step8"
+      },
+      {
+        "label": "The approach",
+        "id": "step9"
+      },
+      {
+        "label": "Steps",
+        "id": "step10"
+      },
+      {
+        "label": "Set up the function",
+        "id": "step11"
+      },
+      {
+        "label": "Find min and max capacity",
+        "id": "step12"
+      },
+      {
+        "label": "Create the canShip helper function",
+        "id": "step13"
+      },
+      {
+        "label": "Implement canShip logic",
+        "id": "step14"
+      },
+      {
+        "label": "Implement binary search",
+        "id": "step15"
+      },
+      {
+        "label": "Return the result",
+        "id": "step16"
+      },
+      {
+        "label": "Done",
+        "id": "step17"
+      }
+    ],
+    "algorithmFamily": "array-hashmap",
+    "familyTeachingProfile": {
+      "mentalModel": "Remember what we have already seen",
+      "conceptBridge": "Show the learner how to use a lookup structure (e.g. object or Map) to remember seen values and avoid re-scanning.",
+      "visualMetaphor": "A notebook where we write down what we've seen and check it in one step.",
+      "commonConfusions": [
+        "What do we store as key vs value?",
+        "When do we check the structure vs add to it?"
+      ]
+    }
+  },
+  "source": "content"
+}

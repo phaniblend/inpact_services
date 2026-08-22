@@ -1,0 +1,466 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-angular-03",
+    "track": "angular",
+    "lessonNum": 3,
+    "title": "Data Service",
+    "shortName": "P03",
+    "intro": {
+      "tag": "LESSON #3",
+      "title": "Data Service",
+      "body": "In this lesson, you'll build a data service that manages and provides data to multiple components in an Angular application. You'll learn about Angular services, which are singleton classes that encapsulate business logic and data operations, keeping your components clean and focused on presentation. The lesson covers creating an injectable service using the @Injectable decorator, implementing methods to retrieve and manipulate data, and using Angular's dependency injection system to share the service across components. You'll work with TypeScript classes, observables for handling asynchronous data, and the Angular CLI to generate service files. By the end, you'll understand how services promote code reusability and separation of concerns in Angular applications.",
+      "usecase": "Data services are essential in Angular applications for managing and sharing data across components, commonly seen in e-commerce platforms that fetch product catalogs, user profiles, and shopping cart data from APIs. Social media dashboards use data services to retrieve posts, user interactions, and analytics from multiple endpoints while keeping components synchronized. Banking applications rely on data services to securely fetch account balances, transaction histories, and user preferences, ensuring consistent data flow between different views like account summaries, transaction lists, and profile settings. This pattern centralizes API communication logic, making applications more maintainable and enabling efficient data caching and error handling across the entire application."
+    },
+    "objectives": [
+      "Implement a service class with the @Injectable decorator to encapsulate data logic",
+      "Configure HTTP client methods to fetch data from external APIs",
+      "Construct observable streams to handle asynchronous data operations",
+      "Integrate the data service into components through dependency injection",
+      "Apply error handling mechanisms for failed data requests",
+      "Manipulate retrieved data using RxJS operators before displaying in templates",
+      "Initialize service subscriptions within component lifecycle hooks"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 12",
+        "title": "Import HttpClient and Injectable",
+        "instruction": "Import HttpClient from '@angular/common/http' and Injectable from '@angular/core'",
+        "hint": "Use the import statement to bring in both HttpClient and Injectable from their respective Angular modules",
+        "analogousExample": "// Similar: importing multiple Angular modules\nimport { Component, OnInit } from '@angular/core';",
+        "seedCode": {
+          "App.tsx": "// Import the necessary Angular modules here\n",
+          "store.ts": "// store setup",
+          "api.ts": "// api"
+        },
+        "expectedOutcome": "HttpClient and Injectable are imported and ready to be used in the data service",
+        "successCriteria": [
+          "HttpClient is imported from '@angular/common/http' and Injectable is imported from '@angular/core'"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've imported one of the modules, but make sure to include both HttpClient from '@angular/common/http' and Injectable from '@angular/core'.",
+        "feedbackWrong": "Check your import statements. You need to import HttpClient from '@angular/common/http' and Injectable from '@angular/core' using the correct syntax.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "HttpClient",
+            "@angular/common/http",
+            "Injectable",
+            "@angular/core"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 12",
+        "title": "Create the data service class",
+        "instruction": "Create a DataService class and apply the @Injectable decorator to make it available for dependency injection.",
+        "hint": "Use the @Injectable() decorator above the class definition, then create the class with the export keyword.",
+        "analogousExample": "// Similar: creating an injectable service class\n@Injectable()\nexport class UserService {\n}",
+        "seedCode": {
+          "App.tsx": "// Import the necessary Angular modules here\nimport { Injectable } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\n\n// Create your DataService class here",
+          "store.ts": "// store setup",
+          "api.ts": "// api"
+        },
+        "expectedOutcome": "A DataService class is created with the @Injectable decorator, making it ready to be used as a service in Angular applications.",
+        "successCriteria": [
+          "DataService class is defined with @Injectable decorator and export keyword"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Good start! Make sure you have both the @Injectable() decorator and the DataService class definition with the export keyword.",
+        "feedbackWrong": "create a class named DataService with the @Injectable() decorator above it and the export keyword before the class.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "@Injectable",
+            "DataService",
+            "class",
+            "export"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 12",
+        "title": "Inject HttpClient into the service constructor",
+        "instruction": "Add a constructor to the DataService class that injects HttpClient as a private parameter.",
+        "hint": "Use dependency injection by creating a constructor with 'private http: HttpClient' as a parameter.",
+        "analogousExample": "// Similar: injecting a service into a constructor\nconstructor(private userService: UserService) {}",
+        "seedCode": {
+          "App.tsx": "// Import the necessary Angular modules here\nimport { Injectable } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\n\n// Create your DataService class here\n@Injectable({\n  providedIn: 'root'\n})\nexport class DataService {\n  // Add constructor here\n}",
+          "store.ts": "// store setup",
+          "api.ts": "// api"
+        },
+        "expectedOutcome": "The DataService class will have a constructor that accepts HttpClient through dependency injection, making it available throughout the service.",
+        "successCriteria": [
+          "A constructor is added to DataService that injects HttpClient as a private parameter."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Good start! Make sure your constructor parameter is marked as private and has the correct type annotation for HttpClient.",
+        "feedbackWrong": "The constructor should inject HttpClient as a private parameter. Use the syntax: constructor(private http: HttpClient) {}",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "constructor",
+            "private",
+            "HttpClient"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 12",
+        "title": "Define the API endpoint URL",
+        "instruction": "Create a private property named apiUrl to store the API endpoint URL string",
+        "hint": "Add a private property inside the class to hold the base URL for your API calls. Use a realistic URL like 'https://api.example.com/data'.",
+        "analogousExample": "// Similar: private property in a class\nprivate baseUrl = 'https://api.myapp.com/users';",
+        "seedCode": {
+          "App.tsx": "// Import the necessary Angular modules here\nimport { Injectable } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\n\n// Create your DataService class here\n@Injectable({\n  providedIn: 'root'\n})\nexport class DataService {\n  // Add private apiUrl property here\n  \n  // Add constructor here\n}",
+          "store.ts": "// store setup",
+          "api.ts": "// api"
+        },
+        "expectedOutcome": "The DataService class will have a private property that stores the API endpoint URL for making HTTP requests.",
+        "successCriteria": [
+          "A private property named apiUrl is defined with a string value containing an API endpoint URL"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Good start! Make sure your property is private and contains a valid URL string.",
+        "feedbackWrong": "add a private property named apiUrl with a string value containing an API endpoint URL inside the DataService class.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "private",
+            "apiUrl",
+            "http"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 12",
+        "title": "Create a method to fetch all data",
+        "instruction": "Add a getData method inside the DataService class that uses this.http.get to make a GET request to the API endpoint and return the Observable",
+        "hint": "Create a public method that calls this.http.get() with the apiUrl and returns the result. The method should return an Observable.",
+        "analogousExample": "// Similar: a method that makes an HTTP GET request\ngetUsers() {\n  return this.http.get(this.usersUrl);\n}",
+        "seedCode": {
+          "App.tsx": "// Import the necessary Angular modules here\nimport { Injectable } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\n\n// Create your DataService class here\n@Injectable({\n  providedIn: 'root'\n})\nexport class DataService {\n  private apiUrl = 'https://jsonplaceholder.typicode.com/users';\n  \n  constructor(private http: HttpClient) {}\n  \n  // Add getData method here\n}",
+          "store.ts": "// store setup",
+          "api.ts": "// api"
+        },
+        "expectedOutcome": "A getData method is added to the DataService class that uses HttpClient.get to fetch data from the API endpoint",
+        "successCriteria": [
+          "The DataService class contains a getData method that uses this.http.get with the apiUrl and returns an Observable"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Good start! Make sure your getData method uses this.http.get() with the apiUrl and returns the Observable result.",
+        "feedbackWrong": "The getData method should use this.http.get() to make a GET request to this.apiUrl and return the Observable. Check that you're calling the http.get method correctly.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "getData",
+            "this.http.get",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 12",
+        "title": "Create a method to fetch data by ID",
+        "instruction": "Add a getDataById method to the DataService class that accepts an id parameter and returns an HTTP GET request to fetch a specific user by ID",
+        "hint": "Create a method that takes an id parameter and uses this.http.get() with the API URL followed by the ID",
+        "analogousExample": "// Similar: a method that fetches data by parameter\ngetUserById(userId: number) {\n  return this.http.get(`${this.baseUrl}/${userId}`);\n}",
+        "seedCode": {
+          "App.tsx": "// Import the necessary Angular modules here\nimport { Injectable } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\n\n// Create your DataService class here\n@Injectable({\n  providedIn: 'root'\n})\nexport class DataService {\n  private apiUrl = 'https://jsonplaceholder.typicode.com/users';\n  \n  constructor(private http: HttpClient) {}\n  \n  getData() {\n    return this.http.get(this.apiUrl);\n  }\n  \n  // Add getDataById method here\n}",
+          "store.ts": "// store setup",
+          "api.ts": "// api"
+        },
+        "expectedOutcome": "A getDataById method is added that accepts an id parameter and makes an HTTP GET request to fetch a specific user",
+        "successCriteria": [
+          "The getDataById method is defined with an id parameter and returns this.http.get() with the appropriate URL"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Good start! Make sure your method accepts an id parameter and uses it in the URL path.",
+        "feedbackWrong": "The method needs to accept an id parameter and use this.http.get() with the URL that includes the ID.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "getDataById",
+            "id",
+            "this.http.get",
+            "apiUrl"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 12",
+        "title": "Create a method to post new data",
+        "instruction": "Add a createData method that accepts a data parameter and uses HttpClient.post to send it to the API endpoint",
+        "hint": "Use this.http.post() with the apiUrl and the data parameter. The method should return the observable from the HTTP call.",
+        "analogousExample": "// Similar: a method that posts data\naddUser(userData: any) {\n  return this.http.post(this.userUrl, userData);\n}",
+        "seedCode": {
+          "App.tsx": "// Import the necessary Angular modules here\nimport { Injectable } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\n\n// Create your DataService class here\n@Injectable({\n  providedIn: 'root'\n})\nexport class DataService {\n  private apiUrl = 'https://jsonplaceholder.typicode.com/users';\n  \n  constructor(private http: HttpClient) {}\n  \n  getData() {\n    return this.http.get(this.apiUrl);\n  }\n  \n  getDataById(id: number) {\n    return this.http.get(`${this.apiUrl}/${id}`);\n  }\n  \n  // Add createData method here\n}",
+          "store.ts": "// store setup",
+          "api.ts": "// api"
+        },
+        "expectedOutcome": "The DataService class will have a createData method that accepts data and makes a POST request to create new data",
+        "successCriteria": [
+          "A createData method is defined that accepts a parameter and uses this.http.post with the apiUrl"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Good start! Make sure your createData method accepts a data parameter and uses this.http.post with the apiUrl.",
+        "feedbackWrong": "The createData method should accept a data parameter and use this.http.post(this.apiUrl, data) to send the data to the API.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "createData",
+            "http.post",
+            "apiUrl"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 12",
+        "title": "Create a method to update existing data",
+        "instruction": "Add an updateData method that takes an id and data parameter and uses the HttpClient put method to update existing data at the API endpoint",
+        "hint": "Use this.http.put() with the URL including the id parameter and pass the data as the second argument",
+        "analogousExample": "// Similar: updating user profile data\nupdateProfile(userId: number, profileData: any) {\n  return this.http.put(`${this.apiUrl}/profiles/${userId}`, profileData);\n}",
+        "seedCode": {
+          "App.tsx": "// Import the necessary Angular modules here\nimport { Injectable } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\n\n// Create your DataService class here\n@Injectable({\n  providedIn: 'root'\n})\nexport class DataService {\n  private apiUrl = 'https://jsonplaceholder.typicode.com/users';\n  \n  constructor(private http: HttpClient) {}\n  \n  getData() {\n    return this.http.get(this.apiUrl);\n  }\n  \n  getDataById(id: number) {\n    return this.http.get(`${this.apiUrl}/${id}`);\n  }\n  \n  // Add updateData method here\n}",
+          "store.ts": "// store setup",
+          "api.ts": "// api"
+        },
+        "expectedOutcome": "The service should have an updateData method that accepts id and data parameters and returns an HTTP PUT request observable",
+        "successCriteria": [
+          "updateData method is defined with id and data parameters and uses this.http.put with the correct URL structure"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Good start! Make sure your updateData method takes both id and data parameters and uses the put method.",
+        "feedbackWrong": "The updateData method should use this.http.put() with the URL containing the id parameter and the data to update.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "updateData",
+            "put",
+            "id",
+            "data"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 12",
+        "title": "Create a method to delete data",
+        "instruction": "Add a deleteData method that takes an id parameter and uses HttpClient.delete to remove data by ID",
+        "hint": "Use this.http.delete() with the API URL and the ID parameter to create a DELETE request",
+        "analogousExample": "// Similar: DELETE request method\ndeleteUser(userId: number) {\n  return this.http.delete(`${this.apiUrl}/${userId}`);\n}",
+        "seedCode": {
+          "App.tsx": "// Import the necessary Angular modules here\nimport { Injectable } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\n\n// Create your DataService class here\n@Injectable({\n  providedIn: 'root'\n})\nexport class DataService {\n  private apiUrl = 'https://jsonplaceholder.typicode.com/users';\n  \n  constructor(private http: HttpClient) {}\n  \n  getData() {\n    return this.http.get(this.apiUrl);\n  }\n  \n  getDataById(id: number) {\n    return this.http.get(`${this.apiUrl}/${id}`);\n  }\n  \n  postData(data: any) {\n    return this.http.post(this.apiUrl, data);\n  }\n  \n  updateData(id: number, data: any) {\n    return this.http.put(`${this.apiUrl}/${id}`, data);\n  }\n  \n  // Add deleteData method here\n}",
+          "store.ts": "// store setup",
+          "api.ts": "// api"
+        },
+        "expectedOutcome": "A deleteData method is added that accepts an id parameter and returns an HTTP DELETE request",
+        "successCriteria": [
+          "The deleteData method is defined with an id parameter and uses this.http.delete with the correct URL pattern"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Good start! Make sure your deleteData method takes an id parameter and uses this.http.delete with the correct URL.",
+        "feedbackWrong": "The deleteData method should take an id parameter and use this.http.delete() with the API URL and ID.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "deleteData",
+            "id",
+            "http.delete",
+            "apiUrl"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 12",
+        "title": "Add error handling to the service methods",
+        "instruction": "Import the catchError operator from 'rxjs/operators' and add error handling to the getData method using catchError",
+        "hint": "Import catchError at the top, then pipe the HTTP request through catchError to handle any potential errors. You can use throwError from 'rxjs' to re-throw the error after logging it.",
+        "analogousExample": "// Import and use catchError operator\nimport { catchError } from 'rxjs/operators';\nimport { throwError } from 'rxjs';\n\ngetUsers() {\n  return this.http.get(this.apiUrl).pipe(\n    catchError(error => {\n      console.error('Error:', error);\n      return throwError(error);\n    })\n  );\n}",
+        "seedCode": {
+          "App.tsx": "// Import the necessary Angular modules here\nimport { Injectable } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\n// Add RxJS imports here\n\n// Create your DataService class here\n@Injectable({\n  providedIn: 'root'\n})\nexport class DataService {\n  private apiUrl = 'https://jsonplaceholder.typicode.com/users';\n  \n  constructor(private http: HttpClient) {}\n  \n  getData() {\n    return this.http.get(this.apiUrl);\n    // Add error handling here\n  }\n  \n  getDataById(id: number) {\n    return this.http.get(`${this.apiUrl}/${id}`);\n  }\n  \n  postData(data: any) {\n    return this.http.post(this.apiUrl, data);\n  }\n  \n  updateData(id: number, data: any) {\n    return this.http.put(`${this.apiUrl}/${id}`, data);\n  }\n  \n  // Add deleteData method here\n}",
+          "store.ts": "// store setup",
+          "api.ts": "// api"
+        },
+        "expectedOutcome": "The service will have catchError imported and used in the getData method to handle HTTP errors gracefully",
+        "successCriteria": [
+          "catchError and throwError are imported from RxJS, and the getData method uses pipe() with catchError to handle errors"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Good start! Make sure you've imported both catchError from 'rxjs/operators' and throwError from 'rxjs', then used pipe() with catchError in the getData method.",
+        "feedbackWrong": "import the necessary RxJS operators and add error handling to the getData method using pipe() and catchError.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "catchError",
+            "throwError",
+            "pipe",
+            "import"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 12",
+        "title": "Register the service in the module providers",
+        "instruction": "Add the DataService to the providers array in the app module to make it available for dependency injection throughout the application",
+        "hint": "Import DataService at the top of the module file, then add it to the providers array in the @NgModule decorator",
+        "analogousExample": "// Similar: registering a service in module providers\nimport { MyService } from './my.service';\n\n@NgModule({\n  providers: [MyService]\n})",
+        "seedCode": {
+          "App.tsx": "import { NgModule } from '@angular/core';\nimport { BrowserModule } from '@angular/platform-browser';\nimport { HttpClientModule } from '@angular/common/http';\nimport { AppComponent } from './app.component';\n// Import DataService here\n\n@NgModule({\n  declarations: [\n    AppComponent\n  ],\n  imports: [\n    BrowserModule,\n    HttpClientModule\n  ],\n  providers: [\n    // Add DataService here\n  ],\n  bootstrap: [AppComponent]\n})\nexport class AppModule { }",
+          "store.ts": "// store setup",
+          "api.ts": "// api"
+        },
+        "expectedOutcome": "The DataService is imported and added to the providers array, making it available for dependency injection",
+        "successCriteria": [
+          "DataService is imported and included in the providers array of the NgModule decorator"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Good start! Make sure to both import DataService at the top and add it to the providers array.",
+        "feedbackWrong": "import DataService and add it to the providers array in the @NgModule decorator to register it for dependency injection.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "DataService",
+            "providers"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step12",
+        "type": "question",
+        "phase": "Step 12 of 12",
+        "title": "Inject and use the service in a component",
+        "instruction": "Import DataService in the AppComponent and inject it into the constructor",
+        "hint": "Use the import statement at the top of the file and add DataService as a parameter to the constructor with proper access modifier",
+        "analogousExample": "// Similar: importing and injecting a service\nimport { MyService } from './my.service';\n\nconstructor(private myService: MyService) {}",
+        "seedCode": {
+          "App.tsx": "import { Component } from '@angular/core';\n// Import DataService here\n\n@Component({\n  selector: 'app-root',\n  template: `\n    <div>\n      <h1>Data Service Demo</h1>\n    </div>\n  `\n})\nexport class AppComponent {\n  title = 'data-service-app';\n  \n  // Inject DataService in constructor\n}",
+          "store.ts": "// store setup",
+          "api.ts": "// api"
+        },
+        "expectedOutcome": "DataService is imported and injected into the AppComponent constructor",
+        "successCriteria": [
+          "DataService is imported from the data service file and injected as a private parameter in the constructor"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Good start! Make sure you have both the import statement and the constructor parameter with the private access modifier.",
+        "feedbackWrong": "add an import statement for DataService and inject it into the constructor as a private parameter. Check the syntax for constructor injection in Angular.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "DataService",
+            "constructor",
+            "private"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import HttpClient and Injectable",
+        "id": "step1"
+      },
+      {
+        "label": "Create the data service class",
+        "id": "step2"
+      },
+      {
+        "label": "Inject HttpClient into the service constructor",
+        "id": "step3"
+      },
+      {
+        "label": "Define the API endpoint URL",
+        "id": "step4"
+      },
+      {
+        "label": "Create a method to fetch all data",
+        "id": "step5"
+      },
+      {
+        "label": "Create a method to fetch data by ID",
+        "id": "step6"
+      },
+      {
+        "label": "Create a method to post new data",
+        "id": "step7"
+      },
+      {
+        "label": "Create a method to update existing data",
+        "id": "step8"
+      },
+      {
+        "label": "Create a method to delete data",
+        "id": "step9"
+      },
+      {
+        "label": "Add error handling to the service methods",
+        "id": "step10"
+      },
+      {
+        "label": "Register the service in the module providers",
+        "id": "step11"
+      },
+      {
+        "label": "Inject and use the service in a component",
+        "id": "step12"
+      }
+    ],
+    "answerShape": "multi-file"
+  },
+  "source": "content"
+}

@@ -1,0 +1,292 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-node-102",
+    "track": "node",
+    "lessonNum": 102,
+    "title": "Build benchmark script for hot endpoints",
+    "shortName": "P102",
+    "intro": {
+      "tag": "LESSON #102",
+      "title": "Build benchmark script for hot endpoints",
+      "body": "In this lesson, you will build a Node.js script to benchmark the performance of 'hot' API endpoints—those frequently accessed in a web application. You'll learn how to simulate multiple concurrent requests to measure response times and throughput. The core programming concept is asynchronous execution using Promises and async/await to handle multiple HTTP calls efficiently. You'll use the built-in Node.js `http` or `https` modules to make requests and the `performance` timing APIs to collect metrics. By the end, you'll have a practical script that can help identify performance bottlenecks in real-world endpoints.",
+      "usecase": "Benchmarking hot endpoints is essential for performance monitoring in production applications. Developers use these scripts to identify slow API endpoints in e-commerce platforms during peak sales events, social media feeds during viral content spikes, and financial trading systems during market volatility. This helps teams proactively optimize critical paths before users experience slowdowns, ensuring reliability under load. Performance dashboards often display these benchmark results alongside real-time metrics to guide optimization decisions."
+    },
+    "objectives": [
+      "Construct a Node.js script that measures endpoint response times",
+      "Initialize HTTP request configurations for target endpoints",
+      "Implement concurrent request simulation to mimic user load",
+      "Configure timing mechanisms to capture performance metrics",
+      "Manipulate response data to calculate statistical benchmarks",
+      "Integrate error handling for network failures and timeouts",
+      "Render formatted output displaying benchmark results"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 8",
+        "title": "Import required Node.js modules",
+        "instruction": "Import the http, https, and performance modules from Node.js core.",
+        "hint": "Use the require() function to import built-in Node.js modules. No need to install them separately.",
+        "analogousExample": "// Example: importing built-in modules\nconst fs = require('fs');\nconst path = require('path');",
+        "seedCode": "// Import the required modules here",
+        "expectedOutcome": "The script will have access to Node.js's HTTP, HTTPS, and performance measurement capabilities.",
+        "successCriteria": [
+          "The http, https, and performance modules are imported using require()."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You imported some modules, but make sure to include all three: http, https, and performance.",
+        "feedbackWrong": "Check the syntax: use require('module_name') for each built-in module.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "require('http')",
+            "require('https')",
+            "require('performance')"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 8",
+        "title": "Define the main benchmarking function",
+        "instruction": "Create a function named runBenchmark that takes url and options parameters. The function should be empty for now (no implementation).",
+        "hint": "You can use either a function declaration or arrow function. Remember to include both parameters in parentheses.",
+        "analogousExample": "// Example of a function with parameters\nfunction fetchData(url, options) {\n  // Implementation goes here\n}",
+        "seedCode": "// Import the required modules here\n\n// Create the runBenchmark function here",
+        "expectedOutcome": "A runBenchmark function is defined with url and options parameters, ready for implementation in later steps.",
+        "successCriteria": [
+          "The runBenchmark function exists and accepts url and options as parameters."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure your function is named exactly 'runBenchmark' and accepts both 'url' and 'options' parameters.",
+        "feedbackWrong": "The function definition doesn't match what's needed. Check that you've named it 'runBenchmark' and included both parameters.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "runBenchmark",
+            "url",
+            "options"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 8",
+        "title": "Initialize test configuration variables",
+        "instruction": "Inside the runBenchmark function, define three variables: requestsCount set to 100, concurrency set to 10, and results as an empty array.",
+        "hint": "Use const for requestsCount and concurrency, and let for results since you'll push data into it later.",
+        "analogousExample": "// Similar: setting up test parameters\nfunction runTest() {\n  const iterations = 50;\n  const threads = 5;\n  let data = [];\n}",
+        "seedCode": "// Import the required modules here\n\n// Create the runBenchmark function here\nfunction runBenchmark() {\n  // Define variables for requests count, concurrency, and results array here\n}",
+        "expectedOutcome": "The runBenchmark function now has three variables initialized: requestsCount, concurrency, and results.",
+        "successCriteria": [
+          "The function contains const requestsCount = 100, const concurrency = 10, and let results = []."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you have all three variables: requestsCount, concurrency, and results.",
+        "feedbackWrong": "Check the variable names and values. You need requestsCount = 100, concurrency = 10, and results = [].",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "requestsCount",
+            "concurrency",
+            "results",
+            "100",
+            "10",
+            "[]"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 8",
+        "title": "Create the HTTP request function",
+        "instruction": "Inside the runBenchmark function, create a function named makeRequest that takes a URL parameter and returns a promise that makes an HTTP GET request using the imported http module.",
+        "hint": "You can use the http.get method. The function should return a promise that resolves with timing data when the request completes or rejects with an error.",
+        "analogousExample": "// Example of a promise-based HTTP request function\nfunction makeRequest(url) {\n  return new Promise((resolve, reject) => {\n    const start = Date.now();\n    http.get(url, (res) => {\n      res.on('data', () => {});\n      res.on('end', () => {\n        const duration = Date.now() - start;\n        resolve({ statusCode: res.statusCode, duration });\n      });\n    }).on('error', reject);\n  });\n}",
+        "seedCode": "// Import the required modules here\n\n// Create the runBenchmark function here\nfunction runBenchmark() {\n  // Define variables for requests count, concurrency, and results array here\n  \n  // Create the makeRequest function here\n}",
+        "expectedOutcome": "The makeRequest function is defined inside runBenchmark, returning a promise that makes HTTP requests and resolves with timing data.",
+        "successCriteria": [
+          "makeRequest function exists, takes a URL parameter, returns a promise, and uses http.get to make requests."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure makeRequest returns a promise and properly handles the HTTP request lifecycle with timing.",
+        "feedbackWrong": "The makeRequest function should be defined inside runBenchmark, take a URL parameter, and return a promise that makes HTTP requests.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "makeRequest",
+            "function",
+            "url",
+            "Promise",
+            "http.get"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 8",
+        "title": "Add timing measurement to requests",
+        "instruction": "Inside the makeRequest function, add timing logic using performance.now() to measure how long each request takes, and store the duration in the results array.",
+        "hint": "Call performance.now() before and after the fetch request, calculate the difference, and push an object with the duration to the results array.",
+        "analogousExample": "// Measuring function execution time\nfunction measureTask() {\n  const start = performance.now();\n  // Simulate some work\n  for (let i = 0; i < 1000000; i++) {}\n  const end = performance.now();\n  const duration = end - start;\n  console.log(`Task took ${duration}ms`);\n}",
+        "seedCode": "// Import the required modules here\n\n// Create the runBenchmark function here\nfunction runBenchmark() {\n  // Define variables for requests count, concurrency, and results array here\n  \n  // Create the makeRequest function here\n  async function makeRequest(url) {\n    // Add timing measurement here\n  }\n  \n  // Create the executeConcurrentRequests function here\n}",
+        "expectedOutcome": "The makeRequest function will now measure and record the duration of each HTTP request.",
+        "successCriteria": [
+          "The makeRequest function uses performance.now() before and after the fetch call, calculates the duration, and pushes an object with the duration to the results array."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added some timing logic, but make sure to calculate the duration correctly and store it in the results array.",
+        "feedbackWrong": "The timing measurement isn't implemented correctly. Remember to use performance.now() and store the duration in the results array.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "performance.now()",
+            "duration",
+            "results.push"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 8",
+        "title": "Add error handling and retry logic",
+        "instruction": "Inside the makeRequest function, wrap the HTTP request logic in a try-catch block to handle errors gracefully.",
+        "hint": "Add try { ... } catch (error) { ... } around the existing request timing logic inside makeRequest.",
+        "analogousExample": "// Example: error handling in async function\nasync function fetchData(url) {\n  try {\n    const response = await fetch(url);\n    return response.json();\n  } catch (error) {\n    console.error('Request failed:', error);\n    return null;\n  }\n}",
+        "seedCode": "// Import the required modules here\n\n// Create the runBenchmark function here\nfunction runBenchmark() {\n  // Define variables for requests count, concurrency, and results array here\n  \n  // Create the makeRequest function here\n  async function makeRequest(url) {\n    // Add timing measurement here\n  }\n  \n  // Create the executeConcurrentRequests function here\n  \n  // Create the calculateStatistics function here\n  \n}",
+        "expectedOutcome": "The makeRequest function should now have basic error handling that catches and logs request failures.",
+        "successCriteria": [
+          "The makeRequest function contains a try-catch block that wraps the HTTP request logic."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure the try-catch block properly wraps the request timing logic.",
+        "feedbackWrong": "The makeRequest function doesn't yet have error handling. Add a try-catch block inside it.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "try",
+            "catch",
+            "makeRequest"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 8",
+        "title": "Create the main script execution flow",
+        "instruction": "At the bottom of your file, outside the runBenchmark function, add code to call runBenchmark with example URLs and display the results.",
+        "hint": "Call the runBenchmark function with an array of test URLs, then use console.log to output the returned statistics.",
+        "analogousExample": "// Example: calling a function and logging results\nconst results = calculateTotal([10, 20, 30]);\nconsole.log('Total:', results);",
+        "seedCode": "// Import the required modules here\n\n// Create the runBenchmark function here\nfunction runBenchmark() {\n  // Define variables for requests count, concurrency, and results array here\n  \n  // Create the makeRequest function here\n  async function makeRequest(url) {\n    // Add timing measurement here\n  }\n  \n  // Create the executeConcurrentRequests function here\n  \n  // Create the calculateStatistics function here\n  \n}\n\n// Add your main script execution flow here",
+        "expectedOutcome": "The script will be executable and will output benchmark statistics when run.",
+        "successCriteria": [
+          "runBenchmark is called with an array of URLs and results are logged to the console."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're calling runBenchmark with actual URLs and logging the results.",
+        "feedbackWrong": "The main execution flow isn't complete. You need to call runBenchmark and display the results.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "runBenchmark",
+            "console.log"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 8",
+        "title": "Add command-line argument parsing",
+        "instruction": "At the top of your script, before the runBenchmark function, add code to parse command-line arguments using process.argv to accept URL, requests count, and concurrency as arguments.",
+        "hint": "process.argv is an array containing command-line arguments. The first two elements are node and the script path, so your arguments start at index 2.",
+        "analogousExample": "// Example: parsing command-line arguments\nconst url = process.argv[2];\nconst requests = parseInt(process.argv[3]);\nconst concurrency = parseInt(process.argv[4]);",
+        "seedCode": "// Import the required modules here\n\n// Add command-line argument parsing here\n\n// Create the runBenchmark function here\nfunction runBenchmark() {\n  // Define variables for requests count, concurrency, and results array here\n  \n  // Create the makeRequest function here\n  async function makeRequest(url) {\n    // Add timing measurement here\n  }\n  \n  // Create the executeConcurrentRequests function here\n  \n  // Create the calculateStatistics function here\n  \n}\n\n// Add your main script execution flow here",
+        "expectedOutcome": "Your script will now accept three command-line arguments: URL, requests count, and concurrency level, making it configurable without editing the code.",
+        "successCriteria": [
+          "Command-line arguments are parsed using process.argv and assigned to variables for URL, requests count, and concurrency."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're parsing all three required arguments: URL, requests count, and concurrency level from process.argv.",
+        "feedbackWrong": "The command-line argument parsing isn't quite right. Remember to use process.argv to extract the URL, requests count, and concurrency level from the command line.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "process.argv",
+            "parseInt",
+            "url",
+            "requests",
+            "concurrency"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import required Node.js modules",
+        "id": "step1"
+      },
+      {
+        "label": "Define the main benchmarking function",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize test configuration variables",
+        "id": "step3"
+      },
+      {
+        "label": "Create the HTTP request function",
+        "id": "step4"
+      },
+      {
+        "label": "Add timing measurement to requests",
+        "id": "step5"
+      },
+      {
+        "label": "Add error handling and retry logic",
+        "id": "step6"
+      },
+      {
+        "label": "Create the main script execution flow",
+        "id": "step7"
+      },
+      {
+        "label": "Add command-line argument parsing",
+        "id": "step8"
+      }
+    ]
+  },
+  "source": "content"
+}

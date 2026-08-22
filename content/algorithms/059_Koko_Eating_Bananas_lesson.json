@@ -1,0 +1,403 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-algorithms-59",
+    "track": "algorithms",
+    "lessonNum": 59,
+    "title": "Koko Eating Bananas",
+    "shortName": "P59",
+    "intro": {
+      "tag": "LESSON #59",
+      "title": "Koko Eating Bananas",
+      "body": "In this lesson, you will implement a solution to the 'Koko Eating Bananas' lesson, where you help Koko determine the minimum eating speed to finish all bananas within a given time limit. You will learn to apply the binary search algorithm to efficiently find the optimal speed in a range of possible values. The main technologies involved are JavaScript arrays, loops, and conditionals to simulate banana consumption and validate time constraints. This exercise will strengthen your understanding of algorithmic thinking and optimization techniques in a beginner-friendly context.",
+      "usecase": "The Koko Eating Bananas algorithm pattern appears in real-time optimization systems where you need to find the minimum viable rate to complete tasks within constraints. For example, in video streaming services, engineers use similar binary search logic to determine the minimum bandwidth required to buffer a video without interruptions before playback begins. In manufacturing dashboards, this approach helps calculate the minimum machine speed needed to meet production deadlines while conserving energy. Developers encounter this pattern when building resource allocation panels, load balancing systems, or any UI that involves finding optimal thresholds under time constraints."
+    },
+    "objectives": [
+      "Implement a function to calculate the total hours required to eat all bananas at a given eating speed.",
+      "Apply binary search to efficiently find the minimum eating speed within a defined range.",
+      "Construct a solution that checks if a given speed allows Koko to finish within the guard's return time.",
+      "Initialize and manipulate variables to track the low and high bounds for the binary search.",
+      "Configure the loop condition and update logic to converge on the optimal eating speed.",
+      "Integrate the helper calculation within the main search function to produce the final result.",
+      "Control the flow to return the minimum integer eating speed that satisfies the time constraint."
+    ],
+    "steps": [
+      {
+        "type": "reasoning",
+        "id": "step1",
+        "phase": "Step 1 of 17",
+        "title": "Welcome",
+        "content": {
+          "body": "Welcome! Today we're solving Koko Eating Bananas. Koko loves bananas but has piles of them and limited time. We'll find her minimum eating speed to finish all piles within a time limit. This is an array-hashmap lesson where we'll use binary search with a helper function.",
+          "title": "Welcome"
+        }
+      },
+      {
+        "type": "reasoning",
+        "id": "step2",
+        "phase": "Step 2 of 17",
+        "title": "What you'll learn",
+        "content": {
+          "body": "1. Apply binary search to find an optimal value within a range.\n2. Implement a helper function to calculate total hours for a given eating speed.\n3. Explain why binary search works for this lesson instead of linear search.\n4. Use a hashmap (object) to store and check calculated hours efficiently.",
+          "title": "What you'll learn"
+        }
+      },
+      {
+        "type": "discovery",
+        "id": "step3",
+        "phase": "Step 3 of 17",
+        "title": "Try it",
+        "content": {
+          "body": "Let's start small. Koko has 3 piles: [3, 6, 7]. She has 8 hours to eat them all. If she eats 1 banana per hour, can she finish in time?",
+          "title": "Try it",
+          "prompt": "Calculate total hours if Koko eats 1 banana/hour: each pile takes ceil(pile/speed).",
+          "exampleArray": [
+            3,
+            6,
+            7
+          ],
+          "target": 8,
+          "successMessage": "Right! Hours = ceil(3/1)+ceil(6/1)+ceil(7/1) = 3+6+7 = 16 hours, which exceeds 8. Too slow."
+        }
+      },
+      {
+        "type": "discovery",
+        "id": "step4",
+        "phase": "Step 4 of 17",
+        "title": "Try a bigger speed",
+        "content": {
+          "body": "(No content)",
+          "title": "Try a bigger speed",
+          "prompt": "What if she eats 4 bananas/hour? Calculate total hours.",
+          "exampleArray": [
+            3,
+            6,
+            7
+          ],
+          "target": 8,
+          "successMessage": "Good! Hours = ceil(3/4)+ceil(6/4)+ceil(7/4) = 1+2+2 = 5 hours, within 8. So speed 4 works."
+        }
+      },
+      {
+        "type": "discovery",
+        "id": "step5",
+        "phase": "Step 5 of 17",
+        "title": "Find minimum",
+        "content": {
+          "body": "(No content)",
+          "title": "Find minimum",
+          "prompt": "Is there a slower speed that still works? Try speed 3.",
+          "exampleArray": [
+            3,
+            6,
+            7
+          ],
+          "target": 8,
+          "successMessage": "Hours = ceil(3/3)+ceil(6/3)+ceil(7/3) = 1+2+3 = 6 hours, still within 8. Speed 3 also works. We need the minimum such speed."
+        }
+      },
+      {
+        "type": "reflection",
+        "id": "step6",
+        "phase": "Step 6 of 17",
+        "title": "What you did",
+        "content": {
+          "body": "You tried speeds one by one (linear search) to see which satisfy the time limit. For small ranges, this is fine, but if speeds go up to 1,000,000, checking each is inefficient.",
+          "title": "What you did"
+        }
+      },
+      {
+        "type": "scale-problem",
+        "id": "step7",
+        "phase": "Step 7 of 17",
+        "title": "Why it gets hard",
+        "content": {
+          "body": "When max pile size is large (e.g., 1,000,000,000), checking every possible speed from 1 to that max is too slow. We need a smarter way to narrow down the search. Can't figure it out? Click Show me on the next step.",
+          "title": "Why it gets hard"
+        }
+      },
+      {
+        "type": "concept-bridge",
+        "id": "step8",
+        "phase": "Step 8 of 17",
+        "title": "Key idea",
+        "content": {
+          "body": "Remember what we have already seen: we can use binary search to eliminate half the speeds each step. Also, we'll use a helper function to compute total hours for a given speed, and we can store results in a hashmap to avoid recalculating.",
+          "title": "Key idea",
+          "visualMetaphor": "Like a notebook where we write down speeds we've tested and their hours, so we don't recompute."
+        }
+      },
+      {
+        "type": "reveal-idea",
+        "id": "step9",
+        "phase": "Step 9 of 17",
+        "title": "The approach",
+        "content": {
+          "body": "We'll binary search between 1 and max(piles). For each mid speed, compute total hours. If hours <= h, try slower speeds (left half); else try faster speeds (right half). Use a hashmap to cache hours for speeds we've already computed.",
+          "title": "The approach",
+          "showMeFirst": true,
+          "illustratedExample": "Example: piles=[3,6,7], h=8. Speeds 1..7. Mid=4 → hours=5 <=8 → go left (1..4). Mid=2 → hours=8 <=8 → go left (1..2). Mid=1 → hours=16 >8 → go right (2..2). Minimum speed=2."
+        }
+      },
+      {
+        "type": "flow-explainer",
+        "id": "step10",
+        "phase": "Step 10 of 17",
+        "title": "Steps",
+        "content": {
+          "body": "1. Find max pile size as upper bound.\n2. Binary search from 1 to max.\n3. For each mid, compute total hours = sum(ceil(pile/mid)).\n4. If hours <= h, search left for smaller speed; else search right.\n5. Store computed hours in hashmap to reuse.\n6. Return the smallest speed that satisfies hours <= h.",
+          "title": "Steps"
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 17",
+        "title": "Set up function and find max",
+        "instruction": "Create the function minEatingSpeed that takes piles and h. Find the maximum pile size to set the upper bound for binary search.",
+        "hint": "Use Math.max(...piles) to get the max.",
+        "analogousExample": "",
+        "seedCode": "function minEatingSpeed(piles, h) {\n  // Step 1: Find max pile\n  const maxPile = Math.max(...piles);\n  \n  // We'll implement binary search next\n  return 1;\n}",
+        "expectedOutcome": "Function returns 1 for now, but maxPile is computed.",
+        "successCriteria": [],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure to use Math.max on the piles array.",
+        "feedbackWrong": "Let's try again. We need to find the largest pile to know the maximum possible speed.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "Math.max",
+            "...piles"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step12",
+        "type": "question",
+        "phase": "Step 12 of 17",
+        "title": "Initialize binary search bounds",
+        "instruction": "Set low to 1 and high to maxPile. We'll search between these speeds.",
+        "hint": "let low = 1; let high = maxPile;",
+        "analogousExample": "",
+        "seedCode": "function minEatingSpeed(piles, h) {\n  const maxPile = Math.max(...piles);\n  \n  // Step 2: Binary search bounds\n  let low = 1;\n  let high = maxPile;\n  \n  return 1;\n}",
+        "expectedOutcome": "Bounds are set correctly.",
+        "successCriteria": [],
+        "feedbackCorrect": "Perfect! Now we have a range to search.",
+        "feedbackPartial": "Almost. Initialize low and high as numbers.",
+        "feedbackWrong": "Remember: low starts at 1, high at maxPile.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "low",
+            "high",
+            "maxPile"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step13",
+        "type": "question",
+        "phase": "Step 13 of 17",
+        "title": "Create helper function to compute hours",
+        "instruction": "Define a function canEat(speed) that returns total hours needed for given speed. Use ceil(pile/speed) for each pile.",
+        "hint": "Use piles.reduce((sum, pile) => sum + Math.ceil(pile / speed), 0);",
+        "analogousExample": "",
+        "seedCode": "function minEatingSpeed(piles, h) {\n  const maxPile = Math.max(...piles);\n  let low = 1;\n  let high = maxPile;\n  \n  // Step 3: Helper function\n  function canEat(speed) {\n    return piles.reduce((total, pile) => total + Math.ceil(pile / speed), 0);\n  }\n  \n  return 1;\n}",
+        "expectedOutcome": "Helper function computes total hours.",
+        "successCriteria": [],
+        "feedbackCorrect": "Excellent! Now we can test any speed.",
+        "feedbackPartial": "Check the reduce syntax and Math.ceil.",
+        "feedbackWrong": "Let's review: sum ceil(pile/speed) for all piles.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "canEat",
+            "Math.ceil",
+            "reduce"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step14",
+        "type": "question",
+        "phase": "Step 14 of 17",
+        "title": "Implement binary search loop",
+        "instruction": "While low <= high, compute mid speed. Use canEat(mid) to get hours. If hours <= h, move high to mid - 1 (search left); else move low to mid + 1 (search right).",
+        "hint": "while (low <= high) { let mid = Math.floor((low + high) / 2); let hours = canEat(mid); if (hours <= h) high = mid - 1; else low = mid + 1; }",
+        "analogousExample": "",
+        "seedCode": "function minEatingSpeed(piles, h) {\n  const maxPile = Math.max(...piles);\n  let low = 1;\n  let high = maxPile;\n  \n  function canEat(speed) {\n    return piles.reduce((total, pile) => total + Math.ceil(pile / speed), 0);\n  }\n  \n  // Step 4: Binary search\n  while (low <= high) {\n    const mid = Math.floor((low + high) / 2);\n    const hours = canEat(mid);\n    if (hours <= h) {\n      high = mid - 1;\n    } else {\n      low = mid + 1;\n    }\n  }\n  \n  return 1;\n}",
+        "expectedOutcome": "Loop updates bounds based on hours.",
+        "successCriteria": [],
+        "feedbackCorrect": "Great! The search narrows down the speed.",
+        "feedbackPartial": "Check the condition and updates for low/high.",
+        "feedbackWrong": "Remember: if hours <= h, we can try slower (left), else faster (right).",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "while",
+            "mid",
+            "canEat(mid)",
+            "hours <= h",
+            "high = mid - 1",
+            "low = mid + 1"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step15",
+        "type": "question",
+        "phase": "Step 15 of 17",
+        "title": "Add hashmap to cache results",
+        "instruction": "Create an object cache to store hours for speeds we've computed. Before calling canEat, check cache; if not present, compute and store.",
+        "hint": "const cache = {}; in loop: if (cache[mid] === undefined) cache[mid] = canEat(mid); const hours = cache[mid];",
+        "analogousExample": "",
+        "seedCode": "function minEatingSpeed(piles, h) {\n  const maxPile = Math.max(...piles);\n  let low = 1;\n  let high = maxPile;\n  const cache = {};\n  \n  function canEat(speed) {\n    return piles.reduce((total, pile) => total + Math.ceil(pile / speed), 0);\n  }\n  \n  while (low <= high) {\n    const mid = Math.floor((low + high) / 2);\n    // Step 5: Cache check\n    if (cache[mid] === undefined) {\n      cache[mid] = canEat(mid);\n    }\n    const hours = cache[mid];\n    if (hours <= h) {\n      high = mid - 1;\n    } else {\n      low = mid + 1;\n    }\n  }\n  \n  return 1;\n}",
+        "expectedOutcome": "Cache avoids recomputing hours for same speed.",
+        "successCriteria": [],
+        "feedbackCorrect": "Nice! Now we remember seen speeds.",
+        "feedbackPartial": "Make sure to check undefined and store in cache.",
+        "feedbackWrong": "We want to store hours for mid in cache object.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "cache",
+            "cache[mid] === undefined",
+            "cache[mid] = canEat(mid)"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step16",
+        "type": "question",
+        "phase": "Step 16 of 17",
+        "title": "Return the minimum speed",
+        "instruction": "After the loop, low will be the minimum speed. Return low.",
+        "hint": "return low;",
+        "analogousExample": "",
+        "seedCode": "function minEatingSpeed(piles, h) {\n  const maxPile = Math.max(...piles);\n  let low = 1;\n  let high = maxPile;\n  const cache = {};\n  \n  function canEat(speed) {\n    return piles.reduce((total, pile) => total + Math.ceil(pile / speed), 0);\n  }\n  \n  while (low <= high) {\n    const mid = Math.floor((low + high) / 2);\n    if (cache[mid] === undefined) {\n      cache[mid] = canEat(mid);\n    }\n    const hours = cache[mid];\n    if (hours <= h) {\n      high = mid - 1;\n    } else {\n      low = mid + 1;\n    }\n  }\n  \n  // Step 6: Return result\n  return low;\n}",
+        "expectedOutcome": "Function returns correct minimum eating speed.",
+        "successCriteria": [],
+        "feedbackCorrect": "Perfect! You've implemented the solution.",
+        "feedbackPartial": "Almost there. Return the final speed.",
+        "feedbackWrong": "After binary search, low holds the answer.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "return low"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "type": "complete",
+        "id": "step17",
+        "phase": "Step 17 of 17",
+        "title": "Done",
+        "content": {
+          "body": "Great job! You solved Koko Eating Bananas using binary search and a hashmap cache. Remember: binary search works because hours decrease as speed increases (monotonic). The hashmap helps avoid redundant calculations. This pattern applies to many optimization lessons.",
+          "title": "Done"
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Welcome",
+        "id": "step1"
+      },
+      {
+        "label": "What you'll learn",
+        "id": "step2"
+      },
+      {
+        "label": "Try it",
+        "id": "step3"
+      },
+      {
+        "label": "Try a bigger speed",
+        "id": "step4"
+      },
+      {
+        "label": "Find minimum",
+        "id": "step5"
+      },
+      {
+        "label": "What you did",
+        "id": "step6"
+      },
+      {
+        "label": "Why it gets hard",
+        "id": "step7"
+      },
+      {
+        "label": "Key idea",
+        "id": "step8"
+      },
+      {
+        "label": "The approach",
+        "id": "step9"
+      },
+      {
+        "label": "Steps",
+        "id": "step10"
+      },
+      {
+        "label": "Set up function and find max",
+        "id": "step11"
+      },
+      {
+        "label": "Initialize binary search bounds",
+        "id": "step12"
+      },
+      {
+        "label": "Create helper function to compute hours",
+        "id": "step13"
+      },
+      {
+        "label": "Implement binary search loop",
+        "id": "step14"
+      },
+      {
+        "label": "Add hashmap to cache results",
+        "id": "step15"
+      },
+      {
+        "label": "Return the minimum speed",
+        "id": "step16"
+      },
+      {
+        "label": "Done",
+        "id": "step17"
+      }
+    ],
+    "algorithmFamily": "array-hashmap",
+    "familyTeachingProfile": {
+      "mentalModel": "Remember what we have already seen",
+      "conceptBridge": "Show the learner how to use a lookup structure (e.g. object or Map) to remember seen values and avoid re-scanning.",
+      "visualMetaphor": "A notebook where we write down what we've seen and check it in one step.",
+      "commonConfusions": [
+        "What do we store as key vs value?",
+        "When do we check the structure vs add to it?"
+      ]
+    }
+  },
+  "source": "content"
+}

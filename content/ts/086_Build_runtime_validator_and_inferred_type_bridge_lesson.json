@@ -1,0 +1,359 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-ts-86",
+    "track": "ts",
+    "lessonNum": 86,
+    "title": "Build runtime validator and inferred type bridge",
+    "shortName": "P86",
+    "intro": {
+      "tag": "LESSON #86",
+      "title": "Build runtime validator and inferred type bridge",
+      "body": "In this lesson, you will build a simple runtime validator function that checks data at runtime and uses TypeScript's type inference to create a static type from it. You'll learn how to write a validator using basic TypeScript constructs like type predicates and generics. The main technologies involved are TypeScript's type system and functions. By the end, you'll have a bridge that ensures runtime safety and provides accurate static types for your data.",
+      "usecase": "This pattern is essential when building data-intensive applications like admin dashboards or analytics platforms where you need to validate API responses at runtime while maintaining TypeScript's type safety. For example, when displaying user data tables with filters, you can validate incoming JSON from external APIs against a schema, then automatically infer TypeScript types for the validated data. This ensures your UI components receive properly typed data for rendering charts, tables, or forms while catching data format errors early. Developers use this bridge pattern to create robust applications that handle unpredictable external data sources while maintaining development-time type checking and autocomplete."
+    },
+    "objectives": [
+      "Implement a runtime validator function using TypeScript's type predicates",
+      "Construct a type inference bridge that connects runtime validation to compile-time types",
+      "Apply validation logic to enforce data constraints at runtime",
+      "Configure type-safe error handling for validation failures",
+      "Integrate the validator and type bridge into a simple data processing pipeline",
+      "Manipulate TypeScript's type system to reflect validation results in the code editor",
+      "Initialize a validation schema and generate corresponding TypeScript types"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 10",
+        "title": "Import TypeScript types and utilities",
+        "instruction": "Import the TypeScript types and utilities needed for runtime validation. Add the following imports: `z` from 'zod' for schema validation, and `TypeOf` from 'zod' for type inference.",
+        "hint": "Use the import statement to bring in the necessary modules from the 'zod' library.",
+        "analogousExample": "// Similar: importing utilities from a library\nimport { useState } from 'react';",
+        "seedCode": "// Import the required TypeScript types and utilities here",
+        "expectedOutcome": "The code will have the necessary imports to start building runtime validators and type bridges.",
+        "successCriteria": [
+          "The 'z' and 'TypeOf' utilities are imported from the 'zod' library."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure to import both 'z' and 'TypeOf' from 'zod'.",
+        "feedbackWrong": "Check the import statement. You need to import 'z' and 'TypeOf' from the 'zod' library.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "z",
+            "TypeOf",
+            "'zod'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 10",
+        "title": "Define a basic runtime validation schema",
+        "instruction": "Create an interface named 'ValidationSchema' that describes the shape of data to validate. It should have a property 'type' of type string and a property 'required' of type boolean.",
+        "hint": "Use the 'interface' keyword followed by the interface name and define the properties with their types.",
+        "analogousExample": "// Example: defining an interface for a user\ninterface User {\n  name: string;\n  age: number;\n}",
+        "seedCode": "// Import the required TypeScript types and utilities here\n\n// Define your ValidationSchema interface below",
+        "expectedOutcome": "An interface named ValidationSchema with type and required properties will be created.",
+        "successCriteria": [
+          "The ValidationSchema interface is defined with 'type: string' and 'required: boolean' properties."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've defined an interface, but check that it has both 'type' and 'required' properties with the correct types.",
+        "feedbackWrong": "The ValidationSchema interface is not defined correctly. Make sure to use the 'interface' keyword and include both properties.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "interface",
+            "ValidationSchema",
+            "type:",
+            "string",
+            "required:",
+            "boolean"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 10",
+        "title": "Create a validation function with runtime checks",
+        "instruction": "Create a function named 'validateData' that takes two parameters: 'data' (of type 'any') and 'schema' (of type 'ValidationSchema'), and returns a boolean indicating if the data matches the schema.",
+        "hint": "Start with 'function validateData(data: any, schema: ValidationSchema): boolean { }' or use an arrow function. Inside, you'll need to check if the data's type matches the schema's expected type.",
+        "analogousExample": "// Example: a simple type-checking function\nfunction isString(value: any): boolean {\n  return typeof value === 'string';\n}",
+        "seedCode": "// Import the required TypeScript types and utilities here\n\n// Define your ValidationSchema interface below\n\n// Create your validation function here\n",
+        "expectedOutcome": "A function named 'validateData' is created with proper TypeScript parameter types and a boolean return type.",
+        "successCriteria": [
+          "The function 'validateData' is defined with parameters (data: any, schema: ValidationSchema) and returns a boolean."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the function, but check the parameter types or return type. It should accept (data: any, schema: ValidationSchema) and return a boolean.",
+        "feedbackWrong": "The validation function isn't defined correctly. Make sure to create a function named 'validateData' with the specified parameters and return type.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "validateData",
+            "data: any",
+            "schema: ValidationSchema",
+            "boolean"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 10",
+        "title": "Define the return type for validation results",
+        "instruction": "Define a TypeScript type named 'ValidationResult' that can represent either a successful validation with a 'value' property or a failed validation with an 'error' property.",
+        "hint": "Use a union type with object types for each case. For success, include a 'value' property of type 'any' (or a generic type if you prefer). For failure, include an 'error' property of type 'string'.",
+        "analogousExample": "// Example: A union type for operation results\ntype OperationResult = { success: true; data: string } | { success: false; message: string };",
+        "seedCode": "// Import the required TypeScript types and utilities here\n\n// Define your ValidationSchema interface below\n\n// Create your validation function here\n\n// Define your ValidationResult type below",
+        "expectedOutcome": "You will have a 'ValidationResult' type that can represent both successful and failed validation outcomes.",
+        "successCriteria": [
+          "The 'ValidationResult' type is defined as a union type with distinct object types for success and failure cases."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your ValidationResult is a proper union type with both success and failure cases explicitly defined.",
+        "feedbackWrong": "The ValidationResult type isn't defined correctly. It should be a union type that can represent either a successful validation (with a value) or a failed validation (with an error).",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "type",
+            "ValidationResult",
+            "|",
+            "{",
+            "}",
+            "value",
+            "error"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 10",
+        "title": "Implement the validation function with proper return type",
+        "instruction": "Update your validation function to return the ValidationResult type you defined, ensuring it returns either success with validated data or error with validation messages.",
+        "hint": "Make your validation function explicitly return a ValidationResult object. Use type annotations to ensure the return type matches your ValidationResult interface.",
+        "analogousExample": "// Example: A function returning a typed result\nfunction validateAge(age: number): ValidationResult {\n  if (age >= 18) {\n    return { success: true, data: { age } };\n  } else {\n    return { success: false, errors: ['Age must be at least 18'] };\n  }\n}",
+        "seedCode": "// Import the required TypeScript types and utilities here\n\n// Define your ValidationSchema interface below\n\n// Create your validation function here\n\n// Define your ValidationResult type below",
+        "expectedOutcome": "Your validation function will now have a proper return type annotation and will return structured validation results.",
+        "successCriteria": [
+          "The validation function returns ValidationResult type with both success and error cases properly handled."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your function explicitly returns ValidationResult and handles both success and error cases.",
+        "feedbackWrong": "The validation function doesn't yet return the proper ValidationResult type. Review the expected return structure and add type annotations.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "ValidationResult",
+            "return",
+            "success",
+            "errors"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 10",
+        "title": "Create a type inference utility",
+        "instruction": "Create a utility type named `InferredType` that uses TypeScript's conditional types to infer the TypeScript type from a validation schema.",
+        "hint": "Define a generic type `InferredType<T>` that checks if `T` matches your `ValidationSchema` structure and returns the corresponding TypeScript type.",
+        "analogousExample": "// Example: a generic type that extracts a property type\ntype ExtractProp<T> = T extends { prop: infer U } ? U : never;",
+        "seedCode": "// Import the required TypeScript types and utilities here\n\n// Define your ValidationSchema interface below\n\n// Create your validation function here\n\n// Define your ValidationResult type below\n\n// Create your type inference utility here",
+        "expectedOutcome": "A generic utility type `InferredType` is defined, ready to infer types from validation schemas.",
+        "successCriteria": [
+          "The `InferredType` utility type is defined with proper generic constraints and conditional type logic."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but check that your `InferredType` uses conditional types and properly handles the schema structure.",
+        "feedbackWrong": "The type inference utility is missing or incorrect. Review how to create generic conditional types in TypeScript.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "InferredType",
+            "extends",
+            "infer"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 10",
+        "title": "Test the validation with sample data",
+        "instruction": "Create a test object with sample data and call your validation function to see runtime validation in action.",
+        "hint": "Define a test object with properties that match your schema, then call your validation function with that object and log the result.",
+        "analogousExample": "// Example: testing a validation function\nconst testData = { name: 'Alice', age: 25 };\nconst result = validatePerson(testData);\nconsole.log(result);",
+        "seedCode": "// Import the required TypeScript types and utilities here\n\n// Define your ValidationSchema interface below\n\n// Create your validation function here\n\n// Define your ValidationResult type below\n\n// Create your type inference utility here\n\n// Test the validation with sample data",
+        "expectedOutcome": "You'll see how your validation function works with real data by creating test data and calling the function.",
+        "successCriteria": [
+          "A test object is created and the validation function is called with it."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure you create test data and call your validation function with it.",
+        "feedbackWrong": "Try creating a test object with sample data and calling your validation function to see the validation result.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "test",
+            "validate",
+            "console.log"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 10",
+        "title": "Use the inferred type for type-safe data handling",
+        "instruction": "Create a function named 'processValidData' that takes a parameter of the inferred type from your validation utility and returns a string describing the data.",
+        "hint": "Use the type you inferred earlier as the parameter type. Inside the function, access properties of the parameter to build a descriptive string.",
+        "analogousExample": "// Example: type-safe processing function\nfunction formatUser(user: { name: string; age: number }): string {\n  return `${user.name} is ${user.age} years old`;\n}",
+        "seedCode": "// Import the required TypeScript types and utilities here\n\n// Define your ValidationSchema interface below\n\n// Create your validation function here\n\n// Define your ValidationResult type below\n\n// Create your type inference utility here\n\n// Test the validation with sample data\n\n// Create your type-safe processing function here",
+        "expectedOutcome": "A function that demonstrates compile-time type safety by using the inferred type as a parameter type.",
+        "successCriteria": [
+          "The 'processValidData' function is defined with proper TypeScript parameter typing and returns a string."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've created a function, but check that it uses the correct inferred type for the parameter and returns a string.",
+        "feedbackWrong": "The function is missing or doesn't match the requirements. Make sure to create a function named 'processValidData' with proper TypeScript typing.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "processValidData",
+            ":",
+            "string"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 10",
+        "title": "Create a simple validation bridge component",
+        "instruction": "Create a functional component named ValidationBridge that demonstrates the bridge between runtime validation and compile-time types by using both your validation function and inferred types.",
+        "hint": "Define a component that imports and uses your existing validation function and type inference utility. The component should return some JSX structure.",
+        "analogousExample": "// Example: a simple component that uses validation\nfunction ValidationBridge() {\n  // Component logic here\n  return (\n    <div>\n      <h2>Validation Bridge</h2>\n    </div>\n  );\n}",
+        "seedCode": "// Import the required TypeScript types and utilities here\n\n// Define your ValidationSchema interface below\n\n// Create your validation function here\n\n// Define your ValidationResult type below\n\n// Create your type inference utility here\n\n// Test the validation with sample data\n\n// Create your type-safe processing function here\n\n// Create your ValidationBridge component below",
+        "expectedOutcome": "A ValidationBridge component is created that will serve as the bridge between runtime validation and TypeScript's compile-time type checking.",
+        "successCriteria": [
+          "The ValidationBridge component is defined as a functional component and returns JSX structure."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you've created a functional component named ValidationBridge that returns JSX.",
+        "feedbackWrong": "The component wasn't created correctly. Create a functional component named ValidationBridge that returns JSX.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "ValidationBridge",
+            "return",
+            "<"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 10",
+        "title": "Test the complete validation and type bridge",
+        "instruction": "In your ValidationBridge component, add a test case that calls your validation function with invalid data and logs the error result to the console.",
+        "hint": "Add a test call inside the component that passes data that doesn't match your validation schema, then console.log the result.",
+        "analogousExample": "// Example: testing validation with invalid data\nconst testInvalidData = { name: 123, age: 'twenty' };\nconst invalidResult = validateUser(testInvalidData);\nconsole.log('Invalid test result:', invalidResult);",
+        "seedCode": "// Import the required TypeScript types and utilities here\n\n// Define your ValidationSchema interface below\n\n// Create your validation function here\n\n// Define your ValidationResult type below\n\n// Create your type inference utility here\n\n// Test the validation with sample data\n\n// Create your type-safe processing function here\n\n// Create your ValidationBridge component below\n\n// Add your invalid data test case here",
+        "expectedOutcome": "The component should include a test case with invalid data that demonstrates runtime validation failure while maintaining type safety.",
+        "successCriteria": [
+          "The ValidationBridge component contains a test call with invalid data that triggers validation failure and logs the error result."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your test case uses data that doesn't match your validation schema and properly logs the error result.",
+        "feedbackWrong": "Try adding a test case inside your ValidationBridge component that calls your validation function with data that should fail validation, then logs the result.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "validate",
+            "invalid",
+            "console.log",
+            "result"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import TypeScript types and utilities",
+        "id": "step1"
+      },
+      {
+        "label": "Define a basic runtime validation schema",
+        "id": "step2"
+      },
+      {
+        "label": "Create a validation function with runtime checks",
+        "id": "step3"
+      },
+      {
+        "label": "Define the return type for validation results",
+        "id": "step4"
+      },
+      {
+        "label": "Implement the validation function with proper return type",
+        "id": "step5"
+      },
+      {
+        "label": "Create a type inference utility",
+        "id": "step6"
+      },
+      {
+        "label": "Test the validation with sample data",
+        "id": "step7"
+      },
+      {
+        "label": "Use the inferred type for type-safe data handling",
+        "id": "step8"
+      },
+      {
+        "label": "Create a simple validation bridge component",
+        "id": "step9"
+      },
+      {
+        "label": "Test the complete validation and type bridge",
+        "id": "step10"
+      }
+    ]
+  },
+  "source": "content"
+}

@@ -1,0 +1,408 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-algorithms-40",
+    "track": "algorithms",
+    "lessonNum": 40,
+    "title": "Longest Ones with K Flips",
+    "shortName": "P40",
+    "intro": {
+      "tag": "LESSON #40",
+      "title": "Longest Ones with K Flips",
+      "body": "In this lesson, you will build a function that finds the longest subarray of 1s in a binary array, allowing you to flip up to K zeros to 1s. You will learn the sliding window technique, a core algorithm pattern for efficiently solving array lessons. The implementation will use basic JavaScript constructs like arrays, loops, and conditional logic. By the end, you'll understand how to track a window and adjust it dynamically to maximize the length of consecutive 1s.",
+      "usecase": "The Longest Ones with K Flips algorithm is essential for optimizing data streaming and signal processing in real-time applications. It's commonly used in network monitoring dashboards to identify the longest consecutive sequence of successful data packets, allowing engineers to detect stable connection periods. In video streaming services, this pattern helps analyze buffering sequences to determine optimal quality settings while maintaining smooth playback. Financial trading platforms apply similar logic to track consecutive profitable trades within risk tolerance limits, helping traders identify reliable market trends."
+    },
+    "objectives": [
+      "Implement a sliding window algorithm to track consecutive ones in a binary array",
+      "Initialize and update a counter variable to track the number of zero flips used",
+      "Construct logic to expand the window when zeros can be flipped within the K limit",
+      "Manipulate the window boundaries to slide forward when the flip limit is exceeded",
+      "Configure the algorithm to maintain the maximum window length throughout iteration",
+      "Apply the solution to binary arrays with varying K values to verify correctness",
+      "Integrate edge case handling for arrays with all ones or all zeros"
+    ],
+    "steps": [
+      {
+        "type": "reasoning",
+        "id": "step1",
+        "phase": "Step 1 of 16",
+        "title": "Welcome",
+        "content": {
+          "body": "Imagine you have a binary array (only 0s and 1s) and you can flip up to K zeros to ones. What's the longest contiguous subarray of ones you can create? This is a classic lesson that combines array manipulation with clever counting. We'll learn how to solve it efficiently using a sliding window approach.",
+          "title": "Welcome"
+        }
+      },
+      {
+        "type": "reasoning",
+        "id": "step2",
+        "phase": "Step 2 of 16",
+        "title": "What you'll learn",
+        "content": {
+          "body": "• Apply the sliding window technique to find maximum length subarrays with constraints.\n• Implement a solution that tracks zero counts within a window.\n• Explain when to expand and shrink the window based on zero count.\n• Recognize how this approach optimizes brute force checking.",
+          "title": "What you'll learn"
+        }
+      },
+      {
+        "type": "discovery",
+        "id": "step3",
+        "phase": "Step 3 of 16",
+        "title": "Try it",
+        "content": {
+          "body": "Let's start with a small example. You have [1,1,0,1] and K=1 (you can flip one 0 to 1). What's the longest contiguous segment of 1s you can make?",
+          "title": "Try it",
+          "prompt": "What's the longest contiguous segment of 1s you can make with K=1?",
+          "exampleArray": [
+            1,
+            1,
+            0,
+            1
+          ],
+          "target": 1,
+          "successMessage": "Great! You can flip the 0 at index 2 to get [1,1,1,1] - that's 4 consecutive 1s."
+        }
+      },
+      {
+        "type": "discovery",
+        "id": "step4",
+        "phase": "Step 4 of 16",
+        "title": "Try a bigger array",
+        "content": {
+          "body": "(No content)",
+          "title": "Try a bigger array",
+          "prompt": "Now try [1,0,0,1,1,0,1] with K=2. What's the maximum length?",
+          "exampleArray": [
+            1,
+            0,
+            0,
+            1,
+            1,
+            0,
+            1
+          ],
+          "target": 2,
+          "successMessage": "Well done! You can flip two zeros to get 6 consecutive 1s (from index 1 to 6)."
+        }
+      },
+      {
+        "type": "discovery",
+        "id": "step5",
+        "phase": "Step 5 of 16",
+        "title": "One more",
+        "content": {
+          "body": "(No content)",
+          "title": "One more",
+          "prompt": "What about [0,0,1,1,0,0,1,0,1,1] with K=2?",
+          "exampleArray": [
+            0,
+            0,
+            1,
+            1,
+            0,
+            0,
+            1,
+            0,
+            1,
+            1
+          ],
+          "target": 2,
+          "successMessage": "Excellent! You found that flipping two zeros gives you 6 consecutive 1s. You're checking different windows to find the best one."
+        }
+      },
+      {
+        "type": "reflection",
+        "id": "step6",
+        "phase": "Step 6 of 16",
+        "title": "What you did",
+        "content": {
+          "body": "What you just did was explore different windows manually - you tried starting at different positions and counted how many zeros were in each window. For small arrays, this works, but it's essentially checking every possible subarray.",
+          "title": "What you did"
+        }
+      },
+      {
+        "type": "scale-problem",
+        "id": "step7",
+        "phase": "Step 7 of 16",
+        "title": "Why it gets hard",
+        "content": {
+          "body": "When the array has 10,000 elements, checking every possible subarray would be extremely slow (O(n²)). We need a smarter method that finds the answer in one pass through the array. Can't figure it out? Click Show me on the next step.",
+          "title": "Why it gets hard"
+        }
+      },
+      {
+        "type": "concept-bridge",
+        "id": "step8",
+        "phase": "Step 8 of 16",
+        "title": "Key idea",
+        "content": {
+          "body": "Remember what we have already seen. We can use a sliding window that expands and shrinks based on how many zeros we've encountered. The trick is to keep track of zeros in our current window and adjust the window boundaries to maintain at most K zeros.",
+          "title": "Key idea",
+          "visualMetaphor": "Imagine a notebook where we write down what we've seen and check it in one step. For this lesson, we're tracking how many zeros are in our current window - like keeping a running tally that we can quickly check and update."
+        }
+      },
+      {
+        "type": "reveal-idea",
+        "id": "step9",
+        "phase": "Step 9 of 16",
+        "title": "The approach",
+        "content": {
+          "body": "We'll use a single pass with two pointers (left and right) that define our window. As we expand the right pointer, we count zeros. If we exceed K zeros, we shrink from the left until we're back within the limit. We always track the maximum window length.",
+          "title": "The approach",
+          "showMeFirst": true,
+          "illustratedExample": "Walkthrough with [1,0,1,1,0,0,1], K=2:\n1. Window [1]: zeros=0, max=1\n2. Window [1,0]: zeros=1, max=2\n3. Window [1,0,1]: zeros=1, max=3\n4. Window [1,0,1,1]: zeros=1, max=4\n5. Window [1,0,1,1,0]: zeros=2, max=5\n6. Window [1,0,1,1,0,0]: zeros=3 (exceeds K)\n   Shrink left: Window [0,1,1,0,0]: zeros=3\n   Shrink left: Window [1,1,0,0]: zeros=2, max=5\n7. Window [1,1,0,0,1]: zeros=2, max=5\nAnswer: 5"
+        }
+      },
+      {
+        "type": "flow-explainer",
+        "id": "step10",
+        "phase": "Step 10 of 16",
+        "title": "Steps",
+        "content": {
+          "body": "1. Initialize left pointer at 0, zero count at 0, and max length at 0.\n2. Move right pointer through the array.\n3. If current element is 0, increment zero count.\n4. While zero count > K, move left pointer forward (if element at left is 0, decrement zero count).\n5. Update max length with current window size (right - left + 1).\n6. Return max length.",
+          "title": "Steps"
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 16",
+        "title": "Set up function and variables",
+        "instruction": "Create the function skeleton and initialize the variables we need: left pointer, zero count, and maximum length.",
+        "hint": "Start with function longestOnes(nums, k). Initialize left = 0, zeroCount = 0, maxLen = 0.",
+        "analogousExample": "",
+        "seedCode": "// Write your code here\n",
+        "expectedOutcome": "Function declaration with three variables initialized to 0.",
+        "successCriteria": [],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Good start! Make sure you have all three variables: left, zeroCount, and maxLen.",
+        "feedbackWrong": "Let's try again. We need a function that takes nums and k, and initializes left, zeroCount, and maxLen to 0.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "function",
+            "longestOnes",
+            "nums",
+            "k",
+            "left",
+            "0",
+            "zeroCount",
+            "0",
+            "maxLen",
+            "0"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step12",
+        "type": "question",
+        "phase": "Step 12 of 16",
+        "title": "Create the right pointer loop",
+        "instruction": "Add a for loop to iterate through the array with the right pointer. We'll process each element as we expand our window.",
+        "hint": "Use for (let right = 0; right < nums.length; right++) to go through each element.",
+        "analogousExample": "",
+        "seedCode": "function longestOnes(nums, k) {\n  let left = 0;\n  let zeroCount = 0;\n  let maxLen = 0;\n  \n  // Write your code here\n}",
+        "expectedOutcome": "A for loop that iterates through nums using right as index.",
+        "successCriteria": [],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Almost there! Make sure your loop goes through all elements of nums.",
+        "feedbackWrong": "Remember we need to iterate through the entire array. Use a standard for loop with right as the index.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "for",
+            "right",
+            "nums.length"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step13",
+        "type": "question",
+        "phase": "Step 13 of 16",
+        "title": "Count zeros when expanding",
+        "instruction": "Inside the loop, check if the current element is 0. If it is, increment zeroCount to track how many zeros are in our current window.",
+        "hint": "Use if (nums[right] === 0) { zeroCount++; }",
+        "analogousExample": "",
+        "seedCode": "function longestOnes(nums, k) {\n  let left = 0;\n  let zeroCount = 0;\n  let maxLen = 0;\n  \n  for (let right = 0; right < nums.length; right++) {\n    // Write your code here\n  }\n}",
+        "expectedOutcome": "Conditional check for zero and increment of zeroCount.",
+        "successCriteria": [],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Good! Make sure you're checking nums[right] and incrementing zeroCount when it's 0.",
+        "feedbackWrong": "We need to check if the current element is 0. If it is, we should increase our zero count.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "if",
+            "nums[right]",
+            "===",
+            "0",
+            "zeroCount++"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step14",
+        "type": "question",
+        "phase": "Step 14 of 16",
+        "title": "Shrink window when too many zeros",
+        "instruction": "Add a while loop to shrink the window from the left when we have more than K zeros. If the element at left is 0, decrement zeroCount as it leaves the window.",
+        "hint": "while (zeroCount > k) { if (nums[left] === 0) zeroCount--; left++; }",
+        "analogousExample": "",
+        "seedCode": "function longestOnes(nums, k) {\n  let left = 0;\n  let zeroCount = 0;\n  let maxLen = 0;\n  \n  for (let right = 0; right < nums.length; right++) {\n    if (nums[right] === 0) {\n      zeroCount++;\n    }\n    \n    // Write your code here\n  }\n}",
+        "expectedOutcome": "A while loop that shrinks the window when zeroCount exceeds k.",
+        "successCriteria": [],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Almost! Make sure you check zeroCount > k and properly update zeroCount when left element is 0.",
+        "feedbackWrong": "We need to shrink the window from the left when we have too many zeros. Use a while loop that moves left forward.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "while",
+            "zeroCount",
+            ">",
+            "k",
+            "if",
+            "nums[left]",
+            "===",
+            "0",
+            "zeroCount--",
+            "left++"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step15",
+        "type": "question",
+        "phase": "Step 15 of 16",
+        "title": "Update maximum length and return",
+        "instruction": "After adjusting the window, calculate the current window length and update maxLen if it's larger. After the loop, return maxLen.",
+        "hint": "maxLen = Math.max(maxLen, right - left + 1); then return maxLen;",
+        "analogousExample": "",
+        "seedCode": "function longestOnes(nums, k) {\n  let left = 0;\n  let zeroCount = 0;\n  let maxLen = 0;\n  \n  for (let right = 0; right < nums.length; right++) {\n    if (nums[right] === 0) {\n      zeroCount++;\n    }\n    \n    while (zeroCount > k) {\n      if (nums[left] === 0) {\n        zeroCount--;\n      }\n      left++;\n    }\n    \n    // Write your code here\n  }\n}",
+        "expectedOutcome": "Update maxLen with current window size and return it after the loop.",
+        "successCriteria": [],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Good progress! Don't forget to update maxLen inside the loop and return it at the end.",
+        "feedbackWrong": "We need to track the maximum window length we've seen. Calculate right - left + 1 and use Math.max to update maxLen.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "maxLen",
+            "Math.max",
+            "right",
+            "-",
+            "left",
+            "+",
+            "1",
+            "return",
+            "maxLen"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "type": "complete",
+        "id": "step16",
+        "phase": "Step 16 of 16",
+        "title": "Done",
+        "content": {
+          "body": "Congratulations! You've implemented an efficient O(n) solution for the Longest Ones with K Flips lesson. Remember: the sliding window technique is powerful for contiguous subarray lessons with constraints. Keep track of what matters (zero count here) and adjust your window boundaries to maintain the constraint. This approach beats checking every possible subarray!",
+          "title": "Done"
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Welcome",
+        "id": "step1"
+      },
+      {
+        "label": "What you'll learn",
+        "id": "step2"
+      },
+      {
+        "label": "Try it",
+        "id": "step3"
+      },
+      {
+        "label": "Try a bigger array",
+        "id": "step4"
+      },
+      {
+        "label": "One more",
+        "id": "step5"
+      },
+      {
+        "label": "What you did",
+        "id": "step6"
+      },
+      {
+        "label": "Why it gets hard",
+        "id": "step7"
+      },
+      {
+        "label": "Key idea",
+        "id": "step8"
+      },
+      {
+        "label": "The approach",
+        "id": "step9"
+      },
+      {
+        "label": "Steps",
+        "id": "step10"
+      },
+      {
+        "label": "Set up function and variables",
+        "id": "step11"
+      },
+      {
+        "label": "Create the right pointer loop",
+        "id": "step12"
+      },
+      {
+        "label": "Count zeros when expanding",
+        "id": "step13"
+      },
+      {
+        "label": "Shrink window when too many zeros",
+        "id": "step14"
+      },
+      {
+        "label": "Update maximum length and return",
+        "id": "step15"
+      },
+      {
+        "label": "Done",
+        "id": "step16"
+      }
+    ],
+    "algorithmFamily": "array-hashmap",
+    "familyTeachingProfile": {
+      "mentalModel": "Remember what we have already seen",
+      "conceptBridge": "Show the learner how to use a lookup structure (e.g. object or Map) to remember seen values and avoid re-scanning.",
+      "visualMetaphor": "A notebook where we write down what we've seen and check it in one step.",
+      "commonConfusions": [
+        "What do we store as key vs value?",
+        "When do we check the structure vs add to it?"
+      ]
+    }
+  },
+  "source": "content"
+}

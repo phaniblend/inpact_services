@@ -1,0 +1,390 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-node-53",
+    "track": "node",
+    "lessonNum": 53,
+    "title": "Build request deduplication layer",
+    "shortName": "P53",
+    "intro": {
+      "tag": "LESSON #53",
+      "title": "Build request deduplication layer",
+      "body": "In this lesson, you will build a request deduplication layer, a component that prevents duplicate requests from being processed multiple times to improve efficiency and consistency in a Node.js application. You'll learn the core concept of using a cache or map to track ongoing requests, ensuring that identical requests wait for the first one to complete instead of executing again. The main technologies involved are JavaScript's built-in Map object for storing request promises and async/await for handling asynchronous operations. By the end, you'll have a functional deduplication layer that can be integrated into API handlers or data-fetching logic.",
+      "usecase": "Request deduplication is essential in Node.js backend systems where multiple clients might make identical API calls simultaneously. This pattern prevents redundant database queries or external API requests in scenarios like e-commerce product pages with concurrent user access, financial dashboard data refreshes, or real-time inventory management systems. By implementing a deduplication layer, developers optimize resource usage, reduce latency, and prevent rate-limiting issues when fetching user profiles, stock prices, or cached content. This technique is particularly valuable in microservices architectures where multiple services might request the same data from shared dependencies."
+    },
+    "objectives": [
+      "Construct a caching mechanism to store in-flight request promises",
+      "Implement a deduplication function that checks for duplicate requests before execution",
+      "Configure request parameters to serve as cache keys for deduplication",
+      "Integrate the deduplication layer with existing HTTP request functions",
+      "Manipulate cache entries to clear completed requests and prevent memory leaks",
+      "Initialize the deduplication system with configurable timeout settings",
+      "Apply the deduplication layer to batch identical API calls in a Node.js server"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 11",
+        "title": "Import required Node.js modules",
+        "instruction": "Import the http and crypto modules from Node.js core.",
+        "hint": "Use the require() function to import built-in Node.js modules.",
+        "analogousExample": "// Importing built-in modules\nconst fs = require('fs');\nconst path = require('path');",
+        "seedCode": "// Import http and crypto modules here",
+        "expectedOutcome": "The http module for creating a server and the crypto module for generating request hashes are imported.",
+        "successCriteria": [
+          "Both http and crypto modules are imported using require()."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but you need to import both modules. Make sure you're importing both http and crypto using require().",
+        "feedbackWrong": "import two built-in Node.js modules: http and crypto. Use the require() function for each.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "require('http')",
+            "require('crypto')"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 11",
+        "title": "Create a basic HTTP server",
+        "instruction": "Create an HTTP server using the http module's createServer() method and make it listen on port 3000.",
+        "hint": "Call http.createServer() to create a server instance, then use the .listen() method on that instance with port 3000.",
+        "analogousExample": "// Creating a basic HTTP server\nconst server = http.createServer();\nserver.listen(3000);",
+        "seedCode": "// Import http and crypto modules here\n\n// Create an HTTP server and make it listen on port 3000",
+        "expectedOutcome": "A basic HTTP server is created and listening on port 3000.",
+        "successCriteria": [
+          "The code creates an HTTP server using http.createServer() and calls .listen(3000) on it."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started creating the server, but make sure you're both creating it with http.createServer() and calling .listen(3000) on it.",
+        "feedbackWrong": "The server isn't properly set up. Remember to use http.createServer() to create the server and then make it listen on port 3000.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "createServer",
+            "listen",
+            "3000"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 11",
+        "title": "Define request deduplication cache",
+        "instruction": "Initialize an empty JavaScript object to serve as the request cache. Declare it as a constant variable named 'cache' at the top level of your file.",
+        "hint": "You can create an empty object using curly braces: {}.",
+        "analogousExample": "// Example: creating an empty cache object\nconst cache = {};",
+        "seedCode": "const http = require('http');\nconst crypto = require('crypto');\n\n// Initialize request cache here\n\nconst server = http.createServer((req, res) => {\n  // Request handling will be added later\n});\n\nserver.listen(3000, () => {\n  console.log('Server listening on port 3000');\n});",
+        "expectedOutcome": "An empty cache object is created and ready to store ongoing request identifiers.",
+        "successCriteria": [
+          "A constant variable named 'cache' is declared and initialized as an empty object."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you've declared a constant variable named 'cache' and initialized it as an empty object using {}.",
+        "feedbackWrong": "The cache object wasn't properly created. You need to declare a constant variable named 'cache' and set it to an empty object {}.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "const",
+            "cache",
+            "=",
+            "{}"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 11",
+        "title": "Create request hash generation function",
+        "instruction": "Define a function named 'generateRequestHash' that takes 'method' and 'url' as parameters and returns an MD5 hash string using the crypto module.",
+        "hint": "Use crypto.createHash('md5') to create a hash object, then update it with the method and URL combined, and finally call digest('hex') to get the hexadecimal string.",
+        "analogousExample": "// Example: function that creates a hash from input\nfunction hashInput(input) {\n  return crypto.createHash('md5').update(input).digest('hex');\n}",
+        "seedCode": "const http = require('http');\nconst crypto = require('crypto');\n\n// Initialize request cache here\n\n// Define generateRequestHash function here\n\nconst server = http.createServer((req, res) => {\n  // Request handling will be added later\n});\n\nserver.listen(3000, () => {\n  console.log('Server listening on port 3000');\n});",
+        "expectedOutcome": "A function that generates a unique MD5 hash for each request based on its method and URL.",
+        "successCriteria": [
+          "The 'generateRequestHash' function is defined, takes method and url parameters, uses crypto.createHash('md5'), updates with combined method and url, and returns a hexadecimal hash string."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your function uses crypto.createHash('md5'), updates with both method and URL, and returns the hexadecimal digest.",
+        "feedbackWrong": "The function isn't defined correctly. Remember to create a function named 'generateRequestHash' that takes method and url parameters and returns an MD5 hash using the crypto module.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "generateRequestHash",
+            "method",
+            "url",
+            "crypto.createHash('md5')",
+            "update",
+            "digest('hex')"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 11",
+        "title": "Implement deduplication middleware function",
+        "instruction": "Define a function named 'deduplicateRequest' that takes 'req' and 'res' as parameters and returns a promise. Inside the function, generate a request hash using the 'generateRequestHash' function and check if it exists in the 'requestCache' object.",
+        "hint": "Create a function that will handle deduplication logic. Use the existing 'generateRequestHash' function to create a unique key for each request, then check if that key already exists in the 'requestCache'.",
+        "analogousExample": "// Similar: a middleware function that checks cache\nfunction checkCache(req, res) {\n  const key = generateKey(req);\n  if (cache[key]) {\n    return Promise.resolve(cache[key]);\n  }\n  return Promise.resolve(null);\n}",
+        "seedCode": "const http = require('http');\nconst crypto = require('crypto');\n\n// Initialize request cache here\nconst requestCache = {};\n\n// Define generateRequestHash function here\nfunction generateRequestHash(req) {\n  const { url, method, headers } = req;\n  const data = `${url}:${method}:${JSON.stringify(headers)}`;\n  return crypto.createHash('sha256').update(data).digest('hex');\n}\n\n// Define deduplicateRequest function here\n\nconst server = http.createServer((req, res) => {\n  // Request handling will be added later\n});\n\nserver.listen(3000, () => {\n  console.log('Server listening on port 3000');\n});",
+        "expectedOutcome": "A function named 'deduplicateRequest' is created that generates a request hash and checks the cache for duplicates, returning a promise.",
+        "successCriteria": [
+          "The 'deduplicateRequest' function is defined with 'req' and 'res' parameters, calls 'generateRequestHash', checks 'requestCache', and returns a promise."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your function includes all the required elements: parameters, hash generation, cache check, and promise return.",
+        "feedbackWrong": "The function doesn't match the required structure. Review the instruction: create a function named 'deduplicateRequest' that takes req and res, generates a hash, checks the cache, and returns a promise.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "function deduplicateRequest",
+            "req",
+            "res",
+            "generateRequestHash",
+            "requestCache",
+            "Promise"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 11",
+        "title": "Add request handling to the server",
+        "instruction": "Inside the server's request handler callback, call the deduplicateRequest function (which you'll implement later) with the request and response objects as arguments.",
+        "hint": "Look at the server's callback function parameters (req, res). Pass both of these to deduplicateRequest(req, res).",
+        "analogousExample": "// Example: calling a function inside a server handler\nconst server = http.createServer((req, res) => {\n  processRequest(req, res);\n});",
+        "seedCode": "const http = require('http');\nconst crypto = require('crypto');\n\n// Initialize request cache here\nconst requestCache = {};\n\n// Define generateRequestHash function here\nfunction generateRequestHash(req) {\n  const { url, method, headers } = req;\n  const data = `${url}:${method}:${JSON.stringify(headers)}`;\n  return crypto.createHash('sha256').update(data).digest('hex');\n}\n\n// Define deduplicateRequest function here\n\nconst server = http.createServer((req, res) => {\n  // Call deduplicateRequest here\n});\n\nserver.listen(3000, () => {\n  console.log('Server listening on port 3000');\n});",
+        "expectedOutcome": "The server's request handler now calls the deduplicateRequest function, preparing to integrate deduplication logic.",
+        "successCriteria": [
+          "The server callback contains a call to deduplicateRequest(req, res)."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're calling deduplicateRequest with both req and res parameters inside the server callback.",
+        "feedbackWrong": "The server handler should call deduplicateRequest(req, res). Check the function call syntax and placement.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "deduplicateRequest",
+            "req",
+            "res"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 11",
+        "title": "Implement simulated API call function",
+        "instruction": "Define an async function named simulateApiCall that uses setTimeout to simulate a 2-second API response. Place it after the deduplicateRequest function comment.",
+        "hint": "Create an async function that returns a promise resolving after a delay. Use setTimeout inside the promise to wait 2000 milliseconds.",
+        "analogousExample": "// Example async function with delay\nasync function fetchData() {\n  return new Promise((resolve) => {\n    setTimeout(() => {\n      resolve('Data fetched');\n    }, 1000);\n  });\n}",
+        "seedCode": "const http = require('http');\nconst crypto = require('crypto');\n\n// Initialize request cache here\nconst requestCache = {};\n\n// Define generateRequestHash function here\nfunction generateRequestHash(req) {\n  const { url, method, headers } = req;\n  const data = `${url}:${method}:${JSON.stringify(headers)}`;\n  return crypto.createHash('sha256').update(data).digest('hex');\n}\n\n// Define deduplicateRequest function here\n\n// Define simulateApiCall function here\n\nconst server = http.createServer((req, res) => {\n  // Call deduplicateRequest here\n});\n\nserver.listen(3000, () => {\n  console.log('Server listening on port 3000');\n});",
+        "expectedOutcome": "The simulateApiCall function is defined and ready to be used as a mock API endpoint in the server.",
+        "successCriteria": [
+          "An async function named simulateApiCall is defined, returns a promise, and uses setTimeout with a 2000ms delay."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure your function is async, returns a promise, and uses setTimeout with 2000ms.",
+        "feedbackWrong": "The function isn't defined correctly. Check that it's async, returns a promise, and simulates a 2-second delay.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "async",
+            "simulateApiCall",
+            "setTimeout",
+            "2000",
+            "Promise"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 11",
+        "title": "Connect deduplication to simulated API",
+        "instruction": "Inside the deduplicateRequest function, call the simulateApiCall function for new requests (when the hash is not in cache) and store its result in the cache.",
+        "hint": "After checking if the hash exists in requestCache, if it doesn't, call simulateApiCall with the request object and assign its return value to the cache entry.",
+        "analogousExample": "// Similar: calling a function and caching its result\nfunction processRequest(req) {\n  const key = req.url;\n  if (!cache[key]) {\n    cache[key] = fetchData(req); // Call external function\n  }\n  return cache[key];\n}",
+        "seedCode": "const http = require('http');\nconst crypto = require('crypto');\n\n// Initialize request cache here\nconst requestCache = {};\n\n// Define generateRequestHash function here\nfunction generateRequestHash(req) {\n  const { url, method, headers } = req;\n  const data = `${url}:${method}:${JSON.stringify(headers)}`;\n  return crypto.createHash('sha256').update(data).digest('hex');\n}\n\n// Define deduplicateRequest function here\nfunction deduplicateRequest(req) {\n  const hash = generateRequestHash(req);\n  if (requestCache[hash]) {\n    return requestCache[hash];\n  }\n  // Call simulateApiCall for new requests and cache the result\n}\n\n// Define simulateApiCall function here\n\nconst server = http.createServer((req, res) => {\n  // Call deduplicateRequest here\n});\n\nserver.listen(3000, () => {\n  console.log('Server listening on port 3000');\n});",
+        "expectedOutcome": "The deduplicateRequest function will now properly call the simulated API for uncached requests and store the result in the cache.",
+        "successCriteria": [
+          "The deduplicateRequest function calls simulateApiCall when a request hash is not found in requestCache and assigns the result to the cache."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're calling simulateApiCall with the request object and storing its return value in requestCache[hash].",
+        "feedbackWrong": "The deduplicateRequest function should call simulateApiCall for new requests and cache the result. Check if you're properly handling the cache assignment.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "simulateApiCall",
+            "requestCache[hash]",
+            "="
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 11",
+        "title": "Add cache cleanup mechanism",
+        "instruction": "Modify the deduplicateRequest function to delete the cached request from requestCache once the simulated API call completes.",
+        "hint": "After storing the promise in the cache, attach a .then() handler to remove the hash from requestCache when the promise resolves.",
+        "analogousExample": "// Similar: cleanup after async operation\nfunction fetchWithCleanup(url) {\n  const promise = fetch(url);\n  cache[url] = promise;\n  promise.then(() => {\n    delete cache[url];\n  });\n  return promise;\n}",
+        "seedCode": "const http = require('http');\nconst crypto = require('crypto');\n\n// Initialize request cache here\nconst requestCache = {};\n\n// Define generateRequestHash function here\nfunction generateRequestHash(req) {\n  const { url, method, headers } = req;\n  const data = `${url}:${method}:${JSON.stringify(headers)}`;\n  return crypto.createHash('sha256').update(data).digest('hex');\n}\n\n// Define deduplicateRequest function here\nfunction deduplicateRequest(req) {\n  const hash = generateRequestHash(req);\n  if (requestCache[hash]) {\n    return requestCache[hash];\n  }\n  // Call simulateApiCall for new requests and cache the result\n}\n\n// Define simulateApiCall function here\n\nconst server = http.createServer((req, res) => {\n  // Call deduplicateRequest here\n});\n\nserver.listen(3000, () => {\n  console.log('Server listening on port 3000');\n});",
+        "expectedOutcome": "The deduplicateRequest function will now automatically clean up completed requests from the cache to prevent memory leaks.",
+        "successCriteria": [
+          "The deduplicateRequest function stores the promise in requestCache and removes it with .then() after resolution."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure to remove the hash from requestCache when the promise resolves.",
+        "feedbackWrong": "The cache cleanup isn't implemented yet. Try adding a .then() handler to delete the cached entry.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "deduplicateRequest",
+            "requestCache",
+            "then",
+            "delete"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 11",
+        "title": "Test the deduplication server",
+        "instruction": "Start the server by running the file with Node.js,",
+        "hint": "You can use curl, Postman, or a browser to send requests to http://localhost:3000/test. Send them quickly one after another to see deduplication in action.",
+        "analogousExample": "// Starting a Node.js server\nconst server = http.createServer((req, res) => {\n  res.end('Hello');\n});\nserver.listen(3000, () => {\n  console.log('Server started');\n});",
+        "seedCode": "const http = require('http');\nconst crypto = require('crypto');\n\n// Initialize request cache here\nconst requestCache = {};\n\n// Define generateRequestHash function here\nfunction generateRequestHash(req) {\n  const { url, method, headers } = req;\n  const data = `${url}:${method}:${JSON.stringify(headers)}`;\n  return crypto.createHash('sha256').update(data).digest('hex');\n}\n\n// Define deduplicateRequest function here\nfunction deduplicateRequest(req) {\n  const hash = generateRequestHash(req);\n  if (requestCache[hash]) {\n    return requestCache[hash];\n  }\n  // Call simulateApiCall for new requests and cache the result\n}\n\n// Define simulateApiCall function here\n\nconst server = http.createServer((req, res) => {\n  // Call deduplicateRequest here\n});\n\nserver.listen(3000, () => {\n  console.log('Server listening on port 3000');\n});",
+        "expectedOutcome": "The server starts successfully and logs 'Server listening on port 3000'. Duplicate requests to the same endpoint within a short time window should return the same cached response.",
+        "successCriteria": [
+          "Server starts without errors and duplicate requests are deduplicated (only one API call is made for identical requests)."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "The server started, but deduplication might not be fully functional. Check that the deduplicateRequest function correctly caches and returns cached responses.",
+        "feedbackWrong": "The server failed to start or deduplication isn't working. Verify the server setup and that the deduplicateRequest function is properly implemented.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "server.listen",
+            "3000",
+            "console.log",
+            "Server listening"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 11",
+        "title": "send multiple simultaneous requests to the sa",
+        "instruction": "send multiple simultaneous requests to the same endpoint to test deduplication.",
+        "hint": "You can use curl, Postman, or a browser to send requests to http://localhost:3000/test. Send them quickly one after another to see deduplication in action.",
+        "analogousExample": "// Starting a Node.js server\nconst server = http.createServer((req, res) => {\n  res.end('Hello');\n});\nserver.listen(3000, () => {\n  console.log('Server started');\n});",
+        "seedCode": "const http = require('http');\nconst crypto = require('crypto');\n\n// Initialize request cache here\nconst requestCache = {};\n\n// Define generateRequestHash function here\nfunction generateRequestHash(req) {\n  const { url, method, headers } = req;\n  const data = `${url}:${method}:${JSON.stringify(headers)}`;\n  return crypto.createHash('sha256').update(data).digest('hex');\n}\n\n// Define deduplicateRequest function here\nfunction deduplicateRequest(req) {\n  const hash = generateRequestHash(req);\n  if (requestCache[hash]) {\n    return requestCache[hash];\n  }\n  // Call simulateApiCall for new requests and cache the result\n}\n\n// Define simulateApiCall function here\n\nconst server = http.createServer((req, res) => {\n  // Call deduplicateRequest here\n});\n\nserver.listen(3000, () => {\n  console.log('Server listening on port 3000');\n});",
+        "expectedOutcome": "",
+        "successCriteria": [
+          "Complete the step as instructed."
+        ],
+        "feedbackCorrect": "Great! Step completed.",
+        "feedbackPartial": "Review the instruction and try again.",
+        "feedbackWrong": "Check the instruction and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "server.listen",
+            "3000",
+            "console.log",
+            "Server listening"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import required Node.js modules",
+        "id": "step1"
+      },
+      {
+        "label": "Create a basic HTTP server",
+        "id": "step2"
+      },
+      {
+        "label": "Define request deduplication cache",
+        "id": "step3"
+      },
+      {
+        "label": "Create request hash generation function",
+        "id": "step4"
+      },
+      {
+        "label": "Implement deduplication middleware function",
+        "id": "step5"
+      },
+      {
+        "label": "Add request handling to the server",
+        "id": "step6"
+      },
+      {
+        "label": "Implement simulated API call function",
+        "id": "step7"
+      },
+      {
+        "label": "Connect deduplication to simulated API",
+        "id": "step8"
+      },
+      {
+        "label": "Add cache cleanup mechanism",
+        "id": "step9"
+      },
+      {
+        "label": "Test the deduplication server",
+        "id": "step10"
+      },
+      {
+        "label": "send multiple simultaneous requests to the sa",
+        "id": "step11"
+      }
+    ]
+  },
+  "source": "content"
+}

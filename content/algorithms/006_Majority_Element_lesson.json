@@ -1,0 +1,445 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-algorithms-06",
+    "track": "algorithms",
+    "lessonNum": 6,
+    "title": "Majority Element",
+    "shortName": "P06",
+    "intro": {
+      "tag": "LESSON #6",
+      "title": "Majority Element",
+      "body": "In this lesson, you will build a function that finds the majority element in an array, which is the element that appears more than half the time. You will learn the core concept of frequency counting using a hash map to track occurrences efficiently. The main technologies involved are JavaScript arrays, objects for mapping, and conditional logic. This beginner-friendly exercise will help you practice lesson-solving with common data structures and algorithms.",
+      "usecase": "The majority element algorithm is essential in systems that analyze user behavior or aggregate preferences, such as social media platforms identifying trending hashtags or e-commerce sites determining most popular products. In developer tools, it helps analyze log files to find the most frequent error type across thousands of requests. This pattern also powers recommendation engines that need to identify dominant user preferences from large datasets, and voting systems that must quickly determine if a candidate has majority support in real-time results."
+    },
+    "objectives": [
+      "Implement the Boyer-Moore Voting Algorithm to find the majority element in an array",
+      "Initialize and manipulate a candidate variable and counter to track potential majority elements",
+      "Apply conditional logic to update the candidate and counter while iterating through the array",
+      "Configure a final verification step to confirm the candidate appears more than n/2 times",
+      "Construct a function that returns the majority element or indicates when none exists",
+      "Integrate the algorithm into a complete solution that handles various input arrays"
+    ],
+    "steps": [
+      {
+        "type": "reasoning",
+        "id": "step1",
+        "phase": "Step 1 of 18",
+        "title": "Welcome",
+        "content": {
+          "body": "Have you ever wondered how to find the most common element in a list? In this lesson, we'll learn how to identify the majority element—the value that appears more than half the time. This is a common pattern in data analysis and voting systems.",
+          "title": "Welcome"
+        }
+      },
+      {
+        "type": "reasoning",
+        "id": "step2",
+        "phase": "Step 2 of 18",
+        "title": "What you'll learn",
+        "content": {
+          "body": "By the end of this lesson, you will be able to:\n1. Explain what a majority element is and why it matters\n2. Apply a hash map to track element frequencies efficiently\n3. Implement an algorithm that finds the majority element in one pass\n4. Determine when to check the hash map versus add to it\n5. Choose appropriate keys and values for frequency tracking",
+          "title": "What you'll learn"
+        }
+      },
+      {
+        "type": "discovery",
+        "id": "step3",
+        "phase": "Step 3 of 18",
+        "title": "Try it",
+        "content": {
+          "body": "(No content)",
+          "title": "Try it",
+          "prompt": "Look at this small array: [3, 2, 3]. Which number appears most frequently?",
+          "exampleArray": [
+            3,
+            2,
+            3
+          ],
+          "successMessage": "Correct! The number 3 appears twice, which is more than half the array length."
+        }
+      },
+      {
+        "type": "discovery",
+        "id": "step4",
+        "phase": "Step 4 of 18",
+        "title": "Try a bigger array",
+        "content": {
+          "body": "(No content)",
+          "title": "Try a bigger array",
+          "prompt": "Now look at [2, 2, 1, 1, 1, 2, 2]. Which number appears more than half the time?",
+          "exampleArray": [
+            2,
+            2,
+            1,
+            1,
+            1,
+            2,
+            2
+          ],
+          "successMessage": "Well done! The number 2 appears four times out of seven, which is more than half."
+        }
+      },
+      {
+        "type": "discovery",
+        "id": "step5",
+        "phase": "Step 5 of 18",
+        "title": "One more",
+        "content": {
+          "body": "(No content)",
+          "title": "One more",
+          "prompt": "What about [1, 3, 3, 4, 3, 2, 3, 3, 5, 3]? Find the majority element.",
+          "exampleArray": [
+            1,
+            3,
+            3,
+            4,
+            3,
+            2,
+            3,
+            3,
+            5,
+            3
+          ],
+          "successMessage": "Great! You found that 3 appears six times out of ten—that's the majority element."
+        }
+      },
+      {
+        "type": "reflection",
+        "id": "step6",
+        "phase": "Step 6 of 18",
+        "title": "What you did",
+        "content": {
+          "body": "What you just did was manually count each element's occurrences by scanning through the array. For small arrays, this works fine, but it requires you to keep track of counts in your head as you go.",
+          "title": "What you did"
+        }
+      },
+      {
+        "type": "scale-problem",
+        "id": "step7",
+        "phase": "Step 7 of 18",
+        "title": "Why it gets hard",
+        "content": {
+          "body": "When arrays have thousands of elements, manually counting becomes impossible. We need a systematic way to track frequencies without losing count. Can't figure out how? Click Show me on the next step.",
+          "title": "Why it gets hard"
+        }
+      },
+      {
+        "type": "concept-bridge",
+        "id": "step8",
+        "phase": "Step 8 of 18",
+        "title": "Key idea",
+        "content": {
+          "body": "The solution is to remember what we have already seen. Think of it like keeping a notebook where you write down each number and how many times you've encountered it. Instead of rescanning the entire array for each element, you check your notebook in one step.",
+          "title": "Key idea",
+          "visualMetaphor": "A notebook where we write down what we've seen and check it in one step."
+        }
+      },
+      {
+        "type": "reveal-idea",
+        "id": "step9",
+        "phase": "Step 9 of 18",
+        "title": "The approach",
+        "content": {
+          "body": "We'll use a hash map (JavaScript object) as our notebook. As we go through the array, we'll check if we've seen the current number before. If we have, we increase its count. If not, we add it to our notebook. We'll also track the current majority candidate.",
+          "title": "The approach",
+          "showMeFirst": true,
+          "illustratedExample": "Walkthrough with [3, 2, 3]:\n1. Start with empty notebook and no majority\n2. See 3 → not in notebook → add {3:1}, majority=3\n3. See 2 → not in notebook → add {3:1, 2:1}, majority still 3\n4. See 3 → in notebook → update {3:2, 2:1}, count(3)=2 > n/2 → 3 is majority"
+        }
+      },
+      {
+        "type": "flow-explainer",
+        "id": "step10",
+        "phase": "Step 10 of 18",
+        "title": "Steps",
+        "content": {
+          "body": "1. Create an empty object to store frequencies\n2. Initialize variables for majority element and its count\n3. Loop through each element in the array\n4. For each element:\n   - If it's not in the frequency object, add it with count 1\n   - If it is in the object, increment its count\n   - Update the majority if this element's count is higher\n5. After the loop, verify the majority element appears > n/2 times\n6. Return the majority element",
+          "title": "Steps"
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 18",
+        "title": "Create the function skeleton",
+        "instruction": "Start by creating a function called majorityElement that takes one parameter: nums (the array). Return 0 for now.",
+        "hint": "Use function majorityElement(nums) { return 0; }",
+        "analogousExample": "",
+        "seedCode": "",
+        "expectedOutcome": "Function declaration with correct name and parameter",
+        "successCriteria": [],
+        "feedbackCorrect": "Great! You've created the function structure.",
+        "feedbackPartial": "Almost! Make sure the function name is exactly 'majorityElement' and it takes 'nums' as parameter.",
+        "feedbackWrong": "Let's try again. Create a function called majorityElement that accepts nums.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "function",
+            "majorityElement",
+            "(nums)"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step12",
+        "type": "question",
+        "phase": "Step 12 of 18",
+        "title": "Initialize tracking variables",
+        "instruction": "Inside the function, create two variables: 'counts' as an empty object to store frequencies, and 'majority' set to null. Also create 'maxCount' set to 0.",
+        "hint": "let counts = {}; let majority = null; let maxCount = 0;",
+        "analogousExample": "",
+        "seedCode": "function majorityElement(nums) {\n  return 0;\n}",
+        "expectedOutcome": "Three variables declared and initialized",
+        "successCriteria": [],
+        "feedbackCorrect": "Perfect! You've set up the tracking variables we need.",
+        "feedbackPartial": "Close! Make sure you have 'counts' as empty object, 'majority' as null, and 'maxCount' as 0.",
+        "feedbackWrong": "Remember: we need an object for counts, null for majority, and 0 for maxCount.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "counts",
+            "{}",
+            "majority",
+            "null",
+            "maxCount",
+            "0"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step13",
+        "type": "question",
+        "phase": "Step 13 of 18",
+        "title": "Create the loop structure",
+        "instruction": "Add a for loop that iterates through each element in nums. Use 'let i = 0' as the starting point.",
+        "hint": "for (let i = 0; i < nums.length; i++) { }",
+        "analogousExample": "",
+        "seedCode": "function majorityElement(nums) {\n  let counts = {};\n  let majority = null;\n  let maxCount = 0;\n  return 0;\n}",
+        "expectedOutcome": "For loop that iterates through nums array",
+        "successCriteria": [],
+        "feedbackCorrect": "Excellent! The loop will process each element one by one.",
+        "feedbackPartial": "Almost there! Check your loop syntax - it should go from i=0 to i<nums.length.",
+        "feedbackWrong": "We need a for loop that goes through all elements in nums.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "for",
+            "let i",
+            "nums.length"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step14",
+        "type": "question",
+        "phase": "Step 14 of 18",
+        "title": "Check and update frequencies",
+        "instruction": "Inside the loop, get the current number: 'let num = nums[i]'.",
+        "hint": "if (!counts[num]) { counts[num] = 1; } else { counts[num]++; }",
+        "analogousExample": "",
+        "seedCode": "function majorityElement(nums) {\n  let counts = {};\n  let majority = null;\n  let maxCount = 0;\n  \n  for (let i = 0; i < nums.length; i++) {\n    \n  }\n  \n  return 0;\n}",
+        "expectedOutcome": "Frequency tracking logic inside the loop",
+        "successCriteria": [],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Good start! Make sure you're checking if the number exists in counts, then either setting to 1 or incrementing.",
+        "feedbackWrong": "Remember: we need to check if the number is in counts, then update accordingly.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "num = nums[i]",
+            "counts[num]",
+            "1",
+            "++"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step15",
+        "type": "question",
+        "phase": "Step 15 of 18",
+        "title": "check if it exists in counts. If not, add it ",
+        "instruction": "check if it exists in counts. If not, add it with count 1. If it does exist, increment its count.",
+        "hint": "if (!counts[num]) { counts[num] = 1; } else { counts[num]++; }",
+        "analogousExample": "",
+        "seedCode": "function majorityElement(nums) {\n  let counts = {};\n  let majority = null;\n  let maxCount = 0;\n  \n  for (let i = 0; i < nums.length; i++) {\n    \n  }\n  \n  return 0;\n}",
+        "expectedOutcome": "",
+        "successCriteria": [
+          "Complete the step as instructed."
+        ],
+        "feedbackCorrect": "Great! Step completed.",
+        "feedbackPartial": "Review the instruction and try again.",
+        "feedbackWrong": "Check the instruction and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "num = nums[i]",
+            "counts[num]",
+            "1",
+            "++"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step16",
+        "type": "question",
+        "phase": "Step 16 of 18",
+        "title": "Track the current majority",
+        "instruction": "After updating the count for the current number, check if its count is greater than maxCount. If it is, update maxCount and set majority to this number.",
+        "hint": "if (counts[num] > maxCount) { maxCount = counts[num]; majority = num; }",
+        "analogousExample": "",
+        "seedCode": "function majorityElement(nums) {\n  let counts = {};\n  let majority = null;\n  let maxCount = 0;\n  \n  for (let i = 0; i < nums.length; i++) {\n    let num = nums[i];\n    if (!counts[num]) {\n      counts[num] = 1;\n    } else {\n      counts[num]++;\n    }\n  }\n  \n  return 0;\n}",
+        "expectedOutcome": "Majority tracking logic after count update",
+        "successCriteria": [],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Almost! Check that you're comparing counts[num] with maxCount and updating both variables.",
+        "feedbackWrong": "We need to check if the current number's count exceeds maxCount, then update both maxCount and majority.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "counts[num] > maxCount",
+            "maxCount = counts[num]",
+            "majority = num"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step17",
+        "type": "question",
+        "phase": "Step 17 of 18",
+        "title": "Return the result",
+        "instruction": "After the loop ends, return the majority element. Also add a check to verify it's truly the majority (appears more than n/2 times).",
+        "hint": "if (maxCount > nums.length / 2) { return majority; } return null;",
+        "analogousExample": "",
+        "seedCode": "function majorityElement(nums) {\n  let counts = {};\n  let majority = null;\n  let maxCount = 0;\n  \n  for (let i = 0; i < nums.length; i++) {\n    let num = nums[i];\n    if (!counts[num]) {\n      counts[num] = 1;\n    } else {\n      counts[num]++;\n    }\n    \n    if (counts[num] > maxCount) {\n      maxCount = counts[num];\n      majority = num;\n    }\n  }\n  \n  return 0;\n}",
+        "expectedOutcome": "Return statement with majority validation",
+        "successCriteria": [],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Good! Make sure you're checking if maxCount > nums.length/2 before returning majority.",
+        "feedbackWrong": "We need to verify the majority appears more than half the time before returning it.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "maxCount > nums.length",
+            "return majority"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "type": "complete",
+        "id": "step18",
+        "phase": "Step 18 of 18",
+        "title": "Done",
+        "content": {
+          "body": "Congratulations! You've successfully implemented the majority element algorithm using a hash map. Remember: the key insight is to remember what we've already seen by using a lookup structure. Store elements as keys and their counts as values. Check the structure before adding to it to avoid duplicate entries. This approach lets us find the majority in a single pass through the array—much more efficient than checking every pair!",
+          "title": "Done"
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Welcome",
+        "id": "step1"
+      },
+      {
+        "label": "What you'll learn",
+        "id": "step2"
+      },
+      {
+        "label": "Try it",
+        "id": "step3"
+      },
+      {
+        "label": "Try a bigger array",
+        "id": "step4"
+      },
+      {
+        "label": "One more",
+        "id": "step5"
+      },
+      {
+        "label": "What you did",
+        "id": "step6"
+      },
+      {
+        "label": "Why it gets hard",
+        "id": "step7"
+      },
+      {
+        "label": "Key idea",
+        "id": "step8"
+      },
+      {
+        "label": "The approach",
+        "id": "step9"
+      },
+      {
+        "label": "Steps",
+        "id": "step10"
+      },
+      {
+        "label": "Create the function skeleton",
+        "id": "step11"
+      },
+      {
+        "label": "Initialize tracking variables",
+        "id": "step12"
+      },
+      {
+        "label": "Create the loop structure",
+        "id": "step13"
+      },
+      {
+        "label": "Check and update frequencies",
+        "id": "step14"
+      },
+      {
+        "label": "check if it exists in counts. If not, add it ",
+        "id": "step15"
+      },
+      {
+        "label": "Track the current majority",
+        "id": "step16"
+      },
+      {
+        "label": "Return the result",
+        "id": "step17"
+      },
+      {
+        "label": "Done",
+        "id": "step18"
+      }
+    ],
+    "algorithmFamily": "array-hashmap",
+    "familyTeachingProfile": {
+      "mentalModel": "Remember what we have already seen",
+      "conceptBridge": "Show the learner how to use a lookup structure (e.g. object or Map) to remember seen values and avoid re-scanning.",
+      "visualMetaphor": "A notebook where we write down what we've seen and check it in one step.",
+      "commonConfusions": [
+        "What do we store as key vs value?",
+        "When do we check the structure vs add to it?"
+      ]
+    }
+  },
+  "source": "content"
+}

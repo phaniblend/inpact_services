@@ -1,0 +1,423 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-react-js-75",
+    "track": "react-js",
+    "lessonNum": 75,
+    "title": "Request Deduplication",
+    "shortName": "P75",
+    "intro": {
+      "tag": "LESSON #75",
+      "title": "Request Deduplication",
+      "body": "In this lesson, you will build a React application that prevents duplicate API requests from being sent. You will learn how to implement request deduplication by creating a simple cache using a JavaScript Map to store ongoing requests. The core concept involves checking this cache before making a new request and reusing a pending promise if the same request is already in flight. This beginner-friendly project will help you understand state management, asynchronous operations, and performance optimization in React.",
+      "usecase": "Request deduplication is a critical performance pattern in modern web applications, especially in data-rich dashboards and interactive filtering interfaces. For example, in an e-commerce admin panel, a user might rapidly click a 'Refresh Sales Data' button multiple times, triggering duplicate API calls that waste bandwidth and can cause race conditions in the UI. By deduplicating these identical requests, developers ensure that only one network call is made, preventing unnecessary server load and keeping the dashboard's charts and tables responsive and consistent. This pattern is also essential in search-as-you-type components or financial trading UIs where rapid, repeated user actions must not overwhelm backend systems."
+    },
+    "objectives": [
+      "Implement a deduplication mechanism to prevent duplicate API requests",
+      "Construct a request cache using React state or context",
+      "Configure request tracking to identify duplicate calls",
+      "Apply deduplication logic to fetch operations in React components",
+      "Initialize request status tracking for pending and completed calls",
+      "Integrate request deduplication with existing data fetching patterns",
+      "Render UI feedback based on deduplicated request states"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 12",
+        "title": "Import React and useState",
+        "instruction": "Import React and useState from the 'react' package.",
+        "hint": "Use the import statement to bring in React and the useState hook.",
+        "analogousExample": "// Example: importing React and a hook\nimport React, { useState } from 'react';",
+        "seedCode": "// Import React and useState here",
+        "expectedOutcome": "The React library and useState hook are imported and ready to use.",
+        "successCriteria": [
+          "React and useState are imported from 'react'."
+        ],
+        "feedbackCorrect": "Great! You've successfully imported React and useState.",
+        "feedbackPartial": "You're close. Make sure you're importing both React and useState from 'react'.",
+        "feedbackWrong": "That's not quite right. Try importing React and useState from the 'react' package.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "React",
+            "useState",
+            "'react'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 12",
+        "title": "Create the main App component",
+        "instruction": "Create a functional component named App that returns an empty fragment for now.",
+        "hint": "You can use either a function declaration or arrow function syntax. Return React.Fragment shorthand <> </>.",
+        "analogousExample": "// Example of a functional component returning empty fragment\nfunction App() {\n  return <> </>;\n}",
+        "seedCode": "import React, { useState } from 'react';\n\n// Create the App component here",
+        "expectedOutcome": "The App component is defined and returns an empty fragment.",
+        "successCriteria": [
+          "App component exists and returns <> </>."
+        ],
+        "feedbackCorrect": "Great! You've created the main App component structure.",
+        "feedbackPartial": "You've created a component, but make sure it returns an empty fragment <> </>.",
+        "feedbackWrong": "The App component isn't defined correctly. Create a functional component named App that returns <> </>.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "App",
+            "return",
+            "<>",
+            "</>"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 12",
+        "title": "Initialize state for loading status",
+        "instruction": "Inside your App component, use the useState hook to declare a state variable named 'loading' initialized to false.",
+        "hint": "Call useState with the initial value false and destructure the returned array into a variable and setter function.",
+        "analogousExample": "// Example: state for tracking visibility\nconst [isVisible, setIsVisible] = useState(false);",
+        "seedCode": "import React, { useState } from 'react';\n\n// Create the App component here\nconst App = () => {\n  // Initialize loading state here\n  \n  return null;\n};",
+        "expectedOutcome": "The component will have a 'loading' state variable that tracks whether a request is in progress, starting as false.",
+        "successCriteria": [
+          "The App component contains a useState call that declares a 'loading' state variable initialized to false."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're using useState to create a state variable named 'loading' with an initial value of false.",
+        "feedbackWrong": "use useState to create a state variable called 'loading' that starts as false.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "loading",
+            "useState",
+            "false"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 12",
+        "title": "Initialize state for request data",
+        "instruction": "Inside your App component, use useState to create a state variable named 'data' and initialize it to null.",
+        "hint": "Add a second useState call after your existing loading state. The pattern is: const [data, setData] = useState(null);",
+        "analogousExample": "// Similar: state for storing fetched data\nconst [userData, setUserData] = useState(null);",
+        "seedCode": "import React, { useState } from 'react';\n\n// Create the App component here\nconst App = () => {\n  // Initialize loading state here\n  const [loading, setLoading] = useState(false);\n  \n  // Initialize data state here\n  \n  return null;\n};",
+        "expectedOutcome": "Your component will have two state variables: 'loading' for tracking request status and 'data' for storing API response data.",
+        "successCriteria": [
+          "A 'data' state variable is declared using useState and initialized to null."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're using useState to create a variable named 'data' initialized to null.",
+        "feedbackWrong": "add a second useState call to create a 'data' state variable.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "data",
+            "useState",
+            "null"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 12",
+        "title": "Initialize state for request IDs",
+        "instruction": "Initialize a state variable named 'pendingRequests' using useState, setting its initial value to an empty Set.",
+        "hint": "Use the useState hook to create a state variable that will hold a Set of request IDs. The initial value should be a new empty Set.",
+        "analogousExample": "// Example: state for tracking IDs\nconst [activeIds, setActiveIds] = useState(new Set());",
+        "seedCode": "import React, { useState } from 'react';\n\nconst App = () => {\n  const [loading, setLoading] = useState(false);\n  // Initialize data state here\n  \n  // Initialize pendingRequests state here\n  \n  return null;\n};",
+        "expectedOutcome": "The component will have a state variable 'pendingRequests' initialized as an empty Set, ready to track active request identifiers.",
+        "successCriteria": [
+          "The pendingRequests state is declared with useState, initialized as a new Set(), and placed after the loading state."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added state, but check that pendingRequests is initialized as a new Set() and placed correctly in the component.",
+        "feedbackWrong": "The pendingRequests state is missing or not initialized as an empty Set. Review the useState syntax for Sets.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "pendingRequests",
+            "useState",
+            "new Set()"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 12",
+        "title": "Create a mock fetch function",
+        "instruction": "Inside your App component, create a function named mockFetch that returns a Promise. The Promise should resolve with a sample data object after a 2-second delay.",
+        "hint": "Use the Promise constructor or async/await with setTimeout to simulate a delay. The resolved value should be an object like { data: 'Sample response' }.",
+        "analogousExample": "// Example of a mock API function\nfunction mockFetch() {\n  return new Promise((resolve) => {\n    setTimeout(() => {\n      resolve({ data: 'Sample response' });\n    }, 2000);\n  });\n}",
+        "seedCode": "import React, { useState } from 'react';\n\nconst App = () => {\n  const [loading, setLoading] = useState(false);\n  // Initialize data state here\n  \n  // Initialize pendingRequests state here\n  \n  // Create mockFetch function here\n  \n  return null;\n};",
+        "expectedOutcome": "A mockFetch function is defined that returns a Promise resolving with sample data after a delay, simulating an API call.",
+        "successCriteria": [
+          "The mockFetch function is defined, returns a Promise, uses setTimeout for a 2-second delay, and resolves with a data object."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but ensure your mockFetch function returns a Promise that resolves after exactly 2 seconds with a data object.",
+        "feedbackWrong": "The mockFetch function is missing or doesn't meet the requirements. It should return a Promise that resolves with data after a 2-second delay.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "mockFetch",
+            "Promise",
+            "setTimeout",
+            "2000",
+            "resolve",
+            "data"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 12",
+        "title": "Create the deduplicated request handler",
+        "instruction": "Create a function named fetchData that takes a requestId parameter. Inside this function, check if the requestId already exists in the pendingRequests state array before making any API call.",
+        "hint": "You'll need to access the pendingRequests state and use conditional logic to prevent duplicate requests for the same ID.",
+        "analogousExample": "// Similar: function that checks for duplicates before proceeding\nfunction processOrder(orderId) {\n  if (pendingOrders.includes(orderId)) {\n    return;\n  }\n  // Process the order\n}",
+        "seedCode": "import React, { useState } from 'react';\n\nconst App = () => {\n  const [loading, setLoading] = useState(false);\n  // Initialize data state here\n  \n  // Initialize pendingRequests state here\n  \n  // Create mockFetch function here\n  \n  // Create fetchData function here\n  \n  return null;\n};",
+        "expectedOutcome": "A fetchData function that includes a duplicate request check using the pendingRequests state.",
+        "successCriteria": [
+          "The fetchData function is defined, takes a requestId parameter, and includes a conditional check for duplicates in pendingRequests."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've created a function, but make sure it checks if the requestId already exists in pendingRequests before proceeding.",
+        "feedbackWrong": "The function doesn't properly check for duplicate requests. Review how to access state and implement the duplicate check.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "fetchData",
+            "requestId",
+            "pendingRequests",
+            "includes"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 12",
+        "title": "Add structure for the UI",
+        "instruction": "Return a container div with a class name of 'app-container' and add a main heading with the text 'Request Deduplication Demo' inside it.",
+        "hint": "Replace the current return statement with a JSX structure that includes a div and an h1 element.",
+        "analogousExample": "// Similar: returning a basic layout\nfunction App() {\n  return (\n    <div className=\"container\">\n      <h1>My Application</h1>\n    </div>\n  );\n}",
+        "seedCode": "import React, { useState } from 'react';\n\nconst App = () => {\n  const [loading, setLoading] = useState(false);\n  // Initialize data state here\n  \n  // Initialize pendingRequests state here\n  \n  // Create mockFetch function here\n  \n  // Create fetchData function here\n  \n  return (\n    <div className=\"app-container\">\n      <h1>Request Deduplication Demo</h1>\n    </div>\n  );\n};",
+        "expectedOutcome": "The component now returns a structured layout with a container div and a main heading, providing a foundation for the UI.",
+        "successCriteria": [
+          "The return statement includes a div with className 'app-container' and an h1 element containing the text 'Request Deduplication Demo'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure the div has the correct className and the h1 contains the exact text.",
+        "feedbackWrong": "The UI structure is missing or incorrect. Please return a div with className 'app-container' and an h1 with 'Request Deduplication Demo'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "return",
+            "<div",
+            "className=\"app-container\"",
+            "<h1",
+            "Request Deduplication Demo"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 12",
+        "title": "Display loading status",
+        "instruction": "Add a paragraph element that conditionally displays 'Loading...' based on the loading state. Place it inside the app-container div after the heading.",
+        "hint": "Use the loading state variable in a conditional expression. You can use a ternary operator or logical AND operator.",
+        "analogousExample": "// Conditional rendering example\nfunction StatusDisplay({ isLoading }) {\n  return (\n    <div>\n      {isLoading ? <p>Processing...</p> : null}\n    </div>\n  );\n}",
+        "seedCode": "import React, { useState } from 'react';\n\nconst App = () => {\n  const [loading, setLoading] = useState(false);\n  // Initialize data state here\n  \n  // Initialize pendingRequests state here\n  \n  // Create mockFetch function here\n  \n  // Create fetchData function here\n  \n  return (\n    <div className=\"app-container\">\n      <h1>Request Deduplication Demo</h1>\n      {/* Add conditional loading paragraph here */}\n    </div>\n  );\n};",
+        "expectedOutcome": "A paragraph element that shows 'Loading...' only when the loading state is true",
+        "successCriteria": [
+          "The paragraph element conditionally renders based on the loading state variable"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure the paragraph only displays when loading is true. Check your conditional expression.",
+        "feedbackWrong": "The loading paragraph isn't working correctly. Make sure you're using the loading state variable and proper conditional rendering syntax.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<p>",
+            "loading",
+            "?",
+            ":",
+            "null",
+            "Loading..."
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 12",
+        "title": "Display fetched data",
+        "instruction": "Add a paragraph element that displays the data state value when it exists, right after the loading paragraph.",
+        "hint": "Use the data state variable inside curly braces within a <p> tag. Place it after the existing conditional loading paragraph.",
+        "analogousExample": "// Displaying state data in JSX\n<p>Current data: {data}</p>",
+        "seedCode": "import React, { useState } from 'react';\n\nconst App = () => {\n  const [loading, setLoading] = useState(false);\n  // Initialize data state here\n  \n  // Initialize pendingRequests state here\n  \n  // Create mockFetch function here\n  \n  // Create fetchData function here\n  \n  return (\n    <div className=\"app-container\">\n      <h1>Request Deduplication Demo</h1>\n      {loading && <p>Loading...</p>}\n      {/* Add paragraph to display data here */}\n    </div>\n  );\n};",
+        "expectedOutcome": "The UI will show the fetched data in a paragraph when the data state has a value.",
+        "successCriteria": [
+          "A paragraph element is added after the loading paragraph that displays the data state value using curly braces."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You added a paragraph, but make sure it displays the data state value using curly braces like {data}.",
+        "feedbackWrong": "The paragraph to display fetched data is missing or incorrect. Add a <p> tag that shows the data state value.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<p>",
+            "{data}",
+            "</p>"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 12",
+        "title": "Add fetch button and wire click handler",
+        "instruction": "Add a button element inside the app-container div that triggers the fetchData function with a unique request ID when clicked.",
+        "hint": "Use the onClick prop on a button element to call fetchData with a string argument like 'request-1'.",
+        "analogousExample": "// Example: button with click handler\n<button onClick={() => handleClick('unique-id')}>\n  Fetch Data\n</button>",
+        "seedCode": "import React, { useState } from 'react';\n\nconst App = () => {\n  const [loading, setLoading] = useState(false);\n  // Initialize data state here\n  \n  // Initialize pendingRequests state here\n  \n  // Create mockFetch function here\n  \n  // Create fetchData function here\n  \n  return (\n    <div className=\"app-container\">\n      <h1>Request Deduplication Demo</h1>\n      {loading && <p>Loading...</p>}\n      {/* Add paragraph to display data here */}\n      {/* Add fetch button here */}\n    </div>\n  );\n};",
+        "expectedOutcome": "A button appears in the UI that, when clicked, will call the fetchData function with a request ID.",
+        "successCriteria": [
+          "A button element with an onClick handler that calls fetchData with a string argument is added to the component's JSX."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You added a button, but make sure it has an onClick handler that calls fetchData with a request ID string.",
+        "feedbackWrong": "The button is missing or doesn't have the correct onClick handler. Add a button that calls fetchData with a unique ID when clicked.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<button",
+            "onClick",
+            "fetchData",
+            "("
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step12",
+        "type": "question",
+        "phase": "Step 12 of 12",
+        "title": "Add duplicate request button",
+        "instruction": "Add a second button next to the existing fetch button that also calls fetchData with the same request ID to demonstrate deduplication.",
+        "hint": "Create another button element with the same onClick handler as the first button. You can give it different text like 'Fetch Same Data'.",
+        "analogousExample": "// Adding a second button with same handler\n<button onClick={handleClick}>Primary Action</button>\n<button onClick={handleClick}>Duplicate Action</button>",
+        "seedCode": "import React, { useState } from 'react';\n\nconst App = () => {\n  const [loading, setLoading] = useState(false);\n  // Initialize data state here\n  \n  // Initialize pendingRequests state here\n  \n  // Create mockFetch function here\n  \n  // Create fetchData function here\n  \n  return (\n    <div className=\"app-container\">\n      <h1>Request Deduplication Demo</h1>\n      {loading && <p>Loading...</p>}\n      {/* Add paragraph to display data here */}\n      <button onClick={fetchData}>Fetch Data</button>\n      {/* Add duplicate request button here */}\n    </div>\n  );\n};",
+        "expectedOutcome": "A second button appears next to the first fetch button that triggers the same request, allowing you to demonstrate that multiple clicks don't create duplicate requests.",
+        "successCriteria": [
+          "A second button element is added with onClick={fetchData} and appropriate text."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You added a button, but make sure it calls the fetchData function with onClick={fetchData}.",
+        "feedbackWrong": "Try adding a second button element next to the existing fetch button that also calls fetchData when clicked.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<button",
+            "onClick={fetchData}",
+            ">",
+            "</button>"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import React and useState",
+        "id": "step1"
+      },
+      {
+        "label": "Create the main App component",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize state for loading status",
+        "id": "step3"
+      },
+      {
+        "label": "Initialize state for request data",
+        "id": "step4"
+      },
+      {
+        "label": "Initialize state for request IDs",
+        "id": "step5"
+      },
+      {
+        "label": "Create a mock fetch function",
+        "id": "step6"
+      },
+      {
+        "label": "Create the deduplicated request handler",
+        "id": "step7"
+      },
+      {
+        "label": "Add structure for the UI",
+        "id": "step8"
+      },
+      {
+        "label": "Display loading status",
+        "id": "step9"
+      },
+      {
+        "label": "Display fetched data",
+        "id": "step10"
+      },
+      {
+        "label": "Add fetch button and wire click handler",
+        "id": "step11"
+      },
+      {
+        "label": "Add duplicate request button",
+        "id": "step12"
+      }
+    ]
+  },
+  "source": "content"
+}

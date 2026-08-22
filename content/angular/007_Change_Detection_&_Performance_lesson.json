@@ -1,0 +1,415 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-angular-07",
+    "track": "angular",
+    "lessonNum": 7,
+    "title": "Change Detection & Performance",
+    "shortName": "P07",
+    "intro": {
+      "tag": "LESSON #7",
+      "title": "Change Detection & Performance",
+      "body": "In this lesson, you'll build a user interface that demonstrates Angular's change detection system and learn how to optimize its performance. You'll create components with different change detection strategies and implement techniques like OnPush strategy, trackBy functions, and async pipes to improve application performance. The core concept focuses on understanding how Angular monitors data changes in your application and updates the DOM efficiently. You'll work with Angular's ChangeDetectionStrategy, ChangeDetectorRef service, and performance monitoring tools to identify and resolve performance bottlenecks. By the end of this lesson, you'll understand when and how Angular triggers change detection cycles and how to write more performant Angular applications.",
+      "usecase": "Change detection optimization is crucial for high-performance Angular applications like real-time dashboards, trading platforms, and social media feeds where data updates frequently. Large enterprise applications with complex component trees, such as project management tools or CRM systems, rely on efficient change detection to prevent UI lag when displaying thousands of records or updating multiple charts simultaneously. E-commerce platforms use OnPush change detection strategy for product catalogs and shopping carts to ensure smooth user interactions even with extensive product listings. Financial applications and analytics dashboards implement custom change detection strategies to handle streaming data updates without compromising user experience during critical operations."
+    },
+    "objectives": [
+      "Implement OnPush change detection strategy to optimize component performance",
+      "Configure async pipe to handle observable data streams efficiently",
+      "Apply trackBy functions to control ngFor rendering behavior",
+      "Construct immutable data updates to trigger change detection properly",
+      "Manipulate ChangeDetectorRef to manually control detection cycles",
+      "Integrate performance monitoring tools to measure change detection impact",
+      "Update component architecture to minimize unnecessary re-renders"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 12",
+        "title": "Import Angular Component and ChangeDetectionStrategy",
+        "instruction": "Import Component and ChangeDetectionStrategy from '@angular/core'",
+        "hint": "Use the import statement to bring in both Component decorator and ChangeDetectionStrategy enum from the Angular core package.",
+        "analogousExample": "// Similar: importing multiple items from a library\nimport { Router, ActivatedRoute } from '@angular/router';",
+        "seedCode": "// Import the necessary Angular decorators and enums\n",
+        "expectedOutcome": "Both Component decorator and ChangeDetectionStrategy enum are imported from @angular/core, setting up the foundation for creating optimized Angular components.",
+        "successCriteria": [
+          "Component and ChangeDetectionStrategy are imported from '@angular/core'"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Good start! Make sure you're importing both Component and ChangeDetectionStrategy from '@angular/core'.",
+        "feedbackWrong": "import both Component and ChangeDetectionStrategy from '@angular/core' using the import statement.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "Component",
+            "ChangeDetectionStrategy",
+            "@angular/core"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 12",
+        "title": "Create the main AppComponent",
+        "instruction": "Create the AppComponent class with the @Component decorator, setting the selector to 'app-root' and template to display 'Change Detection Demo'",
+        "hint": "Use the @Component decorator above a class declaration. The decorator should include selector and template properties.",
+        "analogousExample": "// Similar: defining a component with decorator\n@Component({\n  selector: 'my-app',\n  template: '<h1>Hello World</h1>'\n})\nexport class MyComponent {}",
+        "seedCode": "import { Component, ChangeDetectionStrategy } from '@angular/core';\n\n// Add the AppComponent with @Component decorator here",
+        "expectedOutcome": "A properly decorated Angular component class that can serve as the root component",
+        "successCriteria": [
+          "AppComponent class is created with @Component decorator containing selector 'app-root' and a template"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Good start! Make sure your component has both the @Component decorator and the class declaration.",
+        "feedbackWrong": "The AppComponent needs the @Component decorator with selector and template properties, followed by the class declaration.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "@Component",
+            "AppComponent",
+            "class",
+            "selector",
+            "app-root",
+            "template"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 12",
+        "title": "Initialize counter state and expensive data",
+        "instruction": "Add a counter property initialized to 0 and an expensiveData property as an array with sample items inside the AppComponent class",
+        "hint": "Define counter as a number property and expensiveData as an array property directly in the component class body",
+        "analogousExample": "// Component properties example\nexport class UserProfile {\n  username = 'John';\n  userItems = ['item1', 'item2'];\n}",
+        "seedCode": "import { Component, ChangeDetectionStrategy } from '@angular/core';\n\n@Component({\n  selector: 'app-root',\n  template: `<h1>Change Detection Demo</h1>`\n})\nexport class AppComponent {\n  // Add counter and expensiveData properties here\n}",
+        "expectedOutcome": "The component will have counter and expensiveData properties to demonstrate change detection behavior",
+        "successCriteria": [
+          "counter property is initialized to 0 and expensiveData property is initialized as an array with sample data"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Good start! Make sure both counter (number) and expensiveData (array) properties are defined with initial values.",
+        "feedbackWrong": "Add counter as a number property set to 0 and expensiveData as an array property with some sample items inside the component class.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "counter",
+            "0",
+            "expensiveData",
+            "["
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.75
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 12",
+        "title": "Create expensive computation method",
+        "instruction": "Create a method named 'expensiveComputation' inside the AppComponent class that simulates heavy processing by running a loop from 0 to 1000000 and returning the final count",
+        "hint": "Add a method that uses a for loop to simulate expensive processing. The method should iterate many times to demonstrate performance impact.",
+        "analogousExample": "// Similar: a method that does heavy computation\nexpensiveTask() {\n  let result = 0;\n  for (let i = 0; i < 500000; i++) {\n    result += i;\n  }\n  return result;\n}",
+        "seedCode": "import { Component, ChangeDetectionStrategy } from '@angular/core';\n\n@Component({\n  selector: 'app-root',\n  template: `<h1>Change Detection Demo</h1>`\n})\nexport class AppComponent {\n  // Add counter and expensiveData properties here\n  \n  // Add expensiveComputation method here\n}",
+        "expectedOutcome": "The AppComponent class will have an expensiveComputation method that performs a heavy computation loop",
+        "successCriteria": [
+          "Method named 'expensiveComputation' is defined that runs a loop and returns a value"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Good start! Make sure your method is named 'expensiveComputation' and includes a loop that processes many iterations.",
+        "feedbackWrong": "Not quite right. Create a method called 'expensiveComputation' inside the AppComponent class that uses a for loop to simulate heavy processing.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "expensiveComputation",
+            "for",
+            "1000000"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 12",
+        "title": "Define increment counter method",
+        "instruction": "Add an increment method that increases the counter by 1",
+        "hint": "Create a method inside the AppComponent class that updates the counter property by adding 1 to its current value",
+        "analogousExample": "// Similar: a method that updates a property\nincrementScore() {\n  this.score++;\n}",
+        "seedCode": "import { Component, ChangeDetectionStrategy } from '@angular/core';\n\n@Component({\n  selector: 'app-root',\n  template: `<h1>Change Detection Demo</h1>`\n})\nexport class AppComponent {\n  counter = 0;\n  expensiveData = this.expensiveComputation();\n\n  expensiveComputation() {\n    console.log('Running expensive computation...');\n    let result = 0;\n    for (let i = 0; i < 1000000; i++) {\n      result += Math.random();\n    }\n    return result;\n  }\n\n  // Add increment method here\n}",
+        "expectedOutcome": "The AppComponent class will have an increment method that increases the counter property",
+        "successCriteria": [
+          "An increment method is defined that updates the counter property by adding 1"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Good start! Make sure your method increases the counter by 1.",
+        "feedbackWrong": "create a method that updates the counter property by incrementing its value.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "increment",
+            "counter",
+            "++"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 12",
+        "title": "Create the component template with counter display",
+        "instruction": "Update the template to display the current counter value and add an increment button",
+        "hint": "Replace the existing h1 element with a div containing both the counter display and a button. Use interpolation to show the counter value.",
+        "analogousExample": "// Similar: template with interpolation and button\ntemplate: `<div><p>Count: {{count}}</p><button>Click me</button></div>`",
+        "seedCode": "import { Component, ChangeDetectionStrategy } from '@angular/core';\n\n@Component({\n  selector: 'app-root',\n  template: `\n    <!-- Update template here -->\n    <h1>Change Detection Demo</h1>\n  `\n})\nexport class AppComponent {\n  counter = 0;\n  expensiveData = this.expensiveComputation();\n\n  expensiveComputation() {\n    console.log('Running expensive computation...');\n    let result = 0;\n    for (let i = 0; i < 1000000; i++) {\n      result += Math.random();\n    }\n    return result;\n  }\n\n  // Add increment method here\n}",
+        "expectedOutcome": "The template displays the counter value using interpolation and includes a button for incrementing",
+        "successCriteria": [
+          "Template contains interpolation to display counter value and includes an increment button"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Good start! Make sure you're displaying the counter value with interpolation and have included a button.",
+        "feedbackWrong": "The template needs to show the counter value using {{counter}} and include a button element. Check your template syntax.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "{{counter}}",
+            "button"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 12",
+        "title": "Add expensive computation to template",
+        "instruction": "Inside the template, after the h1 heading, add a paragraph that displays the result of calling the expensiveComputation method directly in the template",
+        "hint": "Call the method using expensiveComputation() within Angular's interpolation syntax to show how method calls in templates can impact performance",
+        "analogousExample": "// Similar: calling a method in template\n<p>Result: {{calculateValue()}}</p>",
+        "seedCode": "import { Component, ChangeDetectionStrategy } from '@angular/core';\n\n@Component({\n  selector: 'app-root',\n  template: `\n    <h1>Change Detection Demo</h1>\n    <!-- Add paragraph with expensive computation call here -->\n  `\n})\nexport class AppComponent {\n  counter = 0;\n  expensiveData = this.expensiveComputation();\n\n  expensiveComputation() {\n    console.log('Running expensive computation...');\n    let result = 0;\n    for (let i = 0; i < 1000000; i++) {\n      result += Math.random();\n    }\n    return result;\n  }\n\n  // Add increment method here\n}",
+        "expectedOutcome": "A paragraph element is added to the template that calls the expensiveComputation method, demonstrating performance impact of method calls in templates",
+        "successCriteria": [
+          "Template contains a paragraph that calls expensiveComputation() method using Angular interpolation"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Good start! Make sure you're calling the expensiveComputation() method with parentheses inside the template using Angular's interpolation syntax.",
+        "feedbackWrong": "Not quite right. You need to add a paragraph that calls the expensiveComputation() method directly in the template. This will help demonstrate the performance impact of method calls in templates.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<p>",
+            "expensiveComputation()",
+            "{{",
+            "}}"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 12",
+        "title": "Add performance monitoring logs",
+        "instruction": "Add console.log statements to both the expensiveComputation method and the increment method to track when these operations execute during change detection cycles.",
+        "hint": "Place console.log at the beginning of each method to see when they run. This helps understand Angular's change detection timing.",
+        "analogousExample": "// Adding logging to track method execution\ntrackOperation() {\n  console.log('Operation executed');\n  return this.data;\n}",
+        "seedCode": "import { Component, ChangeDetectionStrategy } from '@angular/core';\n\n@Component({\n  selector: 'app-root',\n  template: `\n    <h1>Change Detection Demo</h1>\n    <p>Counter: {{ counter }}</p>\n    <button (click)=\"increment()\">Increment</button>\n    <p>Expensive result: {{ expensiveData }}</p>\n  `\n})\nexport class AppComponent {\n  counter = 0;\n  expensiveData = this.expensiveComputation();\n\n  expensiveComputation() {\n    // Add console.log here\n    let result = 0;\n    for (let i = 0; i < 1000000; i++) {\n      result += Math.random();\n    }\n    return result;\n  }\n\n  increment() {\n    // Add console.log here\n    this.counter++;\n  }\n}",
+        "expectedOutcome": "Both methods will log to the console when executed, allowing you to observe when Angular triggers change detection and runs expensive operations.",
+        "successCriteria": [
+          "Console.log statements are added to both expensiveComputation and increment methods to track their execution."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Good start! Make sure to add console.log statements to both the expensiveComputation and increment methods.",
+        "feedbackWrong": "Add console.log statements at the beginning of both methods to track when they execute during change detection.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "console.log",
+            "expensiveComputation",
+            "increment"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 12",
+        "title": "Optimize with OnPush change detection strategy",
+        "instruction": "Add ChangeDetectionStrategy.OnPush to the component decorator's changeDetection property to optimize performance by reducing unnecessary change detection cycles.",
+        "hint": "In the @Component decorator, add a changeDetection property and set it to ChangeDetectionStrategy.OnPush. This tells Angular to only check for changes when input properties change or events are triggered.",
+        "analogousExample": "// Similar: setting a component property in the decorator\n@Component({\n  selector: 'app-example',\n  template: `<p>Hello</p>`,\n  changeDetection: ChangeDetectionStrategy.OnPush\n})",
+        "seedCode": "import { Component, ChangeDetectionStrategy } from '@angular/core';\n\n@Component({\n  selector: 'app-root',\n  template: `\n    <h1>Change Detection Demo</h1>\n    <p>Counter: {{ counter }}</p>\n    <button (click)=\"increment()\">Increment</button>\n    <p>Expensive result: {{ expensiveData }}</p>\n  `,\n  // Add changeDetection property here\n})\nexport class AppComponent {\n  counter = 0;\n  expensiveData = this.expensiveComputation();\n\n  expensiveComputation() {\n    console.log('Expensive computation running!');\n    let result = 0;\n    for (let i = 0; i < 1000000; i++) {\n      result += Math.random();\n    }\n    return result;\n  }\n\n  increment() {\n    console.log('Increment called');\n    this.counter++;\n  }\n}",
+        "expectedOutcome": "The component decorator now includes the OnPush change detection strategy, which will reduce the frequency of change detection cycles and improve performance by only checking for changes when necessary.",
+        "successCriteria": [
+          "The @Component decorator includes a changeDetection property set to ChangeDetectionStrategy.OnPush."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track! Make sure you're adding the changeDetection property to the @Component decorator and setting it to ChangeDetectionStrategy.OnPush.",
+        "feedbackWrong": "add the changeDetection property inside the @Component decorator and set its value to ChangeDetectionStrategy.OnPush. This will optimize the component's change detection behavior.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "changeDetection",
+            "ChangeDetectionStrategy.OnPush"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 12",
+        "title": "Create child component with OnPush strategy",
+        "instruction": "Create a new child component named ChildComponent that uses OnPush change detection strategy and accepts an input property",
+        "hint": "Define a component decorator with OnPush strategy and use @Input() decorator for the input property",
+        "analogousExample": "// Similar: component with input property\n@Component({\n  selector: 'app-child',\n  template: '<p>Value: {{ value }}</p>',\n  changeDetection: ChangeDetectionStrategy.OnPush\n})\nexport class ChildComponent {\n  @Input() value = 0;\n}",
+        "seedCode": "import { Component, ChangeDetectionStrategy } from '@angular/core';\n\n@Component({\n  selector: 'app-root',\n  template: `\n    <h1>Change Detection Demo</h1>\n    <p>Counter: {{ counter }}</p>\n    <button (click)=\"increment()\">Increment</button>\n    <p>Expensive result: {{ expensiveData }}</p>\n  `,\n  changeDetection: ChangeDetectionStrategy.OnPush\n})\nexport class AppComponent {\n  counter = 0;\n  expensiveData = this.expensiveComputation();\n\n  expensiveComputation() {\n    console.log('Expensive computation running!');\n    let result = 0;\n    for (let i = 0; i < 1000000; i++) {\n      result += Math.random();\n    }\n    return result;\n  }\n\n  increment() {\n    console.log('Increment called');\n    this.counter++;\n  }\n}\n\n// Add ChildComponent here",
+        "expectedOutcome": "A child component is created with OnPush change detection strategy and an input property to receive data from the parent component",
+        "successCriteria": [
+          "ChildComponent is defined with @Component decorator, uses ChangeDetectionStrategy.OnPush, and has an @Input() property"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Good start! Make sure your component uses ChangeDetectionStrategy.OnPush and includes an @Input() property to receive data from the parent.",
+        "feedbackWrong": "create a component with the @Component decorator that includes changeDetection: ChangeDetectionStrategy.OnPush and an @Input() property.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "ChildComponent",
+            "@Component",
+            "ChangeDetectionStrategy.OnPush",
+            "@Input"
+          ],
+          "partialThreshold": 0.6,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 12",
+        "title": "Add child component to parent template",
+        "instruction": "Add the ChildComponent to the parent template below the expensive computation display and pass the counter value through an input property",
+        "hint": "Include the child component selector in the template and bind the counter property using square brackets for property binding",
+        "analogousExample": "// Including child component with input binding\n<app-user-profile [userId]=\"currentUserId\"></app-user-profile>",
+        "seedCode": "import { Component, ChangeDetectionStrategy } from '@angular/core';\n\n@Component({\n  selector: 'app-root',\n  template: `\n    <h1>Change Detection Demo</h1>\n    <p>Counter: {{ counter }}</p>\n    <button (click)=\"increment()\">Increment</button>\n    <p>Expensive result: {{ expensiveData }}</p>\n    <!-- Add ChildComponent here -->\n  `,\n  changeDetection: ChangeDetectionStrategy.OnPush\n})\nexport class AppComponent {\n  counter = 0;\n  expensiveData = this.expensiveComputation();\n\n  expensiveComputation() {\n    console.log('Expensive computation running!');\n    let result = 0;\n    for (let i = 0; i < 1000000; i++) {\n      result += Math.random();\n    }\n    return result;\n  }\n\n  increment() {\n    console.log('Increment called');\n    this.counter++;\n  }\n}\n\n// Add ChildComponent here",
+        "expectedOutcome": "The ChildComponent is included in the parent template with the counter value passed as an input property",
+        "successCriteria": [
+          "The template includes <app-child> with [count]=\"counter\" property binding"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Good start! Make sure to include both the child component selector and bind the counter value using property binding syntax [count]=\"counter\".",
+        "feedbackWrong": "The child component needs to be added to the template with property binding. Use <app-child [count]=\"counter\"></app-child> to pass the counter value to the child.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "app-child",
+            "[count]",
+            "counter"
+          ],
+          "partialThreshold": 0.6,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step12",
+        "type": "question",
+        "phase": "Step 12 of 12",
+        "title": "Test and compare performance improvements",
+        "instruction": "Run the application in your browser and open the developer console to observe how the OnPush change detection strategy reduces the number of expensive computations compared to the default strategy",
+        "hint": "Look for the console logs that show when expensive computations run - with OnPush, you should see fewer logs when clicking the increment button",
+        "analogousExample": "// Similar: testing performance in browser\nconsole.log('Performance test complete');",
+        "seedCode": "import { Component, ChangeDetectionStrategy } from '@angular/core';\n\n@Component({\n  selector: 'app-root',\n  template: `\n    <h1>Change Detection Demo</h1>\n    <p>Counter: {{ counter }}</p>\n    <button (click)=\"increment()\">Increment</button>\n    <p>Expensive result: {{ expensiveData }}</p>\n    <!-- Add ChildComponent here -->\n  `,\n  changeDetection: ChangeDetectionStrategy.OnPush\n})\nexport class AppComponent {\n  counter = 0;\n  expensiveData = this.expensiveComputation();\n\n  expensiveComputation() {\n    console.log('Expensive computation running!');\n    let result = 0;\n    for (let i = 0; i < 1000000; i++) {\n      result += Math.random();\n    }\n    return result;\n  }\n\n  increment() {\n    console.log('Increment called');\n    this.counter++;\n  }\n}\n\n// Add ChildComponent here\n\n// Test the application by running it and checking the console",
+        "expectedOutcome": "The application runs in the browser with console logs showing performance improvements from OnPush change detection strategy",
+        "successCriteria": [
+          "Console logs demonstrate reduced expensive computation calls when using OnPush change detection strategy"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Good start! Make sure to observe the console logs to see the performance difference between default and OnPush change detection.",
+        "feedbackWrong": "Run the application in your browser and open the developer console to observe the performance improvements from OnPush change detection.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "console",
+            "OnPush",
+            "performance"
+          ],
+          "partialThreshold": 0.4,
+          "correctThreshold": 0.7
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import Angular Component and ChangeDetectionStrategy",
+        "id": "step1"
+      },
+      {
+        "label": "Create the main AppComponent",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize counter state and expensive data",
+        "id": "step3"
+      },
+      {
+        "label": "Create expensive computation method",
+        "id": "step4"
+      },
+      {
+        "label": "Define increment counter method",
+        "id": "step5"
+      },
+      {
+        "label": "Create the component template with counter display",
+        "id": "step6"
+      },
+      {
+        "label": "Add expensive computation to template",
+        "id": "step7"
+      },
+      {
+        "label": "Add performance monitoring logs",
+        "id": "step8"
+      },
+      {
+        "label": "Optimize with OnPush change detection strategy",
+        "id": "step9"
+      },
+      {
+        "label": "Create child component with OnPush strategy",
+        "id": "step10"
+      },
+      {
+        "label": "Add child component to parent template",
+        "id": "step11"
+      },
+      {
+        "label": "Test and compare performance improvements",
+        "id": "step12"
+      }
+    ]
+  },
+  "source": "content"
+}

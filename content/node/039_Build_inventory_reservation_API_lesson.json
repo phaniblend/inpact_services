@@ -1,0 +1,464 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-node-39",
+    "track": "node",
+    "lessonNum": 39,
+    "title": "Build inventory reservation API",
+    "shortName": "P39",
+    "intro": {
+      "tag": "LESSON #39",
+      "title": "Build inventory reservation API",
+      "body": "In this lesson, you will build a simple inventory reservation API using Node.js. You'll learn how to create endpoints that allow users to check available stock and reserve items from an inventory. The core concept is handling HTTP requests and managing state with an in-memory data structure. You'll use Express.js for routing and JavaScript objects to track inventory levels, focusing on basic CRUD operations. This will give you a practical foundation in building RESTful APIs with Node.js.",
+      "usecase": "Inventory reservation APIs are fundamental to e-commerce platforms like Amazon and Shopify, where they prevent overselling by temporarily holding items in a customer's cart during checkout. This pattern also appears in booking systems for hotels, airlines, and event ticketing services, ensuring that a seat or room isn't double-booked while a user completes their purchase. Developers implement these APIs to manage concurrent requests and maintain data consistency across distributed systems, which is critical for any application dealing with limited inventory or resources."
+    },
+    "objectives": [
+      "Construct an Express server with routes for inventory management",
+      "Implement a data model to track product inventory and reservations",
+      "Apply validation logic to ensure reservation requests are within available stock",
+      "Configure middleware to parse JSON request bodies",
+      "Manipulate inventory data to update quantities after successful reservations",
+      "Integrate error handling for insufficient stock scenarios",
+      "Initialize a mock database structure for storing inventory state"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 13",
+        "title": "Import required Node.js modules",
+        "instruction": "Import the http and url modules using Node.js's require() syntax.",
+        "hint": "Use require('module_name') to import built-in Node.js modules.",
+        "analogousExample": "// Importing built-in modules\nconst fs = require('fs');\nconst path = require('path');",
+        "seedCode": "// Import the http and url modules here\n",
+        "expectedOutcome": "The http and url modules are imported and available for use in the API server.",
+        "successCriteria": [
+          "The http and url modules are imported using require()."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're importing both http and url modules.",
+        "feedbackWrong": "The imports are missing or incorrect. Use require() to import both http and url modules.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "require('http')",
+            "require('url')"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 13",
+        "title": "Initialize inventory data structure",
+        "instruction": "Create an inventory array with sample items, each having id, name, quantity, and reserved properties.",
+        "hint": "Define a variable named 'inventory' and assign it an array of objects with the specified properties.",
+        "analogousExample": "// Example: creating an array of objects\nconst users = [\n  { id: 1, name: 'Alice', age: 25 },\n  { id: 2, name: 'Bob', age: 30 }\n];",
+        "seedCode": "// Import the http and url modules here\nconst http = require('http');\nconst url = require('url');\n\n// Create your inventory array here\n",
+        "expectedOutcome": "An inventory array with at least one sample item is created, ready to be used as an in-memory data store.",
+        "successCriteria": [
+          "The inventory variable is defined as an array containing objects with id, name, quantity, and reserved properties."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure inventory is an array and each item has id, name, quantity, and reserved properties.",
+        "feedbackWrong": "The inventory data structure is not correctly defined. Review the instruction and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "inventory",
+            "[",
+            "{",
+            "id",
+            "name",
+            "quantity",
+            "reserved"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 13",
+        "title": "Create helper function to parse request body",
+        "instruction": "Create a function named parseRequestBody that takes a request object as a parameter and returns a promise that resolves with the parsed JSON body.",
+        "hint": "The function should read the request body data chunks, concatenate them, and parse the resulting string as JSON.",
+        "analogousExample": "// Example: a function that reads and parses request body\nfunction parseRequestBody(req) {\n    return new Promise((resolve, reject) => {\n        let body = '';\n        req.on('data', chunk => body += chunk);\n        req.on('end', () => {\n            try {\n                resolve(JSON.parse(body));\n            } catch (error) {\n                reject(error);\n            }\n        });\n    });\n}",
+        "seedCode": "const http = require('http');\nconst url = require('url');\n\n// Create your inventory array here\n\n// Create parseRequestBody function here",
+        "expectedOutcome": "A parseRequestBody function that can be used later to handle JSON data from POST requests.",
+        "successCriteria": [
+          "The parseRequestBody function is defined, takes a request parameter, returns a promise, and properly reads and parses JSON from the request body."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure your function takes a request parameter, returns a promise, and handles both data and end events to parse JSON.",
+        "feedbackWrong": "The parseRequestBody function is missing or incomplete. It should read the request body and parse it as JSON.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "parseRequestBody",
+            "function",
+            "req",
+            "Promise",
+            "JSON.parse",
+            "data",
+            "end"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 13",
+        "title": "Create helper function to send JSON responses",
+        "instruction": "Create a function named sendJsonResponse that takes three parameters: response, statusCode, and data. Inside the function, set the response headers for 'Content-Type' to 'application/json' and statusCode to the provided statusCode,",
+        "hint": "Remember to use response.writeHead() to set both status code and headers, and response.end() to send the JSON string.",
+        "analogousExample": "// Similar: a function that sends a JSON response\nfunction sendJsonResponse(res, code, data) {\n  res.writeHead(code, { 'Content-Type': 'application/json' });\n  res.end(JSON.stringify(data));\n}",
+        "seedCode": "const http = require('http');\nconst url = require('url');\n\n// Create your inventory array here\n\n// Create parseRequestBody function here\n\n// Create sendJsonResponse function here",
+        "expectedOutcome": "You will have a reusable helper function that standardizes how your API sends JSON responses with proper headers.",
+        "successCriteria": [
+          "The sendJsonResponse function is defined with three parameters, sets the correct Content-Type header and status code, and sends the data as a JSON string."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your function sets both the status code and Content-Type header, and ends the response with the JSON data.",
+        "feedbackWrong": "The function isn't quite right. Check that you're using response.writeHead() with the status code and headers object, and response.end() with JSON.stringify().",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "sendJsonResponse",
+            "writeHead",
+            "Content-Type",
+            "application/json",
+            "JSON.stringify",
+            "end"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 13",
+        "title": "end the response with JSON.stringify(data)",
+        "instruction": "end the response with JSON.stringify(data).",
+        "hint": "Remember to use response.writeHead() to set both status code and headers, and response.end() to send the JSON string.",
+        "analogousExample": "// Similar: a function that sends a JSON response\nfunction sendJsonResponse(res, code, data) {\n  res.writeHead(code, { 'Content-Type': 'application/json' });\n  res.end(JSON.stringify(data));\n}",
+        "seedCode": "const http = require('http');\nconst url = require('url');\n\n// Create your inventory array here\n\n// Create parseRequestBody function here\n\n// Create sendJsonResponse function here",
+        "expectedOutcome": "",
+        "successCriteria": [
+          "Complete the step as instructed."
+        ],
+        "feedbackCorrect": "Great! Step completed.",
+        "feedbackPartial": "Review the instruction and try again.",
+        "feedbackWrong": "Check the instruction and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "sendJsonResponse",
+            "writeHead",
+            "Content-Type",
+            "application/json",
+            "JSON.stringify",
+            "end"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 13",
+        "title": "Create GET inventory endpoint handler",
+        "instruction": "Create a function named handleGetInventory that takes request and response parameters and uses sendJsonResponse to return the inventory array with a 200 status.",
+        "hint": "Define a function that calls sendJsonResponse with the inventory array and status code 200.",
+        "analogousExample": "// Example: a function that returns data\nfunction getData(req, res) {\n  const data = [];\n  sendJsonResponse(res, 200, data);\n}",
+        "seedCode": "const http = require('http');\nconst url = require('url');\n\n// Create your inventory array here\nlet inventory = [];\n\n// Create parseRequestBody function here\nfunction parseRequestBody(req) {\n  return new Promise((resolve, reject) => {\n    let body = '';\n    req.on('data', chunk => body += chunk);\n    req.on('end', () => {\n      try {\n        resolve(JSON.parse(body));\n      } catch (error) {\n        reject(error);\n      }\n    });\n  });\n}\n\n// Create sendJsonResponse function here\nfunction sendJsonResponse(res, statusCode, data) {\n  res.writeHead(statusCode, { 'Content-Type': 'application/json' });\n  res.end(JSON.stringify(data));\n}\n\n// Create handleGetInventory function here",
+        "expectedOutcome": "A handleGetInventory function is defined that will return all inventory items when called.",
+        "successCriteria": [
+          "The handleGetInventory function is defined, takes req and res parameters, and calls sendJsonResponse with inventory and status 200."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the function, but make sure it calls sendJsonResponse with the inventory array and status code 200.",
+        "feedbackWrong": "The function isn't defined correctly. Create a function named handleGetInventory that uses sendJsonResponse to return the inventory with a 200 status.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "handleGetInventory",
+            "sendJsonResponse",
+            "inventory",
+            "200"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 13",
+        "title": "Create GET single item endpoint handler",
+        "instruction": "Create a function named handleGetItem that takes req and res parameters, finds a single inventory item by ID from the URL, and returns it with sendJsonResponse.",
+        "hint": "Parse the URL to get the ID parameter, find the matching item in the inventory array, and send the appropriate JSON response.",
+        "analogousExample": "// Similar: a function that finds and returns an item by ID\nfunction handleGetItem(req, res) {\n  const parsedUrl = url.parse(req.url, true);\n  const id = parsedUrl.query.id;\n  const item = inventory.find(item => item.id === id);\n  if (item) {\n    sendJsonResponse(res, 200, item);\n  } else {\n    sendJsonResponse(res, 404, { error: 'Item not found' });\n  }\n}",
+        "seedCode": "const http = require('http');\nconst url = require('url');\n\n// Create your inventory array here\nlet inventory = [];\n\n// Create parseRequestBody function here\nfunction parseRequestBody(req) {\n  return new Promise((resolve, reject) => {\n    let body = '';\n    req.on('data', chunk => body += chunk);\n    req.on('end', () => {\n      try {\n        resolve(JSON.parse(body));\n      } catch (error) {\n        reject(error);\n      }\n    });\n  });\n}\n\n// Create sendJsonResponse function here\nfunction sendJsonResponse(res, statusCode, data) {\n  res.writeHead(statusCode, { 'Content-Type': 'application/json' });\n  res.end(JSON.stringify(data));\n}\n\n// Create handleGetInventory function here\n\n// Create handleGetItem function here\n",
+        "expectedOutcome": "A handleGetItem function that retrieves a single inventory item by ID from the URL and sends a JSON response.",
+        "successCriteria": [
+          "The handleGetItem function is defined, parses the URL for an ID, finds the matching item in inventory, and uses sendJsonResponse to return the item or an error."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the handleGetItem function, but make sure it parses the URL, finds the item by ID, and sends the correct JSON response.",
+        "feedbackWrong": "The handleGetItem function is missing or doesn't correctly implement single item retrieval. Check the URL parsing and item lookup logic.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "function handleGetItem",
+            "req",
+            "res",
+            "url.parse",
+            "id",
+            "inventory.find",
+            "sendJsonResponse"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 13",
+        "title": "Create reservation endpoint handler",
+        "instruction": "Create a function named handleReserveItem that takes req and res parameters and will process reservation requests.",
+        "hint": "Define a function that accepts request and response objects as parameters. You'll add the reservation logic inside it in later steps.",
+        "analogousExample": "// Similar: a function that handles requests\nfunction handleRequest(req, res) {\n  // Request handling logic goes here\n}",
+        "seedCode": "const http = require('http');\nconst url = require('url');\n\n// Create your inventory array here\nlet inventory = [];\n\n// Create parseRequestBody function here\nfunction parseRequestBody(req) {\n  return new Promise((resolve, reject) => {\n    let body = '';\n    req.on('data', chunk => body += chunk);\n    req.on('end', () => {\n      try {\n        resolve(JSON.parse(body));\n      } catch (error) {\n        reject(error);\n      }\n    });\n  });\n}\n\n// Create sendJsonResponse function here\nfunction sendJsonResponse(res, statusCode, data) {\n  res.writeHead(statusCode, { 'Content-Type': 'application/json' });\n  res.end(JSON.stringify(data));\n}\n\n// Create handleGetInventory function here\n\n// Create handleGetItem function here\n\n// Create handleReserveItem function here\n",
+        "expectedOutcome": "A function named handleReserveItem is defined with req and res parameters, ready to implement reservation logic.",
+        "successCriteria": [
+          "The handleReserveItem function is created with the correct name and parameter signature."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure the function is named exactly 'handleReserveItem' and accepts both req and res parameters.",
+        "feedbackWrong": "The reservation handler function isn't properly defined. Create a function named handleReserveItem that takes req and res parameters.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "handleReserveItem",
+            "req",
+            "res"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 13",
+        "title": "Create main request router function",
+        "instruction": "Create a function named handleRequest that takes req and res parameters and routes GET and POST requests to the appropriate handlers based on URL path and method.",
+        "hint": "Inside the function, use req.method and req.url to determine the request type and path, then call the corresponding handler functions you've already created.",
+        "analogousExample": "// Example of a routing function\nfunction handleRequest(req, res) {\n  const parsedUrl = url.parse(req.url, true);\n  const path = parsedUrl.pathname;\n  \n  if (req.method === 'GET' && path === '/items') {\n    handleGetItems(req, res);\n  } else if (req.method === 'POST' && path === '/items') {\n    handleCreateItem(req, res);\n  } else {\n    sendJsonResponse(res, 404, { error: 'Not found' });\n  }\n}",
+        "seedCode": "const http = require('http');\nconst url = require('url');\n\n// Create your inventory array here\nlet inventory = [];\n\n// Create parseRequestBody function here\nfunction parseRequestBody(req) {\n  return new Promise((resolve, reject) => {\n    let body = '';\n    req.on('data', chunk => body += chunk);\n    req.on('end', () => {\n      try {\n        resolve(JSON.parse(body));\n      } catch (error) {\n        reject(error);\n      }\n    });\n  });\n}\n\n// Create sendJsonResponse function here\nfunction sendJsonResponse(res, statusCode, data) {\n  res.writeHead(statusCode, { 'Content-Type': 'application/json' });\n  res.end(JSON.stringify(data));\n}\n\n// Create handleGetInventory function here\n\n// Create handleGetItem function here\n\n// Create handleReserveItem function here\n\n// Create handleRequest function here\n",
+        "expectedOutcome": "A handleRequest function that routes different HTTP methods and URL paths to the appropriate handler functions.",
+        "successCriteria": [
+          "The handleRequest function exists, accepts req and res parameters, and contains logic to route GET and POST requests based on URL path and method."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the handleRequest function, but make sure it properly routes both GET and POST requests based on URL paths and methods.",
+        "feedbackWrong": "The handleRequest function is missing or doesn't properly route requests. Check that it accepts req and res parameters and contains routing logic for different HTTP methods and URL paths.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "handleRequest",
+            "req",
+            "res",
+            "req.method",
+            "req.url",
+            "GET",
+            "POST"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 13",
+        "title": "Create the HTTP server",
+        "instruction": "Create an HTTP server using the http module and connect it to the handleRequest function you created earlier.",
+        "hint": "Use the http.createServer() method and pass your handleRequest function as the request handler.",
+        "analogousExample": "// Similar: creating a basic HTTP server\nconst server = http.createServer((req, res) => {\n  res.end('Hello World');\n});",
+        "seedCode": "const http = require('http');\nconst url = require('url');\n\n// Create your inventory array here\nlet inventory = [];\n\n// Create parseRequestBody function here\nfunction parseRequestBody(req) {\n  return new Promise((resolve, reject) => {\n    let body = '';\n    req.on('data', chunk => body += chunk);\n    req.on('end', () => {\n      try {\n        resolve(JSON.parse(body));\n      } catch (error) {\n        reject(error);\n      }\n    });\n  });\n}\n\n// Create sendJsonResponse function here\nfunction sendJsonResponse(res, statusCode, data) {\n  res.writeHead(statusCode, { 'Content-Type': 'application/json' });\n  res.end(JSON.stringify(data));\n}\n\n// Create handleGetInventory function here\n\n// Create handleGetItem function here\n\n// Create handleReserveItem function here\n\n// Create handleRequest function here\n\n// Create your HTTP server here",
+        "expectedOutcome": "You'll have a server variable that uses http.createServer() with handleRequest as the callback, ready to be started in the next step.",
+        "successCriteria": [
+          "An HTTP server is created using http.createServer() and connected to the handleRequest function."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure you're using http.createServer() and passing your handleRequest function as the argument.",
+        "feedbackWrong": "Let's review: you need to create an HTTP server using the http module and connect it to your handleRequest function. Check the http.createServer() documentation if needed.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "http.createServer",
+            "handleRequest"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 13",
+        "title": "Start the server and listen on a port",
+        "instruction": "Call the server's listen method to start it on port 3000 and log a startup message to the console.",
+        "hint": "Use server.listen(port, callback) where the callback logs a message like 'Server running on port 3000'.",
+        "analogousExample": "// Starting a server\nconst server = http.createServer();\nserver.listen(3000, () => {\n  console.log('Server started on port 3000');\n});",
+        "seedCode": "const http = require('http');\nconst url = require('url');\n\n// Create your inventory array here\nlet inventory = [];\n\n// Create parseRequestBody function here\nfunction parseRequestBody(req) {\n  return new Promise((resolve, reject) => {\n    let body = '';\n    req.on('data', chunk => body += chunk);\n    req.on('end', () => {\n      try {\n        resolve(JSON.parse(body));\n      } catch (error) {\n        reject(error);\n      }\n    });\n  });\n}\n\n// Create sendJsonResponse function here\nfunction sendJsonResponse(res, statusCode, data) {\n  res.writeHead(statusCode, { 'Content-Type': 'application/json' });\n  res.end(JSON.stringify(data));\n}\n\n// Create handleGetInventory function here\n\n// Create handleGetItem function here\n\n// Create handleReserveItem function here\n\n// Create handleRequest function here\n\n// Create your HTTP server here\nconst server = http.createServer(handleRequest);\n// Start the server here",
+        "expectedOutcome": "The server will be started and ready to accept HTTP requests on port 3000, with a confirmation logged to the console.",
+        "successCriteria": [
+          "The server is started using server.listen on port 3000 with a callback that logs a startup message."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the server, but make sure to include a callback that logs a startup message.",
+        "feedbackWrong": "The server isn't properly started. Use server.listen(3000, callback) to start it on port 3000.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "server.listen",
+            "3000",
+            "console.log"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step12",
+        "type": "question",
+        "phase": "Step 12 of 13",
+        "title": "Add error handling for missing routes",
+        "instruction": "In the handleRequest function, add a default case that sends a 404 Not Found response for routes that don't match any endpoint.",
+        "hint": "After checking all your route conditions, add an else block that calls sendJsonResponse with status code 404 and an appropriate error message object.",
+        "analogousExample": "// Similar: default error handling in a routing function\nfunction handleRoute(path) {\n  if (path === '/home') {\n    return 'Welcome home';\n  } else if (path === '/about') {\n    return 'About page';\n  } else {\n    return '404 - Page not found';\n  }\n}",
+        "seedCode": "const http = require('http');\nconst url = require('url');\n\n// Create your inventory array here\nlet inventory = [];\n\n// Create parseRequestBody function here\nfunction parseRequestBody(req) {\n  return new Promise((resolve, reject) => {\n    let body = '';\n    req.on('data', chunk => body += chunk);\n    req.on('end', () => {\n      try {\n        resolve(JSON.parse(body));\n      } catch (error) {\n        reject(error);\n      }\n    });\n  });\n}\n\n// Create sendJsonResponse function here\nfunction sendJsonResponse(res, statusCode, data) {\n  res.writeHead(statusCode, { 'Content-Type': 'application/json' });\n  res.end(JSON.stringify(data));\n}\n\n// Create handleGetInventory function here\n\n// Create handleGetItem function here\n\n// Create handleReserveItem function here\n\n// Create handleRequest function here\nfunction handleRequest(req, res) {\n  const parsedUrl = url.parse(req.url, true);\n  const path = parsedUrl.pathname;\n  const method = req.method;\n\n  // Add your route handling logic here\n  // Remember to add a default case for 404 errors\n}\n\n// Create your HTTP server here\nconst server = http.createServer(handleRequest);\n// Start the server here",
+        "expectedOutcome": "The handleRequest function now properly handles invalid routes by returning a 404 status with a JSON error message.",
+        "successCriteria": [
+          "The handleRequest function includes a default case that calls sendJsonResponse with status 404 and an error message object for unmatched routes."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're calling sendJsonResponse with status code 404 and a proper error message object in the default case.",
+        "feedbackWrong": "The handleRequest function doesn't yet handle invalid routes. Add a default case after your route conditions to return a 404 response.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "handleRequest",
+            "404",
+            "sendJsonResponse",
+            "else",
+            "default"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step13",
+        "type": "question",
+        "phase": "Step 13 of 13",
+        "title": "Add CORS headers for cross-origin requests",
+        "instruction": "Modify the sendJsonResponse function to add CORS headers to all responses.",
+        "hint": "Add a 'Access-Control-Allow-Origin' header with value '*' before setting the status code and content type.",
+        "analogousExample": "// Adding CORS headers to a response\nfunction sendResponse(res, status, data) {\n  res.setHeader('Access-Control-Allow-Origin', '*');\n  res.writeHead(status, { 'Content-Type': 'application/json' });\n  res.end(JSON.stringify(data));\n}",
+        "seedCode": "const http = require('http');\nconst url = require('url');\n\n// Create your inventory array here\nlet inventory = [];\n\n// Create parseRequestBody function here\nfunction parseRequestBody(req) {\n  return new Promise((resolve, reject) => {\n    let body = '';\n    req.on('data', chunk => body += chunk);\n    req.on('end', () => {\n      try {\n        resolve(JSON.parse(body));\n      } catch (error) {\n        reject(error);\n      }\n    });\n  });\n}\n\n// Create sendJsonResponse function here\nfunction sendJsonResponse(res, statusCode, data) {\n  // Add CORS headers here\n  res.writeHead(statusCode, { 'Content-Type': 'application/json' });\n  res.end(JSON.stringify(data));\n}\n\n// Create handleGetInventory function here\n\n// Create handleGetItem function here\n\n// Create handleReserveItem function here\n\n// Create handleRequest function here\nfunction handleRequest(req, res) {\n  const parsedUrl = url.parse(req.url, true);\n  const path = parsedUrl.pathname;\n  const method = req.method;\n\n  // Add your route handling logic here\n  // Remember to add a default case for 404 errors\n}\n\n// Create your HTTP server here\nconst server = http.createServer(handleRequest);\n// Start the server here",
+        "expectedOutcome": "The sendJsonResponse function will now include CORS headers, allowing cross-origin requests to your API.",
+        "successCriteria": [
+          "The sendJsonResponse function sets the 'Access-Control-Allow-Origin' header to '*' before writing the response head."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure to add the CORS header before calling res.writeHead.",
+        "feedbackWrong": "The CORS headers weren't added correctly. Check the analogous example for the proper syntax.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "Access-Control-Allow-Origin",
+            "'*'",
+            "sendJsonResponse"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import required Node.js modules",
+        "id": "step1"
+      },
+      {
+        "label": "Initialize inventory data structure",
+        "id": "step2"
+      },
+      {
+        "label": "Create helper function to parse request body",
+        "id": "step3"
+      },
+      {
+        "label": "Create helper function to send JSON responses",
+        "id": "step4"
+      },
+      {
+        "label": "end the response with JSON.stringify(data)",
+        "id": "step5"
+      },
+      {
+        "label": "Create GET inventory endpoint handler",
+        "id": "step6"
+      },
+      {
+        "label": "Create GET single item endpoint handler",
+        "id": "step7"
+      },
+      {
+        "label": "Create reservation endpoint handler",
+        "id": "step8"
+      },
+      {
+        "label": "Create main request router function",
+        "id": "step9"
+      },
+      {
+        "label": "Create the HTTP server",
+        "id": "step10"
+      },
+      {
+        "label": "Start the server and listen on a port",
+        "id": "step11"
+      },
+      {
+        "label": "Add error handling for missing routes",
+        "id": "step12"
+      },
+      {
+        "label": "Add CORS headers for cross-origin requests",
+        "id": "step13"
+      }
+    ]
+  },
+  "source": "content"
+}

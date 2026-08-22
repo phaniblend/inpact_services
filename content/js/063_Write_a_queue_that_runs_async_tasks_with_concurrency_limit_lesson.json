@@ -1,0 +1,361 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-js-63",
+    "track": "js",
+    "lessonNum": 63,
+    "title": "Write a queue that runs async tasks with concurrency limit",
+    "shortName": "P63",
+    "intro": {
+      "tag": "LESSON #63",
+      "title": "Write a queue that runs async tasks with concurrency limit",
+      "body": "In this lesson, you will build a queue system that manages and runs multiple asynchronous tasks while limiting how many can execute at the same time. You'll learn to use JavaScript promises and async/await to handle task execution and concurrency control. The main constructs involved are arrays for the queue, counters for tracking active tasks, and functions to enqueue tasks and process the queue. By the end, you'll have a working queue that can handle a list of async functions, run them with a set concurrency limit, and ensure tasks are processed efficiently.",
+      "usecase": "A concurrency-limited async queue is essential when you need to control resource usage while processing multiple background tasks. In web applications, this pattern appears in dashboard systems that fetch data from multiple APIs simultaneously—like loading user analytics, recent activity, and notifications—without overwhelming the server or browser. It's also used in file upload interfaces where users can queue multiple files but only a few upload at a time, or in e-commerce checkout flows that validate payment, inventory, and shipping concurrently but with controlled parallel requests."
+    },
+    "objectives": [
+      "Construct a queue data structure to manage async task execution",
+      "Initialize a concurrency limit variable to control simultaneous operations",
+      "Implement an enqueue method to add tasks to the queue",
+      "Configure a dequeue mechanism that respects the concurrency limit",
+      "Integrate task completion handling to trigger subsequent tasks",
+      "Manipulate the active task count to maintain concurrency control",
+      "Apply error handling to manage failed async operations within the queue"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 10",
+        "title": "Create the TaskQueue class constructor",
+        "instruction": "Create a TaskQueue class with a constructor that accepts a concurrency limit parameter and initializes the queue state.",
+        "hint": "Define a class named TaskQueue. The constructor should take a parameter (e.g., 'concurrency') and set up internal properties for the queue, running tasks, and the concurrency limit.",
+        "analogousExample": "// Similar: a basic class with constructor\nclass Counter {\n  constructor(initialValue) {\n    this.value = initialValue;\n    this.max = 10;\n  }\n}",
+        "seedCode": "// Create the TaskQueue class with constructor\n",
+        "expectedOutcome": "A TaskQueue class is defined with a constructor that sets up initial state for managing async tasks.",
+        "successCriteria": [
+          "TaskQueue class exists with a constructor that accepts a concurrency parameter and initializes internal state properties."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure your TaskQueue class has a constructor that takes a concurrency parameter and sets up initial properties for the queue and running tasks.",
+        "feedbackWrong": "The TaskQueue class or constructor is missing or incorrect. Create a class named TaskQueue with a constructor that accepts a concurrency parameter and initializes the queue state.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "class",
+            "TaskQueue",
+            "constructor",
+            "concurrency"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 10",
+        "title": "Initialize queue state properties",
+        "instruction": "Inside the TaskQueue constructor, add three properties: 'concurrency' to store the limit, 'running' to track currently executing tasks (initialize to 0), and 'queue' to store pending tasks (initialize as an empty array).",
+        "hint": "Set 'this.concurrency = concurrency', 'this.running = 0', and 'this.queue = []' inside the constructor.",
+        "analogousExample": "// Similar: initializing properties in a constructor\nclass Counter {\n  constructor(initialValue) {\n    this.value = initialValue;\n    this.history = [];\n  }\n}",
+        "seedCode": "// Create the TaskQueue class with constructor\nclass TaskQueue {\n  constructor(concurrency) {\n    // Add properties here\n  }\n}",
+        "expectedOutcome": "The TaskQueue constructor now has three internal properties to track concurrency limit, running task count, and pending tasks.",
+        "successCriteria": [
+          "The constructor sets 'this.concurrency', 'this.running = 0', and 'this.queue = []'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added some properties, but make sure all three are present: concurrency, running (initialized to 0), and queue (initialized as empty array).",
+        "feedbackWrong": "The constructor should store the concurrency limit and initialize running count and task queue. Check the properties you've defined.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "this.concurrency",
+            "this.running",
+            "this.queue",
+            "=",
+            "0",
+            "[]"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 10",
+        "title": "Create the enqueue method to add tasks",
+        "instruction": "Inside the TaskQueue class, add an enqueue method that accepts an async task function and adds it to the pending tasks array.",
+        "hint": "Define a method named enqueue that takes a parameter (like 'task') and pushes it into the pending array.",
+        "analogousExample": "// Similar: a method to add items to a list\nclass ShoppingList {\n  addItem(item) {\n    this.items.push(item);\n  }\n}",
+        "seedCode": "// Create the TaskQueue class with constructor\nclass TaskQueue {\n  constructor(concurrency) {\n    // Add properties here\n  }\n  \n  // Add enqueue method here\n}",
+        "expectedOutcome": "The TaskQueue class will have an enqueue method that can accept async task functions and store them in the pending array.",
+        "successCriteria": [
+          "The enqueue method is defined inside the TaskQueue class and pushes the task parameter into the pending array."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure the enqueue method is defined inside the class and pushes the task into the pending array.",
+        "feedbackWrong": "The enqueue method is missing or not correctly defined. It should be a method inside TaskQueue that accepts a task and adds it to the pending array.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "enqueue",
+            "task",
+            "push",
+            "pending"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 10",
+        "title": "Implement task execution logic",
+        "instruction": "Inside the TaskQueue class, create a private _run method that will execute tasks from the queue when concurrency allows.",
+        "hint": "Add a method named _run that checks if there are pending tasks and available concurrency slots, then processes them.",
+        "analogousExample": "// Similar: a private method that processes items\nclass Processor {\n  _process() {\n    // Implementation logic here\n  }\n}",
+        "seedCode": "// Create the TaskQueue class with constructor\nclass TaskQueue {\n  constructor(concurrency) {\n    // Add properties here\n  }\n  \n  // Add enqueue method here\n  \n  // Add _run method here\n}",
+        "expectedOutcome": "The TaskQueue class now has a private _run method that will handle executing tasks while respecting the concurrency limit.",
+        "successCriteria": [
+          "The TaskQueue class contains a method named _run that can be called internally to process tasks."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure you've added a method named _run inside the TaskQueue class.",
+        "feedbackWrong": "The _run method is missing or incorrectly placed. It should be a method inside the TaskQueue class.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "_run",
+            "method",
+            "TaskQueue"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 10",
+        "title": "Add concurrency check and task execution",
+        "instruction": "Inside the _run method, add a while loop that checks if there are pending tasks and if the current number of running tasks is less than the concurrency limit. Inside the loop, execute the next task.",
+        "hint": "You'll need to use a while loop with two conditions: one for pending tasks and one for the concurrency limit. Inside the loop, shift a task from the queue and execute it.",
+        "analogousExample": "// Similar: checking conditions and executing tasks\nwhile (tasks.length > 0 && running < limit) {\n  const task = tasks.shift();\n  running++;\n  task();\n}",
+        "seedCode": "// Create the TaskQueue class with constructor\nclass TaskQueue {\n  constructor(concurrency) {\n    // Add properties here\n  }\n  \n  // Add enqueue method here\n  \n  // Add _run method here\n  _run() {\n    // Add while loop here to check pending tasks and concurrency limit\n  }\n}",
+        "expectedOutcome": "The _run method now contains a while loop that checks for pending tasks and available concurrency slots, then executes tasks accordingly.",
+        "successCriteria": [
+          "The _run method includes a while loop with two conditions: checking if there are pending tasks and if running tasks are below the concurrency limit. Inside the loop, a task is shifted from the queue and executed."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your while loop has both conditions: checking for pending tasks AND checking if running tasks are below the concurrency limit. Also ensure you're shifting tasks from the queue inside the loop.",
+        "feedbackWrong": "The _run method doesn't yet contain the required while loop with concurrency checking. Review the instruction: you need a while loop that checks both pending tasks and concurrency limit, then executes tasks inside the loop.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "while",
+            "pending",
+            "concurrency",
+            "shift",
+            "execute"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 10",
+        "title": "Implement task completion handling",
+        "instruction": "Inside the _run method, after the task execution logic, add a .then() handler to decrement the running count and call _run again to process the next tasks.",
+        "hint": "After executing the task promise, chain .then() to handle completion: decrement this.running and call this._run() to continue processing.",
+        "analogousExample": "// Similar: handling async completion\nfunction processTask(task) {\n  task().then(() => {\n    console.log('Task done');\n    processNext();\n  });\n}",
+        "seedCode": "// Create the TaskQueue class with constructor\nclass TaskQueue {\n  constructor(concurrency) {\n    // Add properties here\n  }\n  \n  // Add enqueue method here\n  \n  // Add _run method here\n  _run() {\n    // Add while loop here to check pending tasks and concurrency limit\n    // After executing task, add .then() to handle completion\n  }\n}",
+        "expectedOutcome": "The _run method will now properly handle task completion by decreasing the running count and continuing to process remaining tasks.",
+        "successCriteria": [
+          "The _run method includes a .then() handler that decrements this.running and calls this._run() after task completion."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your .then() handler both decrements the running count and calls _run() again to continue processing.",
+        "feedbackWrong": "The task completion handling isn't quite right. Remember to add a .then() handler after executing the task that updates the running count and continues processing.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            ".then",
+            "this.running",
+            "this._run"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 10",
+        "title": "Create helper methods for queue status",
+        "instruction": "Inside the TaskQueue class, add a method named 'isBusy' that returns true if any tasks are currently running.",
+        "hint": "Check if the number of running tasks is greater than zero. You can access the running task count through 'this.running' property.",
+        "analogousExample": "// Similar: a method that checks state\nclass LightSwitch {\n  constructor() {\n    this.isOn = false;\n  }\n  \n  isLit() {\n    return this.isOn;\n  }\n}",
+        "seedCode": "// Create the TaskQueue class with constructor\nclass TaskQueue {\n  constructor(concurrency) {\n    // Add properties here\n  }\n  \n  // Add enqueue method here\n  \n  // Add _run method here\n  _run() {\n    // Add while loop here to check pending tasks and concurrency limit\n    // After executing task, add .then() to handle completion\n  }\n  \n  // Add isBusy method here\n}",
+        "expectedOutcome": "The TaskQueue class will have an 'isBusy' method that returns a boolean indicating whether tasks are currently executing.",
+        "successCriteria": [
+          "The TaskQueue class contains an 'isBusy' method that returns true when tasks are running and false otherwise."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added a method, but make sure it's named 'isBusy' and returns a boolean based on whether tasks are running.",
+        "feedbackWrong": "The 'isBusy' method is missing or doesn't correctly check if tasks are running. Try adding a method that returns true when 'this.running' is greater than zero.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "isBusy",
+            "return",
+            "this.running"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 10",
+        "title": "Test the queue with sample async tasks",
+        "instruction": "Create an instance of TaskQueue with a concurrency limit of 2 and enqueue three sample async functions that log messages with delays to test the queue's behavior.",
+        "hint": "Instantiate the class with 'new TaskQueue(2)', then call enqueue() three times with different async functions that use setTimeout to simulate work.",
+        "analogousExample": "// Example: creating an instance and adding tasks\nconst queue = new TaskQueue(2);\nqueue.enqueue(async () => {\n  await new Promise(resolve => setTimeout(resolve, 1000));\n  console.log('Task 1 done');\n});",
+        "seedCode": "// Create the TaskQueue class with constructor\nclass TaskQueue {\n  constructor(concurrency) {\n    // Add properties here\n  }\n  \n  // Add enqueue method here\n  \n  // Add _run method here\n  _run() {\n    // Add while loop here to check pending tasks and concurrency limit\n    // After executing task, add .then() to handle completion\n  }\n  \n  // Add isBusy method here\n}\n\n// Create a TaskQueue instance and enqueue test tasks here",
+        "expectedOutcome": "The queue instance is created with concurrency 2, and three async tasks are added to demonstrate how the queue manages concurrent execution.",
+        "successCriteria": [
+          "TaskQueue instance is created with concurrency limit 2, and three async functions are enqueued using the enqueue method."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started testing the queue, but make sure to create the instance with concurrency 2 and enqueue three distinct async functions.",
+        "feedbackWrong": "The test setup is incomplete. Create a TaskQueue instance with concurrency 2 and enqueue three async functions that log messages after delays.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "new TaskQueue(2)",
+            "enqueue",
+            "async",
+            "setTimeout",
+            "console.log"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 10",
+        "title": "Add error handling for failed tasks",
+        "instruction": "In the _run method, wrap the task execution in a try-catch block to handle errors without breaking the queue.",
+        "hint": "Add try { ... } catch (error) { ... } around the task execution and completion handling.",
+        "analogousExample": "// Example: error handling in async function\nasync function safeTask() {\n  try {\n    await someAsyncOperation();\n  } catch (error) {\n    console.error('Task failed:', error);\n  }\n}",
+        "seedCode": "// Create the TaskQueue class with constructor\nclass TaskQueue {\n  constructor(concurrency) {\n    this.concurrency = concurrency;\n    this.queue = [];\n    this.running = 0;\n  }\n  \n  enqueue(task) {\n    this.queue.push(task);\n    this._run();\n  }\n  \n  _run() {\n    while (this.running < this.concurrency && this.queue.length) {\n      const task = this.queue.shift();\n      this.running++;\n      task()\n        .then(() => {\n          this.running--;\n          this._run();\n        })\n        .catch(() => {\n          this.running--;\n          this._run();\n        });\n    }\n  }\n  \n  isBusy() {\n    return this.running > 0 || this.queue.length > 0;\n  }\n}\n\n// Create a TaskQueue instance and enqueue test tasks here",
+        "expectedOutcome": "The queue will continue processing tasks even if some tasks fail.",
+        "successCriteria": [
+          "The _run method includes try-catch around task execution and handles errors appropriately."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure to wrap the task execution in try-catch.",
+        "feedbackWrong": "The error handling is missing or incorrect. Try adding a try-catch block in the _run method.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "try",
+            "catch",
+            "error"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 10",
+        "title": "Create a complete example with logging",
+        "instruction": "Create a full example that demonstrates the queue in action by adding logging to show when tasks start, complete, or fail. Add this example code after the TaskQueue class definition.",
+        "hint": "Create a TaskQueue instance with a concurrency limit of 2, then enqueue several async tasks that log their status. Use console.log to show task start, completion, and failure.",
+        "analogousExample": "// Example of logging async operations\nasync function exampleTask(id) {\n  console.log(`Task ${id} started`);\n  await new Promise(resolve => setTimeout(resolve, 1000));\n  console.log(`Task ${id} completed`);\n}",
+        "seedCode": "// Create the TaskQueue class with constructor\nclass TaskQueue {\n  constructor(concurrency) {\n    this.concurrency = concurrency;\n    this.queue = [];\n    this.running = 0;\n  }\n  \n  enqueue(task) {\n    this.queue.push(task);\n    this._run();\n  }\n  \n  _run() {\n    while (this.running < this.concurrency && this.queue.length) {\n      const task = this.queue.shift();\n      this.running++;\n      task()\n        .then(() => {\n          this.running--;\n          this._run();\n        })\n        .catch(() => {\n          this.running--;\n          this._run();\n        });\n    }\n  }\n  \n  isBusy() {\n    return this.running > 0 || this.queue.length > 0;\n  }\n}\n\n// Create a TaskQueue instance and enqueue test tasks here\n// Add your example with logging below:",
+        "expectedOutcome": "The code will include a complete working example that logs task execution details, demonstrating how the queue manages concurrency.",
+        "successCriteria": [
+          "A TaskQueue instance is created with concurrency limit 2, and at least 3 async tasks are enqueued with logging for start, completion, and error handling."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added some logging, but make sure to include: 1) A TaskQueue instance with concurrency 2, 2) At least 3 async tasks with logging, 3) Clear logs for task start and completion.",
+        "feedbackWrong": "The example doesn't demonstrate the queue behavior with logging. Review how to create async tasks that log their status and enqueue them to a TaskQueue instance.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "TaskQueue",
+            "concurrency",
+            "enqueue",
+            "console.log",
+            "async",
+            "then",
+            "catch"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Create the TaskQueue class constructor",
+        "id": "step1"
+      },
+      {
+        "label": "Initialize queue state properties",
+        "id": "step2"
+      },
+      {
+        "label": "Create the enqueue method to add tasks",
+        "id": "step3"
+      },
+      {
+        "label": "Implement task execution logic",
+        "id": "step4"
+      },
+      {
+        "label": "Add concurrency check and task execution",
+        "id": "step5"
+      },
+      {
+        "label": "Implement task completion handling",
+        "id": "step6"
+      },
+      {
+        "label": "Create helper methods for queue status",
+        "id": "step7"
+      },
+      {
+        "label": "Test the queue with sample async tasks",
+        "id": "step8"
+      },
+      {
+        "label": "Add error handling for failed tasks",
+        "id": "step9"
+      },
+      {
+        "label": "Create a complete example with logging",
+        "id": "step10"
+      }
+    ]
+  },
+  "source": "content"
+}

@@ -1,0 +1,334 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-angular-123",
+    "track": "angular",
+    "lessonNum": 123,
+    "title": "RBAC Permission Hook",
+    "shortName": "P123",
+    "intro": {
+      "tag": "LESSON #123",
+      "title": "RBAC Permission Hook",
+      "body": "In this lesson, you will build a reusable custom hook in Angular that checks user permissions based on Role-Based Access Control (RBAC). You will learn how to use Angular's dependency injection and RxJS to create a service that provides role data and a hook that consumes it to conditionally render UI elements. The main technologies involved are Angular services, TypeScript interfaces, and RxJS Observables for reactive state management. By the end, you'll have a functional permission hook that can be used to secure parts of your application based on user roles.",
+      "usecase": "In real-world applications like enterprise dashboards or admin panels, different users (e.g., admins, managers, regular users) need to see and interact with different UI elements based on their roles. For instance, an admin might see a 'Delete User' button or a 'System Settings' menu option, while a regular user does not. Implementing an RBAC permission hook allows developers to cleanly encapsulate this logic, conditionally rendering buttons, forms, or entire dashboard sections without cluttering components with repetitive permission checks. This pattern is essential for building secure, maintainable applications where UI visibility and functionality must dynamically adapt to user permissions."
+    },
+    "objectives": [
+      "Construct a custom Angular hook that encapsulates role-based access control logic.",
+      "Initialize and manage reactive state within the hook to track user permissions.",
+      "Integrate the permission hook into a component to conditionally control UI rendering.",
+      "Manipulate permission data to evaluate user access for specific actions or views.",
+      "Apply the hook to bind permission checks to structural directives like *ngIf.",
+      "Configure the hook to respond dynamically to changes in user roles or permissions.",
+      "Implement a service to provide role and permission data to the hook."
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 9",
+        "title": "Import Angular modules and dependencies",
+        "instruction": "Import Component, Injectable, and OnInit from '@angular/core'",
+        "hint": "Use the import statement with curly braces to import multiple symbols from the Angular core module.",
+        "analogousExample": "// Importing multiple Angular core features\nimport { Component, Injectable, OnInit } from '@angular/core';",
+        "seedCode": "// Import the required Angular modules and dependencies",
+        "expectedOutcome": "The Angular core features needed for creating services and components are imported.",
+        "successCriteria": [
+          "Component, Injectable, and OnInit are imported from '@angular/core'"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're importing all three symbols: Component, Injectable, and OnInit from '@angular/core'.",
+        "feedbackWrong": "The imports are not quite right. Remember to import Component, Injectable, and OnInit from the '@angular/core' module.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "Component",
+            "Injectable",
+            "OnInit",
+            "@angular/core"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 9",
+        "title": "Create a PermissionService with role-based logic",
+        "instruction": "Create an Angular service called PermissionService with a method named hasPermission that takes a user role and a required permission, and returns a boolean indicating if the user has that permission.",
+        "hint": "Use the @Injectable decorator to make the service injectable. The hasPermission method should compare the user's role against the required permission.",
+        "analogousExample": "// Example: A simple service with a method\n@Injectable({\n  providedIn: 'root'\n})\nexport class ExampleService {\n  exampleMethod(param: string): boolean {\n    return param === 'expected';\n  }\n}",
+        "seedCode": "// Import the required Angular modules and dependencies\n\n// Create the PermissionService here",
+        "expectedOutcome": "You will have a PermissionService class with a hasPermission method that implements basic RBAC logic.",
+        "successCriteria": [
+          "PermissionService is created with @Injectable decorator and has a hasPermission method that accepts role and permission parameters and returns a boolean."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your service has the @Injectable decorator and the hasPermission method with proper parameters and return type.",
+        "feedbackWrong": "The service doesn't match the requirements. Remember to create a PermissionService class with @Injectable decorator and a hasPermission method that takes role and permission parameters.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "PermissionService",
+            "@Injectable",
+            "hasPermission",
+            "role",
+            "permission",
+            "boolean"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 9",
+        "title": "Define user roles and permissions interface",
+        "instruction": "Below the PermissionService class, create a TypeScript interface named 'UserRole' with a 'name' property of type string and a 'permissions' property that is an array of strings.",
+        "hint": "Use the 'interface' keyword followed by the interface name and define the properties with their types.",
+        "analogousExample": "// Example interface definition\ninterface Product {\n  id: number;\n  name: string;\n  price: number;\n}",
+        "seedCode": "// Import the required Angular modules and dependencies\n\n// Create the PermissionService here\n\n// Define the UserRole interface below",
+        "expectedOutcome": "A UserRole interface is created with proper TypeScript type definitions for role-based access control.",
+        "successCriteria": [
+          "The UserRole interface exists with 'name: string' and 'permissions: string[]' properties."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started defining the interface, but make sure it has both 'name' (string) and 'permissions' (string array) properties.",
+        "feedbackWrong": "The UserRole interface is not properly defined. Remember to use the 'interface' keyword and include both required properties with correct types.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "interface",
+            "UserRole",
+            "name:",
+            "string",
+            "permissions:",
+            "string[]"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 9",
+        "title": "Implement permission check method in service",
+        "instruction": "Add a hasPermission method to your PermissionService that takes a permission string and returns a boolean.",
+        "hint": "Define a method that accepts a permission parameter and returns true or false based on role logic.",
+        "analogousExample": "// Similar: a method that checks access\nhasAccess(resource: string): boolean {\n  return this.userRole === 'admin';\n}",
+        "seedCode": "// Import the required Angular modules and dependencies\n\n// Create the PermissionService here\n\n// Define the UserRole interface below\n\n// Add the hasPermission method to PermissionService",
+        "expectedOutcome": "The PermissionService will have a hasPermission method that can check permissions.",
+        "successCriteria": [
+          "PermissionService contains a hasPermission method that accepts a string and returns a boolean."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added a method, but make sure it accepts a permission string and returns a boolean.",
+        "feedbackWrong": "The hasPermission method is missing or doesn't match the required signature.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "hasPermission",
+            "permission",
+            "boolean"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 9",
+        "title": "Create a PermissionDirective for template-level checks",
+        "instruction": "Create an Angular directive named PermissionDirective that will be used to conditionally show or hide elements in templates based on user permissions.",
+        "hint": "Use the @Directive decorator to define a directive. You'll need to inject the PermissionService and implement the logic later.",
+        "analogousExample": "// Example: creating a basic directive\n@Directive({\n  selector: '[appHighlight]'\n})\nexport class HighlightDirective {\n  constructor(private el: ElementRef) {}\n}",
+        "seedCode": "// Import the required Angular modules and dependencies\n\n// Create the PermissionService here\n\n// Define the UserRole interface below\n\n// Add the hasPermission method to PermissionService\n\n// Create the PermissionDirective below",
+        "expectedOutcome": "A PermissionDirective class is created with the @Directive decorator, ready to be implemented with permission logic.",
+        "successCriteria": [
+          "The PermissionDirective class is defined with the @Directive decorator and has a basic structure."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started creating the directive, but make sure it has the @Directive decorator and is properly exported as a class.",
+        "feedbackWrong": "The directive wasn't created correctly. Remember to use the @Directive decorator and export a class named PermissionDirective.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "@Directive",
+            "PermissionDirective",
+            "export",
+            "class"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 9",
+        "title": "Set up the main component structure",
+        "instruction": "Create a new Angular component class named 'PermissionDemoComponent' with the basic structure including the @Component decorator and an empty template.",
+        "hint": "Use the @Component decorator from '@angular/core' to define the component metadata, including a selector and an empty template string.",
+        "analogousExample": "// Example of a basic Angular component\nimport { Component } from '@angular/core';\n\n@Component({\n  selector: 'app-example',\n  template: ''\n})\nexport class ExampleComponent {}",
+        "seedCode": "// Import the required Angular modules and dependencies\n\n// Create the PermissionService here\n\n// Define the UserRole interface below\n\n// Add the hasPermission method to PermissionService\n\n// Create the PermissionDirective below\n\n// Create the PermissionDemoComponent below",
+        "expectedOutcome": "A new component class named PermissionDemoComponent is created with the @Component decorator and basic structure.",
+        "successCriteria": [
+          "The PermissionDemoComponent class is defined with @Component decorator, a selector, and an empty template."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the component, but make sure to include the @Component decorator with selector and template properties.",
+        "feedbackWrong": "The component structure isn't complete. Remember to create a class named PermissionDemoComponent with the @Component decorator.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "PermissionDemoComponent",
+            "@Component",
+            "selector",
+            "template"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 9",
+        "title": "Initialize user role state in component",
+        "instruction": "In the PermissionDemoComponent class, add a property called currentUserRole and initialize it with a default role value like 'user'.",
+        "hint": "Add a public property in the component class with type annotation (e.g., currentUserRole: UserRole = 'user').",
+        "analogousExample": "// Example: component property initialization\nclass ExampleComponent {\n  currentStatus: string = 'active';\n}",
+        "seedCode": "// Import the required Angular modules and dependencies\n\n// Create the PermissionService here\n\n// Define the UserRole interface below\n\n// Add the hasPermission method to PermissionService\n\n// Create the PermissionDirective below\n\n// Create the PermissionDemoComponent below\nclass PermissionDemoComponent {\n  // Add currentUserRole property here\n}",
+        "expectedOutcome": "The component now has a currentUserRole property initialized with a default role value.",
+        "successCriteria": [
+          "The PermissionDemoComponent class contains a currentUserRole property with a default role value assignment."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you've added a currentUserRole property with a default value in the component class.",
+        "feedbackWrong": "The component doesn't have a properly initialized currentUserRole property. Try adding a property with a default role value.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "currentUserRole",
+            "=",
+            "'user'",
+            ":",
+            "UserRole"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 9",
+        "title": "Inject PermissionService into component",
+        "instruction": "Inject the PermissionService into the PermissionDemoComponent constructor to make it available for use.",
+        "hint": "Add a constructor parameter with the PermissionService type and Angular will handle the dependency injection automatically.",
+        "analogousExample": "// Example: injecting a service\nclass ExampleComponent {\n  constructor(private exampleService: ExampleService) {}\n}",
+        "seedCode": "// Import the required Angular modules and dependencies\n\n// Create the PermissionService here\n\n// Define the UserRole interface below\n\n// Add the hasPermission method to PermissionService\n\n// Create the PermissionDirective below\n\n// Create the PermissionDemoComponent below\nclass PermissionDemoComponent {\n  // Add currentUserRole property here\n  \n  constructor() {}\n}",
+        "expectedOutcome": "The PermissionDemoComponent constructor now has a parameter that injects the PermissionService.",
+        "successCriteria": [
+          "PermissionService is injected as a constructor parameter",
+          "The service parameter has the correct type"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure the PermissionService is properly typed as a constructor parameter.",
+        "feedbackWrong": "The PermissionService needs to be injected as a constructor parameter with the correct type. Try adding 'private permissionService: PermissionService' to the constructor.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "constructor",
+            "PermissionService",
+            "permissionService"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 9",
+        "title": "Create template with permission-based elements",
+        "instruction": "In the PermissionDemoComponent template, add a button that uses the PermissionDirective to conditionally render based on the 'edit' permission.",
+        "hint": "Use the *appPermission structural directive with the required permission and role parameters.",
+        "analogousExample": "<!-- Example: Button with permission check -->\n<button *appPermission=\"'delete'; role: currentUserRole\">Delete Item</button>",
+        "seedCode": "// Import the required Angular modules and dependencies\n\n// Create the PermissionService here\n\n// Define the UserRole interface below\n\n// Add the hasPermission method to PermissionService\n\n// Create the PermissionDirective below\n\n// Create the PermissionDemoComponent below\nclass PermissionDemoComponent {\n  // Add currentUserRole property here\n  \n  constructor() {}\n}\n\n// Add your template with permission-based button here",
+        "expectedOutcome": "A button element that only appears when the current user role has 'edit' permission.",
+        "successCriteria": [
+          "Button element exists",
+          "Uses *appPermission directive",
+          "Permission parameter is 'edit'",
+          "Role parameter binds to currentUserRole"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure the button uses the *appPermission directive with both permission and role parameters.",
+        "feedbackWrong": "The template doesn't include the required permission-based button. Review how to use the PermissionDirective.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "button",
+            "*appPermission",
+            "'edit'",
+            "currentUserRole"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import Angular modules and dependencies",
+        "id": "step1"
+      },
+      {
+        "label": "Create a PermissionService with role-based logic",
+        "id": "step2"
+      },
+      {
+        "label": "Define user roles and permissions interface",
+        "id": "step3"
+      },
+      {
+        "label": "Implement permission check method in service",
+        "id": "step4"
+      },
+      {
+        "label": "Create a PermissionDirective for template-level checks",
+        "id": "step5"
+      },
+      {
+        "label": "Set up the main component structure",
+        "id": "step6"
+      },
+      {
+        "label": "Initialize user role state in component",
+        "id": "step7"
+      },
+      {
+        "label": "Inject PermissionService into component",
+        "id": "step8"
+      },
+      {
+        "label": "Create template with permission-based elements",
+        "id": "step9"
+      }
+    ]
+  },
+  "source": "content"
+}

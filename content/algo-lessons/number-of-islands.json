@@ -1,0 +1,895 @@
+{
+  "id": "number-of-islands",
+  "title": "Number of Islands",
+  "pattern": "graph",
+  "difficulty": "medium",
+  "language": "javascript",
+  "status": "draft",
+  "flow": [
+    {
+      "stepId": "title",
+      "mentorSays": "At the end of this lesson, you will be able to:\n\n1. Understand what the Number of Islands lesson asks for\n2. Use DFS (Depth-First Search) to explore connected land cells\n3. Mark visited cells to avoid counting islands multiple times\n4. Handle 2D grid traversal with boundary checks\n5. Implement the solution step by step in your chosen language",
+      "action": "continue",
+      "next": "lesson-illustration"
+    },
+    {
+      "stepId": "lesson-illustration",
+      "mentorSays": "Perfect! Now let's understand what the Number of Islands lesson is asking.\n\n**Lesson Definition:**\nGiven an `m x n` 2D binary grid `grid` which represents a map of '1's (land) and '0's (water), return the number of islands.\n\nAn island is surrounded by water and is formed by connecting adjacent lands horizontally or vertically. You may assume all four edges of the grid are all surrounded by water.\n\n**Key Observations:**\n- '1' represents land, '0' represents water\n- Islands are connected horizontally or vertically (not diagonally)\n- We need to count distinct connected components of '1's\n- We should mark visited cells to avoid counting the same island multiple times\n\n**Example 1:**\ngrid = [\n  [\"1\",\"1\",\"1\",\"1\",\"0\"],\n  [\"1\",\"1\",\"0\",\"1\",\"0\"],\n  [\"1\",\"1\",\"0\",\"0\",\"0\"],\n  [\"0\",\"0\",\"0\",\"0\",\"0\"]\n]\n\nVisual representation:\n1 1 1 1 0\n1 1 0 1 0\n1 1 0 0 0\n0 0 0 0 0\n\nThere is one island (all connected '1's in the top-left region).\nAnswer: 1\n\n**Example 2:**\ngrid = [\n  [\"1\",\"1\",\"0\",\"0\",\"0\"],\n  [\"1\",\"1\",\"0\",\"0\",\"0\"],\n  [\"0\",\"0\",\"1\",\"0\",\"0\"],\n  [\"0\",\"0\",\"0\",\"1\",\"1\"]\n]\n\nVisual representation:\n1 1 0 0 0\n1 1 0 0 0\n0 0 1 0 0\n0 0 0 1 1\n\nThere are three islands:\n- Island 1: Top-left (4 connected '1's)\n- Island 2: Middle (1 '1')\n- Island 3: Bottom-right (2 connected '1's)\n\nAnswer: 3\n\n**Step-by-step trace for Example 2 (DFS approach):**\n\ngrid = [\n  [\"1\",\"1\",\"0\",\"0\",\"0\"],\n  [\"1\",\"1\",\"0\",\"0\",\"0\"],\n  [\"0\",\"0\",\"1\",\"0\",\"0\"],\n  [\"0\",\"0\",\"0\",\"1\",\"1\"]\n]\n\nWe'll use DFS to explore each island:\n- **Island 1**: Start at (0,0), DFS explores all connected '1's, marks them as visited\n  - Visit (0,0) → (0,1) → (1,0) → (1,1)\n  - Count: 1 island\n- **Island 2**: Next unvisited '1' at (2,2), DFS explores it\n  - Visit (2,2)\n  - Count: 2 islands\n- **Island 3**: Next unvisited '1' at (3,3), DFS explores connected '1's\n  - Visit (3,3) → (3,4)\n  - Count: 3 islands\n\n**Key Insight:**\nWe traverse the grid, and whenever we find an unvisited '1', we:\n1. Increment the island count\n2. Use DFS to mark all connected '1's as visited\n\nThis ensures we count each island exactly once!\n\n**What makes this tricky:**\n1. Understanding that islands are connected components\n2. Marking visited cells (can modify grid or use visited set)\n3. Boundary checks when exploring neighbors (up, down, left, right)\n4. DFS recursion or iterative approach\n\n**Common pitfalls:**\n- Not marking visited cells (counts same island multiple times)\n- Forgetting boundary checks (array out of bounds)\n- Exploring diagonally (should only be horizontal/vertical)\n- Not handling edge cases (empty grid, all water, all land)",
+      "example": "Example 1:\n1 1 1 1 0\n1 1 0 1 0\n1 1 0 0 0\n0 0 0 0 0\n\n1 island\n\nExample 2:\n1 1 0 0 0\n1 1 0 0 0\n0 0 1 0 0\n0 0 0 1 1\n\n3 islands\n\nExample 3:\n0 0 0\n0 0 0\n\n0 islands",
+      "action": "continue",
+      "next": "thinking-challenge"
+    },
+    {
+      "stepId": "thinking-challenge",
+      "mentorSays": "Now that you understand what the lesson wants, here's the real question:\n\nHow would YOU count the number of islands in a 2D grid?\n\nThink about it for a moment. What approach feels natural to you?",
+      "choices": [
+        {
+          "label": "Use DFS to explore each island and mark visited cells",
+          "next": "explore-dfs"
+        },
+        {
+          "label": "Use BFS to explore each island level by level",
+          "next": "explore-bfs"
+        },
+        {
+          "label": "Check each cell and count islands manually",
+          "next": "explore-manual"
+        }
+      ]
+    },
+    {
+      "stepId": "explore-manual",
+      "mentorSays": "That's a straightforward approach! You're thinking: \"I'll check each cell and try to identify islands.\"\n\nThis is tricky because you need to track which cells belong to which island, and avoid counting the same island multiple times.\n\nThere's a more systematic approach using DFS or BFS that automatically handles connected components. Would you like to learn that?",
+      "action": "continue",
+      "next": "explore-dfs"
+    },
+    {
+      "stepId": "explore-bfs",
+      "mentorSays": "That's a great approach! You're thinking: \"I'll use BFS (Breadth-First Search) to explore each island level by level.\"\n\nThis works perfectly! BFS uses a queue and explores neighbors level by level. However, it requires a queue data structure.\n\nDFS is equally effective and can be simpler to implement (especially recursively). Would you like to learn the DFS approach?",
+      "action": "continue",
+      "next": "explore-dfs"
+    },
+    {
+      "stepId": "explore-dfs",
+      "mentorSays": "Excellent choice! DFS (Depth-First Search) is perfect for this lesson. Here's the core idea:\n\n**The Algorithm:**\n1. **Traverse the grid**: For each cell (i, j)\n2. **If cell is '1' and unvisited**:\n   - Increment island count\n   - Use DFS to mark all connected '1's as visited\n3. **DFS function**:\n   - Mark current cell as visited (change '1' to '0' or use visited set)\n   - Recursively explore all 4 neighbors (up, down, left, right)\n   - Only explore if neighbor is within bounds and is '1'\n4. **Return island count**\n\n**Why it works**:\n- Each time we find an unvisited '1', it's the start of a new island\n- DFS explores all connected '1's, marking them as visited\n- This ensures we count each island exactly once\n\n**Key insight**: We can modify the grid in-place (change '1' to '0') to mark visited cells, avoiding the need for a separate visited set!\n\nLet's trace with grid:\n1 1 0 0 0\n1 1 0 0 0\n0 0 1 0 0\n0 0 0 1 1\n\n- **Cell (0,0)**: Found '1', start DFS, mark connected cells, count = 1\n- **Cell (0,1)**: Already visited (marked as '0')\n- **Cell (0,2)**: '0', skip\n- **Cell (2,2)**: Found '1', start DFS, mark it, count = 2\n- **Cell (3,3)**: Found '1', start DFS, mark connected, count = 3\n\n**Return 3** ✓\n\nThis is O(m*n) time and O(m*n) space (for recursion stack in worst case)! Now let's code it step by step.",
+      "action": "continue",
+      "next": "language-selection"
+    },
+    {
+      "stepId": "language-selection",
+      "mentorSays": "Great! Now let's code this solution. Which programming language would you like to use?",
+      "choices": [
+        {
+          "label": "JavaScript",
+          "next": "variable-check-js"
+        },
+        {
+          "label": "Python",
+          "next": "variable-check-python"
+        },
+        {
+          "label": "Java",
+          "next": "variable-check-java"
+        },
+        {
+          "label": "C++",
+          "next": "variable-check-cpp"
+        },
+        {
+          "label": "TypeScript",
+          "next": "variable-check-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-check-js",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-js"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-js",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'count' or 'i') and put data inside it.",
+      "example": "let count = 0;  // Island count\nlet i = 0;      // Row index",
+      "action": "continue",
+      "next": "function-check-js"
+    },
+    {
+      "stepId": "function-check-js",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-js"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-js",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "function numIslands(grid) {\n  // Returns number of islands\n  return 0;\n}",
+      "action": "continue",
+      "next": "parameter-check-js"
+    },
+    {
+      "stepId": "parameter-check-js",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "array-check-js"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-js",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'function numIslands(grid)', the 'grid' is a parameter that receives the 2D grid.",
+      "example": "function numIslands(grid) {\n  // Parameter receives 2D grid\n}\n\n// Call: numIslands([[\"1\",\"1\"],[\"0\",\"1\"]])",
+      "action": "continue",
+      "next": "array-check-js"
+    },
+    {
+      "stepId": "array-check-js",
+      "mentorSays": "To solve this lesson, we'll need to work with 2D arrays (grids). Do you know what a 2D array is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know 2D arrays",
+          "next": "recursion-check-js"
+        },
+        {
+          "label": "No, explain 2D arrays",
+          "next": "array-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "array-explanation-js",
+      "mentorSays": "A 2D array is an array of arrays. Each element is itself an array. We access elements using two indices: row and column.\n\nFor example, grid[0][1] means: row 0, column 1.",
+      "example": "grid = [[\"1\",\"1\"], [\"0\",\"1\"]];\n\ngrid[0][0] = \"1\"  // Row 0, Column 0\ngrid[0][1] = \"1\"  // Row 0, Column 1\ngrid[1][0] = \"0\"  // Row 1, Column 0",
+      "action": "continue",
+      "next": "recursion-check-js"
+    },
+    {
+      "stepId": "recursion-check-js",
+      "mentorSays": "To solve this lesson, we'll use recursion (DFS). Do you know what recursion is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know recursion",
+          "next": "coding-start-js"
+        },
+        {
+          "label": "No, explain recursion",
+          "next": "recursion-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "recursion-explanation-js",
+      "mentorSays": "Recursion is when a function calls itself. For DFS, we use recursion to explore neighbors: when we visit a cell, we recursively visit its unvisited neighbors.",
+      "example": "function dfs(grid, i, j) {\n  // Mark as visited\n  grid[i][j] = '0';\n  \n  // Recursively visit neighbors\n  dfs(grid, i-1, j);  // Up\n  dfs(grid, i+1, j);  // Down\n  dfs(grid, i, j-1);  // Left\n  dfs(grid, i, j+1);  // Right\n}",
+      "action": "continue",
+      "next": "coding-start-js"
+    },
+    {
+      "stepId": "coding-start-js",
+      "mentorSays": "Perfect! Let's implement the number of islands solution in JavaScript. We'll create a function that takes a 2D grid and returns the number of islands.",
+      "example": "function numIslands(grid) {\n  \n}",
+      "action": "continue",
+      "next": "coding-init-js"
+    },
+    {
+      "stepId": "coding-init-js",
+      "mentorSays": "First, initialize a counter to track the number of islands. We'll also need a helper function for DFS.",
+      "example": "function numIslands(grid) {\n  let count = 0;\n  \n  // Helper function for DFS will go here\n  \n}",
+      "action": "continue",
+      "next": "coding-traverse-grid-js"
+    },
+    {
+      "stepId": "coding-traverse-grid-js",
+      "mentorSays": "Create nested loops to traverse every cell in the grid.",
+      "example": "function numIslands(grid) {\n  let count = 0;\n  \n  // Traverse every cell\n  for (let i = 0; i < grid.length; i++) {\n    for (let j = 0; j < grid[0].length; j++) {\n      // Check if this is land\n    }\n  }\n  \n}",
+      "action": "continue",
+      "next": "coding-check-land-js"
+    },
+    {
+      "stepId": "coding-check-land-js",
+      "mentorSays": "Inside the loops, check if the current cell is '1' (land). If so, increment count and start DFS to mark all connected land.",
+      "example": "function numIslands(grid) {\n  let count = 0;\n  \n  for (let i = 0; i < grid.length; i++) {\n    for (let j = 0; j < grid[0].length; j++) {\n      if (grid[i][j] === '1') {\n        count++;\n        // Start DFS to mark all connected land\n        dfs(grid, i, j);\n      }\n    }\n  }\n  \n  return count;\n}",
+      "action": "continue",
+      "next": "coding-dfs-helper-js"
+    },
+    {
+      "stepId": "coding-dfs-helper-js",
+      "mentorSays": "Create the DFS helper function. It should mark the current cell as visited and recursively explore neighbors.",
+      "example": "function numIslands(grid) {\n  let count = 0;\n  \n  function dfs(grid, i, j) {\n    // Mark as visited by changing '1' to '0'\n    grid[i][j] = '0';\n    \n    // Explore neighbors here\n  }\n  \n  for (let i = 0; i < grid.length; i++) {\n    for (let j = 0; j < grid[0].length; j++) {\n      if (grid[i][j] === '1') {\n        count++;\n        dfs(grid, i, j);\n      }\n    }\n  }\n  \n  return count;\n}",
+      "action": "continue",
+      "next": "coding-boundary-check-js"
+    },
+    {
+      "stepId": "coding-boundary-check-js",
+      "mentorSays": "In the DFS function, add boundary checks. Only explore if the cell is within grid bounds and is '1'.",
+      "example": "function numIslands(grid) {\n  let count = 0;\n  \n  function dfs(grid, i, j) {\n    // Boundary check: must be within grid and be '1'\n    if (i < 0 || i >= grid.length || j < 0 || j >= grid[0].length || grid[i][j] === '0') {\n      return;\n    }\n    \n    grid[i][j] = '0';\n    \n  }\n  \n  for (let i = 0; i < grid.length; i++) {\n    for (let j = 0; j < grid[0].length; j++) {\n      if (grid[i][j] === '1') {\n        count++;\n        dfs(grid, i, j);\n      }\n    }\n  }\n  \n  return count;\n}",
+      "action": "continue",
+      "next": "coding-explore-neighbors-js"
+    },
+    {
+      "stepId": "coding-explore-neighbors-js",
+      "mentorSays": "After marking current cell, recursively explore all 4 neighbors: up, down, left, right.",
+      "example": "function numIslands(grid) {\n  let count = 0;\n  \n  function dfs(grid, i, j) {\n    if (i < 0 || i >= grid.length || j < 0 || j >= grid[0].length || grid[i][j] === '0') {\n      return;\n    }\n    \n    grid[i][j] = '0';\n    \n    // Explore all 4 neighbors\n    dfs(grid, i - 1, j);  // Up\n    dfs(grid, i + 1, j);  // Down\n    dfs(grid, i, j - 1);  // Left\n    dfs(grid, i, j + 1);  // Right\n  }\n  \n  for (let i = 0; i < grid.length; i++) {\n    for (let j = 0; j < grid[0].length; j++) {\n      if (grid[i][j] === '1') {\n        count++;\n        dfs(grid, i, j);\n      }\n    }\n  }\n  \n  return count;\n}",
+      "action": "continue",
+      "next": "test-code-js"
+    },
+    {
+      "stepId": "test-code-js",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** grid = [[\"1\",\"1\",\"1\",\"1\",\"0\"], [\"1\",\"1\",\"0\",\"1\",\"0\"], [\"1\",\"1\",\"0\",\"0\",\"0\"], [\"0\",\"0\",\"0\",\"0\",\"0\"]]\nExpected: 1 (one island)\n\n**Test 2:** grid = [[\"1\",\"1\",\"0\",\"0\",\"0\"], [\"1\",\"1\",\"0\",\"0\",\"0\"], [\"0\",\"0\",\"1\",\"0\",\"0\"], [\"0\",\"0\",\"0\",\"1\",\"1\"]]\nExpected: 3 (three islands)\n\n**Test 3:** grid = [[\"0\",\"0\",\"0\"], [\"0\",\"0\",\"0\"]]\nExpected: 0 (no islands)\n\n**Test 4:** grid = [[\"1\",\"1\",\"1\"], [\"1\",\"1\",\"1\"], [\"1\",\"1\",\"1\"]]\nExpected: 1 (one large island)\n\n**Test 5:** grid = [[\"1\"]]\nExpected: 1 (single cell island)\n\n**Test 6:** grid = [[\"0\"]]\nExpected: 0 (single cell water)\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: [[\"1\",\"1\",\"1\",\"1\",\"0\"], ...] → 1\nTest 2: [[\"1\",\"1\",\"0\",\"0\",\"0\"], ...] → 3\nTest 3: [[\"0\",\"0\",\"0\"], ...] → 0\nTest 4: [[\"1\",\"1\",\"1\"], ...] → 1\nTest 5: [[\"1\"]] → 1\nTest 6: [[\"0\"]] → 0",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-python",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-python"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-python",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'count' or 'i') and put data inside it.",
+      "example": " count = 0;  // Island count\n i = 0;      // Row index",
+      "action": "continue",
+      "next": "function-check-python"
+    },
+    {
+      "stepId": "function-check-python",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-python"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-python",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "def numIslands(grid) {\n  // Returns number of islands\n  return 0;\n}",
+      "action": "continue",
+      "next": "parameter-check-python"
+    },
+    {
+      "stepId": "parameter-check-python",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "array-check-python"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-python",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'def numIslands(grid)', the 'grid' is a parameter that receives the 2D grid.",
+      "example": "def numIslands(grid) {\n  // Parameter receives 2D grid\n}\n\n// Call: numIslands([[\"1\",\"1\"],[\"0\",\"1\"]])",
+      "action": "continue",
+      "next": "array-check-python"
+    },
+    {
+      "stepId": "array-check-python",
+      "mentorSays": "To solve this lesson, we'll need to work with 2D arrays (grids). Do you know what a 2D array is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know 2D arrays",
+          "next": "recursion-check-python"
+        },
+        {
+          "label": "No, explain 2D arrays",
+          "next": "array-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "array-explanation-python",
+      "mentorSays": "A 2D array is an array of arrays. Each element is itself an array. We access elements using two indices: row and column.\n\nFor example, grid[0][1] means: row 0, column 1.",
+      "example": "grid = [[\"1\",\"1\"], [\"0\",\"1\"]];\n\ngrid[0][0] = \"1\"  // Row 0, Column 0\ngrid[0][1] = \"1\"  // Row 0, Column 1\ngrid[1][0] = \"0\"  // Row 1, Column 0",
+      "action": "continue",
+      "next": "recursion-check-python"
+    },
+    {
+      "stepId": "recursion-check-python",
+      "mentorSays": "To solve this lesson, we'll use recursion (DFS). Do you know what recursion is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know recursion",
+          "next": "coding-start-python"
+        },
+        {
+          "label": "No, explain recursion",
+          "next": "recursion-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "recursion-explanation-python",
+      "mentorSays": "Recursion is when a function calls itself. For DFS, we use recursion to explore neighbors: when we visit a cell, we recursively visit its unvisited neighbors.",
+      "example": "function dfs(grid, i, j) {\n  // Mark as visited\n  grid[i][j] = '0';\n  \n  // Recursively visit neighbors\n  dfs(grid, i-1, j);  // Up\n  dfs(grid, i+1, j);  // Down\n  dfs(grid, i, j-1);  // Left\n  dfs(grid, i, j+1);  // Right\n}",
+      "action": "continue",
+      "next": "coding-start-python"
+    },
+    {
+      "stepId": "coding-start-python",
+      "mentorSays": "Perfect! Let's implement the solution in Python.",
+      "example": "// Python implementation",
+      "action": "continue",
+      "next": "coding-init-python"
+    },
+    {
+      "stepId": "coding-init-python",
+      "mentorSays": "Initialize island count.",
+      "example": "// Python implementation",
+      "action": "continue",
+      "next": "coding-traverse-grid-python"
+    },
+    {
+      "stepId": "coding-traverse-grid-python",
+      "mentorSays": "Create nested loops to traverse grid.",
+      "example": "// Python implementation",
+      "action": "continue",
+      "next": "coding-check-land-python"
+    },
+    {
+      "stepId": "coding-check-land-python",
+      "mentorSays": "Check if cell is land, increment count, start DFS.",
+      "example": "// Python implementation",
+      "action": "continue",
+      "next": "coding-dfs-helper-python"
+    },
+    {
+      "stepId": "coding-dfs-helper-python",
+      "mentorSays": "Create DFS helper function.",
+      "example": "// Python implementation",
+      "action": "continue",
+      "next": "coding-boundary-check-python"
+    },
+    {
+      "stepId": "coding-boundary-check-python",
+      "mentorSays": "Add boundary checks in DFS.",
+      "example": "// Python implementation",
+      "action": "continue",
+      "next": "coding-explore-neighbors-python"
+    },
+    {
+      "stepId": "coding-explore-neighbors-python",
+      "mentorSays": "Explore all 4 neighbors recursively.",
+      "example": "// Python implementation",
+      "action": "continue",
+      "next": "test-code-python"
+    },
+    {
+      "stepId": "test-code-python",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** grid = [[\"1\",\"1\",\"1\",\"1\",\"0\"], [\"1\",\"1\",\"0\",\"1\",\"0\"], [\"1\",\"1\",\"0\",\"0\",\"0\"], [\"0\",\"0\",\"0\",\"0\",\"0\"]]\nExpected: 1 (one island)\n\n**Test 2:** grid = [[\"1\",\"1\",\"0\",\"0\",\"0\"], [\"1\",\"1\",\"0\",\"0\",\"0\"], [\"0\",\"0\",\"1\",\"0\",\"0\"], [\"0\",\"0\",\"0\",\"1\",\"1\"]]\nExpected: 3 (three islands)\n\n**Test 3:** grid = [[\"0\",\"0\",\"0\"], [\"0\",\"0\",\"0\"]]\nExpected: 0 (no islands)\n\n**Test 4:** grid = [[\"1\",\"1\",\"1\"], [\"1\",\"1\",\"1\"], [\"1\",\"1\",\"1\"]]\nExpected: 1 (one large island)\n\n**Test 5:** grid = [[\"1\"]]\nExpected: 1 (single cell island)\n\n**Test 6:** grid = [[\"0\"]]\nExpected: 0 (single cell water)\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: [[\"1\",\"1\",\"1\",\"1\",\"0\"], ...] → 1\nTest 2: [[\"1\",\"1\",\"0\",\"0\",\"0\"], ...] → 3\nTest 3: [[\"0\",\"0\",\"0\"], ...] → 0\nTest 4: [[\"1\",\"1\",\"1\"], ...] → 1\nTest 5: [[\"1\"]] → 1\nTest 6: [[\"0\"]] → 0",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-java",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-java"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-java",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'count' or 'i') and put data inside it.",
+      "example": "int count = 0;  // Island count\nint i = 0;      // Row index",
+      "action": "continue",
+      "next": "function-check-java"
+    },
+    {
+      "stepId": "function-check-java",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-java"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-java",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "public int numIslands(grid) {\n  // Returns number of islands\n  return 0;\n}",
+      "action": "continue",
+      "next": "parameter-check-java"
+    },
+    {
+      "stepId": "parameter-check-java",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "array-check-java"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-java",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'public int numIslands(grid)', the 'grid' is a parameter that receives the 2D grid.",
+      "example": "public int numIslands(grid) {\n  // Parameter receives 2D grid\n}\n\n// Call: numIslands([[\"1\",\"1\"],[\"0\",\"1\"]])",
+      "action": "continue",
+      "next": "array-check-java"
+    },
+    {
+      "stepId": "array-check-java",
+      "mentorSays": "To solve this lesson, we'll need to work with 2D arrays (grids). Do you know what a 2D array is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know 2D arrays",
+          "next": "recursion-check-java"
+        },
+        {
+          "label": "No, explain 2D arrays",
+          "next": "array-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "array-explanation-java",
+      "mentorSays": "A 2D array is an array of arrays. Each element is itself an array. We access elements using two indices: row and column.\n\nFor example, grid[0][1] means: row 0, column 1.",
+      "example": "grid = [[\"1\",\"1\"], [\"0\",\"1\"]];\n\ngrid[0][0] = \"1\"  // Row 0, Column 0\ngrid[0][1] = \"1\"  // Row 0, Column 1\ngrid[1][0] = \"0\"  // Row 1, Column 0",
+      "action": "continue",
+      "next": "recursion-check-java"
+    },
+    {
+      "stepId": "recursion-check-java",
+      "mentorSays": "To solve this lesson, we'll use recursion (DFS). Do you know what recursion is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know recursion",
+          "next": "coding-start-java"
+        },
+        {
+          "label": "No, explain recursion",
+          "next": "recursion-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "recursion-explanation-java",
+      "mentorSays": "Recursion is when a function calls itself. For DFS, we use recursion to explore neighbors: when we visit a cell, we recursively visit its unvisited neighbors.",
+      "example": "function dfs(grid, i, j) {\n  // Mark as visited\n  grid[i][j] = '0';\n  \n  // Recursively visit neighbors\n  dfs(grid, i-1, j);  // Up\n  dfs(grid, i+1, j);  // Down\n  dfs(grid, i, j-1);  // Left\n  dfs(grid, i, j+1);  // Right\n}",
+      "action": "continue",
+      "next": "coding-start-java"
+    },
+    {
+      "stepId": "coding-start-java",
+      "mentorSays": "Perfect! Let's implement the solution in Java.",
+      "example": "// Java implementation",
+      "action": "continue",
+      "next": "coding-init-java"
+    },
+    {
+      "stepId": "coding-init-java",
+      "mentorSays": "Initialize island count.",
+      "example": "// Java implementation",
+      "action": "continue",
+      "next": "coding-traverse-grid-java"
+    },
+    {
+      "stepId": "coding-traverse-grid-java",
+      "mentorSays": "Create nested loops to traverse grid.",
+      "example": "// Java implementation",
+      "action": "continue",
+      "next": "coding-check-land-java"
+    },
+    {
+      "stepId": "coding-check-land-java",
+      "mentorSays": "Check if cell is land, increment count, start DFS.",
+      "example": "// Java implementation",
+      "action": "continue",
+      "next": "coding-dfs-helper-java"
+    },
+    {
+      "stepId": "coding-dfs-helper-java",
+      "mentorSays": "Create DFS helper function.",
+      "example": "// Java implementation",
+      "action": "continue",
+      "next": "coding-boundary-check-java"
+    },
+    {
+      "stepId": "coding-boundary-check-java",
+      "mentorSays": "Add boundary checks in DFS.",
+      "example": "// Java implementation",
+      "action": "continue",
+      "next": "coding-explore-neighbors-java"
+    },
+    {
+      "stepId": "coding-explore-neighbors-java",
+      "mentorSays": "Explore all 4 neighbors recursively.",
+      "example": "// Java implementation",
+      "action": "continue",
+      "next": "test-code-java"
+    },
+    {
+      "stepId": "test-code-java",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** grid = [[\"1\",\"1\",\"1\",\"1\",\"0\"], [\"1\",\"1\",\"0\",\"1\",\"0\"], [\"1\",\"1\",\"0\",\"0\",\"0\"], [\"0\",\"0\",\"0\",\"0\",\"0\"]]\nExpected: 1 (one island)\n\n**Test 2:** grid = [[\"1\",\"1\",\"0\",\"0\",\"0\"], [\"1\",\"1\",\"0\",\"0\",\"0\"], [\"0\",\"0\",\"1\",\"0\",\"0\"], [\"0\",\"0\",\"0\",\"1\",\"1\"]]\nExpected: 3 (three islands)\n\n**Test 3:** grid = [[\"0\",\"0\",\"0\"], [\"0\",\"0\",\"0\"]]\nExpected: 0 (no islands)\n\n**Test 4:** grid = [[\"1\",\"1\",\"1\"], [\"1\",\"1\",\"1\"], [\"1\",\"1\",\"1\"]]\nExpected: 1 (one large island)\n\n**Test 5:** grid = [[\"1\"]]\nExpected: 1 (single cell island)\n\n**Test 6:** grid = [[\"0\"]]\nExpected: 0 (single cell water)\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: [[\"1\",\"1\",\"1\",\"1\",\"0\"], ...] → 1\nTest 2: [[\"1\",\"1\",\"0\",\"0\",\"0\"], ...] → 3\nTest 3: [[\"0\",\"0\",\"0\"], ...] → 0\nTest 4: [[\"1\",\"1\",\"1\"], ...] → 1\nTest 5: [[\"1\"]] → 1\nTest 6: [[\"0\"]] → 0",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-cpp",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-cpp"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-cpp",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'count' or 'i') and put data inside it.",
+      "example": "int count = 0;  // Island count\nint i = 0;      // Row index",
+      "action": "continue",
+      "next": "function-check-cpp"
+    },
+    {
+      "stepId": "function-check-cpp",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-cpp"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-cpp",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "int numIslands(grid) {\n  // Returns number of islands\n  return 0;\n}",
+      "action": "continue",
+      "next": "parameter-check-cpp"
+    },
+    {
+      "stepId": "parameter-check-cpp",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "array-check-cpp"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-cpp",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'int numIslands(grid)', the 'grid' is a parameter that receives the 2D grid.",
+      "example": "int numIslands(grid) {\n  // Parameter receives 2D grid\n}\n\n// Call: numIslands([[\"1\",\"1\"],[\"0\",\"1\"]])",
+      "action": "continue",
+      "next": "array-check-cpp"
+    },
+    {
+      "stepId": "array-check-cpp",
+      "mentorSays": "To solve this lesson, we'll need to work with 2D arrays (grids). Do you know what a 2D array is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know 2D arrays",
+          "next": "recursion-check-cpp"
+        },
+        {
+          "label": "No, explain 2D arrays",
+          "next": "array-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "array-explanation-cpp",
+      "mentorSays": "A 2D array is an array of arrays. Each element is itself an array. We access elements using two indices: row and column.\n\nFor example, grid[0][1] means: row 0, column 1.",
+      "example": "grid = [[\"1\",\"1\"], [\"0\",\"1\"]];\n\ngrid[0][0] = \"1\"  // Row 0, Column 0\ngrid[0][1] = \"1\"  // Row 0, Column 1\ngrid[1][0] = \"0\"  // Row 1, Column 0",
+      "action": "continue",
+      "next": "recursion-check-cpp"
+    },
+    {
+      "stepId": "recursion-check-cpp",
+      "mentorSays": "To solve this lesson, we'll use recursion (DFS). Do you know what recursion is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know recursion",
+          "next": "coding-start-cpp"
+        },
+        {
+          "label": "No, explain recursion",
+          "next": "recursion-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "recursion-explanation-cpp",
+      "mentorSays": "Recursion is when a function calls itself. For DFS, we use recursion to explore neighbors: when we visit a cell, we recursively visit its unvisited neighbors.",
+      "example": "function dfs(grid, i, j) {\n  // Mark as visited\n  grid[i][j] = '0';\n  \n  // Recursively visit neighbors\n  dfs(grid, i-1, j);  // Up\n  dfs(grid, i+1, j);  // Down\n  dfs(grid, i, j-1);  // Left\n  dfs(grid, i, j+1);  // Right\n}",
+      "action": "continue",
+      "next": "coding-start-cpp"
+    },
+    {
+      "stepId": "coding-start-cpp",
+      "mentorSays": "Perfect! Let's implement the solution in C++.",
+      "example": "// C++ implementation",
+      "action": "continue",
+      "next": "coding-init-cpp"
+    },
+    {
+      "stepId": "coding-init-cpp",
+      "mentorSays": "Initialize island count.",
+      "example": "// C++ implementation",
+      "action": "continue",
+      "next": "coding-traverse-grid-cpp"
+    },
+    {
+      "stepId": "coding-traverse-grid-cpp",
+      "mentorSays": "Create nested loops to traverse grid.",
+      "example": "// C++ implementation",
+      "action": "continue",
+      "next": "coding-check-land-cpp"
+    },
+    {
+      "stepId": "coding-check-land-cpp",
+      "mentorSays": "Check if cell is land, increment count, start DFS.",
+      "example": "// C++ implementation",
+      "action": "continue",
+      "next": "coding-dfs-helper-cpp"
+    },
+    {
+      "stepId": "coding-dfs-helper-cpp",
+      "mentorSays": "Create DFS helper function.",
+      "example": "// C++ implementation",
+      "action": "continue",
+      "next": "coding-boundary-check-cpp"
+    },
+    {
+      "stepId": "coding-boundary-check-cpp",
+      "mentorSays": "Add boundary checks in DFS.",
+      "example": "// C++ implementation",
+      "action": "continue",
+      "next": "coding-explore-neighbors-cpp"
+    },
+    {
+      "stepId": "coding-explore-neighbors-cpp",
+      "mentorSays": "Explore all 4 neighbors recursively.",
+      "example": "// C++ implementation",
+      "action": "continue",
+      "next": "test-code-cpp"
+    },
+    {
+      "stepId": "test-code-cpp",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** grid = [[\"1\",\"1\",\"1\",\"1\",\"0\"], [\"1\",\"1\",\"0\",\"1\",\"0\"], [\"1\",\"1\",\"0\",\"0\",\"0\"], [\"0\",\"0\",\"0\",\"0\",\"0\"]]\nExpected: 1 (one island)\n\n**Test 2:** grid = [[\"1\",\"1\",\"0\",\"0\",\"0\"], [\"1\",\"1\",\"0\",\"0\",\"0\"], [\"0\",\"0\",\"1\",\"0\",\"0\"], [\"0\",\"0\",\"0\",\"1\",\"1\"]]\nExpected: 3 (three islands)\n\n**Test 3:** grid = [[\"0\",\"0\",\"0\"], [\"0\",\"0\",\"0\"]]\nExpected: 0 (no islands)\n\n**Test 4:** grid = [[\"1\",\"1\",\"1\"], [\"1\",\"1\",\"1\"], [\"1\",\"1\",\"1\"]]\nExpected: 1 (one large island)\n\n**Test 5:** grid = [[\"1\"]]\nExpected: 1 (single cell island)\n\n**Test 6:** grid = [[\"0\"]]\nExpected: 0 (single cell water)\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: [[\"1\",\"1\",\"1\",\"1\",\"0\"], ...] → 1\nTest 2: [[\"1\",\"1\",\"0\",\"0\",\"0\"], ...] → 3\nTest 3: [[\"0\",\"0\",\"0\"], ...] → 0\nTest 4: [[\"1\",\"1\",\"1\"], ...] → 1\nTest 5: [[\"1\"]] → 1\nTest 6: [[\"0\"]] → 0",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-ts",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-ts"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-ts",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'count' or 'i') and put data inside it.",
+      "example": "let count = 0;  // Island count\nlet i = 0;      // Row index",
+      "action": "continue",
+      "next": "function-check-ts"
+    },
+    {
+      "stepId": "function-check-ts",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-ts"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-ts",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "function numIslands(grid) {\n  // Returns number of islands\n  return 0;\n}",
+      "action": "continue",
+      "next": "parameter-check-ts"
+    },
+    {
+      "stepId": "parameter-check-ts",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "array-check-ts"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-ts",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'function numIslands(grid)', the 'grid' is a parameter that receives the 2D grid.",
+      "example": "function numIslands(grid) {\n  // Parameter receives 2D grid\n}\n\n// Call: numIslands([[\"1\",\"1\"],[\"0\",\"1\"]])",
+      "action": "continue",
+      "next": "array-check-ts"
+    },
+    {
+      "stepId": "array-check-ts",
+      "mentorSays": "To solve this lesson, we'll need to work with 2D arrays (grids). Do you know what a 2D array is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know 2D arrays",
+          "next": "recursion-check-ts"
+        },
+        {
+          "label": "No, explain 2D arrays",
+          "next": "array-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "array-explanation-ts",
+      "mentorSays": "A 2D array is an array of arrays. Each element is itself an array. We access elements using two indices: row and column.\n\nFor example, grid[0][1] means: row 0, column 1.",
+      "example": "grid = [[\"1\",\"1\"], [\"0\",\"1\"]];\n\ngrid[0][0] = \"1\"  // Row 0, Column 0\ngrid[0][1] = \"1\"  // Row 0, Column 1\ngrid[1][0] = \"0\"  // Row 1, Column 0",
+      "action": "continue",
+      "next": "recursion-check-ts"
+    },
+    {
+      "stepId": "recursion-check-ts",
+      "mentorSays": "To solve this lesson, we'll use recursion (DFS). Do you know what recursion is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know recursion",
+          "next": "coding-start-ts"
+        },
+        {
+          "label": "No, explain recursion",
+          "next": "recursion-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "recursion-explanation-ts",
+      "mentorSays": "Recursion is when a function calls itself. For DFS, we use recursion to explore neighbors: when we visit a cell, we recursively visit its unvisited neighbors.",
+      "example": "function dfs(grid, i, j) {\n  // Mark as visited\n  grid[i][j] = '0';\n  \n  // Recursively visit neighbors\n  dfs(grid, i-1, j);  // Up\n  dfs(grid, i+1, j);  // Down\n  dfs(grid, i, j-1);  // Left\n  dfs(grid, i, j+1);  // Right\n}",
+      "action": "continue",
+      "next": "coding-start-ts"
+    },
+    {
+      "stepId": "coding-start-ts",
+      "mentorSays": "Perfect! Let's implement the solution in TypeScript.",
+      "example": "// TypeScript implementation",
+      "action": "continue",
+      "next": "coding-init-ts"
+    },
+    {
+      "stepId": "coding-init-ts",
+      "mentorSays": "Initialize island count.",
+      "example": "// TypeScript implementation",
+      "action": "continue",
+      "next": "coding-traverse-grid-ts"
+    },
+    {
+      "stepId": "coding-traverse-grid-ts",
+      "mentorSays": "Create nested loops to traverse grid.",
+      "example": "// TypeScript implementation",
+      "action": "continue",
+      "next": "coding-check-land-ts"
+    },
+    {
+      "stepId": "coding-check-land-ts",
+      "mentorSays": "Check if cell is land, increment count, start DFS.",
+      "example": "// TypeScript implementation",
+      "action": "continue",
+      "next": "coding-dfs-helper-ts"
+    },
+    {
+      "stepId": "coding-dfs-helper-ts",
+      "mentorSays": "Create DFS helper function.",
+      "example": "// TypeScript implementation",
+      "action": "continue",
+      "next": "coding-boundary-check-ts"
+    },
+    {
+      "stepId": "coding-boundary-check-ts",
+      "mentorSays": "Add boundary checks in DFS.",
+      "example": "// TypeScript implementation",
+      "action": "continue",
+      "next": "coding-explore-neighbors-ts"
+    },
+    {
+      "stepId": "coding-explore-neighbors-ts",
+      "mentorSays": "Explore all 4 neighbors recursively.",
+      "example": "// TypeScript implementation",
+      "action": "continue",
+      "next": "test-code-ts"
+    },
+    {
+      "stepId": "test-code-ts",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** grid = [[\"1\",\"1\",\"1\",\"1\",\"0\"], [\"1\",\"1\",\"0\",\"1\",\"0\"], [\"1\",\"1\",\"0\",\"0\",\"0\"], [\"0\",\"0\",\"0\",\"0\",\"0\"]]\nExpected: 1 (one island)\n\n**Test 2:** grid = [[\"1\",\"1\",\"0\",\"0\",\"0\"], [\"1\",\"1\",\"0\",\"0\",\"0\"], [\"0\",\"0\",\"1\",\"0\",\"0\"], [\"0\",\"0\",\"0\",\"1\",\"1\"]]\nExpected: 3 (three islands)\n\n**Test 3:** grid = [[\"0\",\"0\",\"0\"], [\"0\",\"0\",\"0\"]]\nExpected: 0 (no islands)\n\n**Test 4:** grid = [[\"1\",\"1\",\"1\"], [\"1\",\"1\",\"1\"], [\"1\",\"1\",\"1\"]]\nExpected: 1 (one large island)\n\n**Test 5:** grid = [[\"1\"]]\nExpected: 1 (single cell island)\n\n**Test 6:** grid = [[\"0\"]]\nExpected: 0 (single cell water)\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: [[\"1\",\"1\",\"1\",\"1\",\"0\"], ...] → 1\nTest 2: [[\"1\",\"1\",\"0\",\"0\",\"0\"], ...] → 3\nTest 3: [[\"0\",\"0\",\"0\"], ...] → 0\nTest 4: [[\"1\",\"1\",\"1\"], ...] → 1\nTest 5: [[\"1\"]] → 1\nTest 6: [[\"0\"]] → 0",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "final",
+      "mentorSays": "🎉 Well done! You've successfully implemented the Number of Islands solution!\n\n**Time Complexity:** O(m * n)\n- We visit each cell at most once\n- m is the number of rows, n is the number of columns\n- DFS visits each '1' cell exactly once\n\n**Space Complexity:** O(m * n)\n- In the worst case, the recursion stack can be O(m * n) deep (if the entire grid is one island)\n- We modify the grid in-place, so no additional space for visited set\n\n**Key Takeaways:**\n1. **DFS for connected components**: Use DFS to explore all connected cells in a component\n2. **Mark visited cells**: Change '1' to '0' (or use visited set) to avoid revisiting\n3. **Boundary checks**: Always check if indices are within grid bounds before accessing\n4. **4-directional neighbors**: Explore up, down, left, right (not diagonally)\n5. **Count unvisited starts**: Each time we find an unvisited '1', it's a new island\n\n**Related Practice Lessons:**\n- Max Area of Island (LeetCode #695) - find largest island\n- Surrounded Regions (LeetCode #130) - similar DFS on grid\n- Walls and Gates (LeetCode #286) - BFS on grid\n\nKeep practicing graph/DFS lessons - they're essential for interviews!",
+      "action": "continue"
+    }
+  ]
+}

@@ -1,0 +1,354 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-js-62",
+    "track": "js",
+    "lessonNum": 62,
+    "title": "Write a cancellable async task abstraction",
+    "shortName": "P62",
+    "intro": {
+      "tag": "LESSON #62",
+      "title": "Write a cancellable async task abstraction",
+      "body": "In this lesson, you will build a reusable JavaScript function called a 'cancellable async task abstraction.' This function will allow you to start an asynchronous operation, like fetching data, and cancel it before it completes if needed. You will learn to use core JavaScript concepts such as Promises, async/await, and state flags to control task execution. By the end, you will have a practical tool for managing long-running or unnecessary async tasks in your applications. This lesson is designed for beginners, focusing on clear, step-by-step implementation without external libraries.",
+      "usecase": "Cancellable async tasks are essential for responsive user interfaces where users need to interrupt ongoing operations. In search interfaces, users expect to cancel a slow search query when typing new characters. In dashboard applications with data refreshes, users should be able to stop a pending update when navigating away. File upload components also require cancellation to let users abort transfers before completion. This pattern prevents wasted resources and improves user control over long-running operations."
+    },
+    "objectives": [
+      "Construct a Promise-based async function that can be cancelled",
+      "Implement a cancellation token mechanism using a flag variable",
+      "Integrate cancellation checks within async task logic",
+      "Apply error handling for cancelled operations",
+      "Configure a reusable cancellable task abstraction",
+      "Initialize and control multiple cancellable async tasks",
+      "Manipulate task state to respond to user cancellation requests"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 10",
+        "title": "Create a cancellable async task abstraction function",
+        "instruction": "Create a function called createCancellableTask that takes an async function as its parameter.",
+        "hint": "Define a function named createCancellableTask with one parameter. The parameter will be an async function that the abstraction will manage.",
+        "analogousExample": "// Similar: a function that takes another function as parameter\nfunction wrapFunction(fn) {\n  return function() {\n    return fn();\n  };\n}",
+        "seedCode": "// Create the createCancellableTask function here\n",
+        "expectedOutcome": "You'll have a function definition for createCancellableTask that accepts an async function parameter.",
+        "successCriteria": [
+          "The createCancellableTask function is defined and takes one parameter."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure you've defined a function named createCancellableTask with one parameter.",
+        "feedbackWrong": "Create a function called createCancellableTask that takes one parameter.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "createCancellableTask",
+            "function",
+            "("
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 10",
+        "title": "Add cancellation flag and promise state tracking",
+        "instruction": "Inside the createCancellableTask function, declare a variable named isCancelled initialized to false to track cancellation state.",
+        "hint": "You'll need a variable that starts as false and can be set to true when cancellation is requested.",
+        "analogousExample": "// Example: tracking state in a function\nfunction createTimer() {\n  let isRunning = false;\n  // rest of function...\n}",
+        "seedCode": "// Create the createCancellableTask function here\nfunction createCancellableTask(task) {\n  // Add isCancelled variable here\n}",
+        "expectedOutcome": "The function should have an isCancelled variable initialized to false.",
+        "successCriteria": [
+          "The createCancellableTask function contains a variable named isCancelled set to false."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you've declared isCancelled as a variable inside the function and initialized it to false.",
+        "feedbackWrong": "The function should contain a variable named isCancelled initialized to false. Try adding it inside the function body.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "isCancelled",
+            "false"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 10",
+        "title": "Add cancellation check in the runner",
+        "instruction": "Inside the run function, add a check at the beginning that throws an error if isCancelled is true",
+        "hint": "Add an if statement that checks the isCancelled variable and throws an Error with a message like 'Task cancelled' when it's true.",
+        "analogousExample": "// Example: checking a condition before proceeding\nfunction processOrder(order) {\n  if (order.isCancelled) {\n    throw new Error('Order cancelled');\n  }\n  // Process order logic here\n}",
+        "seedCode": "function createCancellableTask(task) {\n  let isCancelled = false;\n  \n  function run() {\n    // Add cancellation check here\n    \n    // Task execution logic will go here\n  }\n  \n  return {\n    run\n  };\n}",
+        "expectedOutcome": "The run function will now immediately throw an error if the task has been cancelled before execution begins.",
+        "successCriteria": [
+          "The run function contains an if statement that checks isCancelled and throws an Error when true"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're checking the isCancelled variable and throwing an Error object with a message.",
+        "feedbackWrong": "The cancellation check isn't quite right. You need to add an if statement at the beginning of the run function that checks if isCancelled is true and throws an Error.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "if",
+            "isCancelled",
+            "throw",
+            "Error"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 10",
+        "title": "Store the promise and handle completion",
+        "instruction": "Inside the run function, store the result of calling the async function in a variable named taskPromise, and reset taskPromise to null when it completes.",
+        "hint": "Call the task function, store its promise in taskPromise, and use .then() and .catch() to handle completion and errors, resetting taskPromise to null in both cases.",
+        "analogousExample": "// Example: storing and clearing a promise\nfunction fetchData() {\n  let dataPromise = fetch('/api/data');\n  dataPromise\n    .then(() => dataPromise = null)\n    .catch(() => dataPromise = null);\n}",
+        "seedCode": "function createCancellableTask(task) {\n  let isCancelled = false;\n  \n  function run() {\n    // Add cancellation check here\n    \n    // Task execution logic will go here\n  }\n  \n  return {\n    run\n  };\n}",
+        "expectedOutcome": "The run function now stores the task promise and properly handles its completion by resetting the promise variable.",
+        "successCriteria": [
+          "The run function stores the task promise in a variable named taskPromise and resets it to null when the promise settles (both success and error)."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure you store the promise in a variable named taskPromise and reset it to null in both .then() and .catch().",
+        "feedbackWrong": "The run function should store the task promise and reset it when complete. Try calling task(), storing the promise, and using .then()/.catch() to reset it.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "taskPromise",
+            "task()",
+            ".then",
+            ".catch",
+            "null"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 10",
+        "title": "Implement the cancel method",
+        "instruction": "Add a cancel method to the returned object that sets isCancelled to true.",
+        "hint": "The cancel method should be a function that updates the cancellation flag.",
+        "analogousExample": "// Example: adding a method to an object\nconst counter = {\n  value: 0,\n  increment() {\n    this.value++;\n  }\n};",
+        "seedCode": "function createCancellableTask(task) {\n  let isCancelled = false;\n  \n  function run() {\n    // Add cancellation check here\n    \n    // Task execution logic will go here\n  }\n  \n  return {\n    run\n  };\n}",
+        "expectedOutcome": "The returned object now has a cancel method that can be called to cancel the task.",
+        "successCriteria": [
+          "The cancel method is defined and sets isCancelled to true when called."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're adding a cancel method to the returned object that sets isCancelled to true.",
+        "feedbackWrong": "The cancel method isn't properly implemented. Check that you're adding it to the returned object and it updates the cancellation flag.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "cancel",
+            "isCancelled",
+            "true"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 10",
+        "title": "Return the runner and cancel methods",
+        "instruction": "Return an object from the createCancellableTask function that contains both the run and cancel methods.",
+        "hint": "The object should have properties named 'run' and 'cancel' that reference the functions you've created.",
+        "analogousExample": "// Returning an object with methods\nfunction createCounter() {\n  let count = 0;\n  \n  function increment() {\n    count++;\n  }\n  \n  function reset() {\n    count = 0;\n  }\n  \n  return {\n    increment,\n    reset\n  };\n}",
+        "seedCode": "function createCancellableTask(task) {\n  let isCancelled = false;\n  \n  function run() {\n    // Add cancellation check here\n    \n    // Task execution logic will go here\n  }\n  \n  function cancel() {\n    // Implement cancellation logic here\n  }\n  \n  // Return an object with run and cancel methods\n}",
+        "expectedOutcome": "The createCancellableTask function now returns an object with both run and cancel methods available for external use.",
+        "successCriteria": [
+          "The createCancellableTask function returns an object containing both run and cancel methods."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're returning an object that contains both the run and cancel methods.",
+        "feedbackWrong": "The function should return an object with both run and cancel methods. Check your return statement syntax.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "return",
+            "{",
+            "run",
+            "cancel",
+            "}"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 10",
+        "title": "Create a sample async task function",
+        "instruction": "Define a mock async function called mockAsyncTask that simulates work with delays. Place it after your createCancellableTask function.",
+        "hint": "Create an async function that uses setTimeout to simulate a delay, then returns a result.",
+        "analogousExample": "// Example: a mock async function\nasync function mockAsyncTask() {\n  await new Promise(resolve => setTimeout(resolve, 1000));\n  return 'Task completed';\n}",
+        "seedCode": "function createCancellableTask(task) {\n  let isCancelled = false;\n  \n  function run() {\n    // Add cancellation check here\n    \n    // Task execution logic will go here\n  }\n  \n  function cancel() {\n    // Implement cancellation logic here\n  }\n  \n  // Return an object with run and cancel methods\n}\n\n// Define your mockAsyncTask function here",
+        "expectedOutcome": "You should have a mockAsyncTask function that can be passed to createCancellableTask for testing.",
+        "successCriteria": [
+          "A function named mockAsyncTask is defined as an async function that uses setTimeout to simulate work."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure mockAsyncTask is an async function that uses setTimeout or similar to simulate a delay.",
+        "feedbackWrong": "The function mockAsyncTask is not defined correctly. It should be an async function that simulates work with a delay.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "mockAsyncTask",
+            "async",
+            "setTimeout",
+            "await",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 10",
+        "title": "Instantiate and use the cancellable task",
+        "instruction": "Create a cancellable task instance by calling createCancellableTask with mockAsyncTask as the argument,",
+        "hint": "Assign the result of createCancellableTask(mockAsyncTask) to a variable, then call .run() on that variable.",
+        "analogousExample": "// Example: creating and using a function instance\nconst taskInstance = createCancellableTask(mockAsyncTask);\ntaskInstance.run();",
+        "seedCode": "function createCancellableTask(task) {\n  let isCancelled = false;\n  \n  function run() {\n    // Add cancellation check here\n    \n    // Task execution logic will go here\n  }\n  \n  function cancel() {\n    // Implement cancellation logic here\n  }\n  \n  // Return an object with run and cancel methods\n}\n\n// Define your mockAsyncTask function here\n\n// Create a cancellable task instance and call run",
+        "expectedOutcome": "A cancellable task instance is created and its run method is invoked.",
+        "successCriteria": [
+          "The code creates a task instance using createCancellableTask(mockAsyncTask) and calls its run method."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're both creating the task instance and calling its run method.",
+        "feedbackWrong": "The task instance wasn't created or run correctly. Review how to instantiate and use the abstraction.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "createCancellableTask",
+            "mockAsyncTask",
+            "run()"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 10",
+        "title": "call its run method",
+        "instruction": "call its run method.",
+        "hint": "Assign the result of createCancellableTask(mockAsyncTask) to a variable, then call .run() on that variable.",
+        "analogousExample": "// Example: creating and using a function instance\nconst taskInstance = createCancellableTask(mockAsyncTask);\ntaskInstance.run();",
+        "seedCode": "function createCancellableTask(task) {\n  let isCancelled = false;\n  \n  function run() {\n    // Add cancellation check here\n    \n    // Task execution logic will go here\n  }\n  \n  function cancel() {\n    // Implement cancellation logic here\n  }\n  \n  // Return an object with run and cancel methods\n}\n\n// Define your mockAsyncTask function here\n\n// Create a cancellable task instance and call run",
+        "expectedOutcome": "",
+        "successCriteria": [
+          "Complete the step as instructed."
+        ],
+        "feedbackCorrect": "Great! Step completed.",
+        "feedbackPartial": "Review the instruction and try again.",
+        "feedbackWrong": "Check the instruction and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "createCancellableTask",
+            "mockAsyncTask",
+            "run()"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 10",
+        "title": "Test cancellation with setTimeout",
+        "instruction": "Add a setTimeout call after your run() call to automatically cancel the task after 100ms, demonstrating the cancellation functionality.",
+        "hint": "Use setTimeout with the cancel method as its callback and 100 as the delay.",
+        "analogousExample": "// Similar: scheduling a cleanup\nsetTimeout(() => {\n  cleanup();\n}, 500);",
+        "seedCode": "function createCancellableTask(task) {\n  let isCancelled = false;\n  \n  function run() {\n    // Add cancellation check here\n    \n    // Task execution logic will go here\n  }\n  \n  function cancel() {\n    // Implement cancellation logic here\n  }\n  \n  // Return an object with run and cancel methods\n}\n\n// Define your mockAsyncTask function here\n\n// Create a cancellable task instance and call run\n// Add setTimeout to call cancel after 100ms",
+        "expectedOutcome": "The task will be automatically cancelled 100ms after starting, demonstrating the cancellation mechanism works.",
+        "successCriteria": [
+          "A setTimeout call is added after run() that calls cancel() after 100ms delay."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're calling cancel() inside the setTimeout callback with a 100ms delay.",
+        "feedbackWrong": "The cancellation test isn't set up correctly. You need to add setTimeout(() => { cancel(); }, 100); after calling run().",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "setTimeout",
+            "cancel",
+            "100"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Create a cancellable async task abstraction function",
+        "id": "step1"
+      },
+      {
+        "label": "Add cancellation flag and promise state tracking",
+        "id": "step2"
+      },
+      {
+        "label": "Add cancellation check in the runner",
+        "id": "step3"
+      },
+      {
+        "label": "Store the promise and handle completion",
+        "id": "step4"
+      },
+      {
+        "label": "Implement the cancel method",
+        "id": "step5"
+      },
+      {
+        "label": "Return the runner and cancel methods",
+        "id": "step6"
+      },
+      {
+        "label": "Create a sample async task function",
+        "id": "step7"
+      },
+      {
+        "label": "Instantiate and use the cancellable task",
+        "id": "step8"
+      },
+      {
+        "label": "call its run method",
+        "id": "step9"
+      },
+      {
+        "label": "Test cancellation with setTimeout",
+        "id": "step10"
+      }
+    ]
+  },
+  "source": "content"
+}

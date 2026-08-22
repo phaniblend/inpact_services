@@ -1,0 +1,465 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-angular-49",
+    "track": "angular",
+    "lessonNum": 49,
+    "title": "Cart Context",
+    "shortName": "P49",
+    "intro": {
+      "tag": "LESSON #49",
+      "title": "Cart Context",
+      "body": "In this lesson, you will build a shopping cart feature for an Angular e-commerce app using a service to manage shared state. You'll learn how to create an Angular service that acts as a central context, holding cart items and providing methods to add and remove them. This involves key Angular constructs like services, dependency injection, and RxJS BehaviorSubject for reactive state. By the end, you'll have a functional cart that multiple components can access and update consistently.",
+      "usecase": "Cart context is essential for e-commerce platforms like Amazon or Shopify, where users add items to a cart while browsing. This pattern manages cart state—such as items, quantities, and totals—across multiple components like product listings, cart summaries, and checkout pages. Developers use cart context to avoid prop drilling and ensure consistent cart data updates, enhancing user experience in shopping flows. It's also applied in booking systems for hotels or flights, where selections must persist across different UI sections."
+    },
+    "objectives": [
+      "Initialize a service to manage cart state across components",
+      "Construct methods to add and remove items from the cart",
+      "Apply dependency injection to provide the cart service to components",
+      "Bind cart data to a component template for display",
+      "Manipulate cart state by integrating service methods with user interactions",
+      "Configure a component to subscribe to cart updates and reflect changes",
+      "Control the visibility of cart details based on state conditions"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 12",
+        "title": "Import required Angular modules and interfaces",
+        "instruction": "Import Injectable from '@angular/core' and create a CartItem interface with productId (number), name (string), price (number), and quantity (number) properties.",
+        "hint": "Use the import statement for Injectable and define the interface with proper TypeScript type annotations.",
+        "analogousExample": "// Importing a decorator and creating an interface\nimport { Injectable } from '@angular/core';\n\ninterface Product {\n  id: number;\n  name: string;\n  price: number;\n}",
+        "seedCode": {
+          "App.tsx": "// Import Injectable from '@angular/core' and create CartItem interface here",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "The code will have the necessary import and a CartItem interface defined with the required properties.",
+        "successCriteria": [
+          "Injectable is imported from '@angular/core' and a CartItem interface with productId: number, name: string, price: number, and quantity: number is created."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure to import Injectable from '@angular/core' and define the CartItem interface with productId (number), name (string), price (number), and quantity (number).",
+        "feedbackWrong": "import Injectable from '@angular/core' and create a CartItem interface with the specified properties.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "Injectable",
+            "@angular/core",
+            "interface",
+            "CartItem",
+            "productId",
+            "name",
+            "price",
+            "quantity"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 12",
+        "title": "Create the CartService with Injectable decorator",
+        "instruction": "Create a class named CartService and decorate it with @Injectable() to make it available for dependency injection.",
+        "hint": "Use the @Injectable() decorator above the class declaration. The class can be empty for now.",
+        "analogousExample": "// Example: Injectable service\n@Injectable()\nexport class UserService {\n  // Service logic here\n}",
+        "seedCode": {
+          "App.tsx": "// Import Injectable from '@angular/core' and create CartItem interface here\n\n@Injectable()\nexport class CartService {\n  // Service implementation will go here\n}",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "A CartService class is created with the @Injectable() decorator, ready to be used as an Angular service.",
+        "successCriteria": [
+          "CartService class exists and is decorated with @Injectable()."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure you have both the class declaration and the @Injectable() decorator above it.",
+        "feedbackWrong": "The CartService class with @Injectable() decorator is not properly defined. Check that you have the class declaration and decorator in place.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "@Injectable()",
+            "class",
+            "CartService"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 12",
+        "title": "Initialize cart items array in the service",
+        "instruction": "Inside the CartService class, add a private property named 'cartItems' of type CartItem[] and initialize it as an empty array.",
+        "hint": "Use the private keyword followed by the property name, type annotation with CartItem[], and assign it an empty array [].",
+        "analogousExample": "// Example: private property with array type\nprivate items: string[] = [];",
+        "seedCode": {
+          "App.tsx": "// Import Injectable from '@angular/core' and create CartItem interface here\n\n@Injectable()\nexport class CartService {\n  // Add private cartItems property here\n  \n  // Service implementation will go here\n}",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "The CartService will have a private cartItems property ready to store cart items.",
+        "successCriteria": [
+          "The CartService contains a private cartItems property of type CartItem[] initialized to an empty array."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure the property is private, has the correct type CartItem[], and is initialized as an empty array.",
+        "feedbackWrong": "The cart items array wasn't properly initialized. Check the property declaration syntax and type.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "private",
+            "cartItems",
+            "CartItem[]",
+            "=",
+            "[]"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 12",
+        "title": "Add method to get all cart items",
+        "instruction": "In the CartService, add a public method named getCartItems that returns the cart items array.",
+        "hint": "The method should have a return type of CartItem[] and return the cartItems property.",
+        "analogousExample": "// Similar: a method that returns data from a service\npublic getUsers(): User[] {\n  return this.users;\n}",
+        "seedCode": {
+          "App.tsx": "import { Injectable } from '@angular/core';\n\ninterface CartItem {\n  id: number;\n  name: string;\n  price: number;\n}\n\n@Injectable()\nexport class CartService {\n  private cartItems: CartItem[] = [];\n  \n  // Add getCartItems method here\n}",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "The CartService will have a getCartItems method that returns the cart items array.",
+        "successCriteria": [
+          "The CartService contains a public getCartItems method that returns the cartItems array with proper type annotation."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure the method is public, named getCartItems, and returns the cartItems array with the correct type.",
+        "feedbackWrong": "The method isn't quite right. Check that you've declared a public method named getCartItems that returns the cartItems array with type CartItem[].",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "getCartItems",
+            "CartItem[]",
+            "return",
+            "cartItems"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 12",
+        "title": "Create method to add items to cart",
+        "instruction": "In the CartService, create a method named addToCart that accepts a CartItem parameter and pushes it to the cartItems array.",
+        "hint": "The method should have a parameter with type CartItem and use the push method on the cartItems array.",
+        "analogousExample": "// Similar: adding an item to a list\naddItem(item: Item) {\n  this.items.push(item);\n}",
+        "seedCode": {
+          "App.tsx": "import { Injectable } from '@angular/core';\n\ninterface CartItem {\n  id: number;\n  name: string;\n  price: number;\n}\n\n@Injectable()\nexport class CartService {\n  private cartItems: CartItem[] = [];\n  \n  // Add getCartItems method here\n  \n  // Create addToCart method here\n}",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "The CartService will have an addToCart method that can add new items to the cart.",
+        "successCriteria": [
+          "The addToCart method is defined with a CartItem parameter and pushes the item to cartItems."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your method accepts a CartItem parameter and pushes it to the cartItems array.",
+        "feedbackWrong": "The addToCart method isn't quite right. It should accept a CartItem and add it to the cartItems array using push().",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "addToCart",
+            "CartItem",
+            "push",
+            "cartItems"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 12",
+        "title": "Create method to remove items from cart",
+        "instruction": "In the CartService class, add a method named removeFromCart that takes an item id (number) and filters out the matching item from the cartItems array.",
+        "hint": "Use the filter method on cartItems to keep only items whose id does not match the provided id.",
+        "analogousExample": "// Similar: method that removes an item by id\nremoveItem(id: number) {\n  this.items = this.items.filter(item => item.id !== id);\n}",
+        "seedCode": {
+          "App.tsx": "import { Injectable } from '@angular/core';\n\ninterface CartItem {\n  id: number;\n  name: string;\n  price: number;\n}\n\n@Injectable()\nexport class CartService {\n  private cartItems: CartItem[] = [];\n  \n  // Add getCartItems method here\n  \n  // Create addToCart method here\n  \n  // Add removeFromCart method here\n}",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "The CartService will have a removeFromCart method that can remove items by their id.",
+        "successCriteria": [
+          "A removeFromCart method is defined in CartService that accepts a number parameter and filters cartItems."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure the method is named removeFromCart, takes a number parameter, and uses filter to exclude the matching item.",
+        "feedbackWrong": "The method is missing or incorrect. It should be named removeFromCart, accept a number, and update cartItems by filtering.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "removeFromCart",
+            "filter",
+            "id"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 12",
+        "title": "Create method to calculate total price",
+        "instruction": "Inside the CartService class, add a method named getTotalPrice that calculates and returns the total price of all items in the cart.",
+        "hint": "Use the reduce method on the cartItems array to sum up the price property of each item.",
+        "analogousExample": "// Example: method that calculates total\ncalculateTotal(): number {\n  return this.items.reduce((sum, item) => sum + item.price, 0);\n}",
+        "seedCode": {
+          "App.tsx": "import { Injectable } from '@angular/core';\n\ninterface CartItem {\n  id: number;\n  name: string;\n  price: number;\n}\n\n@Injectable()\nexport class CartService {\n  private cartItems: CartItem[] = [];\n  \n  // Add getCartItems method here\n  \n  // Create addToCart method here\n  \n  // Add removeFromCart method here\n  \n  // Add getTotalPrice method here\n}",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "The CartService will have a getTotalPrice method that returns the sum of all item prices in the cart.",
+        "successCriteria": [
+          "The getTotalPrice method is defined in CartService and correctly calculates the total price using reduce."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure the method uses reduce to sum the item prices and returns a number.",
+        "feedbackWrong": "The method is missing or doesn't correctly calculate the total price. Review how to use reduce on arrays.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "getTotalPrice",
+            "reduce",
+            "price",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 12",
+        "title": "Create a CartComponent with template",
+        "instruction": "Create a new Angular component named CartComponent with a basic template structure that will display cart data.",
+        "hint": "Use the @Component decorator to define a component with a selector and template. The template can be a simple placeholder for now.",
+        "analogousExample": "// Example: Creating a basic component\n@Component({\n  selector: 'app-example',\n  template: '<p>Example component works!</p>'\n})\nexport class ExampleComponent {}",
+        "seedCode": {
+          "App.tsx": "import { Injectable } from '@angular/core';\n\ninterface CartItem {\n  id: number;\n  name: string;\n  price: number;\n}\n\n@Injectable()\nexport class CartService {\n  private cartItems: CartItem[] = [];\n  \n  // Add getCartItems method here\n  \n  // Create addToCart method here\n  \n  // Add removeFromCart method here\n  \n  // Add getTotalPrice method here\n}\n\n// Create CartComponent here",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "A CartComponent class is created with @Component decorator and basic template structure.",
+        "successCriteria": [
+          "CartComponent is defined with @Component decorator, a selector, and a template property."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started creating the component, but make sure it has the @Component decorator with both selector and template properties.",
+        "feedbackWrong": "The CartComponent wasn't created correctly. Remember to use @Component decorator with selector and template properties.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "@Component",
+            "CartComponent",
+            "selector",
+            "template"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 12",
+        "title": "Inject CartService into CartComponent",
+        "instruction": "In the CartComponent class, add a constructor parameter to inject CartService and store it as a public property.",
+        "hint": "Use dependency injection by declaring a constructor parameter with the service type. Assign it to a public property to make it accessible in the template.",
+        "analogousExample": "// Example: injecting a service into a component\nconstructor(private dataService: DataService) {}",
+        "seedCode": {
+          "App.tsx": "import { Injectable } from '@angular/core';\n\ninterface CartItem {\n  id: number;\n  name: string;\n  price: number;\n}\n\n@Injectable()\nexport class CartService {\n  private cartItems: CartItem[] = [];\n  \n  // Add getCartItems method here\n  \n  // Create addToCart method here\n  \n  // Add removeFromCart method here\n  \n  // Add getTotalPrice method here\n}\n\n// Create CartComponent here\n\n// Add constructor with CartService injection",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "The CartComponent will have a constructor that receives CartService as a dependency and makes it available as a property.",
+        "successCriteria": [
+          "CartComponent has a constructor with a CartService parameter and stores it as a public property."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure the constructor parameter is properly typed as CartService and assigned to a property.",
+        "feedbackWrong": "Check the syntax: the constructor should have a parameter of type CartService (e.g., constructor(private cartService: CartService)).",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "constructor",
+            "CartService",
+            "private",
+            "cartService"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 12",
+        "title": "Display cart items in the template",
+        "instruction": "In the CartComponent template, use *ngFor to iterate over cart items and display each item's name and price.",
+        "hint": "Use *ngFor with the cart items from the service and bind to item properties.",
+        "analogousExample": "// Example: displaying a list\n<ul>\n  <li *ngFor=\"let item of items\">{{ item.name }} - ${{ item.price }}</li>\n</ul>",
+        "seedCode": {
+          "App.tsx": "import { Injectable } from '@angular/core';\nimport { Component } from '@angular/core';\n\ninterface CartItem {\n  id: number;\n  name: string;\n  price: number;\n}\n\n@Injectable()\nexport class CartService {\n  private cartItems: CartItem[] = [];\n  \n  getCartItems(): CartItem[] {\n    return this.cartItems;\n  }\n  \n  addToCart(item: CartItem): void {\n    this.cartItems.push(item);\n  }\n  \n  removeFromCart(id: number): void {\n    this.cartItems = this.cartItems.filter(item => item.id !== id);\n  }\n  \n  getTotalPrice(): number {\n    return this.cartItems.reduce((total, item) => total + item.price, 0);\n  }\n}\n\n@Component({\n  selector: 'app-cart',\n  template: `\n    <h2>Cart</h2>\n    <!-- Use *ngFor to display cart items here -->\n  `,\n  providers: [CartService]\n})\nexport class CartComponent {\n  constructor(private cartService: CartService) {}\n}",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "The template will have a list structure ready to display cart items when data is available.",
+        "successCriteria": [
+          "The template contains an *ngFor directive that iterates over cartService.getCartItems() and displays each item's name and price."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added *ngFor, but make sure you're displaying both the item name and price.",
+        "feedbackWrong": "The template doesn't yet display cart items. Try using *ngFor with cartService.getCartItems().",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "*ngFor",
+            "cartService.getCartItems()",
+            "{{",
+            "item.name",
+            "item.price"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 12",
+        "title": "Add remove buttons and wire to service method",
+        "instruction": "Inside the template's *ngFor loop, add a button for each cart item with a (click) handler that calls the removeFromCart() method from the service, passing the item's id.",
+        "hint": "Use the button element with (click)=\"cartService.removeFromCart(item.id)\" inside the *ngFor loop.",
+        "analogousExample": "// Adding a button with click handler\n<button (click)=\"removeItem(item.id)\">Remove</button>",
+        "seedCode": {
+          "App.tsx": "import { Injectable } from '@angular/core';\nimport { Component } from '@angular/core';\n\ninterface CartItem {\n  id: number;\n  name: string;\n  price: number;\n}\n\n@Injectable()\nexport class CartService {\n  private cartItems: CartItem[] = [];\n  \n  getCartItems(): CartItem[] {\n    return this.cartItems;\n  }\n  \n  addToCart(item: CartItem): void {\n    this.cartItems.push(item);\n  }\n  \n  removeFromCart(id: number): void {\n    this.cartItems = this.cartItems.filter(item => item.id !== id);\n  }\n  \n  getTotalPrice(): number {\n    return this.cartItems.reduce((total, item) => total + item.price, 0);\n  }\n}\n\n@Component({\n  selector: 'app-cart',\n  template: `\n    <h2>Cart</h2>\n    <!-- Use *ngFor to display cart items here -->\n  `,\n  providers: [CartService]\n})\nexport class CartComponent {\n  constructor(private cartService: CartService) {}\n}",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "Each cart item in the template will have a remove button that triggers the service's removeFromCart method.",
+        "successCriteria": [
+          "The template contains a button with (click) handler calling cartService.removeFromCart(item.id) inside an *ngFor loop."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You added a button, but make sure the (click) handler correctly calls cartService.removeFromCart(item.id).",
+        "feedbackWrong": "The remove button or its click handler is missing or incorrect.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "(click)",
+            "cartService.removeFromCart",
+            "item.id",
+            "*ngFor"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step12",
+        "type": "question",
+        "phase": "Step 12 of 12",
+        "title": "Display total price in the template",
+        "instruction": "Add a paragraph element in the CartComponent template to display the total price from the cart service.",
+        "hint": "Use the getTotalPrice() method from the injected CartService and display it using Angular's interpolation syntax.",
+        "analogousExample": "// Displaying a computed value in template\n<p>Total: {{ service.getTotal() }}</p>",
+        "seedCode": {
+          "App.tsx": "import { Injectable } from '@angular/core';\nimport { Component } from '@angular/core';\n\ninterface CartItem {\n  id: number;\n  name: string;\n  price: number;\n}\n\n@Injectable()\nexport class CartService {\n  private cartItems: CartItem[] = [];\n  \n  getCartItems(): CartItem[] {\n    return this.cartItems;\n  }\n  \n  addToCart(item: CartItem): void {\n    this.cartItems.push(item);\n  }\n  \n  removeFromCart(id: number): void {\n    this.cartItems = this.cartItems.filter(item => item.id !== id);\n  }\n  \n  getTotalPrice(): number {\n    return this.cartItems.reduce((total, item) => total + item.price, 0);\n  }\n}\n\n@Component({\n  selector: 'app-cart',\n  template: `\n    <h2>Cart</h2>\n    <!-- Use *ngFor to display cart items here -->\n    \n  `,\n  providers: [CartService]\n})\nexport class CartComponent {\n  constructor(private cartService: CartService) {}\n}",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "The template will show a paragraph with the total price calculated from the cart items.",
+        "successCriteria": [
+          "A paragraph element is added to the template that displays the total price using cartService.getTotalPrice() with interpolation."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You added a paragraph, but make sure it uses interpolation to call cartService.getTotalPrice().",
+        "feedbackWrong": "The total price is not displayed correctly. Add a paragraph element that shows the result of cartService.getTotalPrice() using {{ }} syntax.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<p>",
+            "{{",
+            "cartService.getTotalPrice()",
+            "}}",
+            "</p>"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import required Angular modules and interfaces",
+        "id": "step1"
+      },
+      {
+        "label": "Create the CartService with Injectable decorator",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize cart items array in the service",
+        "id": "step3"
+      },
+      {
+        "label": "Add method to get all cart items",
+        "id": "step4"
+      },
+      {
+        "label": "Create method to add items to cart",
+        "id": "step5"
+      },
+      {
+        "label": "Create method to remove items from cart",
+        "id": "step6"
+      },
+      {
+        "label": "Create method to calculate total price",
+        "id": "step7"
+      },
+      {
+        "label": "Create a CartComponent with template",
+        "id": "step8"
+      },
+      {
+        "label": "Inject CartService into CartComponent",
+        "id": "step9"
+      },
+      {
+        "label": "Display cart items in the template",
+        "id": "step10"
+      },
+      {
+        "label": "Add remove buttons and wire to service method",
+        "id": "step11"
+      },
+      {
+        "label": "Display total price in the template",
+        "id": "step12"
+      }
+    ],
+    "answerShape": "multi-file"
+  },
+  "source": "content"
+}

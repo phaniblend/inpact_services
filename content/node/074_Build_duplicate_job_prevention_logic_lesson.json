@@ -1,0 +1,361 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-node-74",
+    "track": "node",
+    "lessonNum": 74,
+    "title": "Build duplicate job prevention logic",
+    "shortName": "P74",
+    "intro": {
+      "tag": "LESSON #74",
+      "title": "Build duplicate job prevention logic",
+      "body": "In this lesson, you will build duplicate job prevention logic to ensure that a job processing system doesn't handle the same task more than once. You'll learn to use a JavaScript Set data structure to track job IDs and check for duplicates efficiently. The core programming concept involves managing state with a Set and implementing conditional logic to skip duplicate jobs. This beginner-friendly project will help you understand basic data structures and control flow in Node.js.",
+      "usecase": "Duplicate job prevention is essential in task queue systems like Bull or Agenda, where identical jobs could waste resources or cause data corruption. This pattern appears in e-commerce platforms preventing duplicate order processing, in CI/CD pipelines ensuring unique build jobs, and in notification systems avoiding spam. Developers implement this in dashboard job monitors, admin panels with job submission forms, and automated workflow tools where users schedule recurring tasks. The logic prevents system overload and ensures data integrity when multiple triggers could create identical background jobs."
+    },
+    "objectives": [
+      "Initialize a data structure to track active job IDs.",
+      "Implement a function to check for duplicate job submissions.",
+      "Apply conditional logic to prevent duplicate job execution.",
+      "Manipulate the tracking structure upon job completion.",
+      "Integrate duplicate prevention into a job processing workflow.",
+      "Configure error handling for duplicate detection scenarios."
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 10",
+        "title": "Import required Node.js modules",
+        "instruction": "Import the 'fs' (file system) and 'path' modules using require() statements.",
+        "hint": "Use the require() function to import built-in Node.js modules. The 'fs' module handles file operations, and 'path' helps with file path manipulation.",
+        "analogousExample": "// Example: importing modules in Node.js\nconst fs = require('fs');\nconst path = require('path');",
+        "seedCode": "// Import the required Node.js modules here\n",
+        "expectedOutcome": "The fs and path modules are imported and ready to use for file operations and path handling.",
+        "successCriteria": [
+          "Both 'fs' and 'path' modules are imported using require() statements."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but you need to import both modules. Make sure you have require() statements for both 'fs' and 'path'.",
+        "feedbackWrong": "The imports are missing or incorrect. You need to import both 'fs' and 'path' modules using require() statements.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "require('fs')",
+            "require('path')"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 10",
+        "title": "Define the job data structure",
+        "instruction": "Create a sample job object with properties id, name, and timestamp. Place it after the imports.",
+        "hint": "Define a constant variable named 'sampleJob' and assign it an object with the required properties.",
+        "analogousExample": "// Example: a user object with similar structure\nconst sampleUser = {\n  id: 1,\n  name: 'John Doe',\n  createdAt: '2023-01-01T12:00:00Z'\n};",
+        "seedCode": "// Import the required Node.js modules here\n\n// Create a sample job object here",
+        "expectedOutcome": "A sample job object is defined with id, name, and timestamp properties.",
+        "successCriteria": [
+          "The code contains a constant named 'sampleJob' with an object that has id, name, and timestamp properties."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure your object has all three required properties: id, name, and timestamp.",
+        "feedbackWrong": "The job object is missing or incomplete. Create a constant named 'sampleJob' with id, name, and timestamp properties.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "sampleJob",
+            "id",
+            "name",
+            "timestamp"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 10",
+        "title": "Initialize the job tracking file path",
+        "instruction": "Define a constant variable named 'jobFilePath' that stores the path to a file called 'completed-jobs.json' in the current directory.",
+        "hint": "Use the 'path' module's join method to create a platform-independent file path. You can reference the current directory with '__dirname'.",
+        "analogousExample": "// Example: creating a file path constant\nconst dataFilePath = path.join(__dirname, 'data.json');",
+        "seedCode": "const fs = require('fs');\nconst path = require('path');\n\n// Create a sample job object here\nconst sampleJob = {\n  id: 'job-123',\n  name: 'Process Data',\n  status: 'pending'\n};\n\n// Define the job tracking file path constant here",
+        "expectedOutcome": "A constant 'jobFilePath' is created that points to 'completed-jobs.json' in your project directory.",
+        "successCriteria": [
+          "The constant 'jobFilePath' is defined using path.join with __dirname and 'completed-jobs.json'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're using path.join with __dirname and the filename 'completed-jobs.json'.",
+        "feedbackWrong": "The file path constant isn't set up correctly. Remember to use the path module to create a proper file path.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "jobFilePath",
+            "path.join",
+            "__dirname",
+            "'completed-jobs.json'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 10",
+        "title": "Create helper function to read existing jobs",
+        "instruction": "Create a function named readExistingJobs that reads the job tracking file, parses its JSON content, and returns the array of jobs. If the file doesn't exist, return an empty array.",
+        "hint": "Use fs.readFileSync to read the file and JSON.parse to convert the content. Wrap the reading in a try-catch block to handle missing files.",
+        "analogousExample": "// Example: reading and parsing a JSON file\nfunction readDataFile() {\n  try {\n    const data = fs.readFileSync('data.json', 'utf8');\n    return JSON.parse(data);\n  } catch (error) {\n    return [];\n  }\n}",
+        "seedCode": "const fs = require('fs');\nconst path = require('path');\n\n// Create a sample job object here\nconst sampleJob = {\n  id: 'job-123',\n  name: 'Process Data',\n  status: 'pending'\n};\n\n// Define the job tracking file path constant here\n\n// Create the readExistingJobs function here",
+        "expectedOutcome": "A function named readExistingJobs that safely reads and parses the job tracking file, returning an array of jobs or an empty array.",
+        "successCriteria": [
+          "The readExistingJobs function is defined, uses fs.readFileSync and JSON.parse, handles missing files with try-catch, and returns an array."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure your function handles both cases: when the file exists and when it doesn't.",
+        "feedbackWrong": "The function doesn't seem to work correctly. Check that you're reading the file, parsing JSON, and handling errors properly.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "function readExistingJobs",
+            "fs.readFileSync",
+            "JSON.parse",
+            "try",
+            "catch",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 10",
+        "title": "Create helper function to write jobs to file",
+        "instruction": "Create a function named writeJobsToFile that takes an array of jobs as a parameter and writes it to the tracking file as JSON.",
+        "hint": "Use fs.writeFileSync with JSON.stringify to write the jobs array to the file path constant. Wrap it in a try-catch block for error handling.",
+        "analogousExample": "// Similar: writing data to a file\nfunction saveData(data) {\n  try {\n    fs.writeFileSync('data.json', JSON.stringify(data));\n  } catch (error) {\n    console.error('Error writing file:', error);\n  }\n}",
+        "seedCode": "const fs = require('fs');\nconst path = require('path');\n\n// Create a sample job object here\nconst sampleJob = {\n  id: 'job-123',\n  name: 'Process Data',\n  status: 'pending'\n};\n\n// Define the job tracking file path constant here\n\n// Create the readExistingJobs function here\n\n// Create the writeJobsToFile function here",
+        "expectedOutcome": "A writeJobsToFile function that accepts a jobs array and writes it to the tracking file as JSON with error handling.",
+        "successCriteria": [
+          "The writeJobsToFile function is defined, takes a jobs parameter, uses fs.writeFileSync with JSON.stringify, and includes try-catch error handling."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the function, but make sure it includes JSON.stringify and error handling with try-catch.",
+        "feedbackWrong": "The function is missing or doesn't match the required structure. It should accept a jobs array, write to the file, and handle errors.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "writeJobsToFile",
+            "jobs",
+            "writeFileSync",
+            "JSON.stringify",
+            "try",
+            "catch"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 10",
+        "title": "Create duplicate detection logic",
+        "instruction": "Create a function named 'isDuplicateJob' that takes a job object as a parameter and checks if a job with the same id already exists in the tracking file.",
+        "hint": "You'll need to read the existing jobs using the helper function you created earlier, then compare the new job's id with each existing job's id.",
+        "analogousExample": "// Similar: checking for duplicate items\nfunction isDuplicateItem(newItem, existingItems) {\n  return existingItems.some(item => item.id === newItem.id);\n}",
+        "seedCode": "const fs = require('fs');\nconst path = require('path');\n\n// Create a sample job object here\nconst sampleJob = {\n  id: 'job-123',\n  name: 'Process Data',\n  status: 'pending'\n};\n\n// Define the job tracking file path constant here\n\n// Create the readExistingJobs function here\n\n// Create the writeJobsToFile function here\n\n// Create the isDuplicateJob function here",
+        "expectedOutcome": "A function that can detect duplicate jobs by comparing their IDs with existing jobs in the file.",
+        "successCriteria": [
+          "The isDuplicateJob function is defined, takes a job parameter, reads existing jobs, and returns true if a duplicate is found."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the function, but make sure it properly reads existing jobs and compares the job IDs. Check if you're using the readExistingJobs helper function.",
+        "feedbackWrong": "The function isn't correctly implemented. Remember to read existing jobs and compare the new job's id with each existing job's id.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "function isDuplicateJob",
+            "job",
+            "readExistingJobs",
+            "some",
+            "id"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 10",
+        "title": "Create function to add a new job",
+        "instruction": "Create a function named addJob that takes a job object as a parameter, reads existing jobs, checks for duplicates using isDuplicateJob, adds the new job if it's not a duplicate, and writes the updated jobs back to file using writeJobsToFile.",
+        "hint": "The function should call readExistingJobs to get current jobs, use isDuplicateJob to check if the new job exists, push the job to the array if it's unique, then call writeJobsToFile with the updated array.",
+        "analogousExample": "// Similar: function that processes and saves data\nfunction addItem(newItem) {\n  const items = readItems();\n  if (!isDuplicateItem(newItem)) {\n    items.push(newItem);\n    writeItems(items);\n  }\n}",
+        "seedCode": "const fs = require('fs');\nconst path = require('path');\n\n// Create a sample job object here\nconst sampleJob = {\n  id: 'job-123',\n  name: 'Process Data',\n  status: 'pending'\n};\n\n// Define the job tracking file path constant here\n\n// Create the readExistingJobs function here\n\n// Create the writeJobsToFile function here\n\n// Create the isDuplicateJob function here\n\n// Create the addJob function here",
+        "expectedOutcome": "A function named addJob is created that orchestrates reading, duplicate checking, and writing operations.",
+        "successCriteria": [
+          "The addJob function is defined, calls readExistingJobs, uses isDuplicateJob for duplicate checking, pushes the new job to the array if unique, and calls writeJobsToFile with the updated array."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the addJob function, but make sure it includes all the required steps: reading existing jobs, checking for duplicates, adding the job if unique, and writing back to file.",
+        "feedbackWrong": "The addJob function is missing or doesn't properly implement the required logic. Review the steps: read existing jobs, check for duplicates, add if unique, write back.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "addJob",
+            "readExistingJobs",
+            "isDuplicateJob",
+            "push",
+            "writeJobsToFile"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 10",
+        "title": "Test with sample job data",
+        "instruction": "Call the addJob function with the sampleJob object and log the result to the console.",
+        "hint": "Use console.log() to output the result of calling addJob(sampleJob).",
+        "analogousExample": "// Testing a function with sample data\nconst result = calculateSum(5, 10);\nconsole.log(result);",
+        "seedCode": "const fs = require('fs');\nconst path = require('path');\n\n// Create a sample job object here\nconst sampleJob = {\n  id: 'job-123',\n  name: 'Process Data',\n  status: 'pending'\n};\n\n// Define the job tracking file path constant here\nconst JOBS_FILE_PATH = path.join(__dirname, 'jobs.json');\n\n// Create the readExistingJobs function here\nfunction readExistingJobs() {\n  try {\n    const data = fs.readFileSync(JOBS_FILE_PATH, 'utf8');\n    return JSON.parse(data);\n  } catch (error) {\n    return [];\n  }\n}\n\n// Create the writeJobsToFile function here\nfunction writeJobsToFile(jobs) {\n  fs.writeFileSync(JOBS_FILE_PATH, JSON.stringify(jobs, null, 2));\n}\n\n// Create the isDuplicateJob function here\nfunction isDuplicateJob(job, existingJobs) {\n  return existingJobs.some(existingJob => existingJob.id === job.id);\n}\n\n// Create the addJob function here\nfunction addJob(job) {\n  const existingJobs = readExistingJobs();\n  \n  if (isDuplicateJob(job, existingJobs)) {\n    return { success: false, message: 'Duplicate job detected' };\n  }\n  \n  existingJobs.push(job);\n  writeJobsToFile(existingJobs);\n  return { success: true, message: 'Job added successfully' };\n}\n\n// Call addJob with sampleJob and log the result\n",
+        "expectedOutcome": "The console will display the result of adding the sample job, showing either success or duplicate detection.",
+        "successCriteria": [
+          "addJob is called with sampleJob and the result is logged using console.log()."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're calling addJob(sampleJob) and logging the result with console.log().",
+        "feedbackWrong": "The test call isn't quite right. You need to call addJob with the sampleJob object and log the result.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "addJob",
+            "sampleJob",
+            "console.log"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 10",
+        "title": "Test duplicate job scenario",
+        "instruction": "Call the addJob function again with the same sampleJob object and log the result to verify duplicate detection.",
+        "hint": "You need to call addJob(sampleJob) again and console.log the returned result.",
+        "analogousExample": "// Testing duplicate scenario\nconst result = addJob(sampleJob);\nconsole.log(result);",
+        "seedCode": "const fs = require('fs');\nconst path = require('path');\n\n// Create a sample job object here\nconst sampleJob = {\n  id: 'job-123',\n  name: 'Process Data',\n  status: 'pending'\n};\n\n// Define the job tracking file path constant here\nconst JOBS_FILE_PATH = path.join(__dirname, 'jobs.json');\n\n// Create the readExistingJobs function here\nfunction readExistingJobs() {\n  try {\n    const data = fs.readFileSync(JOBS_FILE_PATH, 'utf8');\n    return JSON.parse(data);\n  } catch (error) {\n    return [];\n  }\n}\n\n// Create the writeJobsToFile function here\nfunction writeJobsToFile(jobs) {\n  fs.writeFileSync(JOBS_FILE_PATH, JSON.stringify(jobs, null, 2));\n}\n\n// Create the isDuplicateJob function here\nfunction isDuplicateJob(job, existingJobs) {\n  return existingJobs.some(existingJob => existingJob.id === job.id);\n}\n\n// Create the addJob function here\nfunction addJob(job) {\n  const existingJobs = readExistingJobs();\n  \n  if (isDuplicateJob(job, existingJobs)) {\n    return { success: false, message: 'Duplicate job detected' };\n  }\n  \n  existingJobs.push(job);\n  writeJobsToFile(existingJobs);\n  return { success: true, message: 'Job added successfully' };\n}\n\n// Call addJob with sampleJob and log the result\n// Add your duplicate test call here",
+        "expectedOutcome": "The second call to addJob with the same job object should return { success: false, message: 'Duplicate job detected' } and log this result to the console.",
+        "successCriteria": [
+          "The addJob function is called a second time with sampleJob, and the returned result is logged to the console."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure you're calling addJob(sampleJob) again and logging the result with console.log().",
+        "feedbackWrong": "The duplicate test isn't complete. You need to call addJob(sampleJob) a second time and log the returned result to verify duplicate detection.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "addJob(sampleJob)",
+            "console.log"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 10",
+        "title": "Add error handling and final validation",
+        "instruction": "Wrap the addJob function body in a try-catch block to handle potential errors and return appropriate error messages.",
+        "hint": "Add try { ... } catch (error) { ... } around the existing logic inside addJob. In the catch block, return an object with success: false and a descriptive error message.",
+        "analogousExample": "// Example: wrapping a function in try-catch\nfunction safeOperation() {\n  try {\n    // Existing logic here\n    return { success: true };\n  } catch (error) {\n    return { success: false, message: 'Operation failed' };\n  }\n}",
+        "seedCode": "const fs = require('fs');\nconst path = require('path');\n\n// Create a sample job object here\nconst sampleJob = {\n  id: 'job-123',\n  name: 'Process Data',\n  status: 'pending'\n};\n\n// Define the job tracking file path constant here\nconst JOBS_FILE_PATH = path.join(__dirname, 'jobs.json');\n\n// Create the readExistingJobs function here\nfunction readExistingJobs() {\n  try {\n    const data = fs.readFileSync(JOBS_FILE_PATH, 'utf8');\n    return JSON.parse(data);\n  } catch (error) {\n    return [];\n  }\n}\n\n// Create the writeJobsToFile function here\nfunction writeJobsToFile(jobs) {\n  fs.writeFileSync(JOBS_FILE_PATH, JSON.stringify(jobs, null, 2));\n}\n\n// Create the isDuplicateJob function here\nfunction isDuplicateJob(job, existingJobs) {\n  return existingJobs.some(existingJob => existingJob.id === job.id);\n}\n\n// Create the addJob function here\nfunction addJob(job) {\n  // Wrap the existing logic in try-catch here\n  const existingJobs = readExistingJobs();\n  \n  if (isDuplicateJob(job, existingJobs)) {\n    return { success: false, message: 'Duplicate job detected' };\n  }\n  \n  existingJobs.push(job);\n  writeJobsToFile(existingJobs);\n  return { success: true, message: 'Job added successfully' };\n}\n\n// Call addJob with sampleJob and log the result\n// Add your duplicate test call here",
+        "expectedOutcome": "The addJob function will be more robust by catching errors that might occur during file operations or JSON parsing, returning a clear error response instead of crashing.",
+        "successCriteria": [
+          "addJob function has a try-catch block that wraps the existing logic and returns an error object in case of exceptions."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure the try-catch block wraps all the logic inside addJob and returns an appropriate error object in the catch block.",
+        "feedbackWrong": "The addJob function still lacks proper error handling. Wrap the existing logic in a try-catch block to handle potential errors gracefully.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "try",
+            "catch",
+            "addJob",
+            "return",
+            "success",
+            "false",
+            "message"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import required Node.js modules",
+        "id": "step1"
+      },
+      {
+        "label": "Define the job data structure",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize the job tracking file path",
+        "id": "step3"
+      },
+      {
+        "label": "Create helper function to read existing jobs",
+        "id": "step4"
+      },
+      {
+        "label": "Create helper function to write jobs to file",
+        "id": "step5"
+      },
+      {
+        "label": "Create duplicate detection logic",
+        "id": "step6"
+      },
+      {
+        "label": "Create function to add a new job",
+        "id": "step7"
+      },
+      {
+        "label": "Test with sample job data",
+        "id": "step8"
+      },
+      {
+        "label": "Test duplicate job scenario",
+        "id": "step9"
+      },
+      {
+        "label": "Add error handling and final validation",
+        "id": "step10"
+      }
+    ]
+  },
+  "source": "content"
+}

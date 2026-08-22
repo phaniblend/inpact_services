@@ -1,0 +1,337 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-react-ts-40",
+    "track": "react-ts",
+    "lessonNum": 40,
+    "title": "Cart Context",
+    "shortName": "P40",
+    "intro": {
+      "tag": "LESSON #40",
+      "title": "Cart Context",
+      "body": "In this lesson, you will build a shopping cart feature for a React app using TypeScript. You will learn how to create and use a React Context to manage the cart's state, such as items and totals, across different components. The core concept is global state management with Context API, which avoids prop drilling. You will implement this with TypeScript interfaces for type-safe cart data and functions to add or remove items. By the end, you will have a functional cart that updates dynamically as users interact with it.",
+      "usecase": "Cart Context is a fundamental pattern used in e-commerce applications where shopping cart data needs to be accessible across multiple components. You'll see this implemented in product pages, checkout flows, cart preview modals, and header cart indicators in platforms like Amazon, Shopify stores, and food delivery apps. As a developer, you'll use Cart Context to manage cart state, calculate totals, and synchronize cart updates across different UI sections without prop drilling. This pattern ensures consistent cart data whether users are browsing products, adjusting quantities in a sidebar, or reviewing their order before payment."
+    },
+    "objectives": [
+      "Construct a React context provider to manage global cart state.",
+      "Initialize the cart context with a state object containing items and total.",
+      "Implement reducer functions to manipulate cart items (add, remove, update).",
+      "Apply the context provider to wrap application components for state accessibility.",
+      "Configure child components to consume the cart context using the useContext hook.",
+      "Bind UI elements to cart state to dynamically render items and totals.",
+      "Update the cart state in response to user interactions like adding or removing products."
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 9",
+        "title": "Import React and useContext",
+        "instruction": "Import React and the useContext hook from the 'react' package.",
+        "hint": "Use the import statement to bring in both React and useContext from 'react'.",
+        "analogousExample": "// Importing React and a hook\nimport React, { useState } from 'react';",
+        "seedCode": "// Import React and useContext from 'react'",
+        "expectedOutcome": "The imports are added at the top of the file, making React and useContext available for use.",
+        "successCriteria": [
+          "React and useContext are imported from 'react'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're importing both React and useContext from 'react'.",
+        "feedbackWrong": "That's not quite right. You need to import React and useContext from 'react'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "React",
+            "useContext",
+            "'react'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 9",
+        "title": "Create CartItem interface",
+        "instruction": "Create a TypeScript interface named CartItem with id (number), name (string), price (number), and quantity (number) properties.",
+        "hint": "Define the interface using the interface keyword, then list each property with its type annotation.",
+        "analogousExample": "// Example: another TypeScript interface\ninterface Product {\n  id: number;\n  title: string;\n  price: number;\n}",
+        "seedCode": "// Import React and useContext from 'react'\n\n// Create CartItem interface here",
+        "expectedOutcome": "You'll have a CartItem interface that defines the structure of items in the shopping cart.",
+        "successCriteria": [
+          "A CartItem interface exists with id: number, name: string, price: number, and quantity: number properties."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure your interface has all four properties: id, name, price, and quantity, each with the correct TypeScript type annotations.",
+        "feedbackWrong": "The CartItem interface isn't properly defined. Check that you used the interface keyword, named it CartItem, and included all required properties with their types.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "interface",
+            "CartItem",
+            "id:",
+            "name:",
+            "price:",
+            "quantity:",
+            "number"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 9",
+        "title": "Create CartContext with default value",
+        "instruction": "Create a React context named CartContext with the type CartContextType and provide default empty values for the context.",
+        "hint": "Use React.createContext() and pass an object that matches the CartContextType interface as the default value.",
+        "analogousExample": "// Creating a typed context with default values\nconst ThemeContext = React.createContext({ theme: 'light', toggleTheme: () => {} });",
+        "seedCode": "// Import React and useContext from 'react'\nimport React, { useContext } from 'react';\n\n// Create CartItem interface here\ninterface CartItem {\n  id: number;\n  name: string;\n  price: number;\n  quantity: number;\n}\n\n// Create CartContextType interface here\ninterface CartContextType {\n  items: CartItem[];\n  addItem: (item: CartItem) => void;\n  removeItem: (id: number) => void;\n  clearCart: () => void;\n}\n\n// Create CartContext with default value here",
+        "expectedOutcome": "A CartContext constant is created with proper TypeScript typing and default empty values.",
+        "successCriteria": [
+          "CartContext is created using React.createContext with type CartContextType and default values: items as empty array, addItem/removeItem/clearCart as empty functions."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure to provide default values that match the CartContextType interface.",
+        "feedbackWrong": "The context creation needs improvement. Check that you're using React.createContext with the correct type and default values.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "CartContext",
+            "React.createContext",
+            "CartContextType",
+            "items:",
+            "[]",
+            "addItem:",
+            "()",
+            "removeItem:",
+            "clearCart:"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 9",
+        "title": "Create CartProvider component",
+        "instruction": "Create a functional component named CartProvider that accepts children as props.",
+        "hint": "Define a component that takes a children prop and returns it wrapped in a provider element.",
+        "analogousExample": "// Similar: a provider component\nfunction ThemeProvider({ children }: { children: React.ReactNode }) {\n  return <div>{children}</div>;\n}",
+        "seedCode": "// Import React and useContext from 'react'\nimport React, { useContext } from 'react';\n\n// Create CartItem interface here\ninterface CartItem {\n  id: number;\n  name: string;\n  price: number;\n  quantity: number;\n}\n\n// Create CartContextType interface here\ninterface CartContextType {\n  items: CartItem[];\n  addItem: (item: CartItem) => void;\n  removeItem: (id: number) => void;\n  clearCart: () => void;\n}\n\n// Create CartProvider component here\n",
+        "expectedOutcome": "A CartProvider component is defined with proper TypeScript props.",
+        "successCriteria": [
+          "CartProvider is a functional component that accepts children as a prop."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure CartProvider is a functional component that accepts children as a prop.",
+        "feedbackWrong": "Not quite. Create a functional component named CartProvider that accepts children as props.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "CartProvider",
+            "children",
+            "React.ReactNode",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 9",
+        "title": "Initialize cart state in CartProvider",
+        "instruction": "Inside the CartProvider component, initialize a state variable named 'items' with an empty array as its initial value. Use the useState hook with the CartItem[] type.",
+        "hint": "You'll need to call useState<CartItem[]>([]). This creates state that holds an array of cart items, starting empty.",
+        "analogousExample": "// Example: state for a list of numbers\nconst [numbers, setNumbers] = useState<number[]>([]);",
+        "seedCode": "// Import React and useContext from 'react'\nimport React, { useContext } from 'react';\n\n// Create CartItem interface here\ninterface CartItem {\n  id: number;\n  name: string;\n  price: number;\n  quantity: number;\n}\n\n// Create CartContextType interface here\ninterface CartContextType {\n  items: CartItem[];\n  addItem: (item: CartItem) => void;\n  removeItem: (id: number) => void;\n  clearCart: () => void;\n}\n\n// Create CartProvider component here\nconst CartProvider = () => {\n  // Initialize cart state here\n  \n  return null;\n};",
+        "expectedOutcome": "The CartProvider component will have a state variable 'items' initialized to an empty array, typed as CartItem[].",
+        "successCriteria": [
+          "The useState hook is called with <CartItem[]>([]) inside CartProvider, creating a state variable named 'items'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're using the correct type annotation <CartItem[]> and initializing with an empty array [].",
+        "feedbackWrong": "The state initialization is missing or incorrect. Remember to use useState<CartItem[]>([]) inside the CartProvider component.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "useState",
+            "CartItem[]",
+            "items",
+            "[]"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 9",
+        "title": "Define addToCart handler",
+        "instruction": "Inside the CartProvider component, define a function named addToCart that takes a CartItem parameter and updates the cart state by adding or updating items.",
+        "hint": "Create a function that receives an item and updates the state using the setCart function. You'll need to handle both adding new items and updating quantities for existing items.",
+        "analogousExample": "// Example: A function that updates state\nfunction addItem(item) {\n  setItems(prevItems => [...prevItems, item]);\n}",
+        "seedCode": "// Import React and useContext from 'react'\nimport React, { useContext } from 'react';\n\n// Create CartItem interface here\ninterface CartItem {\n  id: number;\n  name: string;\n  price: number;\n  quantity: number;\n}\n\n// Create CartContextType interface here\ninterface CartContextType {\n  items: CartItem[];\n  addItem: (item: CartItem) => void;\n  removeItem: (id: number) => void;\n  clearCart: () => void;\n}\n\n// Create CartProvider component here\nconst CartProvider = () => {\n  // Initialize cart state here\n  \n  // Define addToCart handler here\n  \n  return null;\n};",
+        "expectedOutcome": "The CartProvider component now contains an addToCart function that will handle adding items to the cart state.",
+        "successCriteria": [
+          "An addToCart function is defined inside the CartProvider component that takes a CartItem parameter."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you've defined a function named addToCart that takes a CartItem parameter. Check that it's inside the CartProvider component.",
+        "feedbackWrong": "The addToCart function isn't defined correctly. Make sure to create a function named addToCart that accepts a CartItem parameter inside the CartProvider component.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "addToCart",
+            "CartItem",
+            "function",
+            "=>",
+            "{"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 9",
+        "title": "Set up CartProvider return structure",
+        "instruction": "Return CartContext.Provider from your CartProvider component, passing the cart state and handlers as the value prop and wrapping children.",
+        "hint": "Use CartContext.Provider with a value object containing items, addItem, removeItem, and clearCart. Wrap children with the provider.",
+        "analogousExample": "// Similar: returning a context provider\nfunction ThemeProvider({ children }) {\n  const [theme, setTheme] = React.useState('light');\n  return (\n    <ThemeContext.Provider value={{ theme, setTheme }}>\n      {children}\n    </ThemeContext.Provider>\n  );\n}",
+        "seedCode": "// Import React and useContext from 'react'\nimport React, { useContext } from 'react';\n\n// Create CartItem interface here\ninterface CartItem {\n  id: number;\n  name: string;\n  price: number;\n  quantity: number;\n}\n\n// Create CartContextType interface here\ninterface CartContextType {\n  items: CartItem[];\n  addItem: (item: CartItem) => void;\n  removeItem: (id: number) => void;\n  clearCart: () => void;\n}\n\n// Create CartProvider component here\nconst CartProvider = () => {\n  // Initialize cart state here\n  const [cart, setCart] = React.useState<CartItem[]>([]);\n\n  // Define addToCart handler here\n  const addItem = (item: CartItem) => {\n    setCart(prevCart => {\n      const existingItem = prevCart.find(cartItem => cartItem.id === item.id);\n      if (existingItem) {\n        return prevCart.map(cartItem =>\n          cartItem.id === item.id\n            ? { ...cartItem, quantity: cartItem.quantity + 1 }\n            : cartItem\n        );\n      }\n      return [...prevCart, { ...item, quantity: 1 }];\n    });\n  };\n\n  // Define removeFromCart handler here\n  \n  // Define clearCart handler here\n  \n  // Return CartContext.Provider here\n  \n};\n",
+        "expectedOutcome": "The CartProvider component returns CartContext.Provider with a value prop containing cart state and handlers, making them available to child components.",
+        "successCriteria": [
+          "CartProvider returns CartContext.Provider with value={{ items: cart, addItem, removeItem, clearCart }} and wraps children."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're returning CartContext.Provider with the correct value object and wrapping children.",
+        "feedbackWrong": "The CartProvider component should return CartContext.Provider with the cart state and handlers as the value prop.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "CartContext.Provider",
+            "value",
+            "items",
+            "addItem",
+            "removeItem",
+            "clearCart",
+            "children"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 9",
+        "title": "Create useCart custom hook",
+        "instruction": "Create a custom hook named useCart that uses useContext to return the CartContext value.",
+        "hint": "Define a function that calls useContext with CartContext and returns the result.",
+        "analogousExample": "// Example: a custom hook for theme context\nfunction useTheme() {\n  const theme = useContext(ThemeContext);\n  return theme;\n}",
+        "seedCode": "// Import React and useContext from 'react'\nimport React, { useContext } from 'react';\n\n// Create CartItem interface here\ninterface CartItem {\n  id: number;\n  name: string;\n  price: number;\n  quantity: number;\n}\n\n// Create CartContextType interface here\ninterface CartContextType {\n  items: CartItem[];\n  addItem: (item: CartItem) => void;\n  removeItem: (id: number) => void;\n  clearCart: () => void;\n}\n\n// Create CartProvider component here\nconst CartProvider = () => {\n  // Initialize cart state here\n  const [cart, setCart] = React.useState<CartItem[]>([]);\n\n  // Define addToCart handler here\n  const addItem = (item: CartItem) => {\n    setCart(prevCart => {\n      const existingItem = prevCart.find(cartItem => cartItem.id === item.id);\n      if (existingItem) {\n        return prevCart.map(cartItem =>\n          cartItem.id === item.id\n            ? { ...cartItem, quantity: cartItem.quantity + 1 }\n            : cartItem\n        );\n      }\n      return [...prevCart, { ...item, quantity: 1 }];\n    });\n  };\n\n  // Define removeFromCart handler here\n  \n  // Define clearCart handler here\n  \n  // Return CartContext.Provider here\n  \n};\n\n// Create useCart custom hook here\n",
+        "expectedOutcome": "A custom hook named useCart is defined that returns the CartContext value.",
+        "successCriteria": [
+          "The useCart hook is defined, uses useContext with CartContext, and returns the context value."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the useCart hook, but it needs to use useContext with CartContext and return the value. Check the syntax for custom hooks.",
+        "feedbackWrong": "The useCart hook isn't properly defined. Make sure to create a function named useCart that calls useContext(CartContext) and returns the result.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "useCart",
+            "useContext",
+            "CartContext",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 9",
+        "title": "Export CartContext and CartProvider",
+        "instruction": "Export CartContext and CartProvider from the module so they can be imported in other files.",
+        "hint": "Use the export keyword before the CartContext and CartProvider declarations.",
+        "analogousExample": "// Exporting a constant and component\nconst MAX_ITEMS = 10;\nexport const MAX_ITEMS;\n\nconst ProductCard = () => {\n  return <div>Product</div>;\n};\nexport ProductCard;",
+        "seedCode": "// Import React and useContext from 'react'\nimport React, { useContext } from 'react';\n\n// Create CartItem interface here\ninterface CartItem {\n  id: number;\n  name: string;\n  price: number;\n  quantity: number;\n}\n\n// Create CartContextType interface here\ninterface CartContextType {\n  items: CartItem[];\n  addItem: (item: CartItem) => void;\n  removeItem: (id: number) => void;\n  clearCart: () => void;\n}\n\n// Create CartProvider component here\nconst CartProvider = () => {\n  // Initialize cart state here\n  const [cart, setCart] = React.useState<CartItem[]>([]);\n\n  // Define addToCart handler here\n  const addItem = (item: CartItem) => {\n    setCart(prevCart => {\n      const existingItem = prevCart.find(cartItem => cartItem.id === item.id);\n      if (existingItem) {\n        return prevCart.map(cartItem =>\n          cartItem.id === item.id\n            ? { ...cartItem, quantity: cartItem.quantity + 1 }\n            : cartItem\n        );\n      }\n      return [...prevCart, { ...item, quantity: 1 }];\n    });\n  };\n\n  // Define removeFromCart handler here\n  \n  // Define clearCart handler here\n  \n  // Return CartContext.Provider here\n  \n};\n\n// Create useCart custom hook here\n\n// Export CartContext and CartProvider here",
+        "expectedOutcome": "CartContext and CartProvider are exported from the module, making them available for import in other components.",
+        "successCriteria": [
+          "CartContext and CartProvider are exported using the export keyword."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've exported one of the items, but both CartContext and CartProvider need to be exported. Make sure to add export before both declarations.",
+        "feedbackWrong": "The exports are missing or incorrect. Remember to use the export keyword before CartContext and CartProvider so they can be imported elsewhere.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "export",
+            "CartContext",
+            "CartProvider"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import React and useContext",
+        "id": "step1"
+      },
+      {
+        "label": "Create CartItem interface",
+        "id": "step2"
+      },
+      {
+        "label": "Create CartContext with default value",
+        "id": "step3"
+      },
+      {
+        "label": "Create CartProvider component",
+        "id": "step4"
+      },
+      {
+        "label": "Initialize cart state in CartProvider",
+        "id": "step5"
+      },
+      {
+        "label": "Define addToCart handler",
+        "id": "step6"
+      },
+      {
+        "label": "Set up CartProvider return structure",
+        "id": "step7"
+      },
+      {
+        "label": "Create useCart custom hook",
+        "id": "step8"
+      },
+      {
+        "label": "Export CartContext and CartProvider",
+        "id": "step9"
+      }
+    ]
+  },
+  "source": "content"
+}

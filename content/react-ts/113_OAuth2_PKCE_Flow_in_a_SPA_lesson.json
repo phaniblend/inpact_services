@@ -1,0 +1,371 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-react-ts-113",
+    "track": "react-ts",
+    "lessonNum": 113,
+    "title": "OAuth2 PKCE Flow in a SPA",
+    "shortName": "P113",
+    "intro": {
+      "tag": "LESSON #113",
+      "title": "OAuth2 PKCE Flow in a SPA",
+      "body": "In this lesson, you will build a simple React app that securely logs a user in using the OAuth2 PKCE flow, a standard for Single Page Applications (SPAs). You'll learn how to generate a code verifier and challenge, redirect to an authorization server, and exchange an authorization code for an access token. The core programming concepts involve managing React state with useState, handling side effects with useEffect, and making secure HTTP requests. You'll work with TypeScript interfaces, browser APIs like crypto for PKCE, and React event handlers to create a functional authentication component.",
+      "usecase": "The OAuth2 PKCE flow is the standard security protocol for authenticating users in modern single-page applications (SPAs) like Gmail, Spotify, and Trello. When you log into these web apps and are redirected to a third-party login page (like Google or GitHub), PKCE ensures that the authorization code cannot be intercepted and reused. As a developer, implementing this flow is essential for building secure dashboards, admin panels, or any user-facing application that requires protected API access without exposing sensitive credentials."
+    },
+    "objectives": [
+      "Construct a React component that initializes the OAuth2 PKCE authorization request",
+      "Implement code verifier and code challenge generation for PKCE security",
+      "Configure the authorization endpoint URL with required OAuth2 parameters",
+      "Integrate the authorization response handling to extract the authorization code",
+      "Manipulate browser storage to securely manage OAuth2 tokens and state",
+      "Apply token exchange logic to convert authorization codes to access tokens",
+      "Control token refresh mechanisms to maintain authenticated sessions",
+      "Render user interface elements that reflect authentication status"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 10",
+        "title": "Import React, useState, useEffect, and useCallback",
+        "instruction": "Import React, useState, useEffect, and useCallback from 'react'.",
+        "hint": "Use a single import statement to bring in all four items from the 'react' package.",
+        "analogousExample": "// Example: importing multiple items from a module\nimport React, { useState, useEffect } from 'react';",
+        "seedCode": "// Import React, useState, useEffect, and useCallback from 'react'\n",
+        "expectedOutcome": "The imports are added at the top of the file, making the React core and essential hooks available for the OAuth2 PKCE flow implementation.",
+        "successCriteria": [
+          "React, useState, useEffect, and useCallback are all imported from 'react'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close, but not all required imports are present. Make sure to import React, useState, useEffect, and useCallback from 'react'.",
+        "feedbackWrong": "The imports are incorrect or missing. You need to import React, useState, useEffect, and useCallback from 'react'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "React",
+            "useState",
+            "useEffect",
+            "useCallback",
+            "'react'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 10",
+        "title": "Create the main App component with TypeScript",
+        "instruction": "Create a functional component named App that returns JSX. Use TypeScript typing for the component.",
+        "hint": "Define a function or arrow function named App that returns a JSX element like a div.",
+        "analogousExample": "// Example: a basic functional component\nfunction App() {\n  return (\n    <div>\n      <h1>Welcome</h1>\n    </div>\n  );\n}",
+        "seedCode": "// Import React, useState, useEffect, and useCallback from 'react'\nimport React, { useState, useEffect, useCallback } from 'react';\n\n// Create the App component here",
+        "expectedOutcome": "The App component is defined with proper TypeScript typing and returns JSX.",
+        "successCriteria": [
+          "A functional component named App is created and returns JSX."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure the component is named App and returns JSX.",
+        "feedbackWrong": "The App component is not correctly defined. Ensure it's a functional component that returns JSX.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "App",
+            "return",
+            "JSX"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 10",
+        "title": "Define TypeScript interfaces for OAuth state",
+        "instruction": "Inside the App component, define two TypeScript interfaces: AuthState and TokenResponse. AuthState should describe the authentication state (isAuthenticated: boolean, user: string | null, error: string | null). TokenResponse should describe the token response from the OAuth server (access_token: string, token_type: string, expires_in: number).",
+        "hint": "Use the 'interface' keyword followed by the interface name and its properties with their types.",
+        "analogousExample": "// Example: defining interfaces for user data\ninterface UserProfile {\n  name: string;\n  age: number;\n  email: string;\n}\n\ninterface ApiResponse {\n  status: number;\n  data: UserProfile;\n}",
+        "seedCode": "import React, { useState, useEffect, useCallback } from 'react';\n\n// Create the App component here\n\n// Define TypeScript interfaces for OAuth state below\n",
+        "expectedOutcome": "You will have two TypeScript interfaces defined that will be used later to type the component's state and API responses.",
+        "successCriteria": [
+          "Two interfaces are defined: AuthState with isAuthenticated (boolean), user (string | null), error (string | null) and TokenResponse with access_token (string), token_type (string), expires_in (number)."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure both interfaces are defined with all the required properties and correct types.",
+        "feedbackWrong": "The interfaces are missing or don't match the required structure. Check the instruction for the exact properties and types needed.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "interface AuthState",
+            "isAuthenticated: boolean",
+            "user: string | null",
+            "error: string | null",
+            "interface TokenResponse",
+            "access_token: string",
+            "token_type: string",
+            "expires_in: number"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 10",
+        "title": "Initialize state for authentication status",
+        "instruction": "Inside your App component, use the useState hook to initialize an authState variable with the AuthState interface type. Set its initial value to { isAuthenticated: false, token: null }.",
+        "hint": "The useState hook takes an initial value and returns an array with the state variable and a setter function. You'll need to provide the correct TypeScript type annotation.",
+        "analogousExample": "// Similar: typed state initialization\nconst [count, setCount] = useState<number>(0);",
+        "seedCode": "import React, { useState, useEffect, useCallback } from 'react';\n\ninterface AuthState {\n  isAuthenticated: boolean;\n  token: string | null;\n}\n\nconst App = () => {\n  // Initialize authState here\n  \n  return null;\n};\n\nexport default App;",
+        "expectedOutcome": "The App component will have a properly typed authState variable initialized with the default authentication state.",
+        "successCriteria": [
+          "authState is declared using useState with AuthState type and initialized to { isAuthenticated: false, token: null }"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're using the useState hook with the AuthState type and the correct initial value.",
+        "feedbackWrong": "The authState initialization is missing or incorrect. Check that you're using useState with the AuthState interface type.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "useState",
+            "authState",
+            "AuthState",
+            "isAuthenticated",
+            "false",
+            "token",
+            "null"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 10",
+        "title": "Create helper function to generate code verifier",
+        "instruction": "Inside the App component, create a function named generateCodeVerifier that returns a secure random string using the Web Crypto API.",
+        "hint": "Use crypto.getRandomValues() to generate random bytes and convert them to a URL-safe base64 string.",
+        "analogousExample": "// Example: A function that generates a random string\nfunction generateRandomId() {\n  const array = new Uint8Array(16);\n  crypto.getRandomValues(array);\n  return btoa(String.fromCharCode(...array)).replace(/[+/=]/g, '');\n}",
+        "seedCode": "import React, { useState, useEffect, useCallback } from 'react';\n\ninterface AuthState {\n  isAuthenticated: boolean;\n  token: string | null;\n}\n\nconst App = () => {\n  // Initialize authState here\n  \n  // Create generateCodeVerifier function here\n  \n  return null;\n};\n\nexport default App;",
+        "expectedOutcome": "The generateCodeVerifier function is defined inside the App component and returns a cryptographically secure random string suitable for PKCE.",
+        "successCriteria": [
+          "A function named generateCodeVerifier is defined, uses crypto.getRandomValues(), and returns a string."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure the function is named generateCodeVerifier and returns a string using crypto.getRandomValues().",
+        "feedbackWrong": "The function is missing or doesn't match the requirements. It should be named generateCodeVerifier and return a secure random string.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "generateCodeVerifier",
+            "crypto.getRandomValues",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 10",
+        "title": "Create login handler function",
+        "instruction": "Inside your App component, create a function named handleLogin that will handle the OAuth2 login flow. This function should be defined using the useCallback hook to memoize it.",
+        "hint": "Use the useCallback hook to define handleLogin. The function should be empty for now - we'll add the PKCE logic in the next step.",
+        "analogousExample": "// Example: creating a memoized handler function\nconst handleClick = useCallback(() => {\n  // Handler logic will go here\n}, []);",
+        "seedCode": "import React, { useState, useEffect, useCallback } from 'react';\n\ninterface AuthState {\n  isAuthenticated: boolean;\n  token: string | null;\n}\n\nconst App = () => {\n  // Initialize authState here\n  \n  // Create generateCodeVerifier function here\n  \n  // Create generateCodeChallenge function here\n  \n  // Create handleLogin function here\n  \n  return null;\n};\n\nexport default App;",
+        "expectedOutcome": "You should have a handleLogin function defined inside your App component using useCallback.",
+        "successCriteria": [
+          "The handleLogin function is defined with useCallback and has an empty implementation."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're using useCallback to define handleLogin inside the App component.",
+        "feedbackWrong": "The handleLogin function needs to be defined inside the App component using useCallback.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "handleLogin",
+            "useCallback",
+            "() =>",
+            "{}"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 10",
+        "title": "Add useEffect to handle OAuth callback",
+        "instruction": "Inside your App component, add a useEffect hook that checks the current URL for an authorization code parameter when the component mounts. If a code is present, call the handleTokenExchange function with that code.",
+        "hint": "Use window.location.search to get URL query parameters. You can parse them with URLSearchParams. The code parameter is typically named 'code'.",
+        "analogousExample": "// Example: useEffect for checking URL parameters\nuseEffect(() => {\n  const params = new URLSearchParams(window.location.search);\n  const code = params.get('code');\n  if (code) {\n    // Handle the authorization code\n  }\n}, []);",
+        "seedCode": "import React, { useState, useEffect, useCallback } from 'react';\n\ninterface AuthState {\n  isAuthenticated: boolean;\n  token: string | null;\n}\n\nconst App = () => {\n  const [authState, setAuthState] = useState<AuthState>({\n    isAuthenticated: false,\n    token: null\n  });\n\n  const generateCodeVerifier = (): string => {\n    const array = new Uint8Array(32);\n    window.crypto.getRandomValues(array);\n    return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');\n  };\n\n  const generateCodeChallenge = async (verifier: string): Promise<string> => {\n    const encoder = new TextEncoder();\n    const data = encoder.encode(verifier);\n    const hash = await window.crypto.subtle.digest('SHA-256', data);\n    return btoa(String.fromCharCode(...new Uint8Array(hash)))\n      .replace(/\\+/g, '-')\n      .replace(/\\//g, '_')\n      .replace(/=+$/, '');\n  };\n\n  const handleLogin = async () => {\n    const verifier = generateCodeVerifier();\n    const challenge = await generateCodeChallenge(verifier);\n    localStorage.setItem('code_verifier', verifier);\n    const authUrl = `https://authorization-server.com/authorize?response_type=code&client_id=your-client-id&redirect_uri=${encodeURIComponent(window.location.origin)}&code_challenge=${challenge}&code_challenge_method=S256`;\n    window.location.href = authUrl;\n  };\n\n  const handleTokenExchange = async (code: string) => {\n    const verifier = localStorage.getItem('code_verifier');\n    if (!verifier) return;\n    const response = await fetch('https://authorization-server.com/token', {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },\n      body: new URLSearchParams({\n        grant_type: 'authorization_code',\n        code,\n        redirect_uri: window.location.origin,\n        client_id: 'your-client-id',\n        code_verifier: verifier\n      })\n    });\n    const data = await response.json();\n    if (data.access_token) {\n      setAuthState({ isAuthenticated: true, token: data.access_token });\n      localStorage.removeItem('code_verifier');\n    }\n  };\n\n  // Add useEffect here to check for authorization code\n\n  return null;\n};\n\nexport default App;",
+        "expectedOutcome": "The useEffect hook will automatically check for an authorization code in the URL when the app loads after OAuth redirect, and trigger token exchange if found.",
+        "successCriteria": [
+          "A useEffect hook is added that checks URL parameters for 'code' and calls handleTokenExchange when present."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your useEffect properly extracts the 'code' parameter from the URL and calls handleTokenExchange with it.",
+        "feedbackWrong": "The useEffect hook is missing or doesn't properly check for the authorization code. Remember to use URLSearchParams to parse the query string and look for the 'code' parameter.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "useEffect",
+            "URLSearchParams",
+            "get('code')",
+            "handleTokenExchange"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 10",
+        "title": "Create main JSX structure with authentication status display",
+        "instruction": "Return JSX from your App component that includes a container div and conditionally renders content based on the authState.isAuthenticated value.",
+        "hint": "Use a ternary operator or conditional rendering to display different UI elements depending on whether the user is authenticated.",
+        "analogousExample": "// Conditional rendering example\nreturn (\n  <div>\n    {isLoggedIn ? <p>Welcome back!</p> : <p>Please log in</p>}\n  </div>\n);",
+        "seedCode": "import React, { useState, useEffect, useCallback } from 'react';\n\ninterface AuthState {\n  isAuthenticated: boolean;\n  token: string | null;\n}\n\nconst App = () => {\n  const [authState, setAuthState] = useState<AuthState>({\n    isAuthenticated: false,\n    token: null\n  });\n\n  const generateCodeVerifier = (): string => {\n    const array = new Uint8Array(32);\n    window.crypto.getRandomValues(array);\n    return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');\n  };\n\n  const generateCodeChallenge = async (verifier: string): Promise<string> => {\n    const encoder = new TextEncoder();\n    const data = encoder.encode(verifier);\n    const hash = await window.crypto.subtle.digest('SHA-256', data);\n    return btoa(String.fromCharCode(...new Uint8Array(hash)))\n      .replace(/\\+/g, '-')\n      .replace(/\\//g, '_')\n      .replace(/=+$/, '');\n  };\n\n  const handleLogin = async () => {\n    const verifier = generateCodeVerifier();\n    const challenge = await generateCodeChallenge(verifier);\n    localStorage.setItem('code_verifier', verifier);\n    const authUrl = `https://authorization-server.com/authorize?response_type=code&client_id=your-client-id&redirect_uri=${encodeURIComponent(window.location.origin)}&code_challenge=${challenge}&code_challenge_method=S256`;\n    window.location.href = authUrl;\n  };\n\n  const handleTokenExchange = async (code: string) => {\n    const verifier = localStorage.getItem('code_verifier');\n    if (!verifier) return;\n    const response = await fetch('https://authorization-server.com/token', {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },\n      body: new URLSearchParams({\n        grant_type: 'authorization_code',\n        code,\n        redirect_uri: window.location.origin,\n        client_id: 'your-client-id',\n        code_verifier: verifier\n      })\n    });\n    const data = await response.json();\n    if (data.access_token) {\n      setAuthState({ isAuthenticated: true, token: data.access_token });\n      localStorage.removeItem('code_verifier');\n    }\n  };\n\n  // Add useEffect here to check for authorization code\n\n  // Return JSX structure with conditional rendering\n  return (\n    <div>\n      {authState.isAuthenticated ? (\n        <p>Authenticated! Token: {authState.token}</p>\n      ) : (\n        <p>Not authenticated</p>\n      )}\n    </div>\n  );\n};\n\nexport default App;",
+        "expectedOutcome": "The App component returns JSX with a container div and conditionally renders authentication status messages.",
+        "successCriteria": [
+          "JSX is returned from the App component",
+          "Container div is present",
+          "Conditional rendering based on authState.isAuthenticated is implemented"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you have both the container div and proper conditional rendering based on authState.isAuthenticated.",
+        "feedbackWrong": "The JSX structure is missing or incomplete. Remember to return JSX with a container div and conditionally render content based on authentication status.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "return",
+            "<div>",
+            "authState.isAuthenticated",
+            "?",
+            ":",
+            "</div>"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 10",
+        "title": "Add login button and wire it to login handler",
+        "instruction": "Inside the JSX structure, add a button element with the text 'Login with OAuth2 PKCE' that calls the handleLogin function when clicked. Place this button in the unauthenticated branch of your conditional rendering.",
+        "hint": "Add a <button> element with an onClick prop that references your handleLogin function. Remember to place it within the JSX fragment that shows when the user is not authenticated.",
+        "analogousExample": "// Adding an interactive button\n<button onClick={handleAction}>Click me</button>",
+        "seedCode": "import React, { useState, useEffect, useCallback } from 'react';\n\ninterface AuthState {\n  isAuthenticated: boolean;\n  token: string | null;\n}\n\nconst App = () => {\n  const [authState, setAuthState] = useState<AuthState>({\n    isAuthenticated: false,\n    token: null\n  });\n\n  const generateCodeVerifier = (): string => {\n    const array = new Uint8Array(32);\n    window.crypto.getRandomValues(array);\n    return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');\n  };\n\n  const generateCodeChallenge = async (verifier: string): Promise<string> => {\n    const encoder = new TextEncoder();\n    const data = encoder.encode(verifier);\n    const hash = await window.crypto.subtle.digest('SHA-256', data);\n    return btoa(String.fromCharCode(...new Uint8Array(hash)))\n      .replace(/\\+/g, '-')\n      .replace(/\\//g, '_')\n      .replace(/=+$/, '');\n  };\n\n  const handleLogin = async () => {\n    const verifier = generateCodeVerifier();\n    const challenge = await generateCodeChallenge(verifier);\n    localStorage.setItem('code_verifier', verifier);\n    const authUrl = `https://authorization-server.com/authorize?response_type=code&client_id=your-client-id&redirect_uri=${encodeURIComponent(window.location.origin)}&code_challenge=${challenge}&code_challenge_method=S256`;\n    window.location.href = authUrl;\n  };\n\n  const handleTokenExchange = async (code: string) => {\n    const verifier = localStorage.getItem('code_verifier');\n    if (!verifier) return;\n    const response = await fetch('https://authorization-server.com/token', {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },\n      body: new URLSearchParams({\n        grant_type: 'authorization_code',\n        code,\n        redirect_uri: window.location.origin,\n        client_id: 'your-client-id',\n        code_verifier: verifier\n      })\n    });\n    const data = await response.json();\n    if (data.access_token) {\n      setAuthState({ isAuthenticated: true, token: data.access_token });\n      localStorage.removeItem('code_verifier');\n    }\n  };\n\n  // Add useEffect here to check for authorization code\n\n  // Return JSX structure with conditional rendering\n  return (\n    <div>\n      {authState.isAuthenticated ? (\n        <p>Authenticated! Token: {authState.token}</p>\n      ) : (\n        <p>Not authenticated</p>\n      )}\n    </div>\n  );\n};\n\nexport default App;",
+        "expectedOutcome": "A button labeled 'Login with OAuth2 PKCE' appears in the UI when the user is not authenticated. Clicking it triggers the OAuth2 PKCE login flow.",
+        "successCriteria": [
+          "A <button> element with onClick={handleLogin} is added to the JSX, placed within the unauthenticated branch of the conditional rendering."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure you've added a button element with the correct onClick handler and placed it in the right location.",
+        "feedbackWrong": "The login button is missing or not properly wired. Check that you've added a <button> with onClick={handleLogin} in the unauthenticated JSX branch.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<button",
+            "onClick={handleLogin}",
+            "Login with OAuth2 PKCE"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 10",
+        "title": "Add logout button and wire it to clear authentication state",
+        "instruction": "Add a logout button that appears when authenticated and clears the authentication state when clicked.",
+        "hint": "Create a button element with an onClick handler that calls a function to reset authState.",
+        "analogousExample": "// Example: logout button in a component\n<button onClick={() => setAuthState({ isAuthenticated: false, token: null })}>\n  Logout\n</button>",
+        "seedCode": "import React, { useState, useEffect, useCallback } from 'react';\n\ninterface AuthState {\n  isAuthenticated: boolean;\n  token: string | null;\n}\n\nconst App = () => {\n  const [authState, setAuthState] = useState<AuthState>({\n    isAuthenticated: false,\n    token: null\n  });\n\n  const generateCodeVerifier = (): string => {\n    const array = new Uint8Array(32);\n    window.crypto.getRandomValues(array);\n    return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');\n  };\n\n  const generateCodeChallenge = async (verifier: string): Promise<string> => {\n    const encoder = new TextEncoder();\n    const data = encoder.encode(verifier);\n    const hash = await window.crypto.subtle.digest('SHA-256', data);\n    return btoa(String.fromCharCode(...new Uint8Array(hash)))\n      .replace(/\\+/g, '-')\n      .replace(/\\//g, '_')\n      .replace(/=+$/, '');\n  };\n\n  const handleLogin = async () => {\n    const verifier = generateCodeVerifier();\n    const challenge = await generateCodeChallenge(verifier);\n    localStorage.setItem('code_verifier', verifier);\n    const authUrl = `https://authorization-server.com/authorize?response_type=code&client_id=your-client-id&redirect_uri=${encodeURIComponent(window.location.origin)}&code_challenge=${challenge}&code_challenge_method=S256`;\n    window.location.href = authUrl;\n  };\n\n  const handleTokenExchange = async (code: string) => {\n    const verifier = localStorage.getItem('code_verifier');\n    if (!verifier) return;\n    const response = await fetch('https://authorization-server.com/token', {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },\n      body: new URLSearchParams({\n        grant_type: 'authorization_code',\n        code,\n        redirect_uri: window.location.origin,\n        client_id: 'your-client-id',\n        code_verifier: verifier\n      })\n    });\n    const data = await response.json();\n    if (data.access_token) {\n      setAuthState({ isAuthenticated: true, token: data.access_token });\n      localStorage.removeItem('code_verifier');\n    }\n  };\n\n  // Add useEffect here to check for authorization code\n\n  // Return JSX structure with conditional rendering\n  return (\n    <div>\n      {authState.isAuthenticated ? (\n        <p>Authenticated! Token: {authState.token}</p>\n      ) : (\n        <p>Not authenticated</p>\n      )}\n    </div>\n  );\n};\n\nexport default App;",
+        "expectedOutcome": "A logout button appears when the user is authenticated, and clicking it resets authState to isAuthenticated: false and token: null.",
+        "successCriteria": [
+          "Logout button is added inside the authenticated branch of the conditional rendering",
+          "Button has an onClick handler that calls setAuthState to reset authentication state"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure the logout button appears only when authenticated and properly resets the authState.",
+        "feedbackWrong": "The logout button or its functionality isn't quite right. Review how to conditionally render elements and update state in React.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<button",
+            "onClick",
+            "setAuthState",
+            "isAuthenticated: false",
+            "token: null"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import React, useState, useEffect, and useCallback",
+        "id": "step1"
+      },
+      {
+        "label": "Create the main App component with TypeScript",
+        "id": "step2"
+      },
+      {
+        "label": "Define TypeScript interfaces for OAuth state",
+        "id": "step3"
+      },
+      {
+        "label": "Initialize state for authentication status",
+        "id": "step4"
+      },
+      {
+        "label": "Create helper function to generate code verifier",
+        "id": "step5"
+      },
+      {
+        "label": "Create login handler function",
+        "id": "step6"
+      },
+      {
+        "label": "Add useEffect to handle OAuth callback",
+        "id": "step7"
+      },
+      {
+        "label": "Create main JSX structure with authentication status display",
+        "id": "step8"
+      },
+      {
+        "label": "Add login button and wire it to login handler",
+        "id": "step9"
+      },
+      {
+        "label": "Add logout button and wire it to clear authentication state",
+        "id": "step10"
+      }
+    ]
+  },
+  "source": "content"
+}

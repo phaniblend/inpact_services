@@ -1,0 +1,368 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-angular-60",
+    "track": "angular",
+    "lessonNum": 60,
+    "title": "Image Lazy Loading",
+    "shortName": "P60",
+    "intro": {
+      "tag": "LESSON #60",
+      "title": "Image Lazy Loading",
+      "body": "In this lesson, you will build an Angular component that displays a list of images, but only loads each image when it becomes visible in the viewport. This technique, called lazy loading, improves page performance by reducing initial load time and bandwidth usage. You will learn to use Angular's built-in directives and the Intersection Observer API to detect when an image enters the screen. By the end, you'll have a functional image gallery that efficiently loads content as the user scrolls.",
+      "usecase": "Lazy loading images is essential for performance in content-heavy applications like e-commerce product galleries, social media feeds, and news/article websites. When users scroll through product listings on Amazon or browse their Instagram feed, images load only as they enter the viewport, reducing initial page weight and improving load times. This pattern is also critical in dashboard applications with data visualizations and media-rich admin panels where dozens of images might be displayed but only a few are initially visible. Implementing lazy loading ensures users get responsive experiences while conserving bandwidth, especially on mobile devices."
+    },
+    "objectives": [
+      "Implement lazy loading for images using Angular's built-in directives",
+      "Configure the Intersection Observer API to detect when images enter the viewport",
+      "Initialize image sources dynamically based on scroll position",
+      "Bind placeholder images that transition to high-resolution versions",
+      "Control image loading behavior with custom Angular directives",
+      "Integrate lazy loading into existing Angular components and templates",
+      "Manipulate DOM elements to optimize image rendering performance"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 10",
+        "title": "Import Angular core modules and BrowserModule",
+        "instruction": "Import Component and NgModule from '@angular/core' and BrowserModule from '@angular/platform-browser'.",
+        "hint": "Use import statements at the top of your TypeScript file to bring in these Angular modules.",
+        "analogousExample": "// Importing Angular modules\nimport { Component, NgModule } from '@angular/core';\nimport { BrowserModule } from '@angular/platform-browser';",
+        "seedCode": "// Import the required Angular modules here",
+        "expectedOutcome": "The necessary Angular modules are imported for component creation and lazy loading.",
+        "successCriteria": [
+          "Component and NgModule are imported from '@angular/core', and BrowserModule is imported from '@angular/platform-browser'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You imported some modules, but check if all required ones are present: Component, NgModule, and BrowserModule.",
+        "feedbackWrong": "The imports are missing or incorrect. Ensure you import Component and NgModule from '@angular/core' and BrowserModule from '@angular/platform-browser'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "Component",
+            "NgModule",
+            "'@angular/core'",
+            "BrowserModule",
+            "'@angular/platform-browser'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 10",
+        "title": "Create main AppComponent class with component decorator",
+        "instruction": "Create an AppComponent class with a @Component decorator that has selector: 'app-root' and templateUrl: './app.component.html'.",
+        "hint": "Use the @Component decorator from '@angular/core' to define the component metadata.",
+        "analogousExample": "// Example of a component class with decorator\n@Component({\n  selector: 'app-example',\n  templateUrl: './example.component.html'\n})\nexport class ExampleComponent {}",
+        "seedCode": "import { Component } from '@angular/core';\nimport { BrowserModule } from '@angular/platform-browser';\n\n// Create the AppComponent class with @Component decorator here",
+        "expectedOutcome": "The AppComponent class is defined with proper component metadata, ready for lazy loading implementation.",
+        "successCriteria": [
+          "AppComponent class exists with @Component decorator containing selector 'app-root' and templateUrl './app.component.html'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your @Component decorator includes both the selector and templateUrl properties.",
+        "feedbackWrong": "The component class or decorator is missing or incorrect. Remember to use @Component with selector and templateUrl.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "@Component",
+            "selector",
+            "templateUrl",
+            "AppComponent",
+            "class"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 10",
+        "title": "Initialize image data array with placeholder URLs",
+        "instruction": "Inside the AppComponent class, define an images property as an array of objects. Each object should have src (string), alt (string), and loaded (boolean) properties. Use placeholder image URLs for the src values.",
+        "hint": "Create a property like 'images = [ ... ]' with the correct TypeScript type annotation or let TypeScript infer the type.",
+        "analogousExample": "// Example: typed data array\nconst products = [\n  { id: 1, name: 'Product A', inStock: true },\n  { id: 2, name: 'Product B', inStock: false }\n];",
+        "seedCode": "import { Component } from '@angular/core';\nimport { BrowserModule } from '@angular/platform-browser';\n\n@Component({\n  selector: 'app-root',\n  template: '',\n  standalone: false\n})\nexport class AppComponent {\n  // Define images array property here\n}",
+        "expectedOutcome": "The AppComponent class now contains an images array with placeholder data that will be used for lazy loading demonstration.",
+        "successCriteria": [
+          "AppComponent has an images property containing an array of objects with src, alt, and loaded properties"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added an images array, but check that each object has all three required properties: src (string), alt (string), and loaded (boolean).",
+        "feedbackWrong": "The images array is missing or doesn't have the correct structure. Each image object needs src, alt, and loaded properties.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "images",
+            "[",
+            "{",
+            "src",
+            "alt",
+            "loaded",
+            "}",
+            "]"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 10",
+        "title": "Add Intersection Observer to component class",
+        "instruction": "Inside the AppComponent class, create a property named 'observer' of type IntersectionObserver | null and initialize it to null. Then, implement the ngOnInit lifecycle hook to create a new IntersectionObserver instance that logs when an image enters the viewport.",
+        "hint": "You'll need to import OnInit from '@angular/core' and implement it in the class. The IntersectionObserver callback receives entries array - check if any entry is intersecting.",
+        "analogousExample": "// Similar: setting up an observer in ngOnInit\nimport { Component, OnInit } from '@angular/core';\n\n@Component({...})\nexport class MyComponent implements OnInit {\n  private observer: IntersectionObserver | null = null;\n\n  ngOnInit() {\n    this.observer = new IntersectionObserver(entries => {\n      entries.forEach(entry => {\n        if (entry.isIntersecting) {\n          console.log('Element visible!');\n        }\n      });\n    });\n  }\n}",
+        "seedCode": "import { Component } from '@angular/core';\nimport { BrowserModule } from '@angular/platform-browser';\n\n@Component({\n  selector: 'app-root',\n  template: '',\n  standalone: false\n})\nexport class AppComponent {\n  // Define images array property here\n  \n  // Add Intersection Observer property and initialization here\n}",
+        "expectedOutcome": "The component will have an IntersectionObserver instance ready to detect when images enter the viewport, though not yet observing any elements.",
+        "successCriteria": [
+          "AppComponent implements OnInit, has an 'observer' property of type IntersectionObserver | null initialized to null, and creates an IntersectionObserver instance in ngOnInit that logs intersecting entries."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you've: 1) Imported and implemented OnInit, 2) Created the observer property with proper type, and 3) Initialized the IntersectionObserver in ngOnInit with a callback that checks entry.isIntersecting.",
+        "feedbackWrong": "The Intersection Observer setup is incomplete. Remember to implement OnInit, declare the observer property, and create the IntersectionObserver instance in ngOnInit with a callback function.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "implements OnInit",
+            "observer:",
+            "IntersectionObserver",
+            "ngOnInit()",
+            "new IntersectionObserver",
+            "entry.isIntersecting"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 10",
+        "title": "Define image loading handler method",
+        "instruction": "Inside the AppComponent class, add a method named loadImage that takes an index parameter and updates the loaded property for that image.",
+        "hint": "Define a method that sets the loaded property of the image at the given index to true.",
+        "analogousExample": "// Example: a method that updates an array property\nupdateItem(index: number) {\n  this.items[index].completed = true;\n}",
+        "seedCode": "import { Component } from '@angular/core';\nimport { BrowserModule } from '@angular/platform-browser';\n\n@Component({\n  selector: 'app-root',\n  template: '',\n  standalone: false\n})\nexport class AppComponent {\n  // Define images array property here\n  \n  // Add Intersection Observer property and initialization here\n  \n  // Add loadImage method here\n}",
+        "expectedOutcome": "The AppComponent class will have a loadImage method that can be called to mark an image as loaded.",
+        "successCriteria": [
+          "The loadImage method is defined with an index parameter and updates the loaded property of the corresponding image."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added a method, but it may not correctly update the loaded property. Ensure it takes an index parameter and sets the loaded property of the image at that index to true.",
+        "feedbackWrong": "The loadImage method is not defined correctly. It should be a method inside the AppComponent class that updates the loaded property for a specific image.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "loadImage",
+            "index",
+            "loaded",
+            "true"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 10",
+        "title": "Create basic template structure with container",
+        "instruction": "In the AppComponent decorator, update the template property to include a main container div with class 'image-container' and a heading element with the text 'Lazy Loading Images Demo'.",
+        "hint": "Replace the empty template string with the required HTML structure. The container div will hold the images later.",
+        "analogousExample": "// Example: basic template structure\n@Component({\n  selector: 'app-example',\n  template: '<div class=\"container\"><h1>Example Title</h1></div>'\n})",
+        "seedCode": "import { Component } from '@angular/core';\nimport { BrowserModule } from '@angular/platform-browser';\n\n@Component({\n  selector: 'app-root',\n  template: '',\n  standalone: false\n})\nexport class AppComponent {\n  // Define images array property here\n  \n  // Add Intersection Observer property and initialization here\n  \n  // Add loadImage method here\n}",
+        "expectedOutcome": "The template property now contains a div with class 'image-container' and an h1 heading with the specified text.",
+        "successCriteria": [
+          "template property contains div with class 'image-container'",
+          "template property contains h1 with text 'Lazy Loading Images Demo'"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure both the container div with class 'image-container' and the heading with text 'Lazy Loading Images Demo' are present in the template.",
+        "feedbackWrong": "The template structure is incomplete. Check that you've added both the container div with class 'image-container' and the h1 heading with the correct text.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "template:",
+            "'image-container'",
+            "'Lazy Loading Images Demo'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 10",
+        "title": "Add ngFor loop to iterate through images",
+        "instruction": "Inside the component's template, add a container element (like a div) that uses *ngFor to iterate over the images array and create an image container for each item.",
+        "hint": "Use *ngFor=\"let image of images\" on a div element to loop through your images array. Each iteration should create a container that will hold an image.",
+        "analogousExample": "// Example: using *ngFor to display list items\n<ul>\n  <li *ngFor=\"let item of items\">{{ item.name }}</li>\n</ul>",
+        "seedCode": "import { Component } from '@angular/core';\nimport { BrowserModule } from '@angular/platform-browser';\n\n@Component({\n  selector: 'app-root',\n  template: `\n    <div class=\"image-container\">\n      <!-- Add *ngFor loop here to iterate through images -->\n    </div>\n  `,\n  standalone: false\n})\nexport class AppComponent {\n  // Define images array property here\n  \n  // Add Intersection Observer property and initialization here\n  \n  // Add loadImage method here\n}",
+        "expectedOutcome": "The template will have a structural directive that creates multiple image containers based on the images array.",
+        "successCriteria": [
+          "The template contains a div element with *ngFor directive that iterates over 'images' array and creates image containers."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added a loop, but check that you're using the correct syntax: *ngFor=\"let image of images\" and that it's applied to a container element.",
+        "feedbackWrong": "The *ngFor directive wasn't properly added. Make sure to add a div with *ngFor that iterates over your images array.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "*ngFor",
+            "images",
+            "let",
+            "of"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 10",
+        "title": "Implement lazy loading with ngSrc and loading attribute",
+        "instruction": "Inside the *ngFor loop, add an img element with [ngSrc] bound to the image URL and set the loading attribute to 'lazy'.",
+        "hint": "Use Angular's property binding syntax [ngSrc] to dynamically set the image source from your images array.",
+        "analogousExample": "<!-- Example: binding image source and lazy loading -->\n<img [src]=\"image.url\" loading=\"lazy\" alt=\"Image description\">",
+        "seedCode": "import { Component } from '@angular/core';\nimport { BrowserModule } from '@angular/platform-browser';\n\n@Component({\n  selector: 'app-root',\n  template: `\n    <div class=\"image-container\">\n      <div *ngFor=\"let image of images\">\n        <!-- Add img element with [ngSrc] and loading='lazy' here -->\n      </div>\n    </div>\n  `,\n  standalone: false\n})\nexport class AppComponent {\n  // Define images array property here\n  \n  // Add Intersection Observer property and initialization here\n  \n  // Add loadImage method here\n}",
+        "expectedOutcome": "The template will have img elements inside the ngFor loop with proper lazy loading attributes.",
+        "successCriteria": [
+          "Each img element has [ngSrc] binding to image.url and loading='lazy' attribute."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You added an img element, but make sure it has both [ngSrc] binding and loading='lazy'.",
+        "feedbackWrong": "The img element is missing or doesn't have the required lazy loading attributes.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "img",
+            "[ngSrc]",
+            "loading=\"lazy\""
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 10",
+        "title": "Wire Intersection Observer to image elements",
+        "instruction": "Add template reference variables to each image element in the ngFor loop and connect them to the Intersection Observer in your component class.",
+        "hint": "Use #refName to create a template reference variable on the img element, then pass that reference to your observer initialization method.",
+        "analogousExample": "// Template with reference variable\n<img #imgRef [src]='imageUrl' />\n\n// Component class method\nobserveImage(imgElement: HTMLImageElement) {\n  this.observer.observe(imgElement);\n}",
+        "seedCode": "import { Component } from '@angular/core';\nimport { BrowserModule } from '@angular/platform-browser';\n\n@Component({\n  selector: 'app-root',\n  template: `\n    <div class=\"image-container\">\n      <div *ngFor=\"let image of images\">\n        <!-- Add template reference variable and connect to observer -->\n      </div>\n    </div>\n  `,\n  standalone: false\n})\nexport class AppComponent {\n  // Define images array property here\n  \n  // Add Intersection Observer property and initialization here\n  \n  // Add loadImage method here\n}",
+        "expectedOutcome": "Each image element will have a template reference variable that can be accessed in the component to connect with the Intersection Observer.",
+        "successCriteria": [
+          "Template reference variables are added to image elements and the component has a method to connect them to the Intersection Observer."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added template reference variables, but make sure they're properly connected to the Intersection Observer in your component class.",
+        "feedbackWrong": "The image elements need template reference variables and a connection to the Intersection Observer. Try adding #refName to each img element and calling your observer method with the element reference.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "#",
+            "template",
+            "reference",
+            "observe",
+            "IntersectionObserver"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 10",
+        "title": "Add loading indicator and finalize module",
+        "instruction": "Add a loading spinner placeholder inside each image container div and complete the NgModule configuration by adding BrowserModule to the imports array.",
+        "hint": "Inside the *ngFor div, add a <div> with a class like 'loading-spinner' and text 'Loading...'. Then, in the NgModule decorator, add BrowserModule to the imports array.",
+        "analogousExample": "// Adding loading indicator and module configuration\n@Component({\n  selector: 'app-example',\n  template: `\n    <div *ngFor=\"let item of items\">\n      <div class=\"loading-spinner\">Loading...</div>\n    </div>\n  `\n})\nexport class ExampleComponent {}\n\n@NgModule({\n  declarations: [ExampleComponent],\n  imports: [BrowserModule],\n  bootstrap: [ExampleComponent]\n})\nexport class AppModule {}",
+        "seedCode": "import { Component } from '@angular/core';\nimport { BrowserModule } from '@angular/platform-browser';\n\n@Component({\n  selector: 'app-root',\n  template: `\n    <div class=\"image-container\">\n      <div *ngFor=\"let image of images\">\n        <!-- Add loading indicator here -->\n      </div>\n    </div>\n  `,\n  standalone: false\n})\nexport class AppComponent {\n  // Define images array property here\n  \n  // Add Intersection Observer property and initialization here\n  \n  // Add loadImage method here\n}\n\n// Add NgModule configuration here",
+        "expectedOutcome": "The template will show a loading indicator for each image, and the app will be properly configured with BrowserModule.",
+        "successCriteria": [
+          "Loading indicator div is added inside the *ngFor loop, and NgModule includes BrowserModule in imports."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You added either the loading indicator or the module configuration, but both are needed.",
+        "feedbackWrong": "The loading indicator or module configuration is missing or incorrect.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "loading-spinner",
+            "Loading...",
+            "NgModule",
+            "imports",
+            "BrowserModule"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import Angular core modules and BrowserModule",
+        "id": "step1"
+      },
+      {
+        "label": "Create main AppComponent class with component decorator",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize image data array with placeholder URLs",
+        "id": "step3"
+      },
+      {
+        "label": "Add Intersection Observer to component class",
+        "id": "step4"
+      },
+      {
+        "label": "Define image loading handler method",
+        "id": "step5"
+      },
+      {
+        "label": "Create basic template structure with container",
+        "id": "step6"
+      },
+      {
+        "label": "Add ngFor loop to iterate through images",
+        "id": "step7"
+      },
+      {
+        "label": "Implement lazy loading with ngSrc and loading attribute",
+        "id": "step8"
+      },
+      {
+        "label": "Wire Intersection Observer to image elements",
+        "id": "step9"
+      },
+      {
+        "label": "Add loading indicator and finalize module",
+        "id": "step10"
+      }
+    ]
+  },
+  "source": "content"
+}

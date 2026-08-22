@@ -1,0 +1,361 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-js-105",
+    "track": "js",
+    "lessonNum": 105,
+    "title": "Build heartbeat and presence client logic",
+    "shortName": "P105",
+    "intro": {
+      "tag": "LESSON #105",
+      "title": "Build heartbeat and presence client logic",
+      "body": "In this lesson, you will build a client-side heartbeat and presence system for a web application. You will learn to use JavaScript's setInterval and clearInterval functions to send periodic signals (heartbeats) to a server, indicating that a user is active and online. The core programming concept involves managing state and side effects to track user presence over time. You will implement this by creating a function that starts a timer to send heartbeat requests and another to stop it, using fetch for network communication. This will help you understand how real-time applications maintain live user status updates.",
+      "usecase": "Heartbeat and presence logic is essential for any application that needs to track user activity and connection status in real-time. For example, collaborative tools like Google Docs or Figma use it to show live cursors and avatars of other active users, while chat applications like Slack or Discord display online/offline status indicators. As a developer, implementing this pattern is key for building interactive dashboards, multiplayer games, or live support systems where knowing who is connected and active directly impacts the user experience."
+    },
+    "objectives": [
+      "Implement a heartbeat function that periodically sends status updates to a server",
+      "Initialize a presence tracking state to monitor user activity status",
+      "Configure event listeners to detect user presence changes (active/idle/away)",
+      "Construct a client-side presence manager that coordinates heartbeat and status updates",
+      "Integrate presence logic with a simulated server API to send and receive status data",
+      "Manipulate the DOM to display real-time user presence status based on activity",
+      "Control the heartbeat interval and manage cleanup to prevent memory leaks"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 10",
+        "title": "Import required modules for heartbeat and presence logic",
+        "instruction": "Import the EventEmitter class from the 'events' module to handle event-driven communication.",
+        "hint": "Use the import statement with the 'from' keyword to import EventEmitter from the 'events' module.",
+        "analogousExample": "// Importing a class from a module\nimport { EventEmitter } from 'events';",
+        "seedCode": "// Import EventEmitter from 'events'",
+        "expectedOutcome": "The EventEmitter class is imported and available for use in your code.",
+        "successCriteria": [
+          "EventEmitter is imported from the 'events' module."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're importing EventEmitter specifically from the 'events' module.",
+        "feedbackWrong": "The import statement is incorrect. You need to import EventEmitter from the 'events' module.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "EventEmitter",
+            "'events'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 10",
+        "title": "Create the PresenceClient class structure",
+        "instruction": "Create a class named PresenceClient with a constructor that accepts a userId parameter.",
+        "hint": "Use the class keyword followed by the class name, then define a constructor method that takes userId as a parameter.",
+        "analogousExample": "// Example: a simple class with a constructor\nclass User {\n  constructor(name) {\n    this.name = name;\n  }\n}",
+        "seedCode": "// Import EventEmitter from 'events'\n\nclass PresenceClient {\n  constructor(userId) {\n    // We'll add more logic here later\n  }\n}",
+        "expectedOutcome": "A PresenceClient class is defined with a constructor that can receive a userId.",
+        "successCriteria": [
+          "The PresenceClient class exists and has a constructor method that accepts userId as a parameter."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure you've defined both the class and a constructor method that takes a userId parameter.",
+        "feedbackWrong": "Create a class named PresenceClient with a constructor that accepts a userId parameter.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "class",
+            "PresenceClient",
+            "constructor",
+            "userId"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 10",
+        "title": "Initialize class properties in the constructor",
+        "instruction": "Inside the PresenceClient constructor, initialize the following properties: userId, isOnline (set to false), lastSeen (set to current timestamp), and create a new EventEmitter instance assigned to a property named emitter.",
+        "hint": "Use 'this.propertyName = value' syntax to assign each property. For lastSeen, use Date.now(). For the EventEmitter, create a new instance with 'new EventEmitter()'.",
+        "analogousExample": "// Example: initializing properties in a class constructor\nclass User {\n  constructor(name) {\n    this.name = name;\n    this.isActive = false;\n    this.lastLogin = Date.now();\n    this.events = new EventEmitter();\n  }\n}",
+        "seedCode": "// Import EventEmitter from 'events'\n\nclass PresenceClient {\n  constructor(userId) {\n    // Initialize properties here\n  }\n}",
+        "expectedOutcome": "The constructor now properly sets up the initial state and event emitter for the presence client.",
+        "successCriteria": [
+          "The PresenceClient constructor initializes userId, isOnline (false), lastSeen (Date.now()), and creates an EventEmitter instance assigned to emitter."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've initialized some properties, but not all required ones. Make sure to set userId, isOnline (to false), lastSeen (to Date.now()), and create an EventEmitter instance.",
+        "feedbackWrong": "The constructor doesn't contain the required property initializations. Review the instruction and add all four properties: userId, isOnline, lastSeen, and emitter.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "this.userId",
+            "this.isOnline",
+            "false",
+            "this.lastSeen",
+            "Date.now()",
+            "this.emitter",
+            "new EventEmitter()"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 10",
+        "title": "Add the startHeartbeat method",
+        "instruction": "Inside the PresenceClient class, add a method named startHeartbeat that sets up a setInterval to update the lastSeen property every 5 seconds.",
+        "hint": "The method should use setInterval to run a function that updates this.lastSeen with the current timestamp (Date.now()).",
+        "analogousExample": "// Example: a method that updates a property periodically\nclass Timer {\n  start() {\n    setInterval(() => {\n      this.seconds = Date.now();\n    }, 1000);\n  }\n}",
+        "seedCode": "// Import EventEmitter from 'events'\n\nclass PresenceClient {\n  constructor(userId) {\n    // Initialize properties here\n  }\n  \n  // Add startHeartbeat method here\n}",
+        "expectedOutcome": "The PresenceClient class will have a startHeartbeat method that periodically updates the lastSeen timestamp.",
+        "successCriteria": [
+          "The startHeartbeat method is defined in the PresenceClient class and uses setInterval to update this.lastSeen every 5000 milliseconds."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added a method, but check that it uses setInterval to update this.lastSeen every 5 seconds (5000 milliseconds).",
+        "feedbackWrong": "The startHeartbeat method is missing or doesn't properly set up the interval to update lastSeen. Review the method implementation.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "startHeartbeat",
+            "setInterval",
+            "this.lastSeen",
+            "5000"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 10",
+        "title": "Add the stopHeartbeat method",
+        "instruction": "Add a stopHeartbeat method to the PresenceClient class that clears the interval if it exists.",
+        "hint": "Check if this.heartbeatInterval is defined, then clear it and set it to null.",
+        "analogousExample": "// Example: a method that stops a timer\nclass Timer {\n  stop() {\n    if (this.timerId) {\n      clearInterval(this.timerId);\n      this.timerId = null;\n    }\n  }\n}",
+        "seedCode": "// Import EventEmitter from 'events'\n\nclass PresenceClient {\n  constructor(userId) {\n    // Initialize properties here\n  }\n  \n  // Add startHeartbeat method here\n  \n  // Add stopHeartbeat method here\n}",
+        "expectedOutcome": "The PresenceClient class now has a stopHeartbeat method that safely clears any active heartbeat interval.",
+        "successCriteria": [
+          "The stopHeartbeat method is defined, checks if this.heartbeatInterval exists, clears it, and sets it to null."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You added a method, but make sure it checks if the interval exists before clearing it and resets the property.",
+        "feedbackWrong": "The stopHeartbeat method is missing or doesn't properly clear the interval.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "stopHeartbeat",
+            "heartbeatInterval",
+            "clearInterval"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 10",
+        "title": "Implement the goOffline method",
+        "instruction": "Add a goOffline method to the PresenceClient class that sets isOnline to false, stops the heartbeat, and emits an 'offline' event.",
+        "hint": "Inside the class, define a method named goOffline. Set this.isOnline to false, call this.stopHeartbeat(), and emit an 'offline' event using this.emit('offline').",
+        "analogousExample": "// Example: a method that stops a process\nstopProcess() {\n  this.isRunning = false;\n  this.clearTimer();\n  this.emit('stopped');\n}",
+        "seedCode": "// Import EventEmitter from 'events'\n\nclass PresenceClient {\n  constructor(userId) {\n    // Initialize properties here\n  }\n  \n  // Add startHeartbeat method here\n  \n  // Add stopHeartbeat method here\n  \n  // Add goOnline method here\n  \n  // Add goOffline method here\n}",
+        "expectedOutcome": "The PresenceClient class will have a goOffline method that handles disconnection by updating state, stopping the heartbeat, and emitting an event.",
+        "successCriteria": [
+          "The goOffline method is defined, sets isOnline to false, calls stopHeartbeat, and emits an 'offline' event."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added the method, but check if it sets isOnline to false, calls stopHeartbeat, and emits the 'offline' event.",
+        "feedbackWrong": "The goOffline method is missing or incomplete. Ensure it updates isOnline, stops the heartbeat, and emits an event.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "goOffline",
+            "isOnline",
+            "false",
+            "stopHeartbeat",
+            "emit",
+            "'offline'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 10",
+        "title": "Add the getStatus method",
+        "instruction": "Create a getStatus method inside the PresenceClient class that returns an object with userId, isOnline, and lastSeen properties.",
+        "hint": "Add a method named getStatus that returns an object containing the current user ID, online status, and last seen timestamp.",
+        "analogousExample": "// Similar: a method that returns an object\nclass User {\n  getProfile() {\n    return {\n      name: 'Alex',\n      age: 25,\n      active: true\n    };\n  }\n}",
+        "seedCode": "// Import EventEmitter from 'events'\n\nclass PresenceClient {\n  constructor(userId) {\n    // Initialize properties here\n  }\n  \n  // Add startHeartbeat method here\n  \n  // Add stopHeartbeat method here\n  \n  // Add goOnline method here\n  \n  // Add goOffline method here\n  \n  // Add getStatus method here\n}",
+        "expectedOutcome": "The PresenceClient class will have a getStatus method that returns an object with the user's current presence status.",
+        "successCriteria": [
+          "A getStatus method is defined in the PresenceClient class and returns an object containing userId, isOnline, and lastSeen properties."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added a method, but make sure it returns an object with exactly userId, isOnline, and lastSeen properties.",
+        "feedbackWrong": "The getStatus method is missing or doesn't return the required object structure. Check the method name and return value.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "getStatus",
+            "return",
+            "{",
+            "userId",
+            "isOnline",
+            "lastSeen"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 10",
+        "title": "Create a helper function to simulate network activity",
+        "instruction": "Create a function named simulateNetworkActivity that takes a PresenceClient instance as a parameter and randomly calls either goOnline or goOffline on it.",
+        "hint": "Use Math.random() to generate a random number between 0 and 1, then call goOnline() if the number is less than 0.5, otherwise call goOffline().",
+        "analogousExample": "// Similar: a function that randomly performs actions\nfunction randomAction(obj) {\n  if (Math.random() < 0.5) {\n    obj.actionA();\n  } else {\n    obj.actionB();\n  }\n}",
+        "seedCode": "// Import EventEmitter from 'events'\n\nclass PresenceClient {\n  constructor(userId) {\n    // Initialize properties here\n  }\n  \n  // Add startHeartbeat method here\n  \n  // Add stopHeartbeat method here\n  \n  // Add goOnline method here\n  \n  // Add goOffline method here\n  \n  // Add getStatus method here\n}\n\n// Create simulateNetworkActivity function here",
+        "expectedOutcome": "You will have a simulateNetworkActivity function that can test the presence client's online/offline behavior with random simulation.",
+        "successCriteria": [
+          "The simulateNetworkActivity function exists, takes a client parameter, and randomly calls goOnline or goOffline on that client."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure your function takes a client parameter and uses Math.random() to decide whether to call goOnline() or goOffline().",
+        "feedbackWrong": "The function is missing or doesn't properly simulate random network activity. Review the instructions and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "simulateNetworkActivity",
+            "function",
+            "client",
+            "Math.random",
+            "goOnline",
+            "goOffline"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 10",
+        "title": "Create and test a PresenceClient instance",
+        "instruction": "Create a new instance of the PresenceClient class with a sample userId,",
+        "hint": "Instantiate the class using the 'new' keyword and pass a string for the userId, then call the goOnline method on that instance.",
+        "analogousExample": "// Creating an instance and calling a method\nconst myClient = new PresenceClient('user123');\nmyClient.goOnline();",
+        "seedCode": "// Import EventEmitter from 'events'\n\nclass PresenceClient {\n  constructor(userId) {\n    // Initialize properties here\n  }\n  \n  // Add startHeartbeat method here\n  \n  // Add stopHeartbeat method here\n  \n  // Add goOnline method here\n  \n  // Add goOffline method here\n  \n  // Add getStatus method here\n}\n\n// Create simulateNetworkActivity function here\n\n// Create a PresenceClient instance and call goOnline here",
+        "expectedOutcome": "A PresenceClient instance is created and the heartbeat system is started by calling goOnline.",
+        "successCriteria": [
+          "A PresenceClient instance is created with a userId and its goOnline method is called."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure you're both creating an instance with 'new PresenceClient()' and calling the goOnline method on that instance.",
+        "feedbackWrong": "The code doesn't show a complete instance creation and method call. Remember to use 'new PresenceClient(userId)' and then call .goOnline() on that instance.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "new PresenceClient",
+            "goOnline()"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 10",
+        "title": "call its goOnline method to start the heartbe",
+        "instruction": "call its goOnline method to start the heartbeat system.",
+        "hint": "Instantiate the class using the 'new' keyword and pass a string for the userId, then call the goOnline method on that instance.",
+        "analogousExample": "// Creating an instance and calling a method\nconst myClient = new PresenceClient('user123');\nmyClient.goOnline();",
+        "seedCode": "// Import EventEmitter from 'events'\n\nclass PresenceClient {\n  constructor(userId) {\n    // Initialize properties here\n  }\n  \n  // Add startHeartbeat method here\n  \n  // Add stopHeartbeat method here\n  \n  // Add goOnline method here\n  \n  // Add goOffline method here\n  \n  // Add getStatus method here\n}\n\n// Create simulateNetworkActivity function here\n\n// Create a PresenceClient instance and call goOnline here",
+        "expectedOutcome": "",
+        "successCriteria": [
+          "Complete the step as instructed."
+        ],
+        "feedbackCorrect": "Great! Step completed.",
+        "feedbackPartial": "Review the instruction and try again.",
+        "feedbackWrong": "Check the instruction and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "new PresenceClient",
+            "goOnline()"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import required modules for heartbeat and presence logic",
+        "id": "step1"
+      },
+      {
+        "label": "Create the PresenceClient class structure",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize class properties in the constructor",
+        "id": "step3"
+      },
+      {
+        "label": "Add the startHeartbeat method",
+        "id": "step4"
+      },
+      {
+        "label": "Add the stopHeartbeat method",
+        "id": "step5"
+      },
+      {
+        "label": "Implement the goOffline method",
+        "id": "step6"
+      },
+      {
+        "label": "Add the getStatus method",
+        "id": "step7"
+      },
+      {
+        "label": "Create a helper function to simulate network activity",
+        "id": "step8"
+      },
+      {
+        "label": "Create and test a PresenceClient instance",
+        "id": "step9"
+      },
+      {
+        "label": "call its goOnline method to start the heartbe",
+        "id": "step10"
+      }
+    ]
+  },
+  "source": "content"
+}

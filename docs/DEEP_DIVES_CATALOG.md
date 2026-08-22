@@ -1,0 +1,152 @@
+# INPACT deep-dive catalog
+
+Human-readable notes on **Deep-dive** wiring.
+
+- **React · TS lessons (catalog):** `content/react-ts/000_deep_dives.json` — per-lesson extended dives (lesson number from key prefix `001_` … `122_`, etc.). SVG and prose live in each entry’s `deepDive` fields.
+- **Glossary concepts** (still used where `introductions` or step `introducesConcepts` reference them): `src/learn/glossary/react-ts.json` (`concepts` + `introductions`).  
+  The UI merges glossary + extended via `getDeepDiveConceptsForStep()` in `src/learn/conceptGlossary.js`.
+
+**react-js:** `src/learn/glossary/react-js.json` currently has empty `concepts` and `introductions` — no deep-dives on that track yet.
+
+---
+
+## 1. useState (React hook)
+
+**conceptId:** `useState`
+
+**In-app (lesson #1):** Extended dive **`001_Counter_App`** from `000_deep_dives.json` (all steps via `byProblem` fallback). The glossary entry below remains for reuse if a step references `useState` via `introducesConcepts`.
+
+### Deep-dive content
+
+**hook:** Think of a number on a whiteboard only you can erase and rewrite. Everyone looking at the screen sees what's on the board **right now**. When you change the number, React wipes the old drawing and paints the new one — that's **re-rendering**. **useState** is how you ask React for that whiteboard: a piece of memory that belongs to this component and triggers updates when you change it.
+
+**pain:** If you only use a normal `let count = 0` inside a component, changing it **does not** tell React to redraw. The UI stays frozen. You need a value **and** a signal that says "the value changed — please update the screen."
+
+**mentalModel:** React is **declarative**: you describe UI from **state**. State is the source of truth; the view follows. **useState** pairs the current value with a **setter** (`setCount`, etc.) — always use the setter to update so React can schedule a re-render.
+
+**discover:** `const [count, setCount] = useState(0)` in plain English:
+
+- `useState(0)` — start at `0`.
+- `count` — what you read in JSX.
+- `setCount(next)` — the only supported way to change it (pass new value or `prev => prev + 1`).
+
+With TypeScript you often write `useState<number>(0)` so `count` is typed as a number.
+
+**dryRun:** Walk through mentally: `count` is `0`. User clicks **+**. Handler runs `setCount(count + 1)`. Before the next paint, React schedules an update. On the next render, `count` is `1`. What does the `<button>` label show after that render?
+
+**build:** In a tiny component, add `const [value, setValue] = useState(0)`, show `{value}` in JSX, and one button that calls `setValue(value + 1)`. No other features — just prove the number on screen moves when you click.
+
+---
+
+## 2. TypeScript interface
+
+**conceptId:** `interface`
+
+**In-app (lesson #25):** Extended dive **`025_Star_Rating_Component`** from `000_deep_dives.json`. The glossary entry below remains for reference.
+
+### Deep-dive content
+
+**hook:** Before you pack boxes for shipping, you agree on a **manifest**: what's allowed in each box (labels, sizes). An **`interface`** is that manifest for **objects** in TypeScript — it says which property names exist and what types their values must have.
+
+**pain:** Without a shape, any object "fits" until runtime blows up (`undefined.title`, wrong types passed to APIs). You discover bugs **in production** instead of **while typing**.
+
+**mentalModel:** An interface **does not exist at runtime** in the compiled JS — it's a **design-time contract**. It tells the compiler (and your teammates) "objects used here must look like this."
+
+**discover:** `interface Props { title: string; count: number }` means: any `Props` value **must** have a string `title` and a number `count`. You then use it: `function Card(props: Props)` or `({ title }: Props)` so TypeScript checks call sites and bodies.
+
+**dryRun:** You have `{ title: 'Hi', count: 3 }`. Does it satisfy `Props`? What if `count` were `"3"` (a string)? What if `title` were missing?
+
+**build:** Declare `interface Point { x: number; y: number }`, then a function `distance(a: Point, b: Point)` that returns a number. Don't implement geometry perfectly — focus on the types compiling when you pass valid points.
+
+---
+
+## 3. TypeScript generics (type parameter T)
+
+**conceptId:** `typescriptGenerics`
+
+**In-app (lesson #28):** Extended dive **`028_useFetch`** from `000_deep_dives.json`. Step `introducesConcepts` for `typescriptGenerics` was removed so the UI does not show two deep-dive buttons on the same step when both apply.
+
+### Deep-dive content
+
+**hook:** A vending machine can dispense **snacks**, **drinks**, or **chips** — same machine, **different slot contents**. A **generic** is that idea for types: one **shape** (the machine), but the **payload type** is filled in later when you know what you’re stocking.
+
+**pain:** If you hard-code `data: any`, you lose autocomplete and safety. If you pick one interface (`Todo`) too early, the same hook **cannot** honestly type a **User** or **Post** response. You need a **placeholder** for “the real type, decided at use site.”
+
+**mentalModel:** **`T`** is a **type variable**. It means “some type we don’t commit to here.” **`FetchResponse<T>`** reads: “a fetch result **whose `data`** is either **`T`** or **`null`**.” When you write **`useFetch<Todo>(url)`**, **`T`** becomes **`Todo`** for that call — **`data`** is then **`Todo | null`**.
+
+**discover:**
+
+- `interface FetchResponse<T> { data: T | null; ... }` — `<T>` declares the parameter; `data` may hold a `T` once loaded.
+- `function useFetch<T>(url: string): FetchResponse<T>` — the **same `T`** links the **input contract** (what JSON you expect) to the **return type**.
+- At the call site: `useFetch<MyType>(url)` plugs `MyType` into `T` everywhere it appears.
+
+**dryRun:** You call `useFetch<{ title: string }>(url)`. After JSON arrives, `data` is `{ title: string } | null`. Before the request finishes, what is `data`? What type is `data.title` if `data` is `null` — why do you need optional chaining or a guard?
+
+**build:** Define `interface Box<T> { value: T | null }`. Write `function wrap<T>(x: T): Box<T>` that returns `{ value: x }`. Call it once with a **number** and once with a **string** — notice `Box<number>` vs `Box<string>` without duplicating interfaces.
+
+---
+
+## 4. React Router (client-side routing)
+
+**conceptId:** `reactRouterDom`
+
+**Introduced in:** **react-ts** (same concept surfaced on **two** steps — depends on lesson order):
+
+- Lesson **#50** — **Lazy Loading Routes** (`step5`)
+- Lesson **#100** — **React Router Basics** (`step1`)
+
+### Deep-dive content
+
+**hook:** A traditional website is like a **building with separate rooms**: each URL is a **different door** — you open it and the **whole room** (full HTML page) is delivered again. A React **single-page app (SPA)** is more like a **TV with one screen**: the frame stays, but you **change the channel** (which component tree shows) when the **address bar** changes. **React Router** is the remote: it keeps the **URL** and **what’s on screen** in sync **without** asking the server for a brand-new document every time.
+
+**pain:** If you only use `<a href="/about">` inside an SPA, the browser does a **full navigation** — you lose in-memory state, flicker, and pay for a round trip you often don’t need. If you **never** tie the URL to views, users can’t **bookmark**, **share links**, or use the **Back** button the way they expect.
+
+**mentalModel:** Think in **layers**. **`BrowserRouter`** wraps the app and **owns routing context** (reading/writing the real browser URL). **`Routes`** is a **switchboard**: among its children, it picks the **first `Route` whose `path` matches** the current URL. Each **`Route`** says: “when the path looks like this, **render this element**.” **`Link`** (and friends) **navigate** by updating the URL **inside** the SPA instead of reloading the whole page.
+
+**discover:**
+
+- **`BrowserRouter`** — top-level provider; use **once** near the root.
+- **`Routes` + `Route`** — declarative table: **`path`** (e.g. `"/"`, `"/about"`) and **`element`** (e.g. **`<Home />`**).
+- **`Link`** — like an anchor, but **`to="/about"`** instead of **`href`** for client-side navigation (no full page load).
+
+You’ll **import** these from **`react-router-dom`** (not `react`) because they’re **library components**, not core React.
+
+**dryRun:** The URL is **`/`**. Your **`Routes`** include **`path="/"`** → **`Home`** and **`path="/about"`** → **`About`**. User clicks **`<Link to="/about">`**. What changes first — the URL or the tree? Does the browser download a new `.html` file by default in a typical CRA/Vite SPA setup?
+
+**build:** On paper, sketch **three URLs** (`/`, `/about`, `/contact`) and **which component** each should show. Then write **one** **`Routes`** block with **three `Route`s** — no styling, just the mapping. That’s the same structure you’ll drop inside **`BrowserRouter`** in the editor.
+
+---
+
+## 5. createAsyncThunk (Redux Toolkit)
+
+**conceptId:** `createAsyncThunk`
+
+**Introduced in:** **react-ts**, lesson **#122** — **Redux Toolkit: Writing Your First createAsyncThunk** (`step1`)
+
+### Deep-dive content
+
+**hook:** You order a pizza. You don't stand frozen at the door until it arrives — you go watch TV, and when the **doorbell** rings, you react. That **wait without freezing** is **async**. **createAsyncThunk** is Redux Toolkit's way of handling the **doorbell**: start an async job, then automatically tell the store when it **succeeds**, **fails**, or is **still in flight**.
+
+**pain:** Inside a reducer you might write `const data = fetch('/api/user')` and then `dispatch(setUser(data))`. **That's broken:** `fetch` returns a **Promise**, not user JSON — you're putting a **box label** on an **empty box**.
+
+**mentalModel:** Redux reducers must stay **synchronous**. Async work lives **outside** in a **thunk**: a function that can **dispatch** multiple times over time. **createAsyncThunk** generates three action types for you: **pending**, **fulfilled**, **rejected** — one mental timeline, three beats.
+
+**discover:** `createAsyncThunk('user/fetch', async (userId) => { ... return json })` in plain English:
+
+- **`'user/fetch'`** — the **name tag** for this operation (prefix for pending/fulfilled/rejected).
+- **`async (userId) => { ... }`** — the **errand** you send off.
+- **`return`** — what becomes **`action.payload`** on success.
+
+In **`extraReducers`**, you listen for **`fetchUser.pending`**, **`fetchUser.fulfilled`**, **`fetchUser.rejected`** to flip `loading`, store `payload`, or set `error`.
+
+**dryRun:** User clicks **Load**. You dispatch **`fetchUser(42)`**. Narrate: which action fires **first**? What does state look like **while** the request flies? If the server returns **500**, which branch runs? What is in **`action.payload`** on success vs failure?
+
+**build:** Write **one** thunk **`fetchPosts`** that `fetch`es `/posts` and returns **`response.json()`**, and **one** slice with **`extraReducers`** that handles **pending / fulfilled / rejected** for that thunk only. No UI polish — prove the three states.
+
+---
+
+## Maintenance
+
+- **React · TS lesson deep dives:** edit **`content/react-ts/000_deep_dives.json`** (see **`content/react-ts/DEEP_DIVES_README.md`**).
+- **Glossary-only concepts** (e.g. Router, Redux): edit **`src/learn/glossary/react-ts.json`** (`concepts.*.deepDive` and **`introductions`**).
+- Lesson titles in this doc are from `content/react-ts/*_lesson.json` at time of writing; re-export or sync this file when you add concepts.

@@ -1,0 +1,895 @@
+{
+  "id": "minimum-window-substring",
+  "title": "Minimum window substring",
+  "pattern": "hash-map",
+  "difficulty": "hard",
+  "language": "javascript",
+  "status": "draft",
+  "flow": [
+    {
+      "stepId": "title",
+      "mentorSays": "At the end of this lesson, you will be able to:\n\n1. Understand what the Minimum Window Substring lesson asks for\n2. Use a sliding window with a hash map to track required characters\n3. Expand and shrink the window to find the minimum valid window\n4. Implement the solution step by step in your chosen language",
+      "action": "continue",
+      "next": "lesson-illustration"
+    },
+    {
+      "stepId": "lesson-illustration",
+      "mentorSays": "This is one of the hardest sliding window lessons. Let's break it down step by step.\n\n**THE PROBLEM:**\nFind the minimum window in s that contains ALL characters of t.\n\n**WHAT DOES THIS MEAN?**\n- A window is a contiguous substring of s\n- The window must contain every character from t (with correct frequencies)\n- We want the SHORTEST such window\n\n**EXAMPLE: Detailed Walkthrough**\n\ns = 'ADOBECODEBANC'\nt = 'ABC'\n\nRequired characters: A=1, B=1, C=1\n\n**STEP-BY-STEP TRACE:**\n\nInitial state:\n- left = 0, right = 0\n- need = {A:1, B:1, C:1}\n- window = {}\n- formed = 0 (characters found)\n- required = 3 (total unique characters needed)\n\n**PHASE 1: EXPAND until window is valid**\n\nright = 0: s[0] = 'A'\n- window = {A:1}\n- need = {A:0, B:1, C:1}\n- formed = 1 (A found)\n\nright = 1: s[1] = 'D'\n- window = {A:1, D:1}\n- formed = 1 (still missing B, C)\n\nright = 2: s[2] = 'O'\n- window = {A:1, D:1, O:1}\n- formed = 1\n\nright = 3: s[3] = 'B'\n- window = {A:1, B:1, D:1, O:1}\n- need = {A:0, B:0, C:1}\n- formed = 2 (A and B found)\n\nright = 4: s[4] = 'E'\n- window = {A:1, B:1, E:1, D:1, O:1}\n- formed = 2\n\nright = 5: s[5] = 'C'\n- window = {A:1, B:1, C:1, E:1, D:1, O:1}\n- need = {A:0, B:0, C:0}\n- formed = 3 ✓ ALL FOUND!\n- Current window: 'ADOBEC' (length 6)\n\n**PHASE 2: SHRINK to find minimum**\n\nleft = 0: Remove 'A'\n- window = {A:0, B:1, C:1, E:1, D:1, O:1}\n- need = {A:1, B:0, C:0}\n- formed = 2 ✗ (missing A, window invalid)\n- Stop shrinking\n\nCurrent best: 'ADOBEC' (length 6)\n\n**PHASE 3: Continue expanding and shrinking**\n\nright = 6: s[6] = 'O'\nright = 7: s[7] = 'D'\nright = 8: s[8] = 'E'\nright = 9: s[9] = 'B'\n- window = {A:0, B:2, C:1, E:2, D:2, O:2}\n- formed = 2 (missing A)\n\nright = 10: s[10] = 'A'\n- window = {A:1, B:2, C:1, E:2, D:2, O:2}\n- formed = 3 ✓ VALID again!\n\nNow shrink:\nleft = 0: Remove 'A' → invalid\nleft = 1: Remove 'D' → still invalid\n...\nleft = 9: Remove 'B'\n- window = {A:1, B:1, C:1, E:2, D:1, O:1}\n- formed = 3 ✓ Still valid!\n- Current window: 'CODEBA' (length 6)\n\nContinue...\n\nEventually find:\nWindow [9, 12] = 'BANC'\n- Has A=1, B=1, C=1 ✓\n- Length: 4\n- MINIMUM! ✓\n\n**Answer: 'BANC'**\n\n**THE STRATEGY:**\n1. Expand window until valid (has all chars from t)\n2. Shrink from left while still valid\n3. Track minimum window found\n4. Repeat until end of string\n\n**TIME COMPLEXITY:** O(|s| + |t|) - each character visited at most twice\n**SPACE COMPLEXITY:** O(|s| + |t|) - for hash maps",
+      "example": "s = \"ADOBECODEBANC\"\nt = \"ABC\"\n\nFind minimum window containing A, B, C:\n- \"ADOBEC\" (length 6) ✓\n- \"CODEBA\" (length 6) ✓\n- \"BANC\" (length 4) ✓\n\nAnswer: \"BANC\"\n\nAnother example:\ns = \"a\"\nt = \"a\"\n\nAnswer: \"a\"\n\nAnother example:\ns = \"a\"\nt = \"aa\"\n\nAnswer: \"\" (no valid window)",
+      "action": "continue",
+      "next": "thinking-challenge"
+    },
+    {
+      "stepId": "thinking-challenge",
+      "mentorSays": "Now that you understand what the lesson wants, here's the real question:\n\nHow would YOU find the minimum window substring?\n\nThink about it for a moment. What approach feels natural to you?",
+      "choices": [
+        {
+          "label": "Use a sliding window with hash map to track required characters",
+          "next": "explore-sliding-window"
+        },
+        {
+          "label": "Check all possible substrings and find the smallest valid one",
+          "next": "explore-brute-force"
+        },
+        {
+          "label": "Use two pointers to expand and shrink the window",
+          "next": "explore-two-pointers"
+        }
+      ]
+    },
+    {
+      "stepId": "explore-brute-force",
+      "mentorSays": "That's a straightforward approach! You're thinking: \"I'll check all possible substrings and find which one is the smallest and contains all characters from t.\"\n\nThis works! However, it's O(n² × m) time complexity where n is length of s and m is length of t.\n\nWould you like to learn the sliding window approach which is O(n) time?",
+      "action": "continue",
+      "next": "explore-sliding-window"
+    },
+    {
+      "stepId": "explore-two-pointers",
+      "mentorSays": "Great thinking! Two pointers is exactly what we need! The sliding window approach uses two pointers (left and right) to maintain a window.\n\nThis is the same as the sliding window approach. Let's learn it!",
+      "action": "continue",
+      "next": "explore-sliding-window"
+    },
+    {
+      "stepId": "explore-sliding-window",
+      "mentorSays": "Excellent choice! The sliding window approach is efficient and elegant. Here's the core idea:\n\n1. **Hash map for required characters**: Count how many of each character we need from t\n2. **Hash map for window**: Track characters currently in the window\n3. **Two pointers**: Use `left` and `right` to define the current window\n4. **Expand**: Move `right` to expand the window until all required characters are found\n5. **Shrink**: Move `left` to shrink the window and find the minimum valid window\n6. **Track minimum**: Keep track of the minimum window size and its start position\n\nLet's trace this with s = \"ADOBECODEBANC\", t = \"ABC\":\n\n- **Initial**: left = 0, right = 0, need = {A:1, B:1, C:1}, window = {}, formed = 0, minLen = ∞\n- **Expand right**:\n  - right=0: 'A' → window = {A:1}, formed = 1 (A found)\n  - right=3: 'B' → window = {A:1, B:1}, formed = 2 (A, B found)\n  - right=5: 'C' → window = {A:1, B:1, C:1}, formed = 3 (all found!) ✓\n- **Shrink left**:\n  - left=0: 'A' removed, window = {A:0, B:1, C:1}, formed = 2 → invalid, stop\n  - Current window \"ADOBEC\" (length 6), minLen = 6, minStart = 0\n- **Continue**: Move right, then shrink again\n  - Eventually find \"BANC\" (length 4), minLen = 4, minStart = 9\n\nAnswer: \"BANC\"\n\nThis is O(n) time and O(m) space where m is the character set size! Now let's code it step by step.",
+      "action": "continue",
+      "next": "language-selection"
+    },
+    {
+      "stepId": "language-selection",
+      "mentorSays": "Great! Now let's code this solution. Which programming language would you like to use?",
+      "choices": [
+        {
+          "label": "JavaScript",
+          "next": "variable-check-js"
+        },
+        {
+          "label": "Python",
+          "next": "variable-check-python"
+        },
+        {
+          "label": "Java",
+          "next": "variable-check-java"
+        },
+        {
+          "label": "C++",
+          "next": "variable-check-cpp"
+        },
+        {
+          "label": "TypeScript",
+          "next": "variable-check-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-check-js",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-js"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-js",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'need' or 'window') and put data inside it.\n\nFor example, 'let need = {};' creates a variable that stores an empty object (hash map).",
+      "example": "let need = {};\n\nNow the variable refers to an empty object",
+      "action": "continue",
+      "next": "function-check-js"
+    },
+    {
+      "stepId": "function-check-js",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "array-check-js"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-js",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "function add(a, b) {\n  return a + b;\n}\n\nadd(3, 5) returns 8",
+      "action": "continue",
+      "next": "array-check-js"
+    },
+    {
+      "stepId": "array-check-js",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a hash map (object) is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know hash maps",
+          "next": "hashmap-check-js"
+        },
+        {
+          "label": "No, explain hash maps",
+          "next": "array-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "hashmap-check-js",
+      "mentorSays": "Do you understand how to use objects/maps to count occurrences?",
+      "choices": [
+        {
+          "label": "Yes, I know hashmap",
+          "next": "string-check-js"
+        },
+        {
+          "label": "No, explain hashmap",
+          "next": "hashmap-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "string-check-js",
+      "mentorSays": "Do you understand how to work with strings and character access?",
+      "choices": [
+        {
+          "label": "Yes, I know string",
+          "next": "coding-start-js"
+        },
+        {
+          "label": "No, explain string",
+          "next": "string-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "string-explanation-js",
+      "mentorSays": "In JavaScript, you can access individual characters in a string. For anagrams, we need to count how many times each character appears.\n\nlet word = 'listen';\nlet firstChar = word[0];  // 'l'\n\n// Loop through characters:\nfor (let i = 0; i < word.length; i++) {\n  console.log(word[i]);\n}\n\nGot it?",
+      "example": "let word = 'listen';\nlet firstChar = word[0];  // 'l'\n\n// Loop through characters:\nfor (let i = 0; i < word.length; i++) {\n  console.log(word[i]);\n}",
+      "action": "continue",
+      "next": "coding-start-js"
+    },
+    {
+      "stepId": "hashmap-explanation-js",
+      "mentorSays": "Use an object to count characters. For anagrams, if two words have the same character counts, they are anagrams!\n\nlet charCount = {};\nfor (let char of 'listen') {\n  charCount[char] = (charCount[char] || 0) + 1;\n}\n// Result: { l: 1, i: 1, s: 1, t: 1, e: 1, n: 1 }\n\nGot it?",
+      "example": "let charCount = {};\nfor (let char of 'listen') {\n  charCount[char] = (charCount[char] || 0) + 1;\n}\n// Result: { l: 1, i: 1, s: 1, t: 1, e: 1, n: 1 }",
+      "action": "continue",
+      "next": "coding-start-js"
+    },
+    {
+      "stepId": "array-explanation-js",
+      "mentorSays": "A hash map (object) stores key-value pairs. You can quickly look up values by their keys.",
+      "example": "let map = {};\nmap['A'] = 1;\nlet value = map['A'];  // value is 1",
+      "action": "continue",
+      "next": "coding-start-js"
+    },
+    {
+      "stepId": "coding-start-js",
+      "mentorSays": "Perfect! Let's implement minimum window substring in JavaScript. We'll use a sliding window with hash maps.",
+      "example": "function minWindow(s, t) {\n  // Your code here\n}",
+      "action": "continue",
+      "next": "coding-build-need-js"
+    },
+    {
+      "stepId": "coding-build-need-js",
+      "mentorSays": "First, build a hash map `need` that counts how many of each character we need from string t.",
+      "example": "function minWindow(s, t) {\n  if (s.length === 0 || t.length === 0) return '';\n  \n  // Build need map\n  const need = {};\n  for (let char of t) {\n    need[char] = (need[char] || 0) + 1;\n  }\n  \n  const needCount = Object.keys(need).length;",
+      "action": "continue",
+      "next": "coding-initialize-js"
+    },
+    {
+      "stepId": "coding-initialize-js",
+      "mentorSays": "Initialize variables: left and right pointers, window map to track current window, formed count to track how many required characters we've found, and variables to track the minimum window.",
+      "example": "function minWindow(s, t) {\n  if (s.length === 0 || t.length === 0) return '';\n  \n  const need = {};\n  for (let char of t) {\n    need[char] = (need[char] || 0) + 1;\n  }\n  const needCount = Object.keys(need).length;\n  \n  // Initialize\n  let left = 0, right = 0;\n  const window = {};\n  let formed = 0;  // How many required characters we've found\n  let minLen = Infinity;\n  let minStart = 0;",
+      "action": "continue",
+      "next": "coding-expand-js"
+    },
+    {
+      "stepId": "coding-expand-js",
+      "mentorSays": "Expand the window by moving the right pointer. For each character, add it to the window map and check if we've found enough of that required character.",
+      "example": "function minWindow(s, t) {\n  if (s.length === 0 || t.length === 0) return '';\n  \n  const need = {};\n  for (let char of t) {\n    need[char] = (need[char] || 0) + 1;\n  }\n  const needCount = Object.keys(need).length;\n  \n  let left = 0, right = 0;\n  const window = {};\n  let formed = 0;\n  let minLen = Infinity;\n  let minStart = 0;\n  \n  // Expand window\n  while (right < s.length) {\n    const char = s[right];\n    \n    // Add character to window\n    window[char] = (window[char] || 0) + 1;\n    \n    // Check if we've found enough of this required character\n    if (need[char] && window[char] === need[char]) {\n      formed++;\n    }",
+      "action": "continue",
+      "next": "coding-shrink-js"
+    },
+    {
+      "stepId": "coding-shrink-js",
+      "mentorSays": "When all required characters are found (formed === needCount), try to shrink the window from the left to find the minimum valid window. Update the minimum window if we find a smaller one.",
+      "example": "function minWindow(s, t) {\n  if (s.length === 0 || t.length === 0) return '';\n  \n  const need = {};\n  for (let char of t) {\n    need[char] = (need[char] || 0) + 1;\n  }\n  const needCount = Object.keys(need).length;\n  \n  let left = 0, right = 0;\n  const window = {};\n  let formed = 0;\n  let minLen = Infinity;\n  let minStart = 0;\n  \n  while (right < s.length) {\n    const char = s[right];\n    window[char] = (window[char] || 0) + 1;\n    \n    if (need[char] && window[char] === need[char]) {\n      formed++;\n    }\n    \n    // Try to shrink window when all characters found\n    while (formed === needCount && left <= right) {\n      // Update minimum window\n      const currentLen = right - left + 1;\n      if (currentLen < minLen) {\n        minLen = currentLen;\n        minStart = left;\n      }\n      \n      // Remove leftmost character\n      const leftChar = s[left];\n      window[leftChar]--;\n      \n      // Check if we lost a required character\n      if (need[leftChar] && window[leftChar] < need[leftChar]) {\n        formed--;\n      }\n      \n      left++;\n    }\n    \n    right++;\n  }",
+      "action": "continue",
+      "next": "coding-window-validation-js"
+    },
+    {
+      "stepId": "coding-window-validation-js",
+      "mentorSays": "Let's add logic to check if current window is valid.\n\nA window is valid when it contains ALL characters from t:\n- Count each character in the window\n- Compare with required counts from t\n- If window has enough of each character → VALID\n\nWe track this with a 'formed' counter!",
+      "example": "let formed = 0;\nlet required = Object.keys(need).length;\n\n// Check if window is valid\nif (windowCount[char] === need[char]) {\n  formed++;\n}\n\n// Window is valid when formed === required",
+      "action": "continue",
+      "next": "coding-window-validation-js"
+    },
+    {
+      "stepId": "coding-return-js",
+      "mentorSays": "Finally, return the minimum window substring. If no valid window was found, return an empty string.",
+      "example": "function minWindow(s, t) {\n  if (s.length === 0 || t.length === 0) return '';\n  \n  const need = {};\n  for (let char of t) {\n    need[char] = (need[char] || 0) + 1;\n  }\n  const needCount = Object.keys(need).length;\n  \n  let left = 0, right = 0;\n  const window = {};\n  let formed = 0;\n  let minLen = Infinity;\n  let minStart = 0;\n  \n  while (right < s.length) {\n    const char = s[right];\n    window[char] = (window[char] || 0) + 1;\n    \n    if (need[char] && window[char] === need[char]) {\n      formed++;\n    }\n    \n    while (formed === needCount && left <= right) {\n      const currentLen = right - left + 1;\n      if (currentLen < minLen) {\n        minLen = currentLen;\n        minStart = left;\n      }\n      \n      const leftChar = s[left];\n      window[leftChar]--;\n      \n      if (need[leftChar] && window[leftChar] < need[leftChar]) {\n        formed--;\n      }\n      \n      left++;\n    }\n    \n    right++;\n  }\n  \n  // Return result\n  return minLen === Infinity ? '' : s.substring(minStart, minStart + minLen);\n}",
+      "action": "continue",
+      "next": "test-code-js"
+    },
+    {
+      "stepId": "test-code-js",
+      "mentorSays": "Perfect! Now test your code with the example we used earlier:\n\ns = \"ADOBECODEBANC\"\nt = \"ABC\"\n\nAfter calling minWindow(s, t), it should return:\n\"BANC\"\n\nTry it in your IDE or code editor!",
+      "example": "Test input:\ns = \"ADOBECODEBANC\"\nt = \"ABC\"\n\nAfter minWindow(s, t):\n\"BANC\"",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-python",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-python"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-python",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'need' or 'window') and put data inside it.\n\nFor example, 'need = {}' creates a variable that stores an empty dictionary (hash map).",
+      "example": "need = {}\n\nNow the variable refers to an empty dictionary",
+      "action": "continue",
+      "next": "function-check-python"
+    },
+    {
+      "stepId": "function-check-python",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "array-check-python"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-python",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "def add(a, b):\n    return a + b\n\nadd(3, 5) returns 8",
+      "action": "continue",
+      "next": "array-check-python"
+    },
+    {
+      "stepId": "array-check-python",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a dictionary (hash map) is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know dictionaries",
+          "next": "hashmap-check-python"
+        },
+        {
+          "label": "No, explain dictionaries",
+          "next": "array-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "hashmap-check-python",
+      "mentorSays": "Do you understand how to use objects/maps to count occurrences?",
+      "choices": [
+        {
+          "label": "Yes, I know hashmap",
+          "next": "string-check-python"
+        },
+        {
+          "label": "No, explain hashmap",
+          "next": "hashmap-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "string-check-python",
+      "mentorSays": "Do you understand how to work with strings and character access?",
+      "choices": [
+        {
+          "label": "Yes, I know string",
+          "next": "coding-start-python"
+        },
+        {
+          "label": "No, explain string",
+          "next": "string-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "string-explanation-python",
+      "mentorSays": "In JavaScript, you can access individual characters in a string. For anagrams, we need to count how many times each character appears.\n\nword = 'listen'\nfirst_char = word[0]  # 'l'\n\n# Loop through characters:\nfor i in range(len(word)):\n    print(word[i])\n\nGot it?",
+      "example": "word = 'listen'\nfirst_char = word[0]  # 'l'\n\n# Loop through characters:\nfor i in range(len(word)):\n    print(word[i])",
+      "action": "continue",
+      "next": "coding-start-python"
+    },
+    {
+      "stepId": "hashmap-explanation-python",
+      "mentorSays": "Use an object to count characters. For anagrams, if two words have the same character counts, they are anagrams!\n\nchar_count = {}\nfor char in 'listen':\n    char_count[char] = char_count.get(char, 0) + 1\n# Result: {'l': 1, 'i': 1, 's': 1, 't': 1, 'e': 1, 'n': 1}\n\nGot it?",
+      "example": "char_count = {}\nfor char in 'listen':\n    char_count[char] = char_count.get(char, 0) + 1\n# Result: {'l': 1, 'i': 1, 's': 1, 't': 1, 'e': 1, 'n': 1}",
+      "action": "continue",
+      "next": "coding-start-python"
+    },
+    {
+      "stepId": "array-explanation-python",
+      "mentorSays": "A dictionary stores key-value pairs. You can quickly look up values by their keys.",
+      "example": "map = {}\nmap['A'] = 1\nvalue = map['A']  # value is 1",
+      "action": "continue",
+      "next": "coding-start-python"
+    },
+    {
+      "stepId": "coding-start-python",
+      "mentorSays": "Perfect! Let's implement minimum window substring in Python. We'll use a sliding window with dictionaries.",
+      "example": "def min_window(s, t):\n    # Your code here\n    pass",
+      "action": "continue",
+      "next": "coding-build-need-python"
+    },
+    {
+      "stepId": "coding-build-need-python",
+      "mentorSays": "First, build a dictionary `need` that counts how many of each character we need from string t.",
+      "example": "def min_window(s, t):\n    if len(s) == 0 or len(t) == 0:\n        return ''\n    \n    # Build need map\n    need = {}\n    for char in t:\n        need[char] = need.get(char, 0) + 1\n    \n    need_count = len(need)",
+      "action": "continue",
+      "next": "coding-initialize-python"
+    },
+    {
+      "stepId": "coding-initialize-python",
+      "mentorSays": "Initialize variables: left and right pointers, window dictionary to track current window, formed count to track how many required characters we've found, and variables to track the minimum window.",
+      "example": "def min_window(s, t):\n    if len(s) == 0 or len(t) == 0:\n        return ''\n    \n    need = {}\n    for char in t:\n        need[char] = need.get(char, 0) + 1\n    need_count = len(need)\n    \n    # Initialize\n    left = 0\n    right = 0\n    window = {}\n    formed = 0  # How many required characters we've found\n    min_len = float('inf')\n    min_start = 0",
+      "action": "continue",
+      "next": "coding-expand-python"
+    },
+    {
+      "stepId": "coding-expand-python",
+      "mentorSays": "Expand the window by moving the right pointer. For each character, add it to the window dictionary and check if we've found enough of that required character.",
+      "example": "def min_window(s, t):\n    if len(s) == 0 or len(t) == 0:\n        return ''\n    \n    need = {}\n    for char in t:\n        need[char] = need.get(char, 0) + 1\n    need_count = len(need)\n    \n    left = 0\n    right = 0\n    window = {}\n    formed = 0\n    min_len = float('inf')\n    min_start = 0\n    \n    # Expand window\n    while right < len(s):\n        char = s[right]\n        \n        # Add character to window\n        window[char] = window.get(char, 0) + 1\n        \n        # Check if we've found enough of this required character\n        if char in need and window[char] == need[char]:\n            formed += 1",
+      "action": "continue",
+      "next": "coding-shrink-python"
+    },
+    {
+      "stepId": "coding-shrink-python",
+      "mentorSays": "When all required characters are found (formed == need_count), try to shrink the window from the left to find the minimum valid window. Update the minimum window if we find a smaller one.",
+      "example": "def min_window(s, t):\n    if len(s) == 0 or len(t) == 0:\n        return ''\n    \n    need = {}\n    for char in t:\n        need[char] = need.get(char, 0) + 1\n    need_count = len(need)\n    \n    left = 0\n    right = 0\n    window = {}\n    formed = 0\n    min_len = float('inf')\n    min_start = 0\n    \n    while right < len(s):\n        char = s[right]\n        window[char] = window.get(char, 0) + 1\n        \n        if char in need and window[char] == need[char]:\n            formed += 1\n        \n        # Try to shrink window when all characters found\n        while formed == need_count and left <= right:\n            # Update minimum window\n            current_len = right - left + 1\n            if current_len < min_len:\n                min_len = current_len\n                min_start = left\n            \n            # Remove leftmost character\n            left_char = s[left]\n            window[left_char] -= 1\n            \n            # Check if we lost a required character\n            if left_char in need and window[left_char] < need[left_char]:\n                formed -= 1\n            \n            left += 1\n        \n        right += 1",
+      "action": "continue",
+      "next": "coding-window-validation-python"
+    },
+    {
+      "stepId": "coding-window-validation-python",
+      "mentorSays": "Let's add logic to check if current window is valid.\n\nA window is valid when it contains ALL characters from t:\n- Count each character in the window\n- Compare with required counts from t\n- If window has enough of each character → VALID\n\nWe track this with a 'formed' counter!",
+      "example": "let formed = 0;\nlet required = Object.keys(need).length;\n\n// Check if window is valid\nif (windowCount[char] === need[char]) {\n  formed++;\n}\n\n// Window is valid when formed === required",
+      "action": "continue",
+      "next": "coding-window-validation-python"
+    },
+    {
+      "stepId": "coding-return-python",
+      "mentorSays": "Finally, return the minimum window substring. If no valid window was found, return an empty string.",
+      "example": "def min_window(s, t):\n    if len(s) == 0 or len(t) == 0:\n        return ''\n    \n    need = {}\n    for char in t:\n        need[char] = need.get(char, 0) + 1\n    need_count = len(need)\n    \n    left = 0\n    right = 0\n    window = {}\n    formed = 0\n    min_len = float('inf')\n    min_start = 0\n    \n    while right < len(s):\n        char = s[right]\n        window[char] = window.get(char, 0) + 1\n        \n        if char in need and window[char] == need[char]:\n            formed += 1\n        \n        while formed == need_count and left <= right:\n            current_len = right - left + 1\n            if current_len < min_len:\n                min_len = current_len\n                min_start = left\n            \n            left_char = s[left]\n            window[left_char] -= 1\n            \n            if left_char in need and window[left_char] < need[left_char]:\n                formed -= 1\n            \n            left += 1\n        \n        right += 1\n    \n    # Return result\n    return '' if min_len == float('inf') else s[min_start:min_start + min_len]",
+      "action": "continue",
+      "next": "test-code-python"
+    },
+    {
+      "stepId": "test-code-python",
+      "mentorSays": "Perfect! Now test your code with the example we used earlier:\n\ns = \"ADOBECODEBANC\"\nt = \"ABC\"\n\nAfter calling min_window(s, t), it should return:\n\"BANC\"\n\nTry it in your IDE or code editor!",
+      "example": "Test input:\ns = \"ADOBECODEBANC\"\nt = \"ABC\"\n\nAfter min_window(s, t):\n\"BANC\"",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-java",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-java"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-java",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'need' or 'window') and put data inside it.\n\nFor example, 'Map<Character, Integer> need = new HashMap<>();' creates a variable that stores an empty hash map.",
+      "example": "Map<Character, Integer> need = new HashMap<>();\n\nNow the variable refers to an empty hash map",
+      "action": "continue",
+      "next": "function-check-java"
+    },
+    {
+      "stepId": "function-check-java",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a method is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know methods",
+          "next": "array-check-java"
+        },
+        {
+          "label": "No, explain methods",
+          "next": "function-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-java",
+      "mentorSays": "A method is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "public int add(int a, int b) {\n    return a + b;\n}\n\nadd(3, 5) returns 8",
+      "action": "continue",
+      "next": "array-check-java"
+    },
+    {
+      "stepId": "array-check-java",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a HashMap is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know HashMaps",
+          "next": "hashmap-check-java"
+        },
+        {
+          "label": "No, explain HashMaps",
+          "next": "array-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "hashmap-check-java",
+      "mentorSays": "Do you understand how to use objects/maps to count occurrences?",
+      "choices": [
+        {
+          "label": "Yes, I know hashmap",
+          "next": "string-check-java"
+        },
+        {
+          "label": "No, explain hashmap",
+          "next": "hashmap-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "string-check-java",
+      "mentorSays": "Do you understand how to work with strings and character access?",
+      "choices": [
+        {
+          "label": "Yes, I know string",
+          "next": "coding-start-java"
+        },
+        {
+          "label": "No, explain string",
+          "next": "string-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "string-explanation-java",
+      "mentorSays": "In JavaScript, you can access individual characters in a string. For anagrams, we need to count how many times each character appears.\n\nString word = \"listen\";\nchar firstChar = word.charAt(0);  // 'l'\n\n// Loop through characters:\nfor (int i = 0; i < word.length(); i++) {\n    System.out.println(word.charAt(i));\n}\n\nGot it?",
+      "example": "String word = \"listen\";\nchar firstChar = word.charAt(0);  // 'l'\n\n// Loop through characters:\nfor (int i = 0; i < word.length(); i++) {\n    System.out.println(word.charAt(i));\n}",
+      "action": "continue",
+      "next": "coding-start-java"
+    },
+    {
+      "stepId": "hashmap-explanation-java",
+      "mentorSays": "Use an object to count characters. For anagrams, if two words have the same character counts, they are anagrams!\n\nMap<Character, Integer> charCount = new HashMap<>();\nfor (char c : \"listen\".toCharArray()) {\n    charCount.put(c, charCount.getOrDefault(c, 0) + 1);\n}\n\nGot it?",
+      "example": "Map<Character, Integer> charCount = new HashMap<>();\nfor (char c : \"listen\".toCharArray()) {\n    charCount.put(c, charCount.getOrDefault(c, 0) + 1);\n}",
+      "action": "continue",
+      "next": "coding-start-java"
+    },
+    {
+      "stepId": "array-explanation-java",
+      "mentorSays": "A HashMap stores key-value pairs. You can quickly look up values by their keys.",
+      "example": "Map<Character, Integer> map = new HashMap<>();\nmap.put('A', 1);\nint value = map.get('A');  // value is 1",
+      "action": "continue",
+      "next": "coding-start-java"
+    },
+    {
+      "stepId": "coding-start-java",
+      "mentorSays": "Perfect! Let's implement minimum window substring in Java. We'll use a sliding window with HashMaps.",
+      "example": "public String minWindow(String s, String t) {\n    // Your code here\n}",
+      "action": "continue",
+      "next": "coding-build-need-java"
+    },
+    {
+      "stepId": "coding-build-need-java",
+      "mentorSays": "First, build a HashMap `need` that counts how many of each character we need from string t.",
+      "example": "public String minWindow(String s, String t) {\n    if (s.length() == 0 || t.length() == 0) return \"\";\n    \n    // Build need map\n    Map<Character, Integer> need = new HashMap<>();\n    for (char c : t.toCharArray()) {\n        need.put(c, need.getOrDefault(c, 0) + 1);\n    }\n    \n    int needCount = need.size();",
+      "action": "continue",
+      "next": "coding-initialize-java"
+    },
+    {
+      "stepId": "coding-initialize-java",
+      "mentorSays": "Initialize variables: left and right pointers, window HashMap to track current window, formed count to track how many required characters we've found, and variables to track the minimum window.",
+      "example": "public String minWindow(String s, String t) {\n    if (s.length() == 0 || t.length() == 0) return \"\";\n    \n    Map<Character, Integer> need = new HashMap<>();\n    for (char c : t.toCharArray()) {\n        need.put(c, need.getOrDefault(c, 0) + 1);\n    }\n    int needCount = need.size();\n    \n    // Initialize\n    int left = 0, right = 0;\n    Map<Character, Integer> window = new HashMap<>();\n    int formed = 0;  // How many required characters we've found\n    int minLen = Integer.MAX_VALUE;\n    int minStart = 0;",
+      "action": "continue",
+      "next": "coding-expand-java"
+    },
+    {
+      "stepId": "coding-expand-java",
+      "mentorSays": "Expand the window by moving the right pointer. For each character, add it to the window HashMap and check if we've found enough of that required character.",
+      "example": "public String minWindow(String s, String t) {\n    if (s.length() == 0 || t.length() == 0) return \"\";\n    \n    Map<Character, Integer> need = new HashMap<>();\n    for (char c : t.toCharArray()) {\n        need.put(c, need.getOrDefault(c, 0) + 1);\n    }\n    int needCount = need.size();\n    \n    int left = 0, right = 0;\n    Map<Character, Integer> window = new HashMap<>();\n    int formed = 0;\n    int minLen = Integer.MAX_VALUE;\n    int minStart = 0;\n    \n    // Expand window\n    while (right < s.length()) {\n        char c = s.charAt(right);\n        \n        // Add character to window\n        window.put(c, window.getOrDefault(c, 0) + 1);\n        \n        // Check if we've found enough of this required character\n        if (need.containsKey(c) && window.get(c).equals(need.get(c))) {\n            formed++;\n        }",
+      "action": "continue",
+      "next": "coding-shrink-java"
+    },
+    {
+      "stepId": "coding-shrink-java",
+      "mentorSays": "When all required characters are found (formed == needCount), try to shrink the window from the left to find the minimum valid window. Update the minimum window if we find a smaller one.",
+      "example": "public String minWindow(String s, String t) {\n    if (s.length() == 0 || t.length() == 0) return \"\";\n    \n    Map<Character, Integer> need = new HashMap<>();\n    for (char c : t.toCharArray()) {\n        need.put(c, need.getOrDefault(c, 0) + 1);\n    }\n    int needCount = need.size();\n    \n    int left = 0, right = 0;\n    Map<Character, Integer> window = new HashMap<>();\n    int formed = 0;\n    int minLen = Integer.MAX_VALUE;\n    int minStart = 0;\n    \n    while (right < s.length()) {\n        char c = s.charAt(right);\n        window.put(c, window.getOrDefault(c, 0) + 1);\n        \n        if (need.containsKey(c) && window.get(c).equals(need.get(c))) {\n            formed++;\n        }\n        \n        // Try to shrink window when all characters found\n        while (formed == needCount && left <= right) {\n            // Update minimum window\n            int currentLen = right - left + 1;\n            if (currentLen < minLen) {\n                minLen = currentLen;\n                minStart = left;\n            }\n            \n            // Remove leftmost character\n            char leftChar = s.charAt(left);\n            window.put(leftChar, window.get(leftChar) - 1);\n            \n            // Check if we lost a required character\n            if (need.containsKey(leftChar) && window.get(leftChar) < need.get(leftChar)) {\n                formed--;\n            }\n            \n            left++;\n        }\n        \n        right++;\n    }",
+      "action": "continue",
+      "next": "coding-window-validation-java"
+    },
+    {
+      "stepId": "coding-window-validation-java",
+      "mentorSays": "Let's add logic to check if current window is valid.\n\nA window is valid when it contains ALL characters from t:\n- Count each character in the window\n- Compare with required counts from t\n- If window has enough of each character → VALID\n\nWe track this with a 'formed' counter!",
+      "example": "let formed = 0;\nlet required = Object.keys(need).length;\n\n// Check if window is valid\nif (windowCount[char] === need[char]) {\n  formed++;\n}\n\n// Window is valid when formed === required",
+      "action": "continue",
+      "next": "coding-window-validation-java"
+    },
+    {
+      "stepId": "coding-return-java",
+      "mentorSays": "Finally, return the minimum window substring. If no valid window was found, return an empty string.",
+      "example": "public String minWindow(String s, String t) {\n    if (s.length() == 0 || t.length() == 0) return \"\";\n    \n    Map<Character, Integer> need = new HashMap<>();\n    for (char c : t.toCharArray()) {\n        need.put(c, need.getOrDefault(c, 0) + 1);\n    }\n    int needCount = need.size();\n    \n    int left = 0, right = 0;\n    Map<Character, Integer> window = new HashMap<>();\n    int formed = 0;\n    int minLen = Integer.MAX_VALUE;\n    int minStart = 0;\n    \n    while (right < s.length()) {\n        char c = s.charAt(right);\n        window.put(c, window.getOrDefault(c, 0) + 1);\n        \n        if (need.containsKey(c) && window.get(c).equals(need.get(c))) {\n            formed++;\n        }\n        \n        while (formed == needCount && left <= right) {\n            int currentLen = right - left + 1;\n            if (currentLen < minLen) {\n                minLen = currentLen;\n                minStart = left;\n            }\n            \n            char leftChar = s.charAt(left);\n            window.put(leftChar, window.get(leftChar) - 1);\n            \n            if (need.containsKey(leftChar) && window.get(leftChar) < need.get(leftChar)) {\n                formed--;\n            }\n            \n            left++;\n        }\n        \n        right++;\n    }\n    \n    // Return result\n    return minLen == Integer.MAX_VALUE ? \"\" : s.substring(minStart, minStart + minLen);\n}",
+      "action": "continue",
+      "next": "test-code-java"
+    },
+    {
+      "stepId": "test-code-java",
+      "mentorSays": "Perfect! Now test your code with the example we used earlier:\n\ns = \"ADOBECODEBANC\"\nt = \"ABC\"\n\nAfter calling minWindow(s, t), it should return:\n\"BANC\"\n\nTry it in your IDE or code editor!",
+      "example": "Test input:\ns = \"ADOBECODEBANC\"\nt = \"ABC\"\n\nAfter minWindow(s, t):\n\"BANC\"",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-cpp",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-cpp"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-cpp",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'need' or 'window') and put data inside it.\n\nFor example, 'unordered_map<char, int> need;' creates a variable that stores an empty hash map.",
+      "example": "unordered_map<char, int> need;\n\nNow the variable refers to an empty hash map",
+      "action": "continue",
+      "next": "function-check-cpp"
+    },
+    {
+      "stepId": "function-check-cpp",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "array-check-cpp"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-cpp",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "int add(int a, int b) {\n    return a + b;\n}\n\nadd(3, 5) returns 8",
+      "action": "continue",
+      "next": "array-check-cpp"
+    },
+    {
+      "stepId": "array-check-cpp",
+      "mentorSays": "Before we start coding, let me ask: Do you know what an unordered_map is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know unordered_map",
+          "next": "hashmap-check-cpp"
+        },
+        {
+          "label": "No, explain unordered_map",
+          "next": "array-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "hashmap-check-cpp",
+      "mentorSays": "Do you understand how to use objects/maps to count occurrences?",
+      "choices": [
+        {
+          "label": "Yes, I know hashmap",
+          "next": "string-check-cpp"
+        },
+        {
+          "label": "No, explain hashmap",
+          "next": "hashmap-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "string-check-cpp",
+      "mentorSays": "Do you understand how to work with strings and character access?",
+      "choices": [
+        {
+          "label": "Yes, I know string",
+          "next": "coding-start-cpp"
+        },
+        {
+          "label": "No, explain string",
+          "next": "string-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "string-explanation-cpp",
+      "mentorSays": "In JavaScript, you can access individual characters in a string. For anagrams, we need to count how many times each character appears.\n\nstring word = \"listen\";\nchar firstChar = word[0];  // 'l'\n\n// Loop through characters:\nfor (int i = 0; i < word.size(); i++) {\n    cout << word[i];\n}\n\nGot it?",
+      "example": "string word = \"listen\";\nchar firstChar = word[0];  // 'l'\n\n// Loop through characters:\nfor (int i = 0; i < word.size(); i++) {\n    cout << word[i];\n}",
+      "action": "continue",
+      "next": "coding-start-cpp"
+    },
+    {
+      "stepId": "hashmap-explanation-cpp",
+      "mentorSays": "Use an object to count characters. For anagrams, if two words have the same character counts, they are anagrams!\n\nunordered_map<char, int> charCount;\nfor (char c : \"listen\") {\n    charCount[c]++;\n}\n\nGot it?",
+      "example": "unordered_map<char, int> charCount;\nfor (char c : \"listen\") {\n    charCount[c]++;\n}",
+      "action": "continue",
+      "next": "coding-start-cpp"
+    },
+    {
+      "stepId": "array-explanation-cpp",
+      "mentorSays": "An unordered_map stores key-value pairs. You can quickly look up values by their keys.",
+      "example": "unordered_map<char, int> map;\nmap['A'] = 1;\nint value = map['A'];  // value is 1",
+      "action": "continue",
+      "next": "coding-start-cpp"
+    },
+    {
+      "stepId": "coding-start-cpp",
+      "mentorSays": "Perfect! Let's implement minimum window substring in C++. We'll use a sliding window with unordered_map.",
+      "example": "string minWindow(string s, string t) {\n    // Your code here\n}",
+      "action": "continue",
+      "next": "coding-build-need-cpp"
+    },
+    {
+      "stepId": "coding-build-need-cpp",
+      "mentorSays": "First, build an unordered_map `need` that counts how many of each character we need from string t.",
+      "example": "string minWindow(string s, string t) {\n    if (s.empty() || t.empty()) return \"\";\n    \n    // Build need map\n    unordered_map<char, int> need;\n    for (char c : t) {\n        need[c]++;\n    }\n    \n    int needCount = need.size();",
+      "action": "continue",
+      "next": "coding-initialize-cpp"
+    },
+    {
+      "stepId": "coding-initialize-cpp",
+      "mentorSays": "Initialize variables: left and right pointers, window unordered_map to track current window, formed count to track how many required characters we've found, and variables to track the minimum window.",
+      "example": "string minWindow(string s, string t) {\n    if (s.empty() || t.empty()) return \"\";\n    \n    unordered_map<char, int> need;\n    for (char c : t) {\n        need[c]++;\n    }\n    int needCount = need.size();\n    \n    // Initialize\n    int left = 0, right = 0;\n    unordered_map<char, int> window;\n    int formed = 0;  // How many required characters we've found\n    int minLen = INT_MAX;\n    int minStart = 0;",
+      "action": "continue",
+      "next": "coding-expand-cpp"
+    },
+    {
+      "stepId": "coding-expand-cpp",
+      "mentorSays": "Expand the window by moving the right pointer. For each character, add it to the window unordered_map and check if we've found enough of that required character.",
+      "example": "string minWindow(string s, string t) {\n    if (s.empty() || t.empty()) return \"\";\n    \n    unordered_map<char, int> need;\n    for (char c : t) {\n        need[c]++;\n    }\n    int needCount = need.size();\n    \n    int left = 0, right = 0;\n    unordered_map<char, int> window;\n    int formed = 0;\n    int minLen = INT_MAX;\n    int minStart = 0;\n    \n    // Expand window\n    while (right < s.length()) {\n        char c = s[right];\n        \n        // Add character to window\n        window[c]++;\n        \n        // Check if we've found enough of this required character\n        if (need.count(c) && window[c] == need[c]) {\n            formed++;\n        }",
+      "action": "continue",
+      "next": "coding-shrink-cpp"
+    },
+    {
+      "stepId": "coding-shrink-cpp",
+      "mentorSays": "When all required characters are found (formed == needCount), try to shrink the window from the left to find the minimum valid window. Update the minimum window if we find a smaller one.",
+      "example": "string minWindow(string s, string t) {\n    if (s.empty() || t.empty()) return \"\";\n    \n    unordered_map<char, int> need;\n    for (char c : t) {\n        need[c]++;\n    }\n    int needCount = need.size();\n    \n    int left = 0, right = 0;\n    unordered_map<char, int> window;\n    int formed = 0;\n    int minLen = INT_MAX;\n    int minStart = 0;\n    \n    while (right < s.length()) {\n        char c = s[right];\n        window[c]++;\n        \n        if (need.count(c) && window[c] == need[c]) {\n            formed++;\n        }\n        \n        // Try to shrink window when all characters found\n        while (formed == needCount && left <= right) {\n            // Update minimum window\n            int currentLen = right - left + 1;\n            if (currentLen < minLen) {\n                minLen = currentLen;\n                minStart = left;\n            }\n            \n            // Remove leftmost character\n            char leftChar = s[left];\n            window[leftChar]--;\n            \n            // Check if we lost a required character\n            if (need.count(leftChar) && window[leftChar] < need[leftChar]) {\n                formed--;\n            }\n            \n            left++;\n        }\n        \n        right++;\n    }",
+      "action": "continue",
+      "next": "coding-window-validation-cpp"
+    },
+    {
+      "stepId": "coding-window-validation-cpp",
+      "mentorSays": "Let's add logic to check if current window is valid.\n\nA window is valid when it contains ALL characters from t:\n- Count each character in the window\n- Compare with required counts from t\n- If window has enough of each character → VALID\n\nWe track this with a 'formed' counter!",
+      "example": "let formed = 0;\nlet required = Object.keys(need).length;\n\n// Check if window is valid\nif (windowCount[char] === need[char]) {\n  formed++;\n}\n\n// Window is valid when formed === required",
+      "action": "continue",
+      "next": "coding-window-validation-cpp"
+    },
+    {
+      "stepId": "coding-return-cpp",
+      "mentorSays": "Finally, return the minimum window substring. If no valid window was found, return an empty string.",
+      "example": "string minWindow(string s, string t) {\n    if (s.empty() || t.empty()) return \"\";\n    \n    unordered_map<char, int> need;\n    for (char c : t) {\n        need[c]++;\n    }\n    int needCount = need.size();\n    \n    int left = 0, right = 0;\n    unordered_map<char, int> window;\n    int formed = 0;\n    int minLen = INT_MAX;\n    int minStart = 0;\n    \n    while (right < s.length()) {\n        char c = s[right];\n        window[c]++;\n        \n        if (need.count(c) && window[c] == need[c]) {\n            formed++;\n        }\n        \n        while (formed == needCount && left <= right) {\n            int currentLen = right - left + 1;\n            if (currentLen < minLen) {\n                minLen = currentLen;\n                minStart = left;\n            }\n            \n            char leftChar = s[left];\n            window[leftChar]--;\n            \n            if (need.count(leftChar) && window[leftChar] < need[leftChar]) {\n                formed--;\n            }\n            \n            left++;\n        }\n        \n        right++;\n    }\n    \n    // Return result\n    return minLen == INT_MAX ? \"\" : s.substr(minStart, minLen);\n}",
+      "action": "continue",
+      "next": "test-code-cpp"
+    },
+    {
+      "stepId": "test-code-cpp",
+      "mentorSays": "Perfect! Now test your code with the example we used earlier:\n\ns = \"ADOBECODEBANC\"\nt = \"ABC\"\n\nAfter calling minWindow(s, t), it should return:\n\"BANC\"\n\nTry it in your IDE or code editor!",
+      "example": "Test input:\ns = \"ADOBECODEBANC\"\nt = \"ABC\"\n\nAfter minWindow(s, t):\n\"BANC\"",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-ts",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-ts"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-ts",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'need' or 'window') and put data inside it.\n\nFor example, 'let need: { [key: string]: number } = {};' creates a variable that stores an empty object (hash map).",
+      "example": "let need: { [key: string]: number } = {};\n\nNow the variable refers to an empty object",
+      "action": "continue",
+      "next": "function-check-ts"
+    },
+    {
+      "stepId": "function-check-ts",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "array-check-ts"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-ts",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "function add(a: number, b: number): number {\n  return a + b;\n}\n\nadd(3, 5) returns 8",
+      "action": "continue",
+      "next": "array-check-ts"
+    },
+    {
+      "stepId": "array-check-ts",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a hash map (object) is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know hash maps",
+          "next": "hashmap-check-ts"
+        },
+        {
+          "label": "No, explain hash maps",
+          "next": "array-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "hashmap-check-ts",
+      "mentorSays": "Do you understand how to use objects/maps to count occurrences?",
+      "choices": [
+        {
+          "label": "Yes, I know hashmap",
+          "next": "string-check-ts"
+        },
+        {
+          "label": "No, explain hashmap",
+          "next": "hashmap-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "string-check-ts",
+      "mentorSays": "Do you understand how to work with strings and character access?",
+      "choices": [
+        {
+          "label": "Yes, I know string",
+          "next": "coding-start-ts"
+        },
+        {
+          "label": "No, explain string",
+          "next": "string-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "string-explanation-ts",
+      "mentorSays": "In JavaScript, you can access individual characters in a string. For anagrams, we need to count how many times each character appears.\n\nlet word: string = 'listen';\nlet firstChar = word[0];  // 'l'\n\n// Loop through characters:\nfor (let i = 0; i < word.length; i++) {\n  console.log(word[i]);\n}\n\nGot it?",
+      "example": "let word: string = 'listen';\nlet firstChar = word[0];  // 'l'\n\n// Loop through characters:\nfor (let i = 0; i < word.length; i++) {\n  console.log(word[i]);\n}",
+      "action": "continue",
+      "next": "coding-start-ts"
+    },
+    {
+      "stepId": "hashmap-explanation-ts",
+      "mentorSays": "Use an object to count characters. For anagrams, if two words have the same character counts, they are anagrams!\n\nlet charCount: { [key: string]: number } = {};\nfor (let char of 'listen') {\n  charCount[char] = (charCount[char] || 0) + 1;\n}\n\nGot it?",
+      "example": "let charCount: { [key: string]: number } = {};\nfor (let char of 'listen') {\n  charCount[char] = (charCount[char] || 0) + 1;\n}",
+      "action": "continue",
+      "next": "coding-start-ts"
+    },
+    {
+      "stepId": "array-explanation-ts",
+      "mentorSays": "A hash map (object) stores key-value pairs. You can quickly look up values by their keys.",
+      "example": "let map: { [key: string]: number } = {};\nmap['A'] = 1;\nlet value = map['A'];  // value is 1",
+      "action": "continue",
+      "next": "coding-start-ts"
+    },
+    {
+      "stepId": "coding-start-ts",
+      "mentorSays": "Perfect! Let's implement minimum window substring in TypeScript. We'll use a sliding window with hash maps.",
+      "example": "function minWindow(s: string, t: string): string {\n  // Your code here\n}",
+      "action": "continue",
+      "next": "coding-build-need-ts"
+    },
+    {
+      "stepId": "coding-build-need-ts",
+      "mentorSays": "First, build a hash map `need` that counts how many of each character we need from string t.",
+      "example": "function minWindow(s: string, t: string): string {\n  if (s.length === 0 || t.length === 0) return '';\n  \n  // Build need map\n  const need: { [key: string]: number } = {};\n  for (let char of t) {\n    need[char] = (need[char] || 0) + 1;\n  }\n  \n  const needCount: number = Object.keys(need).length;",
+      "action": "continue",
+      "next": "coding-initialize-ts"
+    },
+    {
+      "stepId": "coding-initialize-ts",
+      "mentorSays": "Initialize variables: left and right pointers, window hash map to track current window, formed count to track how many required characters we've found, and variables to track the minimum window.",
+      "example": "function minWindow(s: string, t: string): string {\n  if (s.length === 0 || t.length === 0) return '';\n  \n  const need: { [key: string]: number } = {};\n  for (let char of t) {\n    need[char] = (need[char] || 0) + 1;\n  }\n  const needCount: number = Object.keys(need).length;\n  \n  // Initialize\n  let left: number = 0, right: number = 0;\n  const window: { [key: string]: number } = {};\n  let formed: number = 0;  // How many required characters we've found\n  let minLen: number = Infinity;\n  let minStart: number = 0;",
+      "action": "continue",
+      "next": "coding-expand-ts"
+    },
+    {
+      "stepId": "coding-expand-ts",
+      "mentorSays": "Expand the window by moving the right pointer. For each character, add it to the window hash map and check if we've found enough of that required character.",
+      "example": "function minWindow(s: string, t: string): string {\n  if (s.length === 0 || t.length === 0) return '';\n  \n  const need: { [key: string]: number } = {};\n  for (let char of t) {\n    need[char] = (need[char] || 0) + 1;\n  }\n  const needCount: number = Object.keys(need).length;\n  \n  let left: number = 0, right: number = 0;\n  const window: { [key: string]: number } = {};\n  let formed: number = 0;\n  let minLen: number = Infinity;\n  let minStart: number = 0;\n  \n  // Expand window\n  while (right < s.length) {\n    const char: string = s[right];\n    \n    // Add character to window\n    window[char] = (window[char] || 0) + 1;\n    \n    // Check if we've found enough of this required character\n    if (need[char] && window[char] === need[char]) {\n      formed++;\n    }",
+      "action": "continue",
+      "next": "coding-shrink-ts"
+    },
+    {
+      "stepId": "coding-shrink-ts",
+      "mentorSays": "When all required characters are found (formed === needCount), try to shrink the window from the left to find the minimum valid window. Update the minimum window if we find a smaller one.",
+      "example": "function minWindow(s: string, t: string): string {\n  if (s.length === 0 || t.length === 0) return '';\n  \n  const need: { [key: string]: number } = {};\n  for (let char of t) {\n    need[char] = (need[char] || 0) + 1;\n  }\n  const needCount: number = Object.keys(need).length;\n  \n  let left: number = 0, right: number = 0;\n  const window: { [key: string]: number } = {};\n  let formed: number = 0;\n  let minLen: number = Infinity;\n  let minStart: number = 0;\n  \n  while (right < s.length) {\n    const char: string = s[right];\n    window[char] = (window[char] || 0) + 1;\n    \n    if (need[char] && window[char] === need[char]) {\n      formed++;\n    }\n    \n    // Try to shrink window when all characters found\n    while (formed === needCount && left <= right) {\n      // Update minimum window\n      const currentLen: number = right - left + 1;\n      if (currentLen < minLen) {\n        minLen = currentLen;\n        minStart = left;\n      }\n      \n      // Remove leftmost character\n      const leftChar: string = s[left];\n      window[leftChar]--;\n      \n      // Check if we lost a required character\n      if (need[leftChar] && window[leftChar] < need[leftChar]) {\n        formed--;\n      }\n      \n      left++;\n    }\n    \n    right++;\n  }",
+      "action": "continue",
+      "next": "coding-window-validation-ts"
+    },
+    {
+      "stepId": "coding-window-validation-ts",
+      "mentorSays": "Let's add logic to check if current window is valid.\n\nA window is valid when it contains ALL characters from t:\n- Count each character in the window\n- Compare with required counts from t\n- If window has enough of each character → VALID\n\nWe track this with a 'formed' counter!",
+      "example": "let formed = 0;\nlet required = Object.keys(need).length;\n\n// Check if window is valid\nif (windowCount[char] === need[char]) {\n  formed++;\n}\n\n// Window is valid when formed === required",
+      "action": "continue",
+      "next": "coding-window-validation-ts"
+    },
+    {
+      "stepId": "coding-return-ts",
+      "mentorSays": "Finally, return the minimum window substring. If no valid window was found, return an empty string.",
+      "example": "function minWindow(s: string, t: string): string {\n  if (s.length === 0 || t.length === 0) return '';\n  \n  const need: { [key: string]: number } = {};\n  for (let char of t) {\n    need[char] = (need[char] || 0) + 1;\n  }\n  const needCount: number = Object.keys(need).length;\n  \n  let left: number = 0, right: number = 0;\n  const window: { [key: string]: number } = {};\n  let formed: number = 0;\n  let minLen: number = Infinity;\n  let minStart: number = 0;\n  \n  while (right < s.length) {\n    const char: string = s[right];\n    window[char] = (window[char] || 0) + 1;\n    \n    if (need[char] && window[char] === need[char]) {\n      formed++;\n    }\n    \n    while (formed === needCount && left <= right) {\n      const currentLen: number = right - left + 1;\n      if (currentLen < minLen) {\n        minLen = currentLen;\n        minStart = left;\n      }\n      \n      const leftChar: string = s[left];\n      window[leftChar]--;\n      \n      if (need[leftChar] && window[leftChar] < need[leftChar]) {\n        formed--;\n      }\n      \n      left++;\n    }\n    \n    right++;\n  }\n  \n  // Return result\n  return minLen === Infinity ? '' : s.substring(minStart, minStart + minLen);\n}",
+      "action": "continue",
+      "next": "test-code-ts"
+    },
+    {
+      "stepId": "test-code-ts",
+      "mentorSays": "Perfect! Now test your code with the example we used earlier:\n\ns = \"ADOBECODEBANC\"\nt = \"ABC\"\n\nAfter calling minWindow(s, t), it should return:\n\"BANC\"\n\nTry it in your IDE or code editor!",
+      "example": "Test input:\ns = \"ADOBECODEBANC\"\nt = \"ABC\"\n\nAfter minWindow(s, t):\n\"BANC\"",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "final",
+      "mentorSays": "🎉 Well done! You've learned minimum window substring. You understand how to use a sliding window with hash maps to find the minimum window containing all required characters!\n\nThis is O(n) time and O(m) space - excellent for substring lessons! Keep practicing!",
+      "action": "continue"
+    }
+  ]
+}

@@ -1,0 +1,319 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-node-94",
+    "track": "node",
+    "lessonNum": 94,
+    "title": "Build load shedding middleware under pressure",
+    "shortName": "P94",
+    "intro": {
+      "tag": "LESSON #94",
+      "title": "Build load shedding middleware under pressure",
+      "body": "In this lesson, you will build a load-shedding middleware for a Node.js server to handle high traffic gracefully. You'll learn to implement a simple rate-limiting mechanism that rejects excess requests under pressure to prevent server overload. The core concept involves using middleware functions, request counters, and timers to control traffic flow. You'll work with basic Node.js constructs like the HTTP module, setInterval, and conditional logic. By the end, you'll have a functional middleware that helps maintain server stability during traffic spikes.",
+      "usecase": "Load shedding middleware is critical in high-traffic Node.js applications like e-commerce platforms during flash sales or ticketing systems for major events. When servers approach capacity limits, this middleware intelligently rejects non-essential requests (like product recommendations) while maintaining core functionality (like checkout processes). You'll see this pattern in cloud dashboards that show degraded service modes, API gateways that implement circuit breakers, and financial trading platforms that prioritize critical transactions. As a backend developer, implementing load shedding helps prevent complete system collapse during traffic spikes, ensuring your most important users and operations remain functional under pressure."
+    },
+    "objectives": [
+      "Construct a basic Express middleware function that intercepts incoming HTTP requests",
+      "Initialize and configure a request counter to track server load in real-time",
+      "Implement conditional logic to reject requests when server load exceeds a defined threshold",
+      "Integrate the load shedding middleware into an existing Express application pipeline",
+      "Manipulate HTTP response codes and messages for rejected requests",
+      "Apply configuration parameters to adjust load shedding behavior dynamically",
+      "Control middleware execution order to ensure proper request flow management"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 9",
+        "title": "Import required Node.js modules",
+        "instruction": "Import the http module and the EventEmitter class from the events module.",
+        "hint": "Use the require() function to import built-in Node.js modules. The http module is used to create servers, and EventEmitter is a class from the events module for handling events.",
+        "analogousExample": "// Example: importing built-in modules\nconst fs = require('fs');\nconst path = require('path');",
+        "seedCode": "// Import the http module and EventEmitter class here",
+        "expectedOutcome": "You'll have access to Node.js's http server capabilities and event handling functionality, which are essential for building load shedding middleware.",
+        "successCriteria": [
+          "The http module and EventEmitter class are imported using require() statements."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're importing both modules: http for server creation and EventEmitter from events for event handling.",
+        "feedbackWrong": "import two built-in Node.js modules: http and EventEmitter (from the events module). Use require() statements for both.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "require('http')",
+            "require('events')",
+            "EventEmitter"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 9",
+        "title": "Create the main server function",
+        "instruction": "Define a function named 'createServer' that creates and returns an HTTP server instance using the imported http module.",
+        "hint": "Use the http.createServer() method and return its result. The function should take no parameters.",
+        "analogousExample": "// Similar: a function that creates and returns a server\nfunction createServer() {\n  return http.createServer();\n}",
+        "seedCode": "// Import the http module and EventEmitter class here\n\n// Define the createServer function here",
+        "expectedOutcome": "A function named createServer is defined that returns an HTTP server instance.",
+        "successCriteria": [
+          "The createServer function is defined and returns http.createServer()"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure your function is named 'createServer' and returns http.createServer().",
+        "feedbackWrong": "The function isn't defined correctly. Check that you're using the imported http module and returning the server instance.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "createServer",
+            "http.createServer",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 9",
+        "title": "Initialize load shedding configuration",
+        "instruction": "Inside the createServer function, create a configuration object named 'config' with two properties: 'maxRequests' set to 100 and 'windowMs' set to 10000.",
+        "hint": "Define a constant variable called 'config' and assign it an object with the specified numeric properties.",
+        "analogousExample": "// Example: configuration object\nconst settings = {\n  maxConnections: 50,\n  timeout: 5000\n};",
+        "seedCode": "// Import the http module and EventEmitter class here\n\n// Define the createServer function here\nfunction createServer() {\n  // Add configuration object here\n}",
+        "expectedOutcome": "A configuration object is defined inside the server function with the required properties for load shedding.",
+        "successCriteria": [
+          "The 'config' object exists with 'maxRequests: 100' and 'windowMs: 10000' properties."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've created a configuration object, but check that both 'maxRequests' and 'windowMs' have the exact values 100 and 10000.",
+        "feedbackWrong": "The configuration object is missing or incorrect. Make sure to create an object named 'config' with both required properties inside the createServer function.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "config",
+            "maxRequests",
+            "100",
+            "windowMs",
+            "10000"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 9",
+        "title": "Create request tracking data structure",
+        "instruction": "Inside the createServer function, initialize an empty object to track request counts per client.",
+        "hint": "You can create a simple JavaScript object using {} and assign it to a variable.",
+        "analogousExample": "// Similar: tracking user scores\nconst userScores = {};",
+        "seedCode": "// Import the http module and EventEmitter class here\n\n// Define the createServer function here\nfunction createServer() {\n  // Add configuration object here\n  \n  // Initialize request tracking object here\n}",
+        "expectedOutcome": "A request tracking object is created inside the server function.",
+        "successCriteria": [
+          "An empty object variable is declared inside createServer to track request counts."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you declare an empty object variable inside the createServer function.",
+        "feedbackWrong": "Try creating an empty object variable inside the createServer function to track request counts.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "const",
+            "=",
+            "{}"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 9",
+        "title": "Define the load shedding middleware function",
+        "instruction": "Inside the createServer function, define a middleware function named loadSheddingMiddleware that takes three parameters: req, res, and next.",
+        "hint": "Create a function that will process incoming requests and decide whether to allow them through or shed them.",
+        "analogousExample": "// Example middleware function structure\nfunction exampleMiddleware(req, res, next) {\n  // Middleware logic here\n  next();\n}",
+        "seedCode": "// Import the http module and EventEmitter class here\n\n// Define the createServer function here\nfunction createServer() {\n  // Add configuration object here\n  \n  // Initialize request tracking object here\n  \n  // Define loadSheddingMiddleware function here\n}",
+        "expectedOutcome": "The loadSheddingMiddleware function is defined with the correct parameters and placed inside createServer.",
+        "successCriteria": [
+          "A function named loadSheddingMiddleware exists inside createServer and accepts req, res, and next parameters."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure the function is named loadSheddingMiddleware and accepts three parameters: req, res, and next.",
+        "feedbackWrong": "The middleware function isn't properly defined. Check the function name and parameter list.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "loadSheddingMiddleware",
+            "req",
+            "res",
+            "next"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 9",
+        "title": "Implement client identification logic",
+        "instruction": "Inside the loadSheddingMiddleware function, add logic to extract the client's IP address from the request object.",
+        "hint": "You can get the client IP from the request's socket.remoteAddress property.",
+        "analogousExample": "// Example: extracting client information\nfunction identifyClient(req) {\n  const clientIp = req.socket.remoteAddress;\n  return clientIp;\n}",
+        "seedCode": "// Import the http module and EventEmitter class here\n\n// Define the createServer function here\nfunction createServer() {\n  // Add configuration object here\n  \n  // Initialize request tracking object here\n  \n  // Define loadSheddingMiddleware function here\n  function loadSheddingMiddleware(req, res, next) {\n    // Extract client IP here\n  }\n}",
+        "expectedOutcome": "The middleware function will be able to identify clients by their IP address for request tracking.",
+        "successCriteria": [
+          "The loadSheddingMiddleware function contains code to extract the client IP from req.socket.remoteAddress."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're extracting the IP address from the correct property of the request object.",
+        "feedbackWrong": "The client identification logic is missing or incorrect. The middleware needs to extract the client IP from the request.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "req.socket.remoteAddress",
+            "clientIp",
+            "loadSheddingMiddleware"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 9",
+        "title": "Wire middleware into server request handling",
+        "instruction": "Inside the createServer function, after the loadSheddingMiddleware function definition, add the middleware to the server's request handling chain by calling server.use(loadSheddingMiddleware).",
+        "hint": "The server.use() method allows you to add middleware functions that will process all incoming requests before they reach your route handlers.",
+        "analogousExample": "// Adding middleware to an Express-like server\nconst express = require('express');\nconst app = express();\n\nfunction loggingMiddleware(req, res, next) {\n  console.log(`${req.method} ${req.url}`);\n  next();\n}\n\napp.use(loggingMiddleware);",
+        "seedCode": "// Import the http module and EventEmitter class here\n\n// Define the createServer function here\nfunction createServer() {\n  // Add configuration object here\n  \n  // Initialize request tracking object here\n  \n  // Define loadSheddingMiddleware function here\n  function loadSheddingMiddleware(req, res, next) {\n    // Extract client IP here\n    const clientIp = req.socket.remoteAddress;\n    \n    // Add request counting logic here\n    \n    // Add load shedding decision logic here\n    \n    // Add response for overloaded clients here\n  }\n  \n  // Add middleware to server request handling here\n}",
+        "expectedOutcome": "The load shedding middleware will be integrated into the server's request processing pipeline, allowing it to intercept and potentially reject requests before they reach your application logic.",
+        "successCriteria": [
+          "The server.use(loadSheddingMiddleware) call is added inside the createServer function after the middleware definition."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're calling server.use() with loadSheddingMiddleware as the argument, and that this call is placed inside the createServer function after the middleware definition.",
+        "feedbackWrong": "The middleware needs to be explicitly added to the server's request handling chain. Use server.use(loadSheddingMiddleware) to integrate it.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "server.use",
+            "loadSheddingMiddleware"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 9",
+        "title": "Create a simple request handler for testing",
+        "instruction": "Inside the createServer function, add a final request handler that responds to normal requests with a 200 status and a 'Hello from server!' message.",
+        "hint": "After the middleware logic, add a request listener that checks if the request should be processed normally and sends a response.",
+        "analogousExample": "// Simple request handler example\nfunction handleRequest(req, res) {\n  res.writeHead(200, { 'Content-Type': 'text/plain' });\n  res.end('Request handled successfully!');\n}",
+        "seedCode": "// Import the http module and EventEmitter class here\n\n// Define the createServer function here\nfunction createServer() {\n  // Add configuration object here\n  \n  // Initialize request tracking object here\n  \n  // Define loadSheddingMiddleware function here\n  function loadSheddingMiddleware(req, res, next) {\n    // Extract client IP here\n    const clientIp = req.socket.remoteAddress;\n    \n    // Add request counting logic here\n    \n    // Add load shedding decision logic here\n    \n    // Add response for overloaded clients here\n  }\n  \n  // Add middleware to server request handling here\n  \n  // Add final request handler here\n}",
+        "expectedOutcome": "The server will have a complete request handling flow: middleware checks for overload, then normal requests get a friendly response.",
+        "successCriteria": [
+          "A request handler function is added that sends a 200 response with 'Hello from server!' message."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You added a request handler, but make sure it sends a 200 status and the exact message 'Hello from server!'.",
+        "feedbackWrong": "The request handler is missing or doesn't respond correctly. Add a handler that sends a 200 response with 'Hello from server!'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "writeHead(200",
+            "res.end",
+            "'Hello from server!'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 9",
+        "title": "Start the server and export the middleware",
+        "instruction": "Inside the createServer function, start the HTTP server by calling server.listen() on port 3000 and export the loadSheddingMiddleware function.",
+        "hint": "Use server.listen(3000) to start the server and module.exports = { loadSheddingMiddleware } to make it available.",
+        "analogousExample": "// Starting a server and exporting a function\nconst server = http.createServer();\nserver.listen(8080);\nmodule.exports = { myMiddleware };",
+        "seedCode": "// Import the http module and EventEmitter class here\n\n// Define the createServer function here\nfunction createServer() {\n  // Add configuration object here\n  \n  // Initialize request tracking object here\n  \n  // Define loadSheddingMiddleware function here\n  function loadSheddingMiddleware(req, res, next) {\n    // Extract client IP here\n    const clientIp = req.socket.remoteAddress;\n    \n    // Add request counting logic here\n    \n    // Add load shedding decision logic here\n    \n    // Add response for overloaded clients here\n  }\n  \n  // Add middleware to server request handling here\n  \n  // Add final request handler here\n  \n  // Start the server and export the middleware here\n}",
+        "expectedOutcome": "The server will start listening on port 3000 and the middleware function will be exported for external use.",
+        "successCriteria": [
+          "The server is started with server.listen(3000) and loadSheddingMiddleware is exported using module.exports."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure you're both starting the server on port 3000 and exporting the middleware function.",
+        "feedbackWrong": "Check that you're calling server.listen(3000) to start the server and using module.exports to export loadSheddingMiddleware.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "server.listen(3000)",
+            "module.exports",
+            "loadSheddingMiddleware"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import required Node.js modules",
+        "id": "step1"
+      },
+      {
+        "label": "Create the main server function",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize load shedding configuration",
+        "id": "step3"
+      },
+      {
+        "label": "Create request tracking data structure",
+        "id": "step4"
+      },
+      {
+        "label": "Define the load shedding middleware function",
+        "id": "step5"
+      },
+      {
+        "label": "Implement client identification logic",
+        "id": "step6"
+      },
+      {
+        "label": "Wire middleware into server request handling",
+        "id": "step7"
+      },
+      {
+        "label": "Create a simple request handler for testing",
+        "id": "step8"
+      },
+      {
+        "label": "Start the server and export the middleware",
+        "id": "step9"
+      }
+    ]
+  },
+  "source": "content"
+}

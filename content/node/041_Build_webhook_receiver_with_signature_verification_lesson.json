@@ -1,0 +1,320 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-node-41",
+    "track": "node",
+    "lessonNum": 41,
+    "title": "Build webhook receiver with signature verification",
+    "shortName": "P41",
+    "intro": {
+      "tag": "LESSON #41",
+      "title": "Build webhook receiver with signature verification",
+      "body": "In this lesson, you will build a secure webhook receiver in Node.js that validates incoming requests using signature verification. You will learn how to handle HTTP POST requests, parse JSON payloads, and compute HMAC signatures to ensure data integrity and authenticity. The core programming concepts involve using the built-in crypto module for hashing and comparing signatures, and the Express.js framework for setting up a web server. By the end, you will have a functional endpoint that can safely process webhook events from external services.",
+      "usecase": "Webhook receivers with signature verification are essential for secure integrations in real-world applications like payment gateways (e.g., Stripe), notification services (e.g., Slack or GitHub), and e-commerce platforms (e.g., Shopify). Developers implement this pattern to ensure data integrity and authenticity when external services send automated updates to dashboards, order management systems, or user activity logs. For instance, a payment confirmation webhook updates a merchant's admin panel only after verifying the signature, preventing fraudulent transactions. This security measure is critical in production environments where handling sensitive data via HTTP callbacks is common."
+    },
+    "objectives": [
+      "Construct a Node.js Express server to receive webhook payloads",
+      "Configure environment variables to store webhook secrets securely",
+      "Implement signature verification logic using HMAC cryptography",
+      "Initialize middleware to parse incoming webhook request bodies",
+      "Apply validation checks to ensure webhook authenticity",
+      "Manipulate request headers to extract signature information",
+      "Integrate error handling for failed signature verification"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 9",
+        "title": "Import required Node.js modules",
+        "instruction": "Import the http, crypto, and url modules from Node.js using the require() syntax.",
+        "hint": "Use require('module_name') for each module. These are built-in Node.js modules, so no npm installation is needed.",
+        "analogousExample": "// Example: importing built-in modules\nconst fs = require('fs');\nconst path = require('path');",
+        "seedCode": "// Import the required modules here",
+        "expectedOutcome": "The http, crypto, and url modules are imported and ready to use for building the webhook receiver.",
+        "successCriteria": [
+          "The http, crypto, and url modules are imported using require()."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You imported some modules, but make sure to import all three: http, crypto, and url.",
+        "feedbackWrong": "The required modules are not imported correctly. Use require() to import http, crypto, and url.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "require('http')",
+            "require('crypto')",
+            "require('url')"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 9",
+        "title": "Create the main server function",
+        "instruction": "Create a function named 'createWebhookServer' that will handle setting up the HTTP server. The function should take no parameters and return nothing for now.",
+        "hint": "Define a function using either 'function createWebhookServer()' or 'const createWebhookServer = () =>' syntax.",
+        "analogousExample": "// Example of a simple server setup function\nfunction createServer() {\n  // Server logic will go here\n}",
+        "seedCode": "// Import the required modules here\n\n// Create the main server function here",
+        "expectedOutcome": "A function named 'createWebhookServer' is defined in your code.",
+        "successCriteria": [
+          "The 'createWebhookServer' function is properly defined with a function body."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure the function is named exactly 'createWebhookServer' and has a function body.",
+        "feedbackWrong": "The function wasn't created correctly. Please create a function named 'createWebhookServer' that will handle server setup.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "createWebhookServer",
+            "function"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 9",
+        "title": "Initialize server configuration",
+        "instruction": "Inside your server function, define two constants: one for the port number (e.g., 3000) and another for your webhook secret (e.g., 'your-webhook-secret').",
+        "hint": "Use the const keyword to declare both variables. The port should be a number, and the secret should be a string.",
+        "analogousExample": "// Example: defining configuration constants\nconst PORT = 8080;\nconst API_KEY = 'my-secret-key';",
+        "seedCode": "// Import the required modules here\n\n// Create the main server function here\nfunction webhookReceiver() {\n  // Define port number and webhook secret constant here\n}",
+        "expectedOutcome": "Your server function now contains two constant declarations for configuration values.",
+        "successCriteria": [
+          "The function contains a PORT constant with a numeric value and a WEBHOOK_SECRET constant with a string value."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you've defined both constants: one for the port and one for the secret.",
+        "feedbackWrong": "The configuration constants aren't defined correctly. Check that you've declared both PORT and WEBHOOK_SECRET inside the function.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "PORT",
+            "WEBHOOK_SECRET",
+            "const"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 9",
+        "title": "Create request body parsing helper",
+        "instruction": "Inside the webhookReceiver function, create a helper function named parseRequestBody that takes a request object as a parameter and returns a Promise that resolves with the parsed request body.",
+        "hint": "You'll need to collect data chunks from the request stream and concatenate them into a complete string, then parse it as JSON.",
+        "analogousExample": "// Example: A function that collects and parses request body\nfunction parseRequestBody(req) {\n  return new Promise((resolve, reject) => {\n    let body = '';\n    req.on('data', chunk => body += chunk);\n    req.on('end', () => {\n      try {\n        resolve(JSON.parse(body));\n      } catch (error) {\n        reject(error);\n      }\n    });\n    req.on('error', reject);\n  });\n}",
+        "seedCode": "// Import the required modules here\n\n// Create the main server function here\nfunction webhookReceiver() {\n  // Define port number and webhook secret constant here\n\n  // Create request body parsing helper here\n}",
+        "expectedOutcome": "A parseRequestBody function is created inside webhookReceiver that properly handles request streams and returns a Promise with the parsed JSON body.",
+        "successCriteria": [
+          "The parseRequestBody function is defined inside webhookReceiver, takes a request parameter, returns a Promise, collects data chunks, and parses JSON."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure your function returns a Promise and properly handles the 'data', 'end', and 'error' events on the request object.",
+        "feedbackWrong": "The parsing helper isn't quite right. Remember you need to handle the request as a stream and parse the complete body as JSON.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "parseRequestBody",
+            "function",
+            "req",
+            "Promise",
+            "on('data'",
+            "on('end'",
+            "JSON.parse"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 9",
+        "title": "Parse incoming webhook data",
+        "instruction": "Inside the request handler logic, implement the parsing of the JSON payload from the request body.",
+        "hint": "Use JSON.parse() on the raw body string to convert it into a JavaScript object.",
+        "analogousExample": "// Example: parsing JSON from a string\nconst rawData = '{\"event\": \"user.created\"}';\nconst parsedData = JSON.parse(rawData);",
+        "seedCode": "// Import the required modules here\n\n// Create the main server function here\nfunction webhookReceiver() {\n  // Define port number and webhook secret constant here\n\n  // Create request body parsing helper here\n\n  // Create signature verification function here\n\n  // Create request handler logic here\n  const handleRequest = async (req, res) => {\n    try {\n      const rawBody = await getRawBody(req);\n      // Parse the JSON payload here\n    } catch (error) {\n      res.writeHead(400, { 'Content-Type': 'application/json' });\n      res.end(JSON.stringify({ error: 'Invalid request' }));\n    }\n  };\n}",
+        "expectedOutcome": "The request handler will be able to parse incoming JSON webhook data into a usable JavaScript object.",
+        "successCriteria": [
+          "JSON.parse() is used to convert the rawBody string into a JavaScript object inside the try block."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure to parse the rawBody variable using JSON.parse() inside the try block.",
+        "feedbackWrong": "The parsing logic is missing or incorrect. Use JSON.parse() on the rawBody string to convert it to a JavaScript object.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "JSON.parse",
+            "rawBody"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 9",
+        "title": "Extract signature from headers",
+        "instruction": "Inside the handleRequest function, after parsing the JSON payload, extract the webhook signature from the request headers. The signature is typically in a header like 'x-webhook-signature' or 'x-signature'.",
+        "hint": "You can access request headers using req.headers. Look for a header that contains the signature, such as 'x-webhook-signature'.",
+        "analogousExample": "// Extracting a specific header value\nconst signature = req.headers['x-webhook-signature'];",
+        "seedCode": "// Import the required modules here\n\n// Create the main server function here\nfunction webhookReceiver() {\n  // Define port number and webhook secret constant here\n\n  // Create request body parsing helper here\n\n  // Create signature verification function here\n\n  // Create request handler logic here\n  const handleRequest = async (req, res) => {\n    try {\n      const rawBody = await getRawBody(req);\n      // Parse the JSON payload here\n      const payload = JSON.parse(rawBody);\n      // Extract the signature from headers here\n    } catch (error) {\n      res.writeHead(400, { 'Content-Type': 'application/json' });\n      res.end(JSON.stringify({ error: 'Invalid request' }));\n    }\n  };\n}",
+        "expectedOutcome": "The code will extract the signature from the request headers, preparing it for verification in the next step.",
+        "successCriteria": [
+          "The signature is extracted from the request headers and stored in a variable."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're extracting the signature from the correct header (e.g., 'x-webhook-signature').",
+        "feedbackWrong": "The signature extraction seems incorrect. Remember to access the header from req.headers and assign it to a variable.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "req.headers",
+            "signature"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 9",
+        "title": "Verify webhook signature",
+        "instruction": "Inside the try block of handleRequest, call your verifySignature function with the extracted signature and rawBody,",
+        "hint": "Call verifySignature(signature, rawBody) and store the result in a variable. Use an if statement to handle the verification outcome.",
+        "analogousExample": "// Example: calling a verification function\nconst isValid = verifySignature(signature, data);\nif (!isValid) {\n  // Handle invalid case\n}",
+        "seedCode": "// Import the required modules here\n\n// Create the main server function here\nfunction webhookReceiver() {\n  // Define port number and webhook secret constant here\n\n  // Create request body parsing helper here\n\n  // Create signature verification function here\n\n  // Create request handler logic here\n  const handleRequest = async (req, res) => {\n    try {\n      const rawBody = await getRawBody(req);\n      // Parse the JSON payload here\n      const payload = JSON.parse(rawBody);\n      // Extract the signature from headers here\n      // Verify webhook signature here\n    } catch (error) {\n      res.writeHead(400, { 'Content-Type': 'application/json' });\n      res.end(JSON.stringify({ error: 'Invalid request' }));\n    }\n  };\n}",
+        "expectedOutcome": "The signature verification is performed after extracting the signature and parsing the payload, with conditional logic to handle the result.",
+        "successCriteria": [
+          "verifySignature is called with the signature and rawBody, and an if statement checks the result."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you call verifySignature with both the signature and rawBody, then check the result with an if statement.",
+        "feedbackWrong": "The signature verification step is missing or incorrect. You need to call verifySignature and handle the validation outcome.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "verifySignature",
+            "signature",
+            "rawBody",
+            "if"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 9",
+        "title": "check if the verification passes",
+        "instruction": "check if the verification passes.",
+        "hint": "Call verifySignature(signature, rawBody) and store the result in a variable. Use an if statement to handle the verification outcome.",
+        "analogousExample": "// Example: calling a verification function\nconst isValid = verifySignature(signature, data);\nif (!isValid) {\n  // Handle invalid case\n}",
+        "seedCode": "// Import the required modules here\n\n// Create the main server function here\nfunction webhookReceiver() {\n  // Define port number and webhook secret constant here\n\n  // Create request body parsing helper here\n\n  // Create signature verification function here\n\n  // Create request handler logic here\n  const handleRequest = async (req, res) => {\n    try {\n      const rawBody = await getRawBody(req);\n      // Parse the JSON payload here\n      const payload = JSON.parse(rawBody);\n      // Extract the signature from headers here\n      // Verify webhook signature here\n    } catch (error) {\n      res.writeHead(400, { 'Content-Type': 'application/json' });\n      res.end(JSON.stringify({ error: 'Invalid request' }));\n    }\n  };\n}",
+        "expectedOutcome": "",
+        "successCriteria": [
+          "Complete the step as instructed."
+        ],
+        "feedbackCorrect": "Great! Step completed.",
+        "feedbackPartial": "Review the instruction and try again.",
+        "feedbackWrong": "Check the instruction and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "verifySignature",
+            "signature",
+            "rawBody",
+            "if"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 9",
+        "title": "Add error handling and logging",
+        "instruction": "Inside the handleRequest function, add a console.log statement to log successful signature verification and enhance the existing catch block to log errors.",
+        "hint": "Add console.log('Signature verified successfully') after successful verification and console.error('Error:', error.message) in the catch block.",
+        "analogousExample": "// Example: logging in a request handler\nfunction handleRequest(req, res) {\n  try {\n    // Process request\n    console.log('Request processed successfully');\n  } catch (error) {\n    console.error('Processing failed:', error.message);\n  }\n}",
+        "seedCode": "// Import the required modules here\n\n// Create the main server function here\nfunction webhookReceiver() {\n  // Define port number and webhook secret constant here\n\n  // Create request body parsing helper here\n\n  // Create signature verification function here\n\n  // Create request handler logic here\n  const handleRequest = async (req, res) => {\n    try {\n      const rawBody = await getRawBody(req);\n      // Parse the JSON payload here\n      const payload = JSON.parse(rawBody);\n      // Extract the signature from headers here\n      // Verify webhook signature here\n      // Handle verification results here\n    } catch (error) {\n      res.writeHead(400, { 'Content-Type': 'application/json' });\n      res.end(JSON.stringify({ error: 'Invalid request' }));\n    }\n  };\n  \n  // Create and start the HTTP server here\n}",
+        "expectedOutcome": "The handleRequest function will include logging for both successful verification and error cases, making debugging easier.",
+        "successCriteria": [
+          "The handleRequest function contains console.log for success and console.error for errors in the catch block."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You added some logging, but make sure to include both success logging (console.log) and error logging (console.error) in the catch block.",
+        "feedbackWrong": "The handleRequest function doesn't include the required logging statements. Add console.log for successful verification and console.error for errors.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "console.log",
+            "console.error",
+            "catch"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import required Node.js modules",
+        "id": "step1"
+      },
+      {
+        "label": "Create the main server function",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize server configuration",
+        "id": "step3"
+      },
+      {
+        "label": "Create request body parsing helper",
+        "id": "step4"
+      },
+      {
+        "label": "Parse incoming webhook data",
+        "id": "step5"
+      },
+      {
+        "label": "Extract signature from headers",
+        "id": "step6"
+      },
+      {
+        "label": "Verify webhook signature",
+        "id": "step7"
+      },
+      {
+        "label": "check if the verification passes",
+        "id": "step8"
+      },
+      {
+        "label": "Add error handling and logging",
+        "id": "step9"
+      }
+    ]
+  },
+  "source": "content"
+}

@@ -1,0 +1,345 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-angular-39",
+    "track": "angular",
+    "lessonNum": 39,
+    "title": "useLocalStorage",
+    "shortName": "P39",
+    "intro": {
+      "tag": "LESSON #39",
+      "title": "useLocalStorage",
+      "body": "In this lesson, you will build a simple Angular component that uses the browser's localStorage to save and retrieve a user's name. You will learn how to create a reactive form to capture input and manage state with Angular's built-in features. The core concept involves persisting data across browser sessions using the Web Storage API. You'll work with TypeScript for type safety, Angular templates for the UI, and lifecycle hooks to initialize the stored value.",
+      "usecase": "The useLocalStorage pattern is essential for creating seamless user experiences in real-world Angular applications. You'll implement this when building shopping carts that persist items between sessions, user preference panels that remember theme or layout choices, and form wizards that save progress if users navigate away. Product dashboards use localStorage to maintain filter selections and column visibility, while authentication flows often store tokens or session data temporarily. This pattern prevents data loss and creates more responsive interfaces by keeping state client-side."
+    },
+    "objectives": [
+      "Implement a custom service to manage localStorage operations in Angular",
+      "Configure dependency injection to provide the localStorage service throughout the application",
+      "Initialize component state by retrieving data from localStorage on application load",
+      "Manipulate localStorage data through service methods for setting, getting, and removing items",
+      "Bind component properties to localStorage values to maintain state persistence",
+      "Update localStorage synchronously when component data changes",
+      "Integrate localStorage service with Angular components to create persistent user interfaces"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 9",
+        "title": "Import Component and CommonModule",
+        "instruction": "Import Component from '@angular/core' and CommonModule from '@angular/common'.",
+        "hint": "Use the import statement to bring in Angular's core decorator and common module for basic directives.",
+        "analogousExample": "// Importing Angular modules\nimport { Component } from '@angular/core';\nimport { CommonModule } from '@angular/common';",
+        "seedCode": {
+          "App.tsx": "// Import Component from '@angular/core' and CommonModule from '@angular/common'"
+        },
+        "expectedOutcome": "The component file will have the necessary imports to define an Angular component and use common directives.",
+        "successCriteria": [
+          "Component is imported from '@angular/core' and CommonModule is imported from '@angular/common'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're importing both Component from '@angular/core' and CommonModule from '@angular/common'.",
+        "feedbackWrong": "The imports are missing or incorrect. Please import Component from '@angular/core' and CommonModule from '@angular/common'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "Component",
+            "'@angular/core'",
+            "CommonModule",
+            "'@angular/common'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 9",
+        "title": "Create the main component class",
+        "instruction": "Create a component class named LocalStorageComponent with the @Component decorator and basic metadata.",
+        "hint": "Use the export keyword before class, add the @Component decorator above it, and provide an empty template and styles array in the metadata.",
+        "analogousExample": "// Example component class in Angular\nexport class ExampleComponent {}",
+        "seedCode": {
+          "App.tsx": "import { Component } from '@angular/core';\nimport { CommonModule } from '@angular/common';\n\n// Create the LocalStorageComponent class here\n"
+        },
+        "expectedOutcome": "A component class named LocalStorageComponent is defined with the @Component decorator.",
+        "successCriteria": [
+          "The LocalStorageComponent class is exported and decorated with @Component, containing template and styles metadata."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure the class is named LocalStorageComponent, exported, and has the @Component decorator with template and styles.",
+        "feedbackWrong": "The component class is missing or incorrect. Ensure you create an exported class named LocalStorageComponent with @Component decorator.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "export",
+            "class",
+            "LocalStorageComponent",
+            "@Component",
+            "template",
+            "styles"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 9",
+        "title": "Initialize component state with typed properties",
+        "instruction": "Inside the LocalStorageComponent class, add two typed string properties: 'storedValue' and 'inputText'. Initialize 'storedValue' as an empty string and 'inputText' as an empty string.",
+        "hint": "Add these properties directly in the class body, using TypeScript type annotations. For example: propertyName: string = '';",
+        "analogousExample": "// Adding typed properties to a class\nclass UserProfile {\n  username: string = '';\n  email: string = '';\n}",
+        "seedCode": {
+          "App.tsx": "import { Component } from '@angular/core';\nimport { CommonModule } from '@angular/common';\n\n// Create the LocalStorageComponent class here\n@Component({\n  selector: 'app-local-storage',\n  standalone: true,\n  imports: [CommonModule],\n  template: ''\n})\nexport class LocalStorageComponent {\n  // Add typed properties here\n}"
+        },
+        "expectedOutcome": "The component class now has typed properties to store localStorage data and user input.",
+        "successCriteria": [
+          "The LocalStorageComponent class contains both 'storedValue: string = ''' and 'inputText: string = ''' properties."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure both properties are typed as strings and initialized as empty strings.",
+        "feedbackWrong": "The component class doesn't have the required typed properties. Add 'storedValue' and 'inputText' as string properties initialized to empty strings.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "storedValue:",
+            "string",
+            "inputText:",
+            "string"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 9",
+        "title": "Create saveToLocalStorage method",
+        "instruction": "Inside the LocalStorageComponent class, define a method named saveToLocalStorage that saves the inputText property to localStorage and updates the storedValue property.",
+        "hint": "Use localStorage.setItem() to save the value and assign it to this.storedValue.",
+        "analogousExample": "// Example: a method that saves data\nsaveData() {\n  localStorage.setItem('key', this.data);\n  this.savedData = this.data;\n}",
+        "seedCode": {
+          "App.tsx": "import { Component } from '@angular/core';\nimport { CommonModule } from '@angular/common';\n\n// Create the LocalStorageComponent class here\n@Component({\n  selector: 'app-local-storage',\n  standalone: true,\n  imports: [CommonModule],\n  template: ''\n})\nexport class LocalStorageComponent {\n  // Add typed properties here\n  \n  // Define the saveToLocalStorage method here\n}"
+        },
+        "expectedOutcome": "The component will have a method that can save the current input text to localStorage and update the stored value.",
+        "successCriteria": [
+          "The saveToLocalStorage method is defined in the LocalStorageComponent class, uses localStorage.setItem() to save inputText, and updates storedValue."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure your method saves inputText to localStorage and updates storedValue.",
+        "feedbackWrong": "The method isn't quite right. Check that it saves to localStorage and updates the storedValue property.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "saveToLocalStorage",
+            "localStorage.setItem",
+            "this.storedValue",
+            "this.inputText"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 9",
+        "title": "Create loadFromLocalStorage method",
+        "instruction": "Define a method named loadFromLocalStorage in your LocalStorageComponent class that reads from localStorage and updates the storedValue property.",
+        "hint": "Use localStorage.getItem() to retrieve the value, then assign it to this.storedValue. Remember to handle the case where nothing is stored.",
+        "analogousExample": "// Example: A method that loads data\nloadData() {\n  const data = localStorage.getItem('myData');\n  this.myValue = data ? data : '';\n}",
+        "seedCode": {
+          "App.tsx": "import { Component } from '@angular/core';\nimport { CommonModule } from '@angular/common';\n\n// Create the LocalStorageComponent class here\n@Component({\n  selector: 'app-local-storage',\n  standalone: true,\n  imports: [CommonModule],\n  template: ''\n})\nexport class LocalStorageComponent {\n  // Add typed properties here\n  \n  // Define the saveToLocalStorage method here\n  \n  // Define the loadFromLocalStorage method here\n}"
+        },
+        "expectedOutcome": "The component will have a loadFromLocalStorage method that retrieves data from localStorage and updates the storedValue property.",
+        "successCriteria": [
+          "The loadFromLocalStorage method is defined, uses localStorage.getItem(), and assigns the retrieved value to this.storedValue."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure your method reads from localStorage and updates the storedValue property.",
+        "feedbackWrong": "The method isn't quite right. Check that you're using localStorage.getItem() and assigning the result to this.storedValue.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "loadFromLocalStorage",
+            "localStorage.getItem",
+            "this.storedValue"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 9",
+        "title": "Add template structure with input field",
+        "instruction": "Add a template to your component with an input field that uses two-way binding with [(ngModel)] to connect to the inputText property.",
+        "hint": "Use the template property in the @Component decorator. Remember to import FormsModule if you haven't already, but for this step just add the template with the input field.",
+        "analogousExample": "// Example of a simple template with an input field\n@Component({\n  selector: 'app-example',\n  template: `<input [(ngModel)]=\"exampleText\" placeholder=\"Type something...\">`\n})\nexport class ExampleComponent {\n  exampleText = '';\n}",
+        "seedCode": {
+          "App.tsx": "import { Component } from '@angular/core';\nimport { CommonModule } from '@angular/common';\n\n// Create the LocalStorageComponent class here\n@Component({\n  selector: 'app-local-storage',\n  standalone: true,\n  imports: [CommonModule],\n  template: ''\n})\nexport class LocalStorageComponent {\n  // Add typed properties here\n  \n  // Define the saveToLocalStorage method here\n  \n  // Define the loadFromLocalStorage method here\n  \n  // Define the clearLocalStorage method here\n}"
+        },
+        "expectedOutcome": "The component will have a basic template with an input field that is bound to the inputText property using Angular's two-way data binding syntax.",
+        "successCriteria": [
+          "The component's @Component decorator includes a template property with an input element using [(ngModel)]=\"inputText\"."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you've added the template property with an input element that uses [(ngModel)]=\"inputText\".",
+        "feedbackWrong": "The template isn't set up correctly. Remember to add a template property to the @Component decorator with an input element using [(ngModel)]=\"inputText\".",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "template:",
+            "[(ngModel)]=\"inputText\""
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 9",
+        "title": "Add save button with click handler",
+        "instruction": "In the component's template, add a button element with the text 'Save to Local Storage' and bind its click event to the saveToLocalStorage method.",
+        "hint": "Use Angular's event binding syntax (click)=\"methodName()\" on a button element.",
+        "analogousExample": "// Similar: button with click handler\n<button (click)=\"handleClick()\">Click Me</button>",
+        "seedCode": {
+          "App.tsx": "import { Component } from '@angular/core';\nimport { CommonModule } from '@angular/common';\n\n// Create the LocalStorageComponent class here\n@Component({\n  selector: 'app-local-storage',\n  standalone: true,\n  imports: [CommonModule],\n  template: ''\n})\nexport class LocalStorageComponent {\n  // Add typed properties here\n  \n  // Define the saveToLocalStorage method here\n  \n  // Define the loadFromLocalStorage method here\n  \n  // Define the clearLocalStorage method here\n}"
+        },
+        "expectedOutcome": "A button labeled 'Save to Local Storage' appears in the component's template, and clicking it will trigger the saveToLocalStorage method.",
+        "successCriteria": [
+          "The template contains a button element with text 'Save to Local Storage' and a (click) event binding to saveToLocalStorage()."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added a button, but make sure it has the correct text and click event binding.",
+        "feedbackWrong": "The button with the click handler is missing or incorrect. Check the template and event binding syntax.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<button",
+            "(click)=\"saveToLocalStorage()\"",
+            "Save to Local Storage"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 9",
+        "title": "Add load and clear buttons with handlers",
+        "instruction": "Add two buttons to the template: one labeled 'Load from LocalStorage' that calls the loadFromLocalStorage method when clicked, and another labeled 'Clear LocalStorage' that calls the clearLocalStorage method when clicked.",
+        "hint": "Place the buttons after the existing save button in the template. Use Angular's event binding syntax (click)=\"methodName()\" for each button.",
+        "analogousExample": "// Adding buttons with click handlers in Angular template\n<button (click)=\"saveData()\">Save Data</button>\n<button (click)=\"loadData()\">Load Data</button>\n<button (click)=\"clearData()\">Clear Data</button>",
+        "seedCode": {
+          "App.tsx": "import { Component } from '@angular/core';\nimport { CommonModule } from '@angular/common';\n\n// Create the LocalStorageComponent class here\n@Component({\n  selector: 'app-local-storage',\n  standalone: true,\n  imports: [CommonModule],\n  template: `\n    <div>\n      <input type=\"text\" [(ngModel)]=\"inputValue\" placeholder=\"Enter text to save\" />\n      <button (click)=\"saveToLocalStorage()\">Save to LocalStorage</button>\n      <!-- Add load and clear buttons here -->\n    </div>\n  `\n})\nexport class LocalStorageComponent {\n  inputValue = '';\n  storedValue = '';\n\n  saveToLocalStorage() {\n    localStorage.setItem('userInput', this.inputValue);\n    this.storedValue = this.inputValue;\n  }\n\n  loadFromLocalStorage() {\n    const value = localStorage.getItem('userInput');\n    if (value) {\n      this.storedValue = value;\n      this.inputValue = value;\n    }\n  }\n\n  clearLocalStorage() {\n    localStorage.removeItem('userInput');\n    this.storedValue = '';\n    this.inputValue = '';\n  }\n}"
+        },
+        "expectedOutcome": "The template will have three buttons: Save, Load, and Clear, each wired to their respective methods.",
+        "successCriteria": [
+          "Two new buttons are added to the template with correct labels and click handlers calling loadFromLocalStorage() and clearLocalStorage()."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You added buttons, but check that both have correct labels and call the right methods with (click) event binding.",
+        "feedbackWrong": "The buttons are missing or not properly connected. Make sure to add two buttons with (click) handlers for loadFromLocalStorage() and clearLocalStorage().",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "(click)=\"loadFromLocalStorage()\"",
+            "(click)=\"clearLocalStorage()\"",
+            "Load from LocalStorage",
+            "Clear LocalStorage"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 9",
+        "title": "Display stored value in template",
+        "instruction": "Add a paragraph element below the buttons that displays the current storedValue using Angular interpolation.",
+        "hint": "Use the <p> tag with double curly braces to bind the storedValue property.",
+        "analogousExample": "// Displaying a property value in template\n<p>{{ storedValue }}</p>",
+        "seedCode": {
+          "App.tsx": "import { Component } from '@angular/core';\nimport { CommonModule } from '@angular/common';\n\n// Create the LocalStorageComponent class here\n@Component({\n  selector: 'app-local-storage',\n  standalone: true,\n  imports: [CommonModule],\n  template: `\n    <div>\n      <input type=\"text\" [(ngModel)]=\"inputValue\" placeholder=\"Enter text to save\" />\n      <button (click)=\"saveToLocalStorage()\">Save to LocalStorage</button>\n      <button (click)=\"loadFromLocalStorage()\">Load from LocalStorage</button>\n      <button (click)=\"clearLocalStorage()\">Clear LocalStorage</button>\n      <!-- Add paragraph to display storedValue here -->\n    </div>\n  `\n})\nexport class LocalStorageComponent {\n  inputValue = '';\n  storedValue = '';\n\n  saveToLocalStorage() {\n    localStorage.setItem('userInput', this.inputValue);\n    this.storedValue = this.inputValue;\n  }\n\n  loadFromLocalStorage() {\n    const value = localStorage.getItem('userInput');\n    if (value) {\n      this.storedValue = value;\n      this.inputValue = value;\n    }\n  }\n\n  clearLocalStorage() {\n    localStorage.removeItem('userInput');\n    this.storedValue = '';\n    this.inputValue = '';\n  }\n}"
+        },
+        "expectedOutcome": "The template will show the storedValue property value in a paragraph element below the buttons.",
+        "successCriteria": [
+          "A paragraph element with {{ storedValue }} interpolation is added to the template."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You added a paragraph, but make sure it uses interpolation {{ storedValue }} to display the property value.",
+        "feedbackWrong": "The paragraph element with interpolation was not added correctly. Try adding <p>{{ storedValue }}</p> below the buttons.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<p>",
+            "{{",
+            "storedValue",
+            "}}",
+            "</p>"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import Component and CommonModule",
+        "id": "step1"
+      },
+      {
+        "label": "Create the main component class",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize component state with typed properties",
+        "id": "step3"
+      },
+      {
+        "label": "Create saveToLocalStorage method",
+        "id": "step4"
+      },
+      {
+        "label": "Create loadFromLocalStorage method",
+        "id": "step5"
+      },
+      {
+        "label": "Add template structure with input field",
+        "id": "step6"
+      },
+      {
+        "label": "Add save button with click handler",
+        "id": "step7"
+      },
+      {
+        "label": "Add load and clear buttons with handlers",
+        "id": "step8"
+      },
+      {
+        "label": "Display stored value in template",
+        "id": "step9"
+      }
+    ],
+    "answerShape": "multi-file"
+  },
+  "source": "content"
+}

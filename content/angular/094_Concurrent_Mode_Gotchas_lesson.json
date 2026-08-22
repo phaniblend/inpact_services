@@ -1,0 +1,356 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-angular-94",
+    "track": "angular",
+    "lessonNum": 94,
+    "title": "Concurrent Mode Gotchas",
+    "shortName": "P94",
+    "intro": {
+      "tag": "LESSON #94",
+      "title": "Concurrent Mode Gotchas",
+      "body": "In this lesson, you will build a simple Angular component that demonstrates common pitfalls when working with asynchronous operations in a concurrent-like scenario, such as race conditions or outdated state. You'll learn how to use Angular's lifecycle hooks and RxJS to manage and coordinate multiple async tasks safely. The main technologies involved are TypeScript, Angular components, and RxJS Observables. By the end, you'll understand how to avoid these gotchas and write more predictable, robust Angular applications.",
+      "usecase": "In real-world Angular applications, managing state and side effects during rapid user interactions is critical. For example, in a live dashboard with auto-refreshing charts and real-time notifications, uncontrolled re-renders can cause flickering or data misalignment. Developers must handle these concurrent updates to ensure smooth user experiences in complex UIs like collaborative editing tools or fast-filtering data tables."
+    },
+    "objectives": [
+      "Implement a component that demonstrates stale closure issues in concurrent mode",
+      "Apply the useRef hook to persist values across re-renders and avoid race conditions",
+      "Construct a custom hook that safely manages state updates during concurrent renders",
+      "Configure useEffect dependencies to prevent infinite loops in concurrent scenarios",
+      "Update component state using functional updates to ensure consistency with previous state",
+      "Bind event handlers with stable references to prevent memory leaks during rapid re-renders",
+      "Control the timing of side effects with cleanup functions in concurrent mode"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 10",
+        "title": "Import Component and CommonModule from Angular core",
+        "instruction": "Import Component from '@angular/core' and CommonModule from '@angular/common'.",
+        "hint": "Use the import keyword followed by the symbol name and the module path.",
+        "analogousExample": "// Importing from Angular modules\nimport { Component } from '@angular/core';\nimport { CommonModule } from '@angular/common';",
+        "seedCode": "// Import Component and CommonModule here",
+        "expectedOutcome": "The necessary Angular imports are added to the file.",
+        "successCriteria": [
+          "Component is imported from '@angular/core' and CommonModule is imported from '@angular/common'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're importing both Component and CommonModule from their correct module paths.",
+        "feedbackWrong": "The imports are missing or incorrect. Check the module paths and symbol names.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "Component",
+            "'@angular/core'",
+            "CommonModule",
+            "'@angular/common'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 10",
+        "title": "Create the main AppComponent class with @Component decorator",
+        "instruction": "Create the AppComponent class with the @Component decorator and basic metadata. Add the class definition below the imports.",
+        "hint": "Use the @Component decorator with a selector and template. The template can be a simple placeholder for now.",
+        "analogousExample": "// Example component structure\n@Component({\n  selector: 'app-root',\n  template: '<h1>App Component</h1>'\n})\nexport class AppComponent {}",
+        "seedCode": "import { Component, CommonModule } from '@angular/core';\n\n// Create AppComponent class with @Component decorator here",
+        "expectedOutcome": "The AppComponent class is defined with the @Component decorator and basic metadata.",
+        "successCriteria": [
+          "AppComponent class is exported with @Component decorator containing selector and template properties"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the component, but make sure to include both the @Component decorator with metadata and export the class.",
+        "feedbackWrong": "The component structure is incomplete. Check that you have the @Component decorator with selector and template, and export the class.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "@Component",
+            "selector",
+            "template",
+            "export class AppComponent"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 10",
+        "title": "Initialize component state with concurrent data loading flags",
+        "instruction": "Inside the AppComponent class, add two boolean properties: 'isLoading' and 'isProcessing'. Initialize both to 'false'.",
+        "hint": "Add these properties directly in the class body, using TypeScript type annotations for booleans.",
+        "analogousExample": "// Example: adding state properties in an Angular component\nclass ExampleComponent {\n  isLoading: boolean = false;\n  isProcessing: boolean = false;\n}",
+        "seedCode": "import { Component, CommonModule } from '@angular/core';\n\n@Component({\n  selector: 'app-root',\n  standalone: true,\n  imports: [CommonModule],\n  template: ''\n})\nexport class AppComponent {\n  // Add isLoading and isProcessing boolean properties here\n}",
+        "expectedOutcome": "The component class will have two boolean state properties initialized to false, ready to track concurrent operations.",
+        "successCriteria": [
+          "The AppComponent class contains 'isLoading: boolean = false' and 'isProcessing: boolean = false' properties."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure both properties are declared with boolean types and initialized to false.",
+        "feedbackWrong": "The component doesn't have the required state properties. Add 'isLoading' and 'isProcessing' as boolean properties initialized to false.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "isLoading:",
+            "isProcessing:",
+            "boolean",
+            "false"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 10",
+        "title": "Define a simulated data loading function",
+        "instruction": "Inside the AppComponent class, add a method named loadData that simulates asynchronous data loading using setTimeout.",
+        "hint": "Remember to use the correct TypeScript syntax for class methods. The method should return void and use setTimeout to simulate a delay.",
+        "analogousExample": "// Example: A method that simulates async operation\nsimulateFetch() {\n  setTimeout(() => {\n    console.log('Data loaded');\n  }, 1000);\n}",
+        "seedCode": "import { Component, CommonModule } from '@angular/core';\n\n@Component({\n  selector: 'app-root',\n  standalone: true,\n  imports: [CommonModule],\n  template: ''\n})\nexport class AppComponent {\n  // Add isLoading and isProcessing boolean properties here\n  \n  // Add loadData method here\n}",
+        "expectedOutcome": "The AppComponent class now contains a loadData method that uses setTimeout to simulate concurrent data fetching behavior.",
+        "successCriteria": [
+          "The loadData method is defined in the AppComponent class and uses setTimeout to simulate asynchronous loading."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your loadData method uses setTimeout to simulate the async behavior.",
+        "feedbackWrong": "The loadData method is missing or doesn't use setTimeout to simulate asynchronous loading.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "loadData",
+            "setTimeout"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 10",
+        "title": "Define a concurrent processing function",
+        "instruction": "In the AppComponent class, add a method named processData that simulates concurrent processing using setTimeout.",
+        "hint": "Define a method that sets a timeout to simulate a processing delay, similar to the loadData method but for a different task.",
+        "analogousExample": "// Example: another method simulating concurrent work\nprocessData() {\n  setTimeout(() => {\n    // Processing logic here\n  }, 1000);\n}",
+        "seedCode": "import { Component, CommonModule } from '@angular/core';\n\n@Component({\n  selector: 'app-root',\n  standalone: true,\n  imports: [CommonModule],\n  template: ''\n})\nexport class AppComponent {\n  // Add isLoading and isProcessing boolean properties here\n  \n  // Add loadData method here\n  \n  // Add processData method here\n}",
+        "expectedOutcome": "The AppComponent class will have a processData method that uses setTimeout to simulate concurrent processing.",
+        "successCriteria": [
+          "A processData method is defined in the AppComponent class with a setTimeout call."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added a method, but make sure it's named processData and includes a setTimeout call to simulate processing.",
+        "feedbackWrong": "The processData method is not correctly defined. Ensure you add a method named processData with a setTimeout call inside the AppComponent class.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "processData",
+            "setTimeout"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 10",
+        "title": "Create a function to trigger both concurrent operations",
+        "instruction": "Add a method named startConcurrentOperations() to your AppComponent class that calls both loadData() and processData() methods.",
+        "hint": "Define a method inside the AppComponent class that invokes the two existing async methods to simulate concurrent operations.",
+        "analogousExample": "// Example: A method that triggers multiple operations\nstartOperations() {\n  this.loadUserData();\n  this.processUserData();\n}",
+        "seedCode": "import { Component, CommonModule } from '@angular/core';\n\n@Component({\n  selector: 'app-root',\n  standalone: true,\n  imports: [CommonModule],\n  template: ''\n})\nexport class AppComponent {\n  // Add isLoading and isProcessing boolean properties here\n  \n  // Add loadData method here\n  \n  // Add processData method here\n  \n  // Add startConcurrentOperations method here\n}",
+        "expectedOutcome": "The AppComponent class now has a method that initiates both data loading and processing operations concurrently.",
+        "successCriteria": [
+          "The startConcurrentOperations() method is defined and calls both loadData() and processData() methods."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added a method, but it doesn't call both loadData() and processData(). Make sure to invoke both methods inside startConcurrentOperations().",
+        "feedbackWrong": "The startConcurrentOperations() method is missing or doesn't properly call the required methods. Check that you've defined the method correctly and included calls to both loadData() and processData().",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "startConcurrentOperations",
+            "loadData",
+            "processData"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 10",
+        "title": "Add the main template structure with header",
+        "instruction": "In the @Component decorator's template property, add a header element with the text 'Concurrent Mode Gotchas' to create the basic page structure.",
+        "hint": "The template property should contain an HTML header element with the lesson title text.",
+        "analogousExample": "// Adding a header to a component template\n@Component({\n  template: '<h1>My Angular Lesson</h1>'\n})",
+        "seedCode": "import { Component, CommonModule } from '@angular/core';\n\n@Component({\n  selector: 'app-root',\n  standalone: true,\n  imports: [CommonModule],\n  template: ''\n})\nexport class AppComponent {\n  // Add isLoading and isProcessing boolean properties here\n  \n  // Add loadData method here\n  \n  // Add processData method here\n  \n  // Add startConcurrentOperations method here\n}",
+        "expectedOutcome": "The component will have a visible header with the lesson title when rendered.",
+        "successCriteria": [
+          "The template property contains a header element with the text 'Concurrent Mode Gotchas'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure the header element contains the exact text 'Concurrent Mode Gotchas'.",
+        "feedbackWrong": "The template should include a header element with the lesson title text. Try adding <h1>Concurrent Mode Gotchas</h1> inside the template property.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "template:",
+            "'<h1>Concurrent Mode Gotchas</h1>'",
+            "<h1>",
+            "Concurrent Mode Gotchas"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 10",
+        "title": "Display current loading and processing states",
+        "instruction": "Inside the template, add two paragraph elements that display the current values of isLoading and isProcessing using Angular interpolation syntax.",
+        "hint": "Use double curly braces {{ }} to bind component properties in the template. Each paragraph should show the property name and its boolean value.",
+        "analogousExample": "// Displaying state values in template\n<p>Loading status: {{ isLoading }}</p>\n<p>Processing status: {{ isProcessing }}</p>",
+        "seedCode": "import { Component, CommonModule } from '@angular/core';\n\n@Component({\n  selector: 'app-root',\n  standalone: true,\n  imports: [CommonModule],\n  template: ''\n})\nexport class AppComponent {\n  // Add isLoading and isProcessing boolean properties here\n  \n  // Add loadData method here\n  \n  // Add processData method here\n  \n  // Add startConcurrentOperations method here\n}",
+        "expectedOutcome": "The template will show real-time updates of the loading and processing states when the component methods are called.",
+        "successCriteria": [
+          "Two paragraph elements exist in the template using interpolation to display isLoading and isProcessing values."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you have both paragraphs showing isLoading and isProcessing values using interpolation syntax.",
+        "feedbackWrong": "The template doesn't yet display the state values. Add two paragraph elements with interpolation to show isLoading and isProcessing.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "isLoading",
+            "isProcessing",
+            "{{",
+            "}}",
+            "<p>"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 10",
+        "title": "Add the trigger button and wire it to the concurrent operations handler",
+        "instruction": "Inside the component's template, add a button element with the text 'Start Concurrent Operations' and bind its click event to the startConcurrentOperations() method.",
+        "hint": "Use Angular's event binding syntax with parentheses around the event name.",
+        "analogousExample": "// Example: button with click handler\n<button (click)=\"handleClick()\">Click me</button>",
+        "seedCode": "import { Component, CommonModule } from '@angular/core';\n\n@Component({\n  selector: 'app-root',\n  standalone: true,\n  imports: [CommonModule],\n  template: ''\n})\nexport class AppComponent {\n  // Add isLoading and isProcessing boolean properties here\n  \n  // Add loadData method here\n  \n  // Add processData method here\n  \n  // Add startConcurrentOperations method here\n}",
+        "expectedOutcome": "The component template will include a button that triggers the concurrent operations when clicked.",
+        "successCriteria": [
+          "A button element with the text 'Start Concurrent Operations' is present in the template, and its click event is bound to the startConcurrentOperations() method."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added a button, but make sure the click event is properly bound to the startConcurrentOperations() method.",
+        "feedbackWrong": "The button or its click event binding is missing or incorrect. Check the syntax and method name.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<button",
+            "(click)=\"startConcurrentOperations()\"",
+            "Start Concurrent Operations"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 10",
+        "title": "Add visual indicators for concurrent operations",
+        "instruction": "In the component template, add conditional styling or messages that visually indicate when concurrent operations are running. Use the existing isLoading and isProcessing states to show different visual feedback.",
+        "hint": "You can use Angular's class binding or ngClass directive to apply conditional CSS classes based on the boolean states. Alternatively, use *ngIf to show/hide different message elements.",
+        "analogousExample": "// Example: conditional styling based on state\n<div [class.loading]=\"isLoading\" [class.processing]=\"isProcessing\">\n  <p *ngIf=\"isLoading\">Loading data...</p>\n  <p *ngIf=\"isProcessing\">Processing data...</p>\n</div>",
+        "seedCode": "import { Component, CommonModule } from '@angular/core';\n\n@Component({\n  selector: 'app-root',\n  standalone: true,\n  imports: [CommonModule],\n  template: ''\n})\nexport class AppComponent {\n  // Add isLoading and isProcessing boolean properties here\n  \n  // Add loadData method here\n  \n  // Add processData method here\n  \n  // Add startConcurrentOperations method here\n}",
+        "expectedOutcome": "The component template now includes visual indicators (styling or messages) that respond to the concurrent loading and processing states.",
+        "successCriteria": [
+          "Template contains conditional styling or messages using isLoading and isProcessing states to provide visual feedback for concurrent operations."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added some visual elements, but they may not fully utilize both isLoading and isProcessing states. Make sure your template responds to both concurrent operation states.",
+        "feedbackWrong": "The template doesn't yet include proper visual indicators for concurrent operations. Review how to use Angular's conditional directives or class binding with the component's state properties.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "isLoading",
+            "isProcessing",
+            "template",
+            "class",
+            "*ngIf",
+            "binding"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import Component and CommonModule from Angular core",
+        "id": "step1"
+      },
+      {
+        "label": "Create the main AppComponent class with @Component decorator",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize component state with concurrent data loading flags",
+        "id": "step3"
+      },
+      {
+        "label": "Define a simulated data loading function",
+        "id": "step4"
+      },
+      {
+        "label": "Define a concurrent processing function",
+        "id": "step5"
+      },
+      {
+        "label": "Create a function to trigger both concurrent operations",
+        "id": "step6"
+      },
+      {
+        "label": "Add the main template structure with header",
+        "id": "step7"
+      },
+      {
+        "label": "Display current loading and processing states",
+        "id": "step8"
+      },
+      {
+        "label": "Add the trigger button and wire it to the concurrent operations handler",
+        "id": "step9"
+      },
+      {
+        "label": "Add visual indicators for concurrent operations",
+        "id": "step10"
+      }
+    ]
+  },
+  "source": "content"
+}

@@ -1,0 +1,381 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "rtk-thunk-01",
+    "track": "react-ts",
+    "lessonNum": 122,
+    "title": "Redux Toolkit: Writing Your First createAsyncThunk",
+    "shortName": "RTK-T01",
+    "intro": {
+      "tag": "LESSON #122 — REDUX TOOLKIT",
+      "title": "Redux Toolkit: Writing Your First createAsyncThunk",
+      "body": "In this lesson you will construct a complete createAsyncThunk action creator from scratch, one micro-step at a time. You will understand every token in the expression below — what it does, why it exists, and how to write it from memory without any reference material.",
+      "usecase": "In real applications, state often depends on data that takes time to arrive — API calls, timers, file reads. createAsyncThunk is Redux Toolkit's built-in solution for describing that waiting period. It automatically dispatches three lifecycle actions (pending, fulfilled, rejected) so your reducers can respond to each phase. Mastering this pattern is essential for any Redux-powered app that talks to a server."
+    },
+    "objectives": [
+      "Create a typed async thunk using createAsyncThunk<ReturnType, ArgType>('feature/action', async (arg, thunkAPI) => { ... }) so the design pattern is reusable and its contract is clear to downstream code.",
+      "Use thunkAPI.rejectWithValue typed as (value: ErrorType) => RejectWithValue<ErrorType> to return structured error payloads so the pattern drives visible behavior and can be verified in the UI, runtime, or compiler.",
+      "Read thunkAPI.getState() cast to RootState to access other slices inside the thunk body so the learner can explain what runtime information is driving the next decision.",
+      "Dispatch the typed thunk from a component using the typed AppDispatch hook and handle the returned promise with .unwrap() so state transitions remain explicit, traceable, and type-safe."
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 13",
+        "title": "Import createAsyncThunk",
+        "instruction": "Before anything else, import **`createAsyncThunk`** from **`'@reduxjs/toolkit'`**. This is the factory function that wraps your async logic and auto-generates the three lifecycle action types.",
+        "hint": "Use a named import: import { createAsyncThunk } from '@reduxjs/toolkit'. No default import needed here.",
+        "analogousExample": "// Analogous import — named export from a package:\nimport { createSlice } from '@reduxjs/toolkit';\n\n// Now do the same but import createAsyncThunk instead of createSlice.",
+        "seedCode": "// Step 1: Import createAsyncThunk from Redux Toolkit.\n\n// YOUR CODE HERE:",
+        "expectedOutcome": "The createAsyncThunk function is imported and available for use in the rest of the file.",
+        "successCriteria": [
+          "import keyword is used",
+          "createAsyncThunk is imported by name",
+          "'@reduxjs/toolkit' is the source"
+        ],
+        "feedbackCorrect": "Imported! createAsyncThunk is now in scope. In the next steps you'll call it to build the full async action creator.",
+        "feedbackPartial": "Almost — make sure you're using a named import `{ createAsyncThunk }` from the correct package `'@reduxjs/toolkit'`.",
+        "feedbackWrong": "Write: import { createAsyncThunk } from '@reduxjs/toolkit'; — curly braces for a named import, single quotes around the package name.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": ["import", "createAsyncThunk", "@reduxjs/toolkit"],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.85
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 13",
+        "title": "Declare the export const fetchCount",
+        "instruction": "Declare the variable that will hold your async thunk. Write **`export const fetchCount`** — nothing more. Exporting it immediately makes it available to the rest of your app without a separate export statement later.",
+        "hint": "Use export const followed by the variable name. This is the standard way to declare a named export in a module. Don't assign a value yet — the assignment comes in the next step.",
+        "analogousExample": "// Named export declaration pattern:\nexport const myValue = ...;\n\n// You've seen this with slices:\nexport const counterSlice = createSlice({...});\n\n// Do the same for fetchCount — just the declaration, no value yet:\nexport const fetchCount",
+        "seedCode": "import { createAsyncThunk } from '@reduxjs/toolkit';\n\n// Step 2: Declare the exported constant.\n// Write: export const fetchCount\n// Don't assign a value yet.\n\n// YOUR CODE HERE:",
+        "expectedOutcome": "`export const fetchCount` is written. The variable is declared and exported. The value will be assigned in the next step.",
+        "successCriteria": [
+          "export keyword is present",
+          "const keyword is present",
+          "fetchCount is the variable name"
+        ],
+        "feedbackCorrect": "Variable declared and exported. Now we'll assign it the result of calling createAsyncThunk.",
+        "feedbackPartial": "Make sure all three parts are present: export, const, and fetchCount.",
+        "feedbackWrong": "Write exactly: export const fetchCount — the export keyword, const keyword, and the variable name.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": ["export", "const", "fetchCount"],
+          "partialThreshold": 0.5,
+          "correctThreshold": 1.0
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 13",
+        "title": "Assign createAsyncThunk and Open the Call",
+        "instruction": "After **`fetchCount`**, add **`= createAsyncThunk(`** — the assignment operator and the opening of the function call. Don't add any arguments yet. **`createAsyncThunk`** takes exactly two arguments; you'll write each one in its own step.",
+        "hint": "The pattern is: const name = createAsyncThunk( arg1, arg2 ). For now just write the = and open the call with (.",
+        "analogousExample": "// Function call assignment pattern:\nconst myAction = someFactory( /* args go here */ );\n\n// You've seen this with createSlice:\nconst counterSlice = createSlice({ name: 'counter', ... });\n\n// createAsyncThunk works the same way but takes\n// two positional arguments instead of one config object.\n// Open the call:\nexport const fetchCount = createAsyncThunk(",
+        "seedCode": "import { createAsyncThunk } from '@reduxjs/toolkit';\n\n// Step 3: Assign createAsyncThunk and open the call.\n// Write: export const fetchCount = createAsyncThunk(\n// Stop there — arguments come in the next steps.\n\n// YOUR CODE HERE:",
+        "expectedOutcome": "`export const fetchCount = createAsyncThunk(` is written. The function call is open and ready to receive its two arguments.",
+        "successCriteria": [
+          "= assignment operator is present",
+          "createAsyncThunk is called",
+          "The call is opened with ("
+        ],
+        "feedbackCorrect": "The factory is being called. Two arguments go inside these parentheses — a string and a function. Let's write them one at a time.",
+        "feedbackPartial": "Make sure you have the = sign, createAsyncThunk, and an opening parenthesis (.",
+        "feedbackWrong": "Write: export const fetchCount = createAsyncThunk( — equals sign, then createAsyncThunk, then an opening parenthesis.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": ["=", "createAsyncThunk", "("],
+          "partialThreshold": 0.5,
+          "correctThreshold": 1.0
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 13",
+        "title": "Write the Action Type String: 'counter/fetchCount'",
+        "instruction": "The first argument to **`createAsyncThunk`** is a string that uniquely names this action. Write **`'counter/fetchCount'`** as the first argument, followed by a comma. The format is always **`'sliceName/actionName'`** — the slash separates the feature slice from the specific operation.",
+        "hint": "The convention is 'sliceName/actionName'. This string becomes the prefix for the three auto-generated action types: counter/fetchCount/pending, counter/fetchCount/fulfilled, counter/fetchCount/rejected.",
+        "analogousExample": "// The action type string is like an address:\n//   'sliceName/actionName'\n//\n// Write the first argument:\n'counter/fetchCount',",
+        "seedCode": "import { createAsyncThunk } from '@reduxjs/toolkit';\n\n// Step 4: Add the action type string as the first argument.\n// Write: 'counter/fetchCount',\n\nexport const fetchCount = createAsyncThunk(\n  // YOUR CODE HERE:\n",
+        "expectedOutcome": "The action type string `'counter/fetchCount'` is the first argument. The comma after it signals that a second argument follows.",
+        "successCriteria": [
+          "The string 'counter/fetchCount' is present",
+          "A comma follows the string"
+        ],
+        "feedbackCorrect": "Action type string set! RTK will use this to auto-generate the /pending, /fulfilled, and /rejected action types that your reducers can match against. Next: the payload creator function.",
+        "feedbackPartial": "Make sure the string is exactly 'counter/fetchCount' and is followed by a comma.",
+        "feedbackWrong": "Write 'counter/fetchCount', — the string in single quotes, then a comma to separate from the second argument.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": ["'counter/fetchCount'", ","],
+          "partialThreshold": 0.5,
+          "correctThreshold": 1.0
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 13",
+        "title": "Open the Async Payload Creator: async () => {",
+        "instruction": "The second argument is the **payload creator** — an **`async`** arrow function that runs your async logic and returns the payload value. Write **`async () => {`** to open it. The **`async`** keyword is required because you'll **`return`** a Promise from inside it.",
+        "hint": "The payload creator is always an async arrow function. Write async () => { and leave the body open — you'll write the return statement inside it in the next step.",
+        "analogousExample": "// Write the opening:\nasync () => {",
+        "seedCode": "import { createAsyncThunk } from '@reduxjs/toolkit';\n\n// Step 5: Write the async payload creator opening.\n\nexport const fetchCount = createAsyncThunk(\n  'counter/fetchCount',\n  // YOUR CODE HERE:\n",
+        "expectedOutcome": "`async () => {` is written as the second argument. The function body is open and ready for the return statement.",
+        "successCriteria": [
+          "async keyword is present",
+          "() parameter list is empty",
+          "=> arrow is present",
+          "{ opens the function body"
+        ],
+        "feedbackCorrect": "Payload creator opened. Whatever value this async function returns will become action.payload in your reducer. Next: writing the return statement.",
+        "feedbackPartial": "Make sure all four parts are present: async, (), =>, and {.",
+        "feedbackWrong": "Write: async () => { — the async keyword, empty params, fat arrow, and opening brace.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": ["async", "()", "=>", "{"],
+          "partialThreshold": 0.5,
+          "correctThreshold": 1.0
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 13",
+        "title": "Write the return Keyword",
+        "instruction": "Inside the async function body, write **`return`**. You are **`return`**-ing a Promise, and Redux Toolkit will wait for that Promise to settle before dispatching the fulfilled or rejected action. Without **`return`**, the async function resolves immediately with **`undefined`**.",
+        "hint": "Just write the word return inside the { }. The value you're returning (a new Promise) will be written in the next step.",
+        "analogousExample": "// Same shell as your editor — second argument = async payload creator.\n// RTK subscribes to the Promise you *return* from this function.\n// No return → the async function effectively hands off undefined and the\n// thunk settles immediately instead of waiting for your async work.\n\nexport const fetchCount = createAsyncThunk(\n  'counter/fetchCount',\n  async () => {\n    return\n    // ↑ only this word in *this* step; you continue the expression next (new Promise…).\n  }\n);\n\n// Parallel idea with a finished line (different thunk — not your exact payload):\nexport const pingServer = createAsyncThunk('net/ping', async () => {\n  return fetch('/api/ping'); // RTK awaits this Promise\n});",
+        "seedCode": "import { createAsyncThunk } from '@reduxjs/toolkit';\n\n// Step 6: Write the return keyword inside the function body.\n\nexport const fetchCount = createAsyncThunk(\n  'counter/fetchCount',\n  async () => {\n    // YOUR CODE HERE:\n",
+        "expectedOutcome": "The `return` keyword is inside the async function body. The Promise will be returned so RTK can track its lifecycle.",
+        "successCriteria": [
+          "return keyword is written inside the function body"
+        ],
+        "feedbackCorrect": "return is in place. This single keyword is what connects your Promise to RTK's lifecycle tracking. Without it, the thunk dispatches fulfilled immediately with undefined. Next: new Promise.",
+        "feedbackPartial": "Write just the word return inside the async function body.",
+        "feedbackWrong": "Inside the async () => { }, write the word return. Just that — the Promise value comes in the next step.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": ["return"],
+          "partialThreshold": 0.5,
+          "correctThreshold": 1.0
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 13",
+        "title": "Write new Promise<number>( and Open the Executor",
+        "instruction": "After **`return`**, write **`new Promise<number>(`**. The **`<number>`** generic tells TypeScript that this Promise resolves with a number. Open the executor immediately after — write **`(resolve) => {`**. So the full line so far: **`return new Promise<number>((resolve) => {`**.",
+        "hint": "A Promise takes one argument: an executor function. The executor receives `resolve` (and optionally `reject`) as parameters.",
+        "analogousExample": "return new Promise<number>((resolve) => {",
+        "seedCode": "import { createAsyncThunk } from '@reduxjs/toolkit';\n\n// Step 7: Write new Promise<number> and open the executor.\n\nexport const fetchCount = createAsyncThunk(\n  'counter/fetchCount',\n  async () => {\n    return\n    // YOUR CODE HERE:\n",
+        "expectedOutcome": "`return new Promise<number>((resolve) => {` is written. The Promise is being constructed and the executor function is open, ready for the setTimeout call inside it.",
+        "successCriteria": [
+          "new Promise is used",
+          "<number> generic is present",
+          "(resolve) is the executor parameter",
+          "=> { opens the executor body"
+        ],
+        "feedbackCorrect": "Promise constructed and executor opened. resolve is now a callback in scope — calling it is what makes the Promise settle with a value. Next: the setTimeout that delays that call.",
+        "feedbackPartial": "Check all four parts: new Promise, <number> generic, (resolve) parameter, and => { to open the executor body.",
+        "feedbackWrong": "Write: return new Promise<number>((resolve) => { — that's the return keyword, new Promise with a number generic, and the executor arrow function opening.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": ["new Promise", "<number>", "(resolve)", "=>", "{"],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.85
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 13",
+        "title": "Call setTimeout( and Open its Callback",
+        "instruction": "Inside the executor body, write **`setTimeout(`** and immediately open its callback arrow function: **`() =>`**. So the partial line is: **`setTimeout(() =>`**. The setTimeout callback is where you'll call **`resolve`** — don't write the body yet.",
+        "hint": "setTimeout takes two arguments: a callback function and a delay in milliseconds.",
+        "analogousExample": "setTimeout(() =>",
+        "seedCode": "import { createAsyncThunk } from '@reduxjs/toolkit';\n\n// Step 8: Write setTimeout and open its callback.\n\nexport const fetchCount = createAsyncThunk(\n  'counter/fetchCount',\n  async () => {\n    return new Promise<number>((resolve) => {\n      // YOUR CODE HERE:\n",
+        "expectedOutcome": "`setTimeout(() =>` is written inside the executor. The setTimeout call is open and its callback arrow function is started.",
+        "successCriteria": [
+          "setTimeout is called",
+          "An arrow function () => is the first argument"
+        ],
+        "feedbackCorrect": "Timer started. The callback () => is what will fire after the delay. Next: write what happens when the timer fires — resolve(5).",
+        "feedbackPartial": "Write setTimeout( then start the callback: () =>.",
+        "feedbackWrong": "Write: setTimeout(() => — that's setTimeout, opening paren, then an empty arrow function starting with () =>.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": ["setTimeout", "()", "=>"],
+          "partialThreshold": 0.5,
+          "correctThreshold": 1.0
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 13",
+        "title": "Call resolve(5) — Produce the Payload Value",
+        "instruction": "After **`() =>`**, write **`resolve(5)`**. This is the entire body of the setTimeout callback. When this fires, it resolves the Promise with the value **`5`** — that **`5`** becomes **`action.payload`** in your reducer.",
+        "hint": "resolve is the callback from the Promise executor. Calling resolve(value) settles the Promise with that value.",
+        "analogousExample": "resolve(5)",
+        "seedCode": "import { createAsyncThunk } from '@reduxjs/toolkit';\n\n// Step 9: Write resolve(5) as the callback body.\n\nexport const fetchCount = createAsyncThunk(\n  'counter/fetchCount',\n  async () => {\n    return new Promise<number>((resolve) => {\n      setTimeout(\n        // YOUR CODE HERE:\n      );\n    });\n  }\n);",
+        "expectedOutcome": "`resolve(5)` is called inside the setTimeout callback. When the timer fires, the Promise settles and `5` flows into `action.payload` in the reducer.",
+        "successCriteria": [
+          "resolve is called",
+          "5 is passed as the argument to resolve"
+        ],
+        "feedbackCorrect": "resolve(5) is set. When the 1-second timer fires, this call settles the Promise, createAsyncThunk dispatches the fulfilled action, and action.payload equals 5. Last piece: the delay argument.",
+        "feedbackPartial": "Write resolve(5) — call the resolve function with the number 5 as its argument.",
+        "feedbackWrong": "Write resolve(5) — that's the resolve callback called with the number 5. This is what creates the payload value.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": ["resolve", "5"],
+          "partialThreshold": 0.5,
+          "correctThreshold": 1.0
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 13",
+        "title": "Add the Delay Argument: , 1000)",
+        "instruction": "After the callback **`() => resolve(5)`**, add a comma and the delay in milliseconds: **`, 1000)`**. The **`)`** closes the **`setTimeout(`** call. Together: **`setTimeout(() => resolve(5), 1000)`**. The **`1000`** means 1 second — this simulates the time a real API call would take.",
+        "hint": "setTimeout's second argument is the delay in milliseconds. 1000ms = 1 second.",
+        "analogousExample": "setTimeout(() => resolve(5), 1000)",
+        "seedCode": "import { createAsyncThunk } from '@reduxjs/toolkit';\n\n// Step 10: Add the delay argument and close setTimeout.\n\nexport const fetchCount = createAsyncThunk(\n  'counter/fetchCount',\n  async () => {\n    return new Promise<number>((resolve) => {\n      setTimeout(() => resolve(5) /* YOUR CODE HERE */ );\n    });\n  }\n);",
+        "expectedOutcome": "`setTimeout(() => resolve(5), 1000)` is now a complete call. The timer will wait 1 second before calling resolve(5) and settling the Promise.",
+        "successCriteria": [
+          ", 1000 is the second argument to setTimeout",
+          "setTimeout is closed with )"
+        ],
+        "feedbackCorrect": "setTimeout is complete. After 1000ms it fires the callback, resolve(5) runs, and the Promise settles. Now close the remaining open brackets: the executor function and the Promise.",
+        "feedbackPartial": "Write , 1000) — a comma, the number 1000, and a closing paren to end the setTimeout call.",
+        "feedbackWrong": "After () => resolve(5) write , 1000) — that's comma, 1000 milliseconds, and ) to close setTimeout.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": ["1000", ",1000)"],
+          "partialThreshold": 0.5,
+          "correctThreshold": 1.0
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 13",
+        "title": "Close All Remaining Brackets",
+        "instruction": "Three closings are still open: the executor arrow function body **`}`**, the Promise constructor call **`)`**, and the async payload creator body **`}`**. Close them in order: **`});`** then **`}`** on the next line so the structure matches: after **`setTimeout(...);`** write **`});`** to close the executor and **`Promise`**, then **`}`** to close the async function.",
+        "hint": "Work from the inside out: } closes the executor body, ) closes the new Promise( call; } closes the async function body.",
+        "analogousExample": "    });\n  }",
+        "seedCode": "import { createAsyncThunk } from '@reduxjs/toolkit';\n\n// Step 11: Close executor, Promise call, and async body.\n// After setTimeout(...); add });\n// then } on the next line.\n\nexport const fetchCount = createAsyncThunk(\n  'counter/fetchCount',\n  async () => {\n    return new Promise<number>((resolve) => {\n      setTimeout(() => resolve(5), 1000);\n      // YOUR CODE HERE:\n",
+        "expectedOutcome": "All nested functions are properly closed. The async payload creator is complete; only the outer **`createAsyncThunk(`** still needs **`);`** in the next step.",
+        "successCriteria": [
+          "Executor and Promise close with });",
+          "Async function body closes with }"
+        ],
+        "feedbackCorrect": "All brackets matched! The async payload creator is a complete, self-contained function. One final structural step — close the createAsyncThunk() call itself.",
+        "feedbackPartial": "Add }); to close the executor and Promise, then } to close the async function.",
+        "feedbackWrong": "Write }); then } — first line closes the executor { and Promise (, second line closes the async () => {.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": ["});"],
+          "partialThreshold": 0.5,
+          "correctThreshold": 1.0
+        }
+      },
+      {
+        "id": "step12",
+        "type": "question",
+        "phase": "Step 12 of 13",
+        "title": "Close the createAsyncThunk Call",
+        "instruction": "The outermost **`createAsyncThunk(`** call is still open. Close it with **`);`**. Add **`);`** after the closing **`}`** of the async function so the declaration ends correctly.",
+        "hint": "The ) closes the createAsyncThunk( call you opened in Step 3. The ; ends the const declaration.",
+        "analogousExample": ");",
+        "seedCode": "import { createAsyncThunk } from '@reduxjs/toolkit';\n\n// Step 12: Close the createAsyncThunk call with );\n\nexport const fetchCount = createAsyncThunk(\n  'counter/fetchCount',\n  async () => {\n    return new Promise<number>((resolve) => {\n      setTimeout(() => resolve(5), 1000);\n    });\n  }\n  // YOUR CODE HERE:\n",
+        "expectedOutcome": "The entire createAsyncThunk expression is syntactically complete. Every open bracket is matched, every function is closed, and the declaration ends with ;.",
+        "successCriteria": [
+          "createAsyncThunk call is closed with )",
+          "Declaration ends with ;"
+        ],
+        "feedbackCorrect": "Complete! The entire async thunk is valid TypeScript. Now for the final challenge — write the whole thing from scratch, no scaffolding.",
+        "feedbackPartial": "Add ); after the async function's closing } to close createAsyncThunk( and end the statement.",
+        "feedbackWrong": "After the closing } of the async function, write ); — ) to close createAsyncThunk( and ; to end the statement.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [");"],
+          "partialThreshold": 0.5,
+          "correctThreshold": 1.0
+        }
+      },
+      {
+        "id": "step13",
+        "type": "question",
+        "phase": "Step 13 of 13",
+        "title": "Final Recall: Write the Entire Thunk from Memory",
+        "instruction": "No scaffolding. Write the complete file from memory: the import statement and the full **`export const fetchCount = createAsyncThunk(...)`** expression.",
+        "hint": "Work layer by layer: import → export const → createAsyncThunk( → action string → async function → return new Promise → executor → setTimeout → resolve(5) → close everything.",
+        "analogousExample": "import { createAsyncThunk } from '@reduxjs/toolkit';\n\nexport const fetchCount = createAsyncThunk(\n  'counter/fetchCount',\n  async () => {\n    return new Promise<number>((resolve) => {\n      setTimeout(() => resolve(5), 1000);\n    });\n  }\n);",
+        "seedCode": "// Step 13: Write everything from memory.\n// No hints, no scaffolding.\n\n// YOUR CODE HERE:",
+        "expectedOutcome": "The complete createAsyncThunk expression is written from memory, including the import, the export declaration, the action type string, the async payload creator, the Promise, the executor, and the setTimeout call.",
+        "successCriteria": [
+          "import { createAsyncThunk } from '@reduxjs/toolkit' is present",
+          "export const fetchCount is declared",
+          "createAsyncThunk is called",
+          "'counter/fetchCount' is the action type string",
+          "async () => { is the payload creator",
+          "return new Promise<number> is present",
+          "(resolve) => { is the executor",
+          "setTimeout(() => resolve(5), 1000) is inside the executor"
+        ],
+        "feedbackCorrect": "You wrote it from memory! You now understand every token of createAsyncThunk — the action type naming convention, the async payload creator, the Promise pattern, the executor, and how resolve(value) becomes action.payload.",
+        "feedbackPartial": "Almost! Check all pieces: import, export const fetchCount, createAsyncThunk call, action type string, async payload creator, new Promise<number>, executor with resolve, and setTimeout with resolve(5) and 1000.",
+        "feedbackWrong": "Build it layer by layer: import { createAsyncThunk } from '@reduxjs/toolkit' → export const fetchCount = createAsyncThunk( → 'counter/fetchCount', → async () => { → return new Promise<number>((resolve) => { → setTimeout(() => resolve(5), 1000); → close with }); } );",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "createAsyncThunk",
+            "@reduxjs/toolkit",
+            "export",
+            "const",
+            "fetchCount",
+            "'counter/fetchCount'",
+            "async",
+            "new Promise",
+            "<number>",
+            "resolve",
+            "setTimeout",
+            "resolve(5)",
+            "1000"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.85
+        }
+      }
+    ],
+    "sideItems": [
+      { "label": "Intro", "id": "intro" },
+      { "label": "Objectives", "id": "objectives" },
+      { "label": "Step 1 — Import", "id": "step1" },
+      { "label": "Step 2 — export const fetchCount", "id": "step2" },
+      { "label": "Step 3 — = createAsyncThunk(", "id": "step3" },
+      { "label": "Step 4 — Action Type String", "id": "step4" },
+      { "label": "Step 5 — async () => {", "id": "step5" },
+      { "label": "Step 6 — return keyword", "id": "step6" },
+      { "label": "Step 7 — new Promise<number>", "id": "step7" },
+      { "label": "Step 8 — setTimeout(() =>", "id": "step8" },
+      { "label": "Step 9 — resolve(5)", "id": "step9" },
+      { "label": "Step 10 — , 1000)", "id": "step10" },
+      { "label": "Step 11 — Close Brackets", "id": "step11" },
+      { "label": "Step 12 — Close createAsyncThunk", "id": "step12" },
+      { "label": "Step 13 — Full Recall", "id": "step13" }
+    ]
+  },
+  "source": "content"
+}

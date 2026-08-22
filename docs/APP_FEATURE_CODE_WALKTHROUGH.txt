@@ -1,0 +1,303 @@
+================================================================================
+PALL-INPACT — REACT-TS CLICK FLOW WALKTHROUGH (USER ACTION -> FUNCTION -> STATE -> UI)
+================================================================================
+
+Scope: React-TS learner path only. Each feature is written in your requested style:
+"what I click/see" -> function(s) called -> state updates -> what re-renders/shows.
+
+[0] APP BOOT
+I open the app.
+- `src/main.jsx` calls `createRoot(...).render(<HashRouter><StrictMode><App/></StrictMode></HashRouter>)`.
+- `App` becomes the root state machine for catalog, gating, and lesson runtime.
+
+[1] CLICK A LESSON CARD IN CATALOG
+I see lesson cards in `LandingPage`. I click one card.
+- `src/LandingPage.jsx` card `onClick={() => onSelectLesson(i, item)}` fires.
+- Prop points to `handleSelectLesson(i, item)` in `src/App.jsx`.
+- `handleSelectLesson` runs gate checks:
+  `mustLoginToUnlockPastAnonymousLimit`, `mustHardRegisterToAccess`, `mustSoftRegisterToAccess`, `mustPayToAccess`.
+- If blocked: sets `pendingLesson`, `registerModalVariant`, `showRegisterModal`, and may `navigate('/register')`.
+- If allowed: calls `openLesson(i, item, 'react-ts')`.
+
+`openLesson(idx, item, trackOverride)` does:
+- `clearPendingLesson()`, `clearStoredRedirectPath()`
+- `setLessonTrack(t)`
+- `recordLessonAccess(t, idx)` (`src/auth/lessonAccess.js`)
+- `setLessonIndex(idx)`, `setSelectedLessonItem(item ?? null)`
+- `setUseAILessonFailed(false)`, `setPendingLesson(null)`
+- `navigate(buildLessonPath(t, idx), { replace: true })` (`src/auth/redirectPath.js`)
+
+Result on screen:
+- `App` re-renders from catalog branch to lesson branch (`lessonIndex !== null`).
+
+[2] CLICK "Log in" IN TOP BAR
+I click `Log in`.
+- `onClick={goToVoluntaryRegister}` in `App.jsx`.
+- Function clears pending flow state and calls `navigate('/register')`.
+- UI switches to register route/modal layout.
+
+[3] CLOSE/DISMISS REGISTER MODAL (SOFT / START-FREE)
+I close register modal.
+- `registerModalOnClose` resolves to `registerModalDismiss` or `startFreeGuestContinue`.
+- Both clear pending storage, hide modal, and if a pending lesson exists, call `openLesson(...)`.
+- UI either returns to catalog or opens the pending lesson immediately.
+
+[4] REGISTER SUCCESS
+I complete register/google login.
+- `registerSuccess(meta)` runs.
+- `setUser(getStoredUser())`, hides modal, clears pending.
+- If there was pending react-ts lesson: `openLesson(pl.index, pl.item, pl.track)`.
+- May set `welcomeBonusMessage` toast based on `getFreeLessonsRemaining`.
+
+[5] DEEP LINK TO LESSON URL
+I open `#/lessons/react-ts/<index>` (or shorthand `#/lessons/<index>`).
+- `App.jsx` pathname effect calls `parseLessonPath(location.pathname)`.
+- If track is not `LEARNER_FOCUS_TRACK`, app redirects to `/`.
+- Same gate checks run; allowed path calls `openLesson(i, item, t)`.
+
+[6] CLICK "← All Lessons"
+I click `← All Lessons` from lesson screen.
+- `onClick={onBackToLessons}` (`App.jsx`).
+- Function resets lesson states: `setLessonIndex(null)`, `setSelectedLessonItem(null)`, `setLessonTrack(null)`, etc.
+- Calls `navigate('/', { replace: true })`.
+- UI goes back to catalog.
+
+[7] CLICK PREREQUISITE CHIP
+I click a chip in `Recommended prerequisites (strongly advised)`.
+- In `App.jsx` prereq panel: chip `onClick` computes `idx = n - 1`.
+- Calls `openLesson(idx, { title: LESSON_LIST[idx] }, 'react-ts')`.
+- UI jumps directly to that prerequisite lesson.
+
+[8] CLICK "Help: Tour"
+I click `Help: Tour` in lesson shell.
+- In `src/engines/inpact_engine_shared.jsx`, button `onClick`:
+  `setLesson1TourStartIndex(0); setTourLaunchNonce(v => v + 1)`.
+- Tour component re-launches using updated nonce.
+
+[9] CLICK A STEP IN PROGRESS SIDEBAR / RAIL
+I click a step entry in progress.
+- `selectSideItemByIndex(sideIndex)` is called.
+- It first checks `isSideItemUnlocked(item.id)`.
+- Unlock rule uses `highestContiguousCompletedStep` derived from `completedNodes`.
+- If unlocked: finds target node index and runs `setNodeIndex(targetNodeIndex)`.
+- UI loads that node (reveal/objectives/question) and step-specific state reset effect runs.
+
+[10] CLICK "Lesson" TAB
+I click `Lesson` tab.
+- In `src/engines/LessonEditorOutputTabs.jsx`, tab button `onClick` sets `setMainTab('lesson')`
+  (or closes workspace modal then sets lesson).
+- UI renders lesson content card (`TOPICS & CONCEPTS`, objectives, etc.).
+
+[11] CLICK "Editor" TAB
+I click `Editor` tab.
+- Same file: button `onClick` calls `setMainTab('editor')` (or `onOpenEditorWorkspace`).
+- UI renders editor area and editor task block.
+
+[12] CLICK "📖 Reading"
+I click `📖 Reading`.
+- `onClick={() => setShowReadingModal(true)}` in `LessonEditorOutputTabs.jsx`.
+- Reading modal mounts over content.
+
+[13] CLICK "🖥️ Preview"
+I click `🖥️ Preview` in editor.
+- `onClick={openOutputModal}` in `LessonEditorOutputTabs.jsx`.
+- `openOutputModal()` sets `setPreviewCoach(null)` and `setShowOutputModal(true)`.
+- Output iframe/modal is shown using `getOutputPreview(answer)` or generated preview path.
+
+[14] TYPE CODE IN EDITOR
+I type in Monaco editor.
+- Editor `onChange` bubbles to `setAnswer` in shared engine.
+- `answer` state updates and re-renders controls that depend on it (`canSubmit`, preview source, etc.).
+
+[15] CLICK "CHECK MY CODE{ctrl+shift+enter}"
+I click the check button.
+- Button in `renderEditorBlockButtons(...)`: `onClick={submit}`.
+- `submit()` flow in `inpact_engine_shared.jsx`:
+  1) `toEval = getMergedCodeForKeywordEval()`; return if empty.
+  2) `setChecking(true)` -> button text becomes `Checking...`.
+  3) `keywordRes = evaluate(node, toEval)`.
+  4) If AI validation available (`onValidateCodeResolved`), call:
+     `ai = await onValidateCodeResolved(node, userCodeForApi)`.
+     Default resolver calls `fetchLessonCodeValidation(...)` (`src/ai-lessons/clientLessonValidation.js`).
+     That does POST `/api/lessons/validate`.
+  5) Merge decision:
+     - keyword-only mode may bypass AI
+     - guardrail can force `correct` if keyword says correct and AI says partial/wrong.
+  6) `setResult(res)`, `setAttempts(a => a + 1)`.
+  7) If hint/static/AI feedback exists: `setShowFeedbackModal(true)`.
+  8) `done()` clears `checking` after min duration.
+
+Server side for this click:
+- `server/index.js` route `app.post('/api/lessons/validate', ...)`.
+- Calls `validateCodeWithAI(step, userCode, { ... })`.
+- Returns `{ result, feedback, hint?, errors? }`.
+
+UI result:
+- Feedback modal appears with `HINT & FEEDBACK`, colored by result tone.
+
+[16] PRESS Ctrl+Shift+Enter (or Cmd+Shift+Enter)
+I use keyboard shortcut instead of clicking check.
+- Global keydown handler in shared engine picks chord.
+- Calls `runSubmitShortcut()`.
+- It reads `lessonKeyboardRef.current`, blocks if modal open/not question/already correct/checking/cannot submit.
+- If allowed: `void k.submit()` (same flow as [15]).
+
+[17] CLICK "SHOW ME AN EXAMPLE"
+I click `SHOW ME AN EXAMPLE`.
+- Calls `openStepExampleModal()`.
+- Function sets modal offsets/loading state and sets payload label/code.
+- `showExampleModal` true -> example modal renders.
+
+[18] CLICK "SHOW HINT"
+I click `SHOW HINT` (visible after attempts > 0).
+- Handler sets `setShowHint(true)` and `setShowFeedbackModal(true)`.
+- Feedback modal opens with hint/feedback content.
+
+[19] CLICK "💡 VIEW HINT & FEEDBACK"
+I click `💡 VIEW HINT & FEEDBACK`.
+- Handler sets feedback modal offset and `setShowFeedbackModal(true)`.
+- Modal opens even if check button is not clicked again.
+
+[20] CLICK "Annotate my code with this feedback"
+I click annotate inside feedback modal.
+- Handler sets `setFeedbackAnnotateLoading(true)`.
+- Builds instruction + feedback text and calls `fetchFeedbackAnnotate(...)`
+  (`src/ai-lessons/clientFeedbackAnnotate.js`) -> POST `/api/lessons/feedback-annotate`.
+- Response `annotatedCode` is sanitized (`stripFormattingOnlyCommentsFromAnnotatedCode`) and
+  structure-compared (`toStructureFingerprint`) before `setFeedbackAnnotatedCode(...)`.
+- UI shows `YOUR CODE, ANNOTATED` block.
+
+[21] CLICK FEEDBACK MODAL PRIMARY BUTTON
+I click primary button in feedback modal.
+- Handler always closes modal and clears annotate transient state.
+- If `feedbackVisualTone === 'correct'`, it also calls `next()`.
+- Button text is `NEXT STEP →` when correct, otherwise `Close`.
+
+[22] PRESS Enter WHILE FEEDBACK MODAL IS OPEN
+I hit Enter in feedback modal.
+- Keydown handler in shared engine catches plain Enter.
+- Ignores text input/textarea cases and annotate loading.
+- Closes modal; if visual tone is correct, calls `next()`.
+
+[23] CLICK "Think prompt"
+I click `Think prompt` button in editor controls.
+- `onClick={() => setShowTaskModal(true)}`.
+- Task/think modal opens.
+
+[24] CLICK MCQ OPTION IN THINK MODAL
+I click one option in think modal.
+- Option button `onClick={() => setThinkSelection(opt)}`.
+- `selected` state updates; correctness badge changes (`Correct` or `Not quite`).
+- `Continue to editor` button enable/disable updates from `isCorrect`.
+
+[25] CLICK "Continue to editor" IN THINK MODAL
+I click `Continue to editor`.
+- No-think modal path: closes modal only.
+- Think path: `setShowTaskModal(false); setMainTab('editor')`.
+- UI focus returns to coding workspace.
+
+[26] CLICK "Need help?"
+I click `Need help?` in think modal.
+- `setShowMentorModal(true); setMentorError('')`.
+- Mentor modal opens.
+
+[27] CLICK "Show me a simpler version"
+I click this think-modal helper.
+- Calls `openStepExampleModal()`.
+- Example modal opens (same path as [17]).
+
+[28] CLICK "Ask mentor" BUTTON (editor row)
+I click `Ask mentor`.
+- `setShowMentorModal(true); setMentorError('')`.
+- Mentor modal opens.
+
+[29] TYPE QUESTION + CLICK "Send" IN MENTOR MODAL
+I enter mentor text and click `Send`.
+- `sendMentor()` runs:
+  - guards for empty text / unavailable resolver
+  - `setMentorLoading(true)`
+  - `reply = await onAskMentorResolved(node, msg, mentorThread)`
+  - appends user+assistant turns via `setMentorThread([...])`
+  - clears draft
+- On error: `setMentorError(...)`.
+- On finish: `setMentorLoading(false)`.
+
+Server side:
+- POST `/api/lessons/mentor` in `server/index.js`.
+- Returns `{ reply }`.
+
+[30] CLICK "Clear chat" IN MENTOR MODAL
+I click `Clear chat`.
+- Handler runs `setMentorThread([]); setMentorError('')`.
+- Conversation area resets.
+
+[31] CLICK "NEXT STEP →" (correct state)
+I click `NEXT STEP →` after passing step.
+- Calls `next()`.
+- If current node is question and correct: saves code in `passedCodeByStepId[node.id]`.
+- Marks completed node in `completedNodes`.
+- Advances `nodeIndex` to next non-`prereqs` node.
+- Re-render loads next step and step-reset effect runs.
+
+[32] STEP CHANGE SIDE EFFECTS (AUTO AFTER [9] OR [31])
+When `nodeIndex` changes, I see fresh step state.
+- Effect resets result/hints/modals/mentor/feedback state.
+- Rebuilds initial editor answer from passed code / carry-forward / starter seed.
+- Decides whether task modal auto-opens.
+- If revisiting completed question, task modal stays closed.
+
+[33] CLICK "Next Lesson →" ON COMPLETE SCREEN
+I complete all nodes and click `Next Lesson →`.
+- `renderComplete()` button calls `onNextLesson` from `App.jsx`.
+- `onNextLesson` computes `next` index and runs same gate sequence as catalog selection.
+- On allow: `openLesson(next, lessonList[next] ?? null)`.
+- On gate: register/pay modal path.
+
+[34] CLICK "Dashboard"
+I click `Dashboard` from top bar (when logged in).
+- `navigate('/dashboard')` in `App.jsx`.
+- Dashboard route renders with its own top bar and back button.
+
+[35] CLICK "Log out"
+I click `Log out`.
+- `handleLogout()` in `App.jsx`:
+  - `await supabaseSignOut()`
+  - best-effort `signOutFirebase()`
+  - `logout()` local auth state
+  - `setUser(null)`
+- UI updates to logged-out top bar and gate behavior.
+
+[36] CLICK Add Funds CONFIRM / DONE
+I complete add-funds modal.
+- `addFundsDone()` in `App.jsx` runs.
+- Closes funds modal.
+- If pending lesson now affordable: `deductLessonPayment(); openLesson(...)`.
+- Clears `pendingLesson`.
+
+[37] FIRST-SCREEN "onEnterLessons" (cinematic)
+I click the cinematic CTA to enter lessons.
+- `CinematicLanding` prop handler: `setTrack(LEARNER_FOCUS_TRACK); setShowCinematic(false)`.
+- UI transitions from cinematic intro to lesson catalog.
+
+[38] DYNAMIC LESSON (OPTIONAL BRANCH)
+If app chooses dynamic path (`useDynamicLesson === true`):
+- `DynamicLessonPage` runs phase effects:
+  `generateLessonIntro(params)` -> `setPhase('intro')`
+  `generateLessonObjectives(params)` when entering objectives phase
+  `generateLesson(params)` for full config
+- Then it builds engine config and still uses shared lesson runtime.
+
+--------------------------------------------------------------------------------
+QUICK MAP (FILES)
+--------------------------------------------------------------------------------
+- Catalog and routing: `src/App.jsx`, `src/LandingPage.jsx`
+- Gates/pay/auth helpers: `src/auth/lessonAccess.js`, `src/auth/redirectPath.js`
+- Shared lesson runtime + buttons/modals: `src/engines/inpact_engine_shared.jsx`
+- Lesson/Editor/Reading/Preview tabs: `src/engines/LessonEditorOutputTabs.jsx`
+- Validation client: `src/ai-lessons/clientLessonValidation.js`
+- Annotate client: `src/ai-lessons/clientFeedbackAnnotate.js`
+- API server routes: `server/index.js`
+
+================================================================================
+END
+================================================================================

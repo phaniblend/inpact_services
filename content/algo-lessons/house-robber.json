@@ -1,0 +1,895 @@
+{
+  "id": "house-robber",
+  "title": "House robber",
+  "pattern": "dynamic-programming",
+  "difficulty": "medium",
+  "language": "javascript",
+  "status": "draft",
+  "flow": [
+    {
+      "stepId": "title",
+      "mentorSays": "At the end of this lesson, you will be able to:\n\n1. Understand what the House Robber lesson asks for\n2. Use dynamic programming to find maximum money\n3. Build the solution by deciding whether to rob each house\n4. Implement the solution step by step in your chosen language",
+      "action": "continue",
+      "next": "lesson-illustration"
+    },
+    {
+      "stepId": "lesson-illustration",
+      "mentorSays": "The House Robber lesson teaches the classic 'take or skip' DP pattern.\n\nPROBLEM:\nhouses = [2, 7, 9, 3, 1]\nWhat's the maximum money you can rob?\n\nCONSTRAINT: Can't rob adjacent houses!\n\nGREEDY APPROACH (WRONG):\nRob all odd or even indices:\n- Odd: 7 + 3 = 10\n- Even: 2 + 9 + 1 = 12\nBut is 12 optimal?\n\nDP APPROACH:\nFor each house, decide: ROB or SKIP?\n\nHouse 0 (value=2):\n  rob[0] = 2\n\nHouse 1 (value=7):\n  rob[1] = max(rob[0], 7 + 0) = max(2, 7) = 7\n  \nHouse 2 (value=9):\n  rob[2] = max(rob[1], 9 + rob[0])\n         = max(7, 9 + 2) = max(7, 11) = 11\n  \nHouse 3 (value=3):\n  rob[3] = max(rob[2], 3 + rob[1])\n         = max(11, 3 + 7) = max(11, 10) = 11\n  \nHouse 4 (value=1):\n  rob[4] = max(rob[3], 1 + rob[2])\n         = max(11, 1 + 11) = max(11, 12) = 12\n\nANSWER: 12\n\nWHICH HOUSES? Trace back:\nrob[4] = 12 came from (1 + rob[2])\n  → Robbed house 4\nrob[2] = 11 came from (9 + rob[0])\n  → Robbed house 2\nrob[0] = 2\n  → Robbed house 0\n\nHouses robbed: [0, 2, 4] → [2, 9, 1] → Total: 12 ✓\n\nDP TABLE:\nIndex:   0  1  2  3  4\nHouses:  2  7  9  3  1\nRob:     2  7  11 11 12\n\nRECURRENCE RELATION:\nrob[i] = max(\n  rob[i-1],              // Skip this house\n  nums[i] + rob[i-2]     // Rob this house\n)\n\nBASE CASES:\nrob[0] = nums[0]\nrob[1] = max(nums[0], nums[1])\n\nTIME: O(n)\nSPACE: O(n) or O(1) with optimization",
+      "example": "nums = [2, 7, 9, 3, 1]\n\nFind maximum money:\n- Rob houses 0, 2, 4: 2 + 9 + 1 = 12 ✓\n\nAnswer: 12\n\nAnother example:\nnums = [1, 2, 3, 1]\n\nAnswer: 4 (rob houses 0 and 2: 1 + 3 = 4)\n\nAnother example:\nnums = [2, 1, 1, 2]\n\nAnswer: 4 (rob houses 0 and 3: 2 + 2 = 4)",
+      "action": "continue",
+      "next": "thinking-challenge"
+    },
+    {
+      "stepId": "thinking-challenge",
+      "mentorSays": "Now that you understand what the lesson wants, here's the real question:\n\nHow would YOU find the maximum money?\n\nThink about it for a moment. What approach feels natural to you?",
+      "choices": [
+        {
+          "label": "Use dynamic programming to track maximum money at each house",
+          "next": "explore-dp"
+        },
+        {
+          "label": "Try all possible combinations of houses",
+          "next": "explore-brute-force"
+        },
+        {
+          "label": "Use a greedy approach - always rob the house with most money",
+          "next": "explore-greedy"
+        }
+      ]
+    },
+    {
+      "stepId": "explore-brute-force",
+      "mentorSays": "That's a straightforward approach! You're thinking: \"I'll try all possible combinations of houses and find which one gives maximum money.\"\n\nThis works! However, it's exponential time complexity.\n\nWould you like to learn the dynamic programming approach which is O(n) time?",
+      "action": "continue",
+      "next": "explore-dp"
+    },
+    {
+      "stepId": "explore-greedy",
+      "mentorSays": "Great thinking! However, greedy doesn't always work here because robbing the house with most money might prevent you from robbing two other houses that together give more money.\n\nFor example, with [2, 1, 1, 2]:\n- Greedy: rob house 0 (money 2), then can't rob house 1, rob house 2 (money 1) → total 3\n- Optimal: rob house 0 and house 3 → total 4 ✓\n\nLet's learn the dynamic programming approach which always finds the optimal solution!",
+      "action": "continue",
+      "next": "explore-dp"
+    },
+    {
+      "stepId": "explore-dp",
+      "mentorSays": "Excellent choice! Dynamic programming is efficient and always finds the optimal solution. Here's the core idea:\n\n1. **DP Array**: dp[i] = maximum money that can be robbed up to house i\n2. **Base Cases**:\n   - dp[0] = nums[0] (rob house 0)\n   - dp[1] = max(nums[0], nums[1]) (rob the better of first two)\n3. **Recurrence**: For i >= 2:\n   - dp[i] = max(nums[i] + dp[i-2], dp[i-1])\n   - Choice 1: Rob house i → get nums[i] + best up to i-2\n   - Choice 2: Skip house i → keep best up to i-1\n4. **Result**: dp[n-1] (maximum money up to last house)\n\nLet's trace with nums=[2, 7, 9, 3, 1]:\n\n- **dp[0] = 2** (rob house 0)\n- **dp[1] = max(7, 2) = 7** (rob house 1, skip house 0)\n- **dp[2] = max(9 + 2, 7) = 11** (rob house 2 + house 0)\n- **dp[3] = max(3 + 7, 11) = 11** (skip house 3)\n- **dp[4] = max(1 + 11, 11) = 12** (rob house 4 + house 2 + house 0) ✓\n\nAnswer: 12\n\nThis is O(n) time and O(n) space! Now let's code it step by step.",
+      "action": "continue",
+      "next": "language-selection"
+    },
+    {
+      "stepId": "language-selection",
+      "mentorSays": "Great! Now let's code this solution. Which programming language would you like to use?",
+      "choices": [
+        {
+          "label": "JavaScript",
+          "next": "variable-check-js"
+        },
+        {
+          "label": "Python",
+          "next": "variable-check-python"
+        },
+        {
+          "label": "Java",
+          "next": "variable-check-java"
+        },
+        {
+          "label": "C++",
+          "next": "variable-check-cpp"
+        },
+        {
+          "label": "TypeScript",
+          "next": "variable-check-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-check-js",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-js"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-js",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'dp' or 'nums') and put data inside it.\n\nFor example, 'let dp = [];' creates a variable that stores an empty array.",
+      "example": "let dp = [];\n\nNow the variable refers to an empty array",
+      "action": "continue",
+      "next": "function-check-js"
+    },
+    {
+      "stepId": "function-check-js",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "array-check-js"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-js",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "function add(a, b) {\n  return a + b;\n}\n\nadd(3, 5) returns 8",
+      "action": "continue",
+      "next": "array-check-js"
+    },
+    {
+      "stepId": "array-check-js",
+      "mentorSays": "Before we start coding, let me ask: Do you know what an array is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know arrays",
+          "next": "base-cases-check-js"
+        },
+        {
+          "label": "No, explain arrays",
+          "next": "array-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "base-cases-check-js",
+      "mentorSays": "Do you understand what base cases are in dynamic programming?",
+      "choices": [
+        {
+          "label": "Yes, I know base-cases",
+          "next": "choice-lesson-check-js"
+        },
+        {
+          "label": "No, explain base-cases",
+          "next": "base-cases-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "choice-lesson-check-js",
+      "mentorSays": "Do you understand decision/choice lessons in dynamic programming?",
+      "choices": [
+        {
+          "label": "Yes, I know choice-lesson",
+          "next": "coding-start-js"
+        },
+        {
+          "label": "No, explain choice-lesson",
+          "next": "choice-lesson-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "choice-lesson-explanation-js",
+      "mentorSays": "In choice lessons, at each step you decide between options. For House Robber: OPTION 1: Rob current house → Can't rob previous. OPTION 2: Skip current house → Can rob previous. We take the maximum of these two choices!\n\n// At each house, we have TWO choices:\n// OPTION 1: Rob this house → nums[i] + dp[i-2]\n// OPTION 2: Skip this house → dp[i-1]\n\n// Take the maximum:\ndp[i] = Math.max(\n  dp[i-1],              // Skip house i\n  nums[i] + dp[i-2]     // Rob house i\n);\n\nGot it?",
+      "example": "// At each house, we have TWO choices:\n// OPTION 1: Rob this house → nums[i] + dp[i-2]\n// OPTION 2: Skip this house → dp[i-1]\n\n// Take the maximum:\ndp[i] = Math.max(\n  dp[i-1],              // Skip house i\n  nums[i] + dp[i-2]     // Rob house i\n);",
+      "action": "continue",
+      "next": "coding-start-js"
+    },
+    {
+      "stepId": "base-cases-explanation-js",
+      "mentorSays": "Base cases are the simplest inputs where the answer is obvious. For house robber: rob[0] = nums[0] (rob first house), rob[1] = max(nums[0], nums[1]) (rob better of first two). These form the foundation!\n\n// Base cases for house robber:\n// dp[0] = nums[0]  (rob first house)\n// dp[1] = max(nums[0], nums[1])  (rob better of first two)\n\nlet dp = [nums[0], Math.max(nums[0], nums[1])];\n// These are the simplest cases!\n\nGot it?",
+      "example": "// Base cases for house robber:\n// dp[0] = nums[0]  (rob first house)\n// dp[1] = max(nums[0], nums[1])  (rob better of first two)\n\nlet dp = [nums[0], Math.max(nums[0], nums[1])];\n// These are the simplest cases!",
+      "action": "continue",
+      "next": "coding-start-js"
+    },
+    {
+      "stepId": "array-explanation-js",
+      "mentorSays": "An array is like a list of items that keeps them in order. Each item has a position number called an 'index'. Array indices start counting from 0.",
+      "example": "arr = [1, 2, 3]\n\narr[0] = 1\narr[1] = 2\narr[2] = 3",
+      "action": "continue",
+      "next": "coding-start-js"
+    },
+    {
+      "stepId": "coding-start-js",
+      "mentorSays": "Perfect! Let's implement house robber using dynamic programming in JavaScript.",
+      "example": "function rob(nums) {\n  // Your code here\n}",
+      "action": "continue",
+      "next": "coding-base-js"
+    },
+    {
+      "stepId": "coding-base-js",
+      "mentorSays": "First, handle edge cases: if array is empty, return 0. If it has one house, return that house's money. If it has two houses, return the maximum.",
+      "example": "function rob(nums) {\n  if (nums.length === 0) return 0;\n  if (nums.length === 1) return nums[0];\n  if (nums.length === 2) return Math.max(nums[0], nums[1]);",
+      "action": "continue",
+      "next": "coding-init-js"
+    },
+    {
+      "stepId": "coding-init-js",
+      "mentorSays": "Now, create a DP array and initialize base cases: dp[0] = nums[0], dp[1] = max(nums[0], nums[1]).",
+      "example": "function rob(nums) {\n  if (nums.length === 0) return 0;\n  if (nums.length === 1) return nums[0];\n  if (nums.length === 2) return Math.max(nums[0], nums[1]);\n  \n  const dp = new Array(nums.length);\n  dp[0] = nums[0];\n  dp[1] = Math.max(nums[0], nums[1]);",
+      "action": "continue",
+      "next": "coding-fill-js"
+    },
+    {
+      "stepId": "coding-fill-js",
+      "mentorSays": "Now, fill the DP array: for each house i >= 2, choose the maximum between robbing house i (nums[i] + dp[i-2]) or skipping it (dp[i-1]).",
+      "example": "function rob(nums) {\n  if (nums.length === 0) return 0;\n  if (nums.length === 1) return nums[0];\n  if (nums.length === 2) return Math.max(nums[0], nums[1]);\n  \n  const dp = new Array(nums.length);\n  dp[0] = nums[0];\n  dp[1] = Math.max(nums[0], nums[1]);\n  \n  for (let i = 2; i < nums.length; i++) {\n    dp[i] = Math.max(nums[i] + dp[i-2], dp[i-1]);\n  }",
+      "action": "continue",
+      "next": "coding-recursive-relation-js"
+    },
+    {
+      "stepId": "coding-recursive-relation-js",
+      "mentorSays": "Let's define the recursive relation.\n\nTo reach house i, we have two choices:\n- Skip house i: rob[i] = rob[i-1]\n- Rob house i: rob[i] = nums[i] + rob[i-2]\n\nSo: rob[i] = max(rob[i-1], nums[i] + rob[i-2])\n\nThis captures the 'take or skip' decision!",
+      "example": "// Recursive relation:\n// rob[i] = max(rob[i-1], nums[i] + rob[i-2])\n\nfor (let i = 2; i < nums.length; i++) {\n  rob[i] = Math.max(rob[i-1], nums[i] + rob[i-2]);\n}",
+      "action": "continue",
+      "next": "coding-space-optimization-js"
+    },
+    {
+      "stepId": "coding-space-optimization-js",
+      "mentorSays": "We can optimize space from O(n) to O(1).\n\nNotice: we only need the previous 2 values!\n\nInstead of:\nlet rob = [2, 7, 11, 11, 12]\n\nWe can use:\nlet prev2 = 0;  // rob[i-2]\nlet prev1 = 0;  // rob[i-1]\n\nfor (let i = 0; i < nums.length; i++) {\n  let current = Math.max(prev1, nums[i] + prev2);\n  prev2 = prev1;\n  prev1 = current;\n}\n\nSpace: O(n) → O(1)\nTime: still O(n)",
+      "example": "// Space optimized version:\nlet prev2 = 0, prev1 = 0;\nfor (let i = 0; i < nums.length; i++) {\n  let current = Math.max(prev1, nums[i] + prev2);\n  prev2 = prev1;\n  prev1 = current;\n}\nreturn prev1;",
+      "action": "continue",
+      "next": "coding-return-js"
+    },
+    {
+      "stepId": "coding-return-js",
+      "mentorSays": "Finally, return dp[nums.length - 1], which contains the maximum money that can be robbed.",
+      "example": "function rob(nums) {\n  if (nums.length === 0) return 0;\n  if (nums.length === 1) return nums[0];\n  if (nums.length === 2) return Math.max(nums[0], nums[1]);\n  \n  const dp = new Array(nums.length);\n  dp[0] = nums[0];\n  dp[1] = Math.max(nums[0], nums[1]);\n  \n  for (let i = 2; i < nums.length; i++) {\n    dp[i] = Math.max(nums[i] + dp[i-2], dp[i-1]);\n  }\n  \n  return dp[nums.length - 1];\n}",
+      "action": "continue",
+      "next": "test-code-js"
+    },
+    {
+      "stepId": "test-code-js",
+      "mentorSays": "Perfect! Now test your code with the example we used earlier:\n\nnums = [2, 7, 9, 3, 1]\n\nAfter calling rob(nums), it should return:\n12\n\nTry it in your IDE or code editor!",
+      "example": "Test input:\nnums = [2, 7, 9, 3, 1]\n\nAfter rob(nums):\n12",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-python",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-python"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-python",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'dp' or 'nums') and put data inside it.\n\nFor example, 'dp = []' creates a variable that stores an empty list.",
+      "example": "dp = []\n\nNow the variable refers to an empty list",
+      "action": "continue",
+      "next": "function-check-python"
+    },
+    {
+      "stepId": "function-check-python",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "array-check-python"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-python",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "def add(a, b):\n    return a + b\n\nadd(3, 5) returns 8",
+      "action": "continue",
+      "next": "array-check-python"
+    },
+    {
+      "stepId": "array-check-python",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a list is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know lists",
+          "next": "base-cases-check-python"
+        },
+        {
+          "label": "No, explain lists",
+          "next": "array-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "base-cases-check-python",
+      "mentorSays": "Do you understand what base cases are in dynamic programming?",
+      "choices": [
+        {
+          "label": "Yes, I know base-cases",
+          "next": "choice-lesson-check-python"
+        },
+        {
+          "label": "No, explain base-cases",
+          "next": "base-cases-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "choice-lesson-check-python",
+      "mentorSays": "Do you understand decision/choice lessons in dynamic programming?",
+      "choices": [
+        {
+          "label": "Yes, I know choice-lesson",
+          "next": "coding-start-python"
+        },
+        {
+          "label": "No, explain choice-lesson",
+          "next": "choice-lesson-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "choice-lesson-explanation-python",
+      "mentorSays": "In choice lessons, at each step you decide between options. For House Robber: OPTION 1: Rob current house → Can't rob previous. OPTION 2: Skip current house → Can rob previous. We take the maximum of these two choices!\n\n# At each house, we have TWO choices:\n# OPTION 1: Rob this house → nums[i] + dp[i-2]\n# OPTION 2: Skip this house → dp[i-1]\n\n# Take the maximum:\ndp[i] = max(\n    dp[i-1],              # Skip house i\n    nums[i] + dp[i-2]     # Rob house i\n)\n\nGot it?",
+      "example": "# At each house, we have TWO choices:\n# OPTION 1: Rob this house → nums[i] + dp[i-2]\n# OPTION 2: Skip this house → dp[i-1]\n\n# Take the maximum:\ndp[i] = max(\n    dp[i-1],              # Skip house i\n    nums[i] + dp[i-2]     # Rob house i\n)",
+      "action": "continue",
+      "next": "coding-start-python"
+    },
+    {
+      "stepId": "base-cases-explanation-python",
+      "mentorSays": "Base cases are the simplest inputs where the answer is obvious. For house robber: rob[0] = nums[0] (rob first house), rob[1] = max(nums[0], nums[1]) (rob better of first two). These form the foundation!\n\n# Base cases for house robber:\n# dp[0] = nums[0]  (rob first house)\n# dp[1] = max(nums[0], nums[1])  (rob better of first two)\n\ndp = [nums[0], max(nums[0], nums[1])]\n# These are the simplest cases!\n\nGot it?",
+      "example": "# Base cases for house robber:\n# dp[0] = nums[0]  (rob first house)\n# dp[1] = max(nums[0], nums[1])  (rob better of first two)\n\ndp = [nums[0], max(nums[0], nums[1])]\n# These are the simplest cases!",
+      "action": "continue",
+      "next": "coding-start-python"
+    },
+    {
+      "stepId": "array-explanation-python",
+      "mentorSays": "A list is like an array - a collection of items that keeps them in order. Each item has a position number called an 'index'. List indices start counting from 0.",
+      "example": "arr = [1, 2, 3]\n\narr[0] = 1\narr[1] = 2\narr[2] = 3",
+      "action": "continue",
+      "next": "coding-start-python"
+    },
+    {
+      "stepId": "coding-start-python",
+      "mentorSays": "Perfect! Let's implement house robber using dynamic programming in Python.",
+      "example": "def rob(nums):\n    # Your code here\n    pass",
+      "action": "continue",
+      "next": "coding-base-python"
+    },
+    {
+      "stepId": "coding-base-python",
+      "mentorSays": "First, handle edge cases: if array is empty, return 0. If it has one house, return that house's money. If it has two houses, return the maximum.",
+      "example": "def rob(nums):\n    if len(nums) == 0:\n        return 0\n    if len(nums) == 1:\n        return nums[0]\n    if len(nums) == 2:\n        return max(nums[0], nums[1])",
+      "action": "continue",
+      "next": "coding-init-python"
+    },
+    {
+      "stepId": "coding-init-python",
+      "mentorSays": "Now, create a DP list and initialize base cases: dp[0] = nums[0], dp[1] = max(nums[0], nums[1]).",
+      "example": "def rob(nums):\n    if len(nums) == 0:\n        return 0\n    if len(nums) == 1:\n        return nums[0]\n    if len(nums) == 2:\n        return max(nums[0], nums[1])\n    \n    dp = [0] * len(nums)\n    dp[0] = nums[0]\n    dp[1] = max(nums[0], nums[1])",
+      "action": "continue",
+      "next": "coding-fill-python"
+    },
+    {
+      "stepId": "coding-fill-python",
+      "mentorSays": "Now, fill the DP list: for each house i >= 2, choose the maximum between robbing house i (nums[i] + dp[i-2]) or skipping it (dp[i-1]).",
+      "example": "def rob(nums):\n    if len(nums) == 0:\n        return 0\n    if len(nums) == 1:\n        return nums[0]\n    if len(nums) == 2:\n        return max(nums[0], nums[1])\n    \n    dp = [0] * len(nums)\n    dp[0] = nums[0]\n    dp[1] = max(nums[0], nums[1])\n    \n    for i in range(2, len(nums)):\n        dp[i] = max(nums[i] + dp[i-2], dp[i-1])",
+      "action": "continue",
+      "next": "coding-recursive-relation-python"
+    },
+    {
+      "stepId": "coding-recursive-relation-python",
+      "mentorSays": "Let's define the recursive relation.\n\nTo reach house i, we have two choices:\n- Skip house i: rob[i] = rob[i-1]\n- Rob house i: rob[i] = nums[i] + rob[i-2]\n\nSo: rob[i] = max(rob[i-1], nums[i] + rob[i-2])\n\nThis captures the 'take or skip' decision!",
+      "example": "// Recursive relation:\n// rob[i] = max(rob[i-1], nums[i] + rob[i-2])\n\nfor (let i = 2; i < nums.length; i++) {\n  rob[i] = Math.max(rob[i-1], nums[i] + rob[i-2]);\n}",
+      "action": "continue",
+      "next": "coding-space-optimization-python"
+    },
+    {
+      "stepId": "coding-space-optimization-python",
+      "mentorSays": "We can optimize space from O(n) to O(1).\n\nNotice: we only need the previous 2 values!\n\nInstead of:\nlet rob = [2, 7, 11, 11, 12]\n\nWe can use:\nlet prev2 = 0;  // rob[i-2]\nlet prev1 = 0;  // rob[i-1]\n\nfor (let i = 0; i < nums.length; i++) {\n  let current = Math.max(prev1, nums[i] + prev2);\n  prev2 = prev1;\n  prev1 = current;\n}\n\nSpace: O(n) → O(1)\nTime: still O(n)",
+      "example": "// Space optimized version:\nlet prev2 = 0, prev1 = 0;\nfor (let i = 0; i < nums.length; i++) {\n  let current = Math.max(prev1, nums[i] + prev2);\n  prev2 = prev1;\n  prev1 = current;\n}\nreturn prev1;",
+      "action": "continue",
+      "next": "coding-return-python"
+    },
+    {
+      "stepId": "coding-return-python",
+      "mentorSays": "Finally, return dp[len(nums) - 1], which contains the maximum money that can be robbed.",
+      "example": "def rob(nums):\n    if len(nums) == 0:\n        return 0\n    if len(nums) == 1:\n        return nums[0]\n    if len(nums) == 2:\n        return max(nums[0], nums[1])\n    \n    dp = [0] * len(nums)\n    dp[0] = nums[0]\n    dp[1] = max(nums[0], nums[1])\n    \n    for i in range(2, len(nums)):\n        dp[i] = max(nums[i] + dp[i-2], dp[i-1])\n    \n    return dp[len(nums) - 1]",
+      "action": "continue",
+      "next": "test-code-python"
+    },
+    {
+      "stepId": "test-code-python",
+      "mentorSays": "Perfect! Now test your code with the example we used earlier:\n\nnums = [2, 7, 9, 3, 1]\n\nAfter calling rob(nums), it should return:\n12\n\nTry it in your IDE or code editor!",
+      "example": "Test input:\nnums = [2, 7, 9, 3, 1]\n\nAfter rob(nums):\n12",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-java",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-java"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-java",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'dp' or 'nums') and put data inside it.\n\nFor example, 'int[] dp = new int[n];' creates a variable that stores an array.",
+      "example": "int[] dp = new int[n];\n\nNow the variable refers to an array",
+      "action": "continue",
+      "next": "function-check-java"
+    },
+    {
+      "stepId": "function-check-java",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a method is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know methods",
+          "next": "array-check-java"
+        },
+        {
+          "label": "No, explain methods",
+          "next": "function-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-java",
+      "mentorSays": "A method is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "public int add(int a, int b) {\n    return a + b;\n}\n\nadd(3, 5) returns 8",
+      "action": "continue",
+      "next": "array-check-java"
+    },
+    {
+      "stepId": "array-check-java",
+      "mentorSays": "Before we start coding, let me ask: Do you know what an array is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know arrays",
+          "next": "base-cases-check-java"
+        },
+        {
+          "label": "No, explain arrays",
+          "next": "array-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "base-cases-check-java",
+      "mentorSays": "Do you understand what base cases are in dynamic programming?",
+      "choices": [
+        {
+          "label": "Yes, I know base-cases",
+          "next": "choice-lesson-check-java"
+        },
+        {
+          "label": "No, explain base-cases",
+          "next": "base-cases-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "choice-lesson-check-java",
+      "mentorSays": "Do you understand decision/choice lessons in dynamic programming?",
+      "choices": [
+        {
+          "label": "Yes, I know choice-lesson",
+          "next": "coding-start-java"
+        },
+        {
+          "label": "No, explain choice-lesson",
+          "next": "choice-lesson-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "choice-lesson-explanation-java",
+      "mentorSays": "In choice lessons, at each step you decide between options. For House Robber: OPTION 1: Rob current house → Can't rob previous. OPTION 2: Skip current house → Can rob previous. We take the maximum of these two choices!\n\n// At each house, we have TWO choices:\n// OPTION 1: Rob this house → nums[i] + dp[i-2]\n// OPTION 2: Skip this house → dp[i-1]\n\n// Take the maximum:\ndp[i] = Math.max(\n    dp[i-1],              // Skip house i\n    nums[i] + dp[i-2]     // Rob house i\n);\n\nGot it?",
+      "example": "// At each house, we have TWO choices:\n// OPTION 1: Rob this house → nums[i] + dp[i-2]\n// OPTION 2: Skip this house → dp[i-1]\n\n// Take the maximum:\ndp[i] = Math.max(\n    dp[i-1],              // Skip house i\n    nums[i] + dp[i-2]     // Rob house i\n);",
+      "action": "continue",
+      "next": "coding-start-java"
+    },
+    {
+      "stepId": "base-cases-explanation-java",
+      "mentorSays": "Base cases are the simplest inputs where the answer is obvious. For house robber: rob[0] = nums[0] (rob first house), rob[1] = max(nums[0], nums[1]) (rob better of first two). These form the foundation!\n\n// Base cases for house robber:\n// dp[0] = nums[0]  (rob first house)\n// dp[1] = max(nums[0], nums[1])  (rob better of first two)\n\nint[] dp = {nums[0], Math.max(nums[0], nums[1])};\n// These are the simplest cases!\n\nGot it?",
+      "example": "// Base cases for house robber:\n// dp[0] = nums[0]  (rob first house)\n// dp[1] = max(nums[0], nums[1])  (rob better of first two)\n\nint[] dp = {nums[0], Math.max(nums[0], nums[1])};\n// These are the simplest cases!",
+      "action": "continue",
+      "next": "coding-start-java"
+    },
+    {
+      "stepId": "array-explanation-java",
+      "mentorSays": "An array is like a list of items that keeps them in order. Each item has a position number called an 'index'. Array indices start counting from 0.",
+      "example": "int[] arr = {1, 2, 3};\n\narr[0] = 1\narr[1] = 2\narr[2] = 3",
+      "action": "continue",
+      "next": "coding-start-java"
+    },
+    {
+      "stepId": "coding-start-java",
+      "mentorSays": "Perfect! Let's implement house robber using dynamic programming in Java.",
+      "example": "public int rob(int[] nums) {\n    // Your code here\n}",
+      "action": "continue",
+      "next": "coding-base-java"
+    },
+    {
+      "stepId": "coding-base-java",
+      "mentorSays": "First, handle edge cases: if array is empty, return 0. If it has one house, return that house's money. If it has two houses, return the maximum.",
+      "example": "public int rob(int[] nums) {\n    if (nums.length == 0) return 0;\n    if (nums.length == 1) return nums[0];\n    if (nums.length == 2) return Math.max(nums[0], nums[1]);",
+      "action": "continue",
+      "next": "coding-init-java"
+    },
+    {
+      "stepId": "coding-init-java",
+      "mentorSays": "Now, create a DP array and initialize base cases: dp[0] = nums[0], dp[1] = max(nums[0], nums[1]).",
+      "example": "public int rob(int[] nums) {\n    if (nums.length == 0) return 0;\n    if (nums.length == 1) return nums[0];\n    if (nums.length == 2) return Math.max(nums[0], nums[1]);\n    \n    int[] dp = new int[nums.length];\n    dp[0] = nums[0];\n    dp[1] = Math.max(nums[0], nums[1]);",
+      "action": "continue",
+      "next": "coding-fill-java"
+    },
+    {
+      "stepId": "coding-fill-java",
+      "mentorSays": "Now, fill the DP array: for each house i >= 2, choose the maximum between robbing house i (nums[i] + dp[i-2]) or skipping it (dp[i-1]).",
+      "example": "public int rob(int[] nums) {\n    if (nums.length == 0) return 0;\n    if (nums.length == 1) return nums[0];\n    if (nums.length == 2) return Math.max(nums[0], nums[1]);\n    \n    int[] dp = new int[nums.length];\n    dp[0] = nums[0];\n    dp[1] = Math.max(nums[0], nums[1]);\n    \n    for (int i = 2; i < nums.length; i++) {\n        dp[i] = Math.max(nums[i] + dp[i-2], dp[i-1]);\n    }",
+      "action": "continue",
+      "next": "coding-recursive-relation-java"
+    },
+    {
+      "stepId": "coding-recursive-relation-java",
+      "mentorSays": "Let's define the recursive relation.\n\nTo reach house i, we have two choices:\n- Skip house i: rob[i] = rob[i-1]\n- Rob house i: rob[i] = nums[i] + rob[i-2]\n\nSo: rob[i] = max(rob[i-1], nums[i] + rob[i-2])\n\nThis captures the 'take or skip' decision!",
+      "example": "// Recursive relation:\n// rob[i] = max(rob[i-1], nums[i] + rob[i-2])\n\nfor (let i = 2; i < nums.length; i++) {\n  rob[i] = Math.max(rob[i-1], nums[i] + rob[i-2]);\n}",
+      "action": "continue",
+      "next": "coding-space-optimization-java"
+    },
+    {
+      "stepId": "coding-space-optimization-java",
+      "mentorSays": "We can optimize space from O(n) to O(1).\n\nNotice: we only need the previous 2 values!\n\nInstead of:\nlet rob = [2, 7, 11, 11, 12]\n\nWe can use:\nlet prev2 = 0;  // rob[i-2]\nlet prev1 = 0;  // rob[i-1]\n\nfor (let i = 0; i < nums.length; i++) {\n  let current = Math.max(prev1, nums[i] + prev2);\n  prev2 = prev1;\n  prev1 = current;\n}\n\nSpace: O(n) → O(1)\nTime: still O(n)",
+      "example": "// Space optimized version:\nlet prev2 = 0, prev1 = 0;\nfor (let i = 0; i < nums.length; i++) {\n  let current = Math.max(prev1, nums[i] + prev2);\n  prev2 = prev1;\n  prev1 = current;\n}\nreturn prev1;",
+      "action": "continue",
+      "next": "coding-return-java"
+    },
+    {
+      "stepId": "coding-return-java",
+      "mentorSays": "Finally, return dp[nums.length - 1], which contains the maximum money that can be robbed.",
+      "example": "public int rob(int[] nums) {\n    if (nums.length == 0) return 0;\n    if (nums.length == 1) return nums[0];\n    if (nums.length == 2) return Math.max(nums[0], nums[1]);\n    \n    int[] dp = new int[nums.length];\n    dp[0] = nums[0];\n    dp[1] = Math.max(nums[0], nums[1]);\n    \n    for (int i = 2; i < nums.length; i++) {\n        dp[i] = Math.max(nums[i] + dp[i-2], dp[i-1]);\n    }\n    \n    return dp[nums.length - 1];\n}",
+      "action": "continue",
+      "next": "test-code-java"
+    },
+    {
+      "stepId": "test-code-java",
+      "mentorSays": "Perfect! Now test your code with the example we used earlier:\n\nnums = [2, 7, 9, 3, 1]\n\nAfter calling rob(nums), it should return:\n12\n\nTry it in your IDE or code editor!",
+      "example": "Test input:\nnums = [2, 7, 9, 3, 1]\n\nAfter rob(nums):\n12",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-cpp",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-cpp"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-cpp",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'dp' or 'nums') and put data inside it.\n\nFor example, 'vector<int> dp(n);' creates a variable that stores a vector.",
+      "example": "vector<int> dp(n);\n\nNow the variable refers to a vector",
+      "action": "continue",
+      "next": "function-check-cpp"
+    },
+    {
+      "stepId": "function-check-cpp",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "array-check-cpp"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-cpp",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "int add(int a, int b) {\n    return a + b;\n}\n\nadd(3, 5) returns 8",
+      "action": "continue",
+      "next": "array-check-cpp"
+    },
+    {
+      "stepId": "array-check-cpp",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a vector is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know vectors",
+          "next": "base-cases-check-cpp"
+        },
+        {
+          "label": "No, explain vectors",
+          "next": "array-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "base-cases-check-cpp",
+      "mentorSays": "Do you understand what base cases are in dynamic programming?",
+      "choices": [
+        {
+          "label": "Yes, I know base-cases",
+          "next": "choice-lesson-check-cpp"
+        },
+        {
+          "label": "No, explain base-cases",
+          "next": "base-cases-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "choice-lesson-check-cpp",
+      "mentorSays": "Do you understand decision/choice lessons in dynamic programming?",
+      "choices": [
+        {
+          "label": "Yes, I know choice-lesson",
+          "next": "coding-start-cpp"
+        },
+        {
+          "label": "No, explain choice-lesson",
+          "next": "choice-lesson-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "choice-lesson-explanation-cpp",
+      "mentorSays": "In choice lessons, at each step you decide between options. For House Robber: OPTION 1: Rob current house → Can't rob previous. OPTION 2: Skip current house → Can rob previous. We take the maximum of these two choices!\n\n// At each house, we have TWO choices:\n// OPTION 1: Rob this house → nums[i] + dp[i-2]\n// OPTION 2: Skip this house → dp[i-1]\n\n// Take the maximum:\ndp[i] = max(\n    dp[i-1],              // Skip house i\n    nums[i] + dp[i-2]     // Rob house i\n);\n\nGot it?",
+      "example": "// At each house, we have TWO choices:\n// OPTION 1: Rob this house → nums[i] + dp[i-2]\n// OPTION 2: Skip this house → dp[i-1]\n\n// Take the maximum:\ndp[i] = max(\n    dp[i-1],              // Skip house i\n    nums[i] + dp[i-2]     // Rob house i\n);",
+      "action": "continue",
+      "next": "coding-start-cpp"
+    },
+    {
+      "stepId": "base-cases-explanation-cpp",
+      "mentorSays": "Base cases are the simplest inputs where the answer is obvious. For house robber: rob[0] = nums[0] (rob first house), rob[1] = max(nums[0], nums[1]) (rob better of first two). These form the foundation!\n\n// Base cases for house robber:\n// dp[0] = nums[0]  (rob first house)\n// dp[1] = max(nums[0], nums[1])  (rob better of first two)\n\nvector<int> dp = {nums[0], max(nums[0], nums[1])};\n// These are the simplest cases!\n\nGot it?",
+      "example": "// Base cases for house robber:\n// dp[0] = nums[0]  (rob first house)\n// dp[1] = max(nums[0], nums[1])  (rob better of first two)\n\nvector<int> dp = {nums[0], max(nums[0], nums[1])};\n// These are the simplest cases!",
+      "action": "continue",
+      "next": "coding-start-cpp"
+    },
+    {
+      "stepId": "array-explanation-cpp",
+      "mentorSays": "A vector is like an array - a collection of items that keeps them in order. Each item has a position number called an 'index'. Vector indices start counting from 0.",
+      "example": "vector<int> arr = {1, 2, 3};\n\narr[0] = 1\narr[1] = 2\narr[2] = 3",
+      "action": "continue",
+      "next": "coding-start-cpp"
+    },
+    {
+      "stepId": "coding-start-cpp",
+      "mentorSays": "Perfect! Let's implement house robber using dynamic programming in C++.",
+      "example": "int rob(vector<int>& nums) {\n    // Your code here\n}",
+      "action": "continue",
+      "next": "coding-base-cpp"
+    },
+    {
+      "stepId": "coding-base-cpp",
+      "mentorSays": "First, handle edge cases: if array is empty, return 0. If it has one house, return that house's money. If it has two houses, return the maximum.",
+      "example": "int rob(vector<int>& nums) {\n    if (nums.size() == 0) return 0;\n    if (nums.size() == 1) return nums[0];\n    if (nums.size() == 2) return max(nums[0], nums[1]);",
+      "action": "continue",
+      "next": "coding-init-cpp"
+    },
+    {
+      "stepId": "coding-init-cpp",
+      "mentorSays": "Now, create a DP vector and initialize base cases: dp[0] = nums[0], dp[1] = max(nums[0], nums[1]).",
+      "example": "int rob(vector<int>& nums) {\n    if (nums.size() == 0) return 0;\n    if (nums.size() == 1) return nums[0];\n    if (nums.size() == 2) return max(nums[0], nums[1]);\n    \n    vector<int> dp(nums.size());\n    dp[0] = nums[0];\n    dp[1] = max(nums[0], nums[1]);",
+      "action": "continue",
+      "next": "coding-fill-cpp"
+    },
+    {
+      "stepId": "coding-fill-cpp",
+      "mentorSays": "Now, fill the DP vector: for each house i >= 2, choose the maximum between robbing house i (nums[i] + dp[i-2]) or skipping it (dp[i-1]).",
+      "example": "int rob(vector<int>& nums) {\n    if (nums.size() == 0) return 0;\n    if (nums.size() == 1) return nums[0];\n    if (nums.size() == 2) return max(nums[0], nums[1]);\n    \n    vector<int> dp(nums.size());\n    dp[0] = nums[0];\n    dp[1] = max(nums[0], nums[1]);\n    \n    for (int i = 2; i < nums.size(); i++) {\n        dp[i] = max(nums[i] + dp[i-2], dp[i-1]);\n    }",
+      "action": "continue",
+      "next": "coding-recursive-relation-cpp"
+    },
+    {
+      "stepId": "coding-recursive-relation-cpp",
+      "mentorSays": "Let's define the recursive relation.\n\nTo reach house i, we have two choices:\n- Skip house i: rob[i] = rob[i-1]\n- Rob house i: rob[i] = nums[i] + rob[i-2]\n\nSo: rob[i] = max(rob[i-1], nums[i] + rob[i-2])\n\nThis captures the 'take or skip' decision!",
+      "example": "// Recursive relation:\n// rob[i] = max(rob[i-1], nums[i] + rob[i-2])\n\nfor (let i = 2; i < nums.length; i++) {\n  rob[i] = Math.max(rob[i-1], nums[i] + rob[i-2]);\n}",
+      "action": "continue",
+      "next": "coding-space-optimization-cpp"
+    },
+    {
+      "stepId": "coding-space-optimization-cpp",
+      "mentorSays": "We can optimize space from O(n) to O(1).\n\nNotice: we only need the previous 2 values!\n\nInstead of:\nlet rob = [2, 7, 11, 11, 12]\n\nWe can use:\nlet prev2 = 0;  // rob[i-2]\nlet prev1 = 0;  // rob[i-1]\n\nfor (let i = 0; i < nums.length; i++) {\n  let current = Math.max(prev1, nums[i] + prev2);\n  prev2 = prev1;\n  prev1 = current;\n}\n\nSpace: O(n) → O(1)\nTime: still O(n)",
+      "example": "// Space optimized version:\nlet prev2 = 0, prev1 = 0;\nfor (let i = 0; i < nums.length; i++) {\n  let current = Math.max(prev1, nums[i] + prev2);\n  prev2 = prev1;\n  prev1 = current;\n}\nreturn prev1;",
+      "action": "continue",
+      "next": "coding-return-cpp"
+    },
+    {
+      "stepId": "coding-return-cpp",
+      "mentorSays": "Finally, return dp[nums.size() - 1], which contains the maximum money that can be robbed.",
+      "example": "int rob(vector<int>& nums) {\n    if (nums.size() == 0) return 0;\n    if (nums.size() == 1) return nums[0];\n    if (nums.size() == 2) return max(nums[0], nums[1]);\n    \n    vector<int> dp(nums.size());\n    dp[0] = nums[0];\n    dp[1] = max(nums[0], nums[1]);\n    \n    for (int i = 2; i < nums.size(); i++) {\n        dp[i] = max(nums[i] + dp[i-2], dp[i-1]);\n    }\n    \n    return dp[nums.size() - 1];\n}",
+      "action": "continue",
+      "next": "test-code-cpp"
+    },
+    {
+      "stepId": "test-code-cpp",
+      "mentorSays": "Perfect! Now test your code with the example we used earlier:\n\nnums = [2, 7, 9, 3, 1]\n\nAfter calling rob(nums), it should return:\n12\n\nTry it in your IDE or code editor!",
+      "example": "Test input:\nnums = [2, 7, 9, 3, 1]\n\nAfter rob(nums):\n12",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-ts",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-ts"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-ts",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'dp' or 'nums') and put data inside it.\n\nFor example, 'let dp: number[] = [];' creates a variable that stores an empty array.",
+      "example": "let dp: number[] = [];\n\nNow the variable refers to an empty array",
+      "action": "continue",
+      "next": "function-check-ts"
+    },
+    {
+      "stepId": "function-check-ts",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "array-check-ts"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-ts",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "function add(a: number, b: number): number {\n  return a + b;\n}\n\nadd(3, 5) returns 8",
+      "action": "continue",
+      "next": "array-check-ts"
+    },
+    {
+      "stepId": "array-check-ts",
+      "mentorSays": "Before we start coding, let me ask: Do you know what an array is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know arrays",
+          "next": "base-cases-check-ts"
+        },
+        {
+          "label": "No, explain arrays",
+          "next": "array-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "base-cases-check-ts",
+      "mentorSays": "Do you understand what base cases are in dynamic programming?",
+      "choices": [
+        {
+          "label": "Yes, I know base-cases",
+          "next": "choice-lesson-check-ts"
+        },
+        {
+          "label": "No, explain base-cases",
+          "next": "base-cases-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "choice-lesson-check-ts",
+      "mentorSays": "Do you understand decision/choice lessons in dynamic programming?",
+      "choices": [
+        {
+          "label": "Yes, I know choice-lesson",
+          "next": "coding-start-ts"
+        },
+        {
+          "label": "No, explain choice-lesson",
+          "next": "choice-lesson-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "choice-lesson-explanation-ts",
+      "mentorSays": "In choice lessons, at each step you decide between options. For House Robber: OPTION 1: Rob current house → Can't rob previous. OPTION 2: Skip current house → Can rob previous. We take the maximum of these two choices!\n\n// At each house, we have TWO choices:\n// OPTION 1: Rob this house → nums[i] + dp[i-2]\n// OPTION 2: Skip this house → dp[i-1]\n\n// Take the maximum:\ndp[i] = Math.max(\n  dp[i-1],              // Skip house i\n  nums[i] + dp[i-2]     // Rob house i\n);\n\nGot it?",
+      "example": "// At each house, we have TWO choices:\n// OPTION 1: Rob this house → nums[i] + dp[i-2]\n// OPTION 2: Skip this house → dp[i-1]\n\n// Take the maximum:\ndp[i] = Math.max(\n  dp[i-1],              // Skip house i\n  nums[i] + dp[i-2]     // Rob house i\n);",
+      "action": "continue",
+      "next": "coding-start-ts"
+    },
+    {
+      "stepId": "base-cases-explanation-ts",
+      "mentorSays": "Base cases are the simplest inputs where the answer is obvious. For house robber: rob[0] = nums[0] (rob first house), rob[1] = max(nums[0], nums[1]) (rob better of first two). These form the foundation!\n\n// Base cases for house robber:\n// dp[0] = nums[0]  (rob first house)\n// dp[1] = max(nums[0], nums[1])  (rob better of first two)\n\nlet dp: number[] = [nums[0], Math.max(nums[0], nums[1])];\n// These are the simplest cases!\n\nGot it?",
+      "example": "// Base cases for house robber:\n// dp[0] = nums[0]  (rob first house)\n// dp[1] = max(nums[0], nums[1])  (rob better of first two)\n\nlet dp: number[] = [nums[0], Math.max(nums[0], nums[1])];\n// These are the simplest cases!",
+      "action": "continue",
+      "next": "coding-start-ts"
+    },
+    {
+      "stepId": "array-explanation-ts",
+      "mentorSays": "An array is like a list of items that keeps them in order. Each item has a position number called an 'index'. Array indices start counting from 0.",
+      "example": "arr: number[] = [1, 2, 3]\n\narr[0] = 1\narr[1] = 2\narr[2] = 3",
+      "action": "continue",
+      "next": "coding-start-ts"
+    },
+    {
+      "stepId": "coding-start-ts",
+      "mentorSays": "Perfect! Let's implement house robber using dynamic programming in TypeScript.",
+      "example": "function rob(nums: number[]): number {\n  // Your code here\n}",
+      "action": "continue",
+      "next": "coding-base-ts"
+    },
+    {
+      "stepId": "coding-base-ts",
+      "mentorSays": "First, handle edge cases: if array is empty, return 0. If it has one house, return that house's money. If it has two houses, return the maximum.",
+      "example": "function rob(nums: number[]): number {\n  if (nums.length === 0) return 0;\n  if (nums.length === 1) return nums[0];\n  if (nums.length === 2) return Math.max(nums[0], nums[1]);",
+      "action": "continue",
+      "next": "coding-init-ts"
+    },
+    {
+      "stepId": "coding-init-ts",
+      "mentorSays": "Now, create a DP array and initialize base cases: dp[0] = nums[0], dp[1] = max(nums[0], nums[1]).",
+      "example": "function rob(nums: number[]): number {\n  if (nums.length === 0) return 0;\n  if (nums.length === 1) return nums[0];\n  if (nums.length === 2) return Math.max(nums[0], nums[1]);\n  \n  const dp: number[] = new Array(nums.length);\n  dp[0] = nums[0];\n  dp[1] = Math.max(nums[0], nums[1]);",
+      "action": "continue",
+      "next": "coding-fill-ts"
+    },
+    {
+      "stepId": "coding-fill-ts",
+      "mentorSays": "Now, fill the DP array: for each house i >= 2, choose the maximum between robbing house i (nums[i] + dp[i-2]) or skipping it (dp[i-1]).",
+      "example": "function rob(nums: number[]): number {\n  if (nums.length === 0) return 0;\n  if (nums.length === 1) return nums[0];\n  if (nums.length === 2) return Math.max(nums[0], nums[1]);\n  \n  const dp: number[] = new Array(nums.length);\n  dp[0] = nums[0];\n  dp[1] = Math.max(nums[0], nums[1]);\n  \n  for (let i = 2; i < nums.length; i++) {\n    dp[i] = Math.max(nums[i] + dp[i-2], dp[i-1]);\n  }",
+      "action": "continue",
+      "next": "coding-recursive-relation-ts"
+    },
+    {
+      "stepId": "coding-recursive-relation-ts",
+      "mentorSays": "Let's define the recursive relation.\n\nTo reach house i, we have two choices:\n- Skip house i: rob[i] = rob[i-1]\n- Rob house i: rob[i] = nums[i] + rob[i-2]\n\nSo: rob[i] = max(rob[i-1], nums[i] + rob[i-2])\n\nThis captures the 'take or skip' decision!",
+      "example": "// Recursive relation:\n// rob[i] = max(rob[i-1], nums[i] + rob[i-2])\n\nfor (let i = 2; i < nums.length; i++) {\n  rob[i] = Math.max(rob[i-1], nums[i] + rob[i-2]);\n}",
+      "action": "continue",
+      "next": "coding-space-optimization-ts"
+    },
+    {
+      "stepId": "coding-space-optimization-ts",
+      "mentorSays": "We can optimize space from O(n) to O(1).\n\nNotice: we only need the previous 2 values!\n\nInstead of:\nlet rob = [2, 7, 11, 11, 12]\n\nWe can use:\nlet prev2 = 0;  // rob[i-2]\nlet prev1 = 0;  // rob[i-1]\n\nfor (let i = 0; i < nums.length; i++) {\n  let current = Math.max(prev1, nums[i] + prev2);\n  prev2 = prev1;\n  prev1 = current;\n}\n\nSpace: O(n) → O(1)\nTime: still O(n)",
+      "example": "// Space optimized version:\nlet prev2 = 0, prev1 = 0;\nfor (let i = 0; i < nums.length; i++) {\n  let current = Math.max(prev1, nums[i] + prev2);\n  prev2 = prev1;\n  prev1 = current;\n}\nreturn prev1;",
+      "action": "continue",
+      "next": "coding-return-ts"
+    },
+    {
+      "stepId": "coding-return-ts",
+      "mentorSays": "Finally, return dp[nums.length - 1], which contains the maximum money that can be robbed.",
+      "example": "function rob(nums: number[]): number {\n  if (nums.length === 0) return 0;\n  if (nums.length === 1) return nums[0];\n  if (nums.length === 2) return Math.max(nums[0], nums[1]);\n  \n  const dp: number[] = new Array(nums.length);\n  dp[0] = nums[0];\n  dp[1] = Math.max(nums[0], nums[1]);\n  \n  for (let i = 2; i < nums.length; i++) {\n    dp[i] = Math.max(nums[i] + dp[i-2], dp[i-1]);\n  }\n  \n  return dp[nums.length - 1];\n}",
+      "action": "continue",
+      "next": "test-code-ts"
+    },
+    {
+      "stepId": "test-code-ts",
+      "mentorSays": "Perfect! Now test your code with the example we used earlier:\n\nnums = [2, 7, 9, 3, 1]\n\nAfter calling rob(nums), it should return:\n12\n\nTry it in your IDE or code editor!",
+      "example": "Test input:\nnums = [2, 7, 9, 3, 1]\n\nAfter rob(nums):\n12",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "final",
+      "mentorSays": "🎉 Well done! You've learned house robber using dynamic programming. You understand how to make optimal decisions at each house by choosing between robbing or skipping!\n\nThis is O(n) time and O(n) space - excellent for optimization lessons with constraints! Keep practicing!",
+      "action": "continue"
+    }
+  ]
+}

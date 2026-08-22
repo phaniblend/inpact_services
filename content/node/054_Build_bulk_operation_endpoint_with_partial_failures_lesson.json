@@ -1,0 +1,428 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-node-54",
+    "track": "node",
+    "lessonNum": 54,
+    "title": "Build bulk operation endpoint with partial failures",
+    "shortName": "P54",
+    "intro": {
+      "tag": "LESSON #54",
+      "title": "Build bulk operation endpoint with partial failures",
+      "body": "In this lesson, you will build a Node.js API endpoint that processes bulk operations, such as creating multiple user records at once, while gracefully handling partial failures. You will learn how to implement a system where some operations succeed and others fail, returning detailed results for each item. The core concept involves using loops, conditional logic, and error handling to manage individual operation outcomes within a batch. You will work with JavaScript arrays, async/await, and HTTP response structures to create a robust and user-friendly endpoint.",
+      "usecase": "Bulk operations with partial failure handling are essential in enterprise systems where users need to process multiple items simultaneously. For example, in e-commerce admin dashboards, merchants often upload hundreds of product updates via CSV files - some items may succeed while others fail due to validation errors. Similarly, in cloud management consoles, administrators might deploy multiple virtual machines where some succeed and others fail due to resource constraints. This pattern ensures users get clear feedback on what worked versus what needs attention, rather than having the entire operation fail completely."
+    },
+    "objectives": [
+      "Construct a bulk operation endpoint that processes multiple items in a single request",
+      "Implement error handling logic to capture and report individual operation failures",
+      "Configure response structures to include both successful and failed operation results",
+      "Apply validation to incoming bulk request data before processing",
+      "Integrate partial failure reporting with standard HTTP status codes",
+      "Manipulate arrays of data to separate successful from failed operations",
+      "Initialize a Node.js server with routes for bulk operations"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 12",
+        "title": "Import required Node.js modules",
+        "instruction": "Import the http, url, and querystring modules from Node.js's built-in modules.",
+        "hint": "Use the require() function to import each module. These are core modules, so no npm installation is needed.",
+        "analogousExample": "// Importing core modules\nconst fs = require('fs');\nconst path = require('path');",
+        "seedCode": "// Import the required modules here",
+        "expectedOutcome": "The code will have three import statements for http, url, and querystring modules.",
+        "successCriteria": [
+          "The http, url, and querystring modules are imported using require()."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've imported some modules, but make sure to include all three: http, url, and querystring.",
+        "feedbackWrong": "The imports are missing or incorrect. Use require() to import the http, url, and querystring modules.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "require('http')",
+            "require('url')",
+            "require('querystring')"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 12",
+        "title": "Create the HTTP server",
+        "instruction": "Create an HTTP server using the http module's createServer() method and define a basic request handler function that logs each request.",
+        "hint": "Use the http.createServer() method and pass it a function that takes request and response parameters. Inside the function, log the request URL to the console.",
+        "analogousExample": "// Creating a basic HTTP server\nconst http = require('http');\n\nconst server = http.createServer((req, res) => {\n  console.log(`Request received: ${req.url}`);\n});",
+        "seedCode": "const http = require('http');\n\n// Create the HTTP server here",
+        "expectedOutcome": "You will have a server instance created with a request handler that logs incoming requests.",
+        "successCriteria": [
+          "The code creates an HTTP server using http.createServer() with a request handler function that logs the request URL."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're using http.createServer() and have a function that logs the request URL.",
+        "feedbackWrong": "The server creation is missing or incorrect. Remember to use http.createServer() with a request handler function.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "createServer",
+            "req",
+            "console.log",
+            "url"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 12",
+        "title": "Configure server to listen on a port",
+        "instruction": "Make the server listen on port 3000 and add a console log to confirm it's running.",
+        "hint": "Use the server.listen() method with port 3000 and a callback function that logs a message.",
+        "analogousExample": "// Similar: starting a server on a specific port\nconst server = http.createServer();\nserver.listen(3000, () => {\n  console.log('Server running on port 3000');\n});",
+        "seedCode": "const http = require('http');\n\nconst server = http.createServer();\n\n// Make the server listen on port 3000 and log a message\n",
+        "expectedOutcome": "The server will start listening for incoming requests on port 3000, and you'll see a confirmation message in the console.",
+        "successCriteria": [
+          "The server is configured to listen on port 3000 with a console log message indicating it's running."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started configuring the server, but make sure you're using port 3000 and including a console log in the callback.",
+        "feedbackWrong": "The server isn't properly configured to listen on port 3000. Check the server.listen() method and ensure you're logging a confirmation message.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "server.listen",
+            "3000",
+            "console.log"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 12",
+        "title": "Parse incoming request URL and method",
+        "instruction": "Inside the server's request handler, parse the request URL to get the pathname and check if it's a POST request to /bulk.",
+        "hint": "Use the built-in URL module to parse the request URL and access its pathname property. Compare the request method to 'POST' and the pathname to '/bulk'.",
+        "analogousExample": "// Example: parsing URL and checking method\nconst parsedUrl = new URL(req.url, 'http://localhost:3000');\nconst isBulkPost = req.method === 'POST' && parsedUrl.pathname === '/bulk';",
+        "seedCode": "const http = require('http');\n\nconst server = http.createServer((req, res) => {\n  // Parse the request URL and check if it's a POST to /bulk\n});\n\n// Make the server listen on port 3000 and log a message",
+        "expectedOutcome": "The server will be able to identify incoming POST requests to the /bulk endpoint by parsing the URL and checking the HTTP method.",
+        "successCriteria": [
+          "The request handler parses the URL to get the pathname and checks if the request method is POST and the pathname is '/bulk'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure you're parsing the URL to get the pathname and checking both the method and pathname.",
+        "feedbackWrong": "parse the request URL and check if it's a POST request to /bulk.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "new URL",
+            "pathname",
+            "req.method",
+            "POST",
+            "/bulk"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 12",
+        "title": "Collect request body data",
+        "instruction": "Inside the request handler, collect the incoming request body data by listening for 'data' events and concatenating the chunks into a complete string.",
+        "hint": "Use req.on('data', ...) to collect chunks and req.on('end', ...) to process the complete body.",
+        "analogousExample": "// Example: collecting request body\nfunction handleRequest(req, res) {\n  let body = '';\n  req.on('data', chunk => {\n    body += chunk;\n  });\n  req.on('end', () => {\n    console.log('Body:', body);\n  });\n}",
+        "seedCode": "const http = require('http');\n\nconst server = http.createServer((req, res) => {\n  // Parse the request URL and check if it's a POST to /bulk\n  // Collect request body data here\n});\n\n// Make the server listen on port 3000 and log a message",
+        "expectedOutcome": "The server will be able to collect and store the complete request body as a string when data arrives.",
+        "successCriteria": [
+          "The request handler includes code to collect body chunks and concatenate them into a string variable."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started collecting the body, but make sure you're concatenating all chunks into a single string and handling the 'end' event.",
+        "feedbackWrong": "The request body collection isn't implemented correctly. Check the example: you need to listen for 'data' events and build the body string.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "req.on",
+            "'data'",
+            "body",
+            "chunk",
+            "concat"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 12",
+        "title": "Parse the request body as JSON",
+        "instruction": "Inside the request handler, parse the collected body string as JSON and store it in a variable named 'bodyData'. Wrap the parsing in a try-catch block to handle JSON parsing errors.",
+        "hint": "Use JSON.parse() on the body string inside a try block. In the catch block, you can handle the error by sending a 400 response with an error message.",
+        "analogousExample": "// Parsing JSON with error handling\ntry {\n  const data = JSON.parse(rawBody);\n  // use data\n} catch (error) {\n  // handle error\n}",
+        "seedCode": "const http = require('http');\n\nconst server = http.createServer((req, res) => {\n  // Parse the request URL and check if it's a POST to /bulk\n  // Collect request body data here\n  \n  // Parse the request body as JSON\n  let bodyData;\n  try {\n    bodyData = JSON.parse(body);\n  } catch (error) {\n    // Handle JSON parsing error\n  }\n});\n\n// Make the server listen on port 3000 and log a message",
+        "expectedOutcome": "The request body string is converted to a JavaScript object, and JSON parsing errors are caught and handled gracefully.",
+        "successCriteria": [
+          "JSON.parse() is called on the body string inside a try block, and errors are caught in a catch block."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure you're using JSON.parse() inside a try block and catching errors in a catch block.",
+        "feedbackWrong": "The code doesn't properly parse the request body as JSON with error handling. Review how to use JSON.parse() with try-catch.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "JSON.parse",
+            "try",
+            "catch",
+            "bodyData"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 12",
+        "title": "Validate the bulk request structure",
+        "instruction": "After parsing the request body, check if it contains an 'operations' array property. If not, respond with a 400 status and a JSON error message.",
+        "hint": "Use an if statement to verify that bodyData.operations exists and is an array. If validation fails, set res.statusCode to 400, write a JSON error response, and end the response.",
+        "analogousExample": "// Example: validating request structure\nif (!data || !Array.isArray(data.items)) {\n  res.statusCode = 400;\n  res.end(JSON.stringify({ error: 'Invalid request: items array required' }));\n  return;\n}",
+        "seedCode": "const http = require('http');\n\nconst server = http.createServer((req, res) => {\n  // Parse the request URL and check if it's a POST to /bulk\n  // Collect request body data here\n  \n  // Parse the request body as JSON\n  let bodyData;\n  try {\n    bodyData = JSON.parse(body);\n  } catch (error) {\n    // Handle JSON parsing error\n  }\n  \n  // Validate the bulk request structure here\n});\n\n// Make the server listen on port 3000 and log a message",
+        "expectedOutcome": "The server will validate incoming requests and respond with a proper error when the 'operations' array is missing.",
+        "successCriteria": [
+          "The code includes validation that checks if bodyData.operations exists and is an array, and returns a 400 error with JSON response when validation fails."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added some validation, but make sure to check both that operations exists AND that it's an array. Also ensure you're setting the proper status code and ending the response.",
+        "feedbackWrong": "The validation logic is missing or incorrect. You need to check if bodyData.operations is an array and respond with a 400 error if it's not.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "bodyData.operations",
+            "Array.isArray",
+            "400",
+            "JSON.stringify",
+            "res.end"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 12",
+        "title": "Create the bulk operation processor function",
+        "instruction": "Create a function named 'processBulkOperations' that takes an array of operations as a parameter and returns an empty array for now.",
+        "hint": "Define a function that accepts a parameter (like 'operations') and returns an empty array [].",
+        "analogousExample": "// Example: a function that processes items\nfunction processItems(items) {\n  return [];\n}",
+        "seedCode": "const http = require('http');\n\nconst server = http.createServer((req, res) => {\n  // Parse the request URL and check if it's a POST to /bulk\n  // Collect request body data here\n  \n  // Parse the request body as JSON\n  let bodyData;\n  try {\n    bodyData = JSON.parse(body);\n  } catch (error) {\n    // Handle JSON parsing error\n  }\n  \n  // Validate the bulk request structure here\n});\n\n// Make the server listen on port 3000 and log a message\n\n// Create the bulk operation processor function here",
+        "expectedOutcome": "You'll have a function named 'processBulkOperations' that accepts an array parameter and returns an empty array.",
+        "successCriteria": [
+          "The function 'processBulkOperations' is defined, takes one parameter, and returns an empty array."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure your function is named 'processBulkOperations', accepts a parameter, and returns an empty array.",
+        "feedbackWrong": "The function isn't defined correctly. Create a function named 'processBulkOperations' that takes an array parameter and returns [].",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "processBulkOperations",
+            "function",
+            "return",
+            "[]"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 12",
+        "title": "Implement individual operation processing with error handling",
+        "instruction": "Inside the bulk operation processor function, process each operation in a try-catch block to capture individual failures without stopping the entire batch.",
+        "hint": "Loop through the operations array and wrap each operation's processing logic in try-catch to handle errors individually.",
+        "analogousExample": "// Similar: processing items with individual error handling\nfunction processItems(items) {\n  const results = [];\n  for (let item of items) {\n    try {\n      // Process item\n      results.push({ success: true, data: item });\n    } catch (error) {\n      results.push({ success: false, error: error.message });\n    }\n  }\n  return results;\n}",
+        "seedCode": "const http = require('http');\n\nconst server = http.createServer((req, res) => {\n  // Parse the request URL and check if it's a POST to /bulk\n  // Collect request body data here\n  \n  // Parse the request body as JSON\n  let bodyData;\n  try {\n    bodyData = JSON.parse(body);\n  } catch (error) {\n    // Handle JSON parsing error\n  }\n  \n  // Validate the bulk request structure here\n});\n\n// Make the server listen on port 3000 and log a message\n\n// Create the bulk operation processor function here\nfunction processBulkOperations(operations) {\n  // Process each operation in a try-catch block to capture individual failures\n}",
+        "expectedOutcome": "The bulk operation processor function now handles each operation individually with try-catch blocks, allowing partial failures where some operations succeed while others fail.",
+        "successCriteria": [
+          "The processBulkOperations function contains a loop that processes each operation within a try-catch block, capturing errors without stopping the entire batch."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure each operation is processed within its own try-catch block inside a loop. This ensures individual failures don't stop the entire batch.",
+        "feedbackWrong": "The function should process each operation individually with try-catch blocks. Try implementing a loop that wraps each operation's processing in try-catch to handle errors separately.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "processBulkOperations",
+            "try",
+            "catch",
+            "for",
+            "operations"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 12",
+        "title": "Build the response structure with success/failure tracking",
+        "instruction": "Inside the processBulkOperations function, create and return an object that tracks successful operations, failed operations, and overall status.",
+        "hint": "The function should return an object with properties like 'successful', 'failed', and 'status'.",
+        "analogousExample": "// Similar: function that returns a structured result\nfunction processItems(items) {\n  return {\n    processed: items.filter(i => i.valid),\n    errors: items.filter(i => !i.valid),\n    total: items.length\n  };\n}",
+        "seedCode": "const http = require('http');\n\nconst server = http.createServer((req, res) => {\n  // Parse the request URL and check if it's a POST to /bulk\n  // Collect request body data here\n  \n  // Parse the request body as JSON\n  let bodyData;\n  try {\n    bodyData = JSON.parse(body);\n  } catch (error) {\n    // Handle JSON parsing error\n  }\n  \n  // Validate the bulk request structure here\n});\n\n// Make the server listen on port 3000 and log a message\n\n// Create the bulk operation processor function here\nfunction processBulkOperations(operations) {\n  // Process each operation in a try-catch block to capture individual failures\n  // Return an object with successful, failed, and status properties\n}",
+        "expectedOutcome": "The processBulkOperations function now returns a structured object that will later be used to build the HTTP response.",
+        "successCriteria": [
+          "The function returns an object containing 'successful', 'failed', and 'status' properties."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure your function returns an object with 'successful', 'failed', and 'status' properties.",
+        "feedbackWrong": "The function should return an object with properties to track successful operations, failed operations, and overall status.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "return",
+            "{",
+            "successful",
+            "failed",
+            "status"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 12",
+        "title": "Send the JSON response",
+        "instruction": "Inside the request handler, after processing the bulk operations, set the response headers to 'application/json', status code to 200, and send the processed results as JSON using JSON.stringify.",
+        "hint": "Use res.writeHead() or res.setHeader() for headers, res.statusCode for status, and res.end() with JSON.stringify() to send the response.",
+        "analogousExample": "// Sending a JSON response\nres.writeHead(200, { 'Content-Type': 'application/json' });\nres.end(JSON.stringify({ message: 'Success' }));",
+        "seedCode": "const http = require('http');\n\nconst server = http.createServer((req, res) => {\n  // Parse the request URL and check if it's a POST to /bulk\n  // Collect request body data here\n  \n  // Parse the request body as JSON\n  let bodyData;\n  try {\n    bodyData = JSON.parse(body);\n  } catch (error) {\n    // Handle JSON parsing error\n  }\n  \n  // Validate the bulk request structure here\n  \n  // Process bulk operations and get results\n  const results = processBulkOperations(bodyData.operations);\n  \n  // Set response headers, status code, and send JSON response here\n});\n\n// Make the server listen on port 3000 and log a message\n\n// Create the bulk operation processor function here\nfunction processBulkOperations(operations) {\n  // Process each operation in a try-catch block to capture individual failures\n  // Return an object with successful, failed, and status properties\n}",
+        "expectedOutcome": "The server will send a properly formatted JSON response with the bulk operation results when a request is made to the endpoint.",
+        "successCriteria": [
+          "Response headers include 'Content-Type: application/json', status code is 200, and response body contains the processed results as JSON."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're setting both the Content-Type header and status code, and sending the results as JSON string.",
+        "feedbackWrong": "The response isn't properly formatted. Check that you're setting headers, status code, and using JSON.stringify on the results.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "setHeader",
+            "application/json",
+            "statusCode",
+            "JSON.stringify",
+            "end"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step12",
+        "type": "question",
+        "phase": "Step 12 of 12",
+        "title": "Handle non-bulk endpoints and errors",
+        "instruction": "Add a route check at the beginning of the request handler to send a 404 response for any non-POST request to /bulk, and wrap the main logic in a try-catch to handle server errors with a 500 response.",
+        "hint": "First check if the request method is POST and URL is '/bulk'. If not, set status to 404, write 'Not Found', and end the response. Then wrap the rest of the logic in a try-catch block to catch any unhandled errors.",
+        "analogousExample": "// Example: route and error handling\nif (req.method !== 'POST' || req.url !== '/bulk') {\n  res.writeHead(404, { 'Content-Type': 'text/plain' });\n  res.end('Not Found');\n  return;\n}\n\ntry {\n  // Main logic here\n} catch (error) {\n  res.writeHead(500, { 'Content-Type': 'application/json' });\n  res.end(JSON.stringify({ error: 'Internal server error' }));\n}",
+        "seedCode": "const http = require('http');\n\nconst server = http.createServer((req, res) => {\n  // Add route check for POST /bulk here\n  \n  // Parse the request URL and check if it's a POST to /bulk\n  // Collect request body data here\n  \n  // Parse the request body as JSON\n  let bodyData;\n  try {\n    bodyData = JSON.parse(body);\n  } catch (error) {\n    // Handle JSON parsing error\n  }\n  \n  // Validate the bulk request structure here\n  \n  // Process bulk operations and get results\n  const results = processBulkOperations(bodyData.operations);\n  \n  // Set response headers, status code, and send JSON response here\n});\n\n// Make the server listen on port 3000 and log a message\n\n// Create the bulk operation processor function here\nfunction processBulkOperations(operations) {\n  // Process each operation in a try-catch block to capture individual failures\n  // Return an object with successful, failed, and status properties\n}",
+        "expectedOutcome": "The server will now respond with a 404 for invalid routes and a 500 for any unhandled errors, while still processing valid bulk requests correctly.",
+        "successCriteria": [
+          "The request handler includes a route check that returns a 404 for non-POST /bulk requests, and the main logic is wrapped in a try-catch that sends a 500 JSON response on errors."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added some error handling, but make sure to check both the request method and URL for the 404, and wrap all the main logic in the try-catch block.",
+        "feedbackWrong": "The route check or error handling is missing or incorrect. Remember to check for POST method and '/bulk' URL, and wrap the main processing logic in try-catch.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "req.method",
+            "req.url",
+            "404",
+            "try",
+            "catch",
+            "500"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import required Node.js modules",
+        "id": "step1"
+      },
+      {
+        "label": "Create the HTTP server",
+        "id": "step2"
+      },
+      {
+        "label": "Configure server to listen on a port",
+        "id": "step3"
+      },
+      {
+        "label": "Parse incoming request URL and method",
+        "id": "step4"
+      },
+      {
+        "label": "Collect request body data",
+        "id": "step5"
+      },
+      {
+        "label": "Parse the request body as JSON",
+        "id": "step6"
+      },
+      {
+        "label": "Validate the bulk request structure",
+        "id": "step7"
+      },
+      {
+        "label": "Create the bulk operation processor function",
+        "id": "step8"
+      },
+      {
+        "label": "Implement individual operation processing with error handling",
+        "id": "step9"
+      },
+      {
+        "label": "Build the response structure with success/failure tracking",
+        "id": "step10"
+      },
+      {
+        "label": "Send the JSON response",
+        "id": "step11"
+      },
+      {
+        "label": "Handle non-bulk endpoints and errors",
+        "id": "step12"
+      }
+    ]
+  },
+  "source": "content"
+}

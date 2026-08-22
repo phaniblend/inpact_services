@@ -1,0 +1,378 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-angular-38",
+    "track": "angular",
+    "lessonNum": 38,
+    "title": "useDebounce",
+    "shortName": "P38",
+    "intro": {
+      "tag": "LESSON #38",
+      "title": "useDebounce",
+      "body": "In this lesson, you will build a search input component that delays sending requests until the user stops typing, preventing too many rapid calls. You will learn the core concept of debouncing, which controls how often a function runs by waiting for a pause in activity. The main technologies involved are Angular's reactive forms, RxJS operators like debounceTime, and TypeScript for type safety. By the end, you'll create a functional search bar that efficiently handles user input.",
+      "usecase": "Debouncing is essential in Angular applications where user interactions trigger frequent updates that could overwhelm APIs or cause performance issues. In real-world dashboards, debouncing prevents excessive API calls when users adjust filters or search inputs, ensuring smooth data loading. Form validation benefits from debouncing by delaying checks until users pause typing, improving responsiveness. This pattern also enhances autocomplete suggestions and live search features in e-commerce platforms by reducing server load while maintaining a responsive user experience."
+    },
+    "objectives": [
+      "Construct a custom Angular directive that implements debounce logic.",
+      "Initialize and manage a timer using RxJS operators within the directive.",
+      "Bind the directive to an input element to control event emission.",
+      "Configure the debounce duration via an input property.",
+      "Update the directive to emit a debounced value to a parent component.",
+      "Integrate the debounce directive into a component template to manipulate user input flow."
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 10",
+        "title": "Import Component, OnInit, and CommonModule",
+        "instruction": "Import Component and OnInit from '@angular/core', and CommonModule from '@angular/common' in your TypeScript file.",
+        "hint": "Use the import keyword followed by the symbols you need from their respective Angular packages.",
+        "analogousExample": "// Importing Angular core components\nimport { Component, OnInit } from '@angular/core';\nimport { CommonModule } from '@angular/common';",
+        "seedCode": {
+          "App.tsx": "// Import Component, OnInit, and CommonModule here\n"
+        },
+        "expectedOutcome": "The necessary Angular modules and decorators are imported for building a component with lifecycle hooks and common directives.",
+        "successCriteria": [
+          "Component and OnInit are imported from '@angular/core', and CommonModule is imported from '@angular/common'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've imported some of the required symbols. Make sure to import Component and OnInit from '@angular/core', and CommonModule from '@angular/common'.",
+        "feedbackWrong": "The imports are missing or incorrect. Please import Component and OnInit from '@angular/core', and CommonModule from '@angular/common'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "Component",
+            "OnInit",
+            "@angular/core",
+            "CommonModule",
+            "@angular/common"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 10",
+        "title": "Create the main component class with OnInit",
+        "instruction": "Create a component class named DebounceDemoComponent that implements the OnInit interface.",
+        "hint": "Use the @Component decorator above the class and include the OnInit interface in the implements clause.",
+        "analogousExample": "// Example component class implementing OnInit\n@Component({\n  selector: 'app-example',\n  standalone: true,\n  imports: [CommonModule]\n})\nexport class ExampleComponent implements OnInit {\n  ngOnInit() {\n    // initialization logic here\n  }\n}",
+        "seedCode": {
+          "App.tsx": "import { Component, OnInit } from '@angular/core';\nimport { CommonModule } from '@angular/common';\n\n// Create the DebounceDemoComponent class here\n"
+        },
+        "expectedOutcome": "A component class named DebounceDemoComponent is defined with the OnInit interface implemented.",
+        "successCriteria": [
+          "The code contains a class named DebounceDemoComponent with @Component decorator and implements OnInit."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure your class is named exactly DebounceDemoComponent and implements the OnInit interface.",
+        "feedbackWrong": "The component class wasn't created correctly. Check that you used @Component decorator and implements OnInit.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "@Component",
+            "DebounceDemoComponent",
+            "implements OnInit"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 10",
+        "title": "Add search input state property",
+        "instruction": "Inside the DebounceDemoComponent class, add a public property named 'searchTerm' of type string with an initial empty value.",
+        "hint": "Declare the property in the class body, not inside a method. Use TypeScript type annotation.",
+        "analogousExample": "// Example: adding a string property to a class\nclass ExampleComponent {\n  public message: string = '';\n}",
+        "seedCode": {
+          "App.tsx": "import { Component, OnInit } from '@angular/core';\nimport { CommonModule } from '@angular/common';\n\n// Create the DebounceDemoComponent class here\n\n\n"
+        },
+        "expectedOutcome": "The component will have a reactive property to store the search input value.",
+        "successCriteria": [
+          "The DebounceDemoComponent class contains a 'searchTerm' property of type string initialized to an empty string."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you've declared a property named 'searchTerm' with type 'string' and initialized it to an empty string.",
+        "feedbackWrong": "The property is missing or incorrect. Add 'searchTerm: string = \"\";' inside the DebounceDemoComponent class.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "searchTerm",
+            "string",
+            "=",
+            "\"\""
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 10",
+        "title": "Add debounced search result state property",
+        "instruction": "In the DebounceDemoComponent class, add a property named debouncedResult of type string with an initial empty value.",
+        "hint": "Add a new property declaration in the class body, similar to how you added the searchInput property.",
+        "analogousExample": "// Example: adding a string property in an Angular component\nclass ExampleComponent {\n  searchInput: string = '';\n  debouncedResult: string = '';\n}",
+        "seedCode": {
+          "App.tsx": "import { Component, OnInit } from '@angular/core';\nimport { CommonModule } from '@angular/common';\n\n// Create the DebounceDemoComponent class here\n@Component({\n  selector: 'app-debounce-demo',\n  standalone: true,\n  imports: [CommonModule],\n  template: ''\n})\nexport class DebounceDemoComponent implements OnInit {\n  searchInput: string = '';\n  \n  ngOnInit() {}\n}"
+        },
+        "expectedOutcome": "The component now has a debouncedResult property to store the debounced search result.",
+        "successCriteria": [
+          "The DebounceDemoComponent class contains a debouncedResult property of type string initialized to an empty string."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added a property, but check that it's named exactly 'debouncedResult' and has type 'string' with an initial empty value.",
+        "feedbackWrong": "The debouncedResult property is missing or incorrect. Add 'debouncedResult: string = \"\";' inside the class.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "debouncedResult",
+            "string",
+            "=",
+            "\"\""
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 10",
+        "title": "Define the debounce handler method",
+        "instruction": "Inside the DebounceDemoComponent class, define a private method named debounce that takes a callback function and delay time as parameters, and returns a debounced version of the callback.",
+        "hint": "The method should have two parameters: a callback function and a delay number. Inside, use setTimeout to delay execution and clearTimeout to cancel previous calls.",
+        "analogousExample": "// Similar: debounce method in a class\nprivate debounce(callback: () => void, delay: number): () => void {\n  let timeoutId: any;\n  return () => {\n    clearTimeout(timeoutId);\n    timeoutId = setTimeout(callback, delay);\n  };\n}",
+        "seedCode": {
+          "App.tsx": "import { Component, OnInit } from '@angular/core';\nimport { CommonModule } from '@angular/common';\n\n// Create the DebounceDemoComponent class here\n@Component({\n  selector: 'app-debounce-demo',\n  standalone: true,\n  imports: [CommonModule],\n  template: ''\n})\nexport class DebounceDemoComponent implements OnInit {\n  searchInput: string = '';\n  \n  ngOnInit() {}\n  \n  // Define the debounce method here\n}"
+        },
+        "expectedOutcome": "A private debounce method is added to the component class with proper TypeScript typing for parameters and return type.",
+        "successCriteria": [
+          "The component contains a private method named debounce that accepts a callback function and delay number, and returns a function that implements debounce logic."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added a method, but check: Is it named 'debounce'? Does it take callback and delay parameters? Does it return a debounced function?",
+        "feedbackWrong": "The debounce method is missing or incorrect. Review the method signature and implementation: it should be private, take two parameters, and return a function that uses setTimeout and clearTimeout.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "private",
+            "debounce",
+            "callback",
+            "delay",
+            "setTimeout",
+            "clearTimeout",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 10",
+        "title": "Create the search handler with debounce",
+        "instruction": "Inside the DebounceDemoComponent class, create a method called onSearchInput that updates the debouncedResult property after a 500ms delay using the debounce handler method you defined earlier.",
+        "hint": "Call your debounce handler method inside onSearchInput and pass it a function that updates debouncedResult with the current searchInput value.",
+        "analogousExample": "// Similar: a method that uses a helper\nclass Example {\n  helper() {}\n  \n  actionMethod() {\n    this.helper();\n  }\n}",
+        "seedCode": {
+          "App.tsx": "import { Component, OnInit } from '@angular/core';\nimport { CommonModule } from '@angular/common';\n\n// Create the DebounceDemoComponent class here\n@Component({\n  selector: 'app-debounce-demo',\n  standalone: true,\n  imports: [CommonModule],\n  template: ''\n})\nexport class DebounceDemoComponent implements OnInit {\n  searchInput: string = '';\n  debouncedResult: string = '';\n  \n  ngOnInit() {}\n  \n  // Define the debounce method here\n  debounceHandler(callback: () => void, delay: number) {\n    let timeoutId: any;\n    return () => {\n      clearTimeout(timeoutId);\n      timeoutId = setTimeout(() => {\n        callback();\n      }, delay);\n    };\n  }\n  \n  // Create the onSearchInput method here\n}"
+        },
+        "expectedOutcome": "You will have an onSearchInput method that uses the debounceHandler to update debouncedResult after 500ms when called.",
+        "successCriteria": [
+          "The onSearchInput method exists, calls debounceHandler with a function that updates debouncedResult, and specifies a 500ms delay."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure your onSearchInput method calls debounceHandler and updates debouncedResult with the current searchInput value after 500ms.",
+        "feedbackWrong": "The onSearchInput method is missing or doesn't properly use the debounce handler to update debouncedResult after 500ms.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "onSearchInput",
+            "debounceHandler",
+            "debouncedResult",
+            "500"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 10",
+        "title": "Initialize debounced search in ngOnInit",
+        "instruction": "Inside the ngOnInit method, call the onSearchInput method with the initial searchInput value to trigger the debounced search when the component loads.",
+        "hint": "You can call onSearchInput() directly in ngOnInit. Since onSearchInput expects an event parameter, you can pass a mock event object or call it without arguments if you adjust the method to handle the initial call.",
+        "analogousExample": "// Similar: calling a method in ngOnInit\nngOnInit() {\n  this.loadInitialData();\n}",
+        "seedCode": {
+          "App.tsx": "import { Component, OnInit } from '@angular/core';\nimport { CommonModule } from '@angular/common';\n\n// Create the DebounceDemoComponent class here\n@Component({\n  selector: 'app-debounce-demo',\n  standalone: true,\n  imports: [CommonModule],\n  template: ''\n})\nexport class DebounceDemoComponent implements OnInit {\n  searchInput: string = '';\n  debouncedResult: string = '';\n  \n  ngOnInit() {\n    // Call onSearchInput here\n  }\n  \n  // Define the debounce method here\n  debounceHandler(callback: () => void, delay: number) {\n    let timeoutId: any;\n    return () => {\n      clearTimeout(timeoutId);\n      timeoutId = setTimeout(() => {\n        callback();\n      }, delay);\n    };\n  }\n  \n  // Create the onSearchInput method here\n}"
+        },
+        "expectedOutcome": "The ngOnInit method will now initialize the debounced search behavior by calling onSearchInput when the component first loads.",
+        "successCriteria": [
+          "ngOnInit contains a call to onSearchInput."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you call onSearchInput inside ngOnInit.",
+        "feedbackWrong": "Check the instruction: you need to call onSearchInput inside the ngOnInit method.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "ngOnInit",
+            "onSearchInput",
+            "("
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 10",
+        "title": "Add the component template with search input",
+        "instruction": "Add a template to the component decorator that includes an input field bound to the searchInput property using ngModel.",
+        "hint": "Use the ngModel directive with two-way binding syntax [(ngModel)] and add a placeholder attribute to the input.",
+        "analogousExample": "// Example: template with input binding\n@Component({\n  selector: 'app-example',\n  template: '<input [(ngModel)]=\"userInput\" placeholder=\"Type something...\">'\n})",
+        "seedCode": {
+          "App.tsx": "import { Component, OnInit } from '@angular/core';\nimport { CommonModule } from '@angular/common';\n\n// Create the DebounceDemoComponent class here\n@Component({\n  selector: 'app-debounce-demo',\n  standalone: true,\n  imports: [CommonModule],\n  template: ''\n})\nexport class DebounceDemoComponent implements OnInit {\n  searchInput: string = '';\n  debouncedResult: string = '';\n  \n  ngOnInit() {\n    // Call onSearchInput here\n  }\n  \n  // Define the debounce method here\n  debounceHandler(callback: () => void, delay: number) {\n    let timeoutId: any;\n    return () => {\n      clearTimeout(timeoutId);\n      timeoutId = setTimeout(() => {\n        callback();\n      }, delay);\n    };\n  }\n  \n  // Create the onSearchInput method here\n}"
+        },
+        "expectedOutcome": "The component will have a template with an input field that is bound to the searchInput property.",
+        "successCriteria": [
+          "The template includes an input element with [(ngModel)] binding to searchInput and a placeholder attribute."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You added the input field, but make sure to use [(ngModel)] for two-way binding and include a placeholder.",
+        "feedbackWrong": "The template is missing or incorrect. Add an input element with [(ngModel)]=\"searchInput\" and a placeholder.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "[(ngModel)]",
+            "searchInput",
+            "placeholder"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 10",
+        "title": "Wire input event to search handler",
+        "instruction": "In the component's template, add an (input) event binding to the search input element that calls the onSearchInput() method when the user types.",
+        "hint": "Use Angular's event binding syntax: (input)=\"onSearchInput()\". This connects the input event to your search handler.",
+        "analogousExample": "// Example: wiring an input event\n<input (input)=\"handleInput()\" placeholder=\"Type here\">",
+        "seedCode": {
+          "App.tsx": "import { Component, OnInit } from '@angular/core';\nimport { CommonModule } from '@angular/common';\n\n// Create the DebounceDemoComponent class here\n@Component({\n  selector: 'app-debounce-demo',\n  standalone: true,\n  imports: [CommonModule],\n  template: '<input placeholder=\"Search...\" (input)=\"onSearchInput()\">'\n})\nexport class DebounceDemoComponent implements OnInit {\n  searchInput: string = '';\n  debouncedResult: string = '';\n  \n  ngOnInit() {\n    // Call onSearchInput here\n  }\n  \n  // Define the debounce method here\n  debounceHandler(callback: () => void, delay: number) {\n    let timeoutId: any;\n    return () => {\n      clearTimeout(timeoutId);\n      timeoutId = setTimeout(() => {\n        callback();\n      }, delay);\n    };\n  }\n  \n  // Create the onSearchInput method here\n}"
+        },
+        "expectedOutcome": "The search input element will trigger the onSearchInput() method whenever the user types, enabling the debounced search functionality.",
+        "successCriteria": [
+          "The template contains an input element with an (input) event binding that calls onSearchInput()."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you've added the (input) event binding to call onSearchInput() on the input element.",
+        "feedbackWrong": "The input event isn't properly connected to the search handler. Check that you're using Angular's (input) event binding syntax.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "(input)=\"onSearchInput()\""
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 10",
+        "title": "Display the debounced search result",
+        "instruction": "Add a paragraph element below the input that displays the debouncedResult value.",
+        "hint": "Use Angular's interpolation syntax with double curly braces to display the debouncedResult property value.",
+        "analogousExample": "// Displaying a property value in template\n<p>{{ message }}</p>",
+        "seedCode": {
+          "App.tsx": "import { Component, OnInit } from '@angular/core';\nimport { CommonModule } from '@angular/common';\n\n// Create the DebounceDemoComponent class here\n@Component({\n  selector: 'app-debounce-demo',\n  standalone: true,\n  imports: [CommonModule],\n  template: '<input placeholder=\"Search...\" (input)=\"onSearchInput()\">'\n})\nexport class DebounceDemoComponent implements OnInit {\n  searchInput: string = '';\n  debouncedResult: string = '';\n  \n  ngOnInit() {\n    // Call onSearchInput here\n  }\n  \n  // Define the debounce method here\n  debounceHandler(callback: () => void, delay: number) {\n    let timeoutId: any;\n    return () => {\n      clearTimeout(timeoutId);\n      timeoutId = setTimeout(() => {\n        callback();\n      }, delay);\n    };\n  }\n  \n  // Create the onSearchInput method here\n}"
+        },
+        "expectedOutcome": "The UI will show the debounced search result below the input field as it updates.",
+        "successCriteria": [
+          "A paragraph element exists in the template that displays the debouncedResult value using interpolation."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you've added a paragraph element with interpolation to show the debouncedResult property value.",
+        "feedbackWrong": "The paragraph displaying the debounced result is missing or incorrect. Check that you've added a paragraph element with proper interpolation syntax.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<p>",
+            "{{",
+            "debouncedResult",
+            "}}",
+            "</p>"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import Component, OnInit, and CommonModule",
+        "id": "step1"
+      },
+      {
+        "label": "Create the main component class with OnInit",
+        "id": "step2"
+      },
+      {
+        "label": "Add search input state property",
+        "id": "step3"
+      },
+      {
+        "label": "Add debounced search result state property",
+        "id": "step4"
+      },
+      {
+        "label": "Define the debounce handler method",
+        "id": "step5"
+      },
+      {
+        "label": "Create the search handler with debounce",
+        "id": "step6"
+      },
+      {
+        "label": "Initialize debounced search in ngOnInit",
+        "id": "step7"
+      },
+      {
+        "label": "Add the component template with search input",
+        "id": "step8"
+      },
+      {
+        "label": "Wire input event to search handler",
+        "id": "step9"
+      },
+      {
+        "label": "Display the debounced search result",
+        "id": "step10"
+      }
+    ],
+    "answerShape": "multi-file"
+  },
+  "source": "content"
+}

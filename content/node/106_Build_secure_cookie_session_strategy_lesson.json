@@ -1,0 +1,360 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-node-106",
+    "track": "node",
+    "lessonNum": 106,
+    "title": "Build secure cookie session strategy",
+    "shortName": "P106",
+    "intro": {
+      "tag": "LESSON #106",
+      "title": "Build secure cookie session strategy",
+      "body": "In this lesson, you will build a secure cookie-based session strategy for a Node.js application. You will learn how to store user session data in encrypted cookies to maintain state across HTTP requests. The core programming concept involves using the `cookie-session` middleware to handle session creation, encryption, and validation. You will work with technologies like Express.js, HTTP cookies, and cryptographic signing to ensure session security. By the end, you'll have a functional session system that protects user data from tampering and unauthorized access.",
+      "usecase": "Secure cookie sessions are fundamental to user authentication in virtually every modern web application. When you log into platforms like banking dashboards, e-commerce sites, or social media feeds, your session is maintained through secure cookies that remember your identity across page refreshes. This pattern prevents unauthorized access to sensitive user data while providing seamless navigation through protected areas like account settings, payment forms, and personalized content panels. As a developer, implementing this strategy correctly ensures your users' data remains protected against common attacks like session hijacking or cross-site request forgery."
+    },
+    "objectives": [
+      "Configure a Node.js application to use cookie-based sessions with a secure session store.",
+      "Initialize session middleware with essential security options like HTTP-only flags and same-site policies.",
+      "Manipulate session data to store and retrieve user-specific information across requests.",
+      "Apply secure cookie attributes to protect against common web vulnerabilities like XSS and CSRF.",
+      "Integrate session validation logic to control access to protected routes based on session state.",
+      "Construct a logout handler that properly destroys the session and clears the client-side cookie."
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 10",
+        "title": "Import required Node.js modules",
+        "instruction": "Import the crypto, http, and url modules from Node.js using the require() function.",
+        "hint": "Use require('module-name') for each module. These are built-in Node.js modules, so no npm installation is needed.",
+        "analogousExample": "// Example: importing built-in modules\nconst fs = require('fs');\nconst path = require('path');",
+        "seedCode": "// Import crypto, http, and url modules here",
+        "expectedOutcome": "The crypto, http, and url modules are imported and ready to use for building secure cookie sessions.",
+        "successCriteria": [
+          "crypto, http, and url modules are imported using require()"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure to import all three modules: crypto, http, and url.",
+        "feedbackWrong": "Check the syntax: use require('module-name') for each module. Make sure to import crypto, http, and url.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "require('crypto')",
+            "require('http')",
+            "require('url')"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 10",
+        "title": "Create a basic HTTP server",
+        "instruction": "Create an HTTP server using http.createServer() that listens on port 3000.",
+        "hint": "Use the http module you imported earlier to create a server and make it listen on port 3000.",
+        "analogousExample": "// Example: creating a basic HTTP server\nconst server = http.createServer((req, res) => {\n  res.end('Hello World');\n});\nserver.listen(3000);",
+        "seedCode": "// Import crypto, http, and url modules here\nconst crypto = require('crypto');\nconst http = require('http');\nconst url = require('url');\n\n// Create your HTTP server here",
+        "expectedOutcome": "A basic HTTP server is set up and ready to handle incoming requests on port 3000.",
+        "successCriteria": [
+          "The server is created using http.createServer() and configured to listen on port 3000."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're using http.createServer() and calling .listen(3000) on the server.",
+        "feedbackWrong": "The server isn't set up correctly. Check that you're using the http module and listening on port 3000.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "http.createServer",
+            "listen",
+            "3000"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 10",
+        "title": "Initialize session storage object",
+        "instruction": "Create an empty object named 'sessions' to store session data keyed by session IDs.",
+        "hint": "Declare a variable using 'const' and assign it an empty object {}.",
+        "analogousExample": "// Similar: creating an empty object for data storage\nconst userData = {};",
+        "seedCode": "// Import crypto, http, and url modules here\nconst crypto = require('crypto');\nconst http = require('http');\nconst url = require('url');\n\n// Create your HTTP server here\n\n// Initialize session storage object here",
+        "expectedOutcome": "You will have an empty object ready to store session data.",
+        "successCriteria": [
+          "An empty object named 'sessions' is created."
+        ],
+        "feedbackCorrect": "Great! You've created the session storage object.",
+        "feedbackPartial": "You're close. Make sure you've created an empty object named 'sessions'.",
+        "feedbackWrong": "That's not quite right. You need to create an empty object named 'sessions' to store session data.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "sessions",
+            "=",
+            "{}"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 10",
+        "title": "Define session ID generation function",
+        "instruction": "Create a function named generateSessionId that returns a cryptographically secure random string using crypto.randomBytes().",
+        "hint": "Use crypto.randomBytes() to generate random bytes, then convert them to a hexadecimal string.",
+        "analogousExample": "// Example: function that generates a random token\nfunction generateToken() {\n  return crypto.randomBytes(16).toString('hex');\n}",
+        "seedCode": "const crypto = require('crypto');\nconst http = require('http');\nconst url = require('url');\n\n// Create your HTTP server here\n\n// Initialize session storage object here\n\n// Define session ID generation function here",
+        "expectedOutcome": "A function named generateSessionId is created that returns a secure random hexadecimal string.",
+        "successCriteria": [
+          "The generateSessionId function is defined and uses crypto.randomBytes() to generate a random session ID."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your function uses crypto.randomBytes() and returns the hexadecimal string.",
+        "feedbackWrong": "The function doesn't seem to be defined correctly. Remember to use crypto.randomBytes() and return the result as a hex string.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "generateSessionId",
+            "crypto.randomBytes",
+            "toString('hex')"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 10",
+        "title": "Create session creation handler",
+        "instruction": "Define a function named createSession that takes a username parameter, generates a session ID using the generateSessionId function, stores the session data in the sessions object, and returns the session ID.",
+        "hint": "Create a function that uses the generateSessionId function to create a secure ID, then stores an object with the username and creation timestamp in the sessions object using that ID as the key.",
+        "analogousExample": "// Example function that creates and stores data\nfunction createUser(email) {\n  const userId = generateUserId();\n  users[userId] = { email, createdAt: Date.now() };\n  return userId;\n}",
+        "seedCode": "const crypto = require('crypto');\nconst http = require('http');\nconst url = require('url');\n\nconst server = http.createServer((req, res) => {\n  // Request handling will be added later\n});\n\nconst sessions = {};\n\nfunction generateSessionId() {\n  return crypto.randomBytes(16).toString('hex');\n}\n\n// Define createSession function here",
+        "expectedOutcome": "A createSession function that generates secure session IDs, stores session data, and returns the ID for later use.",
+        "successCriteria": [
+          "The createSession function is defined, generates a session ID using generateSessionId, stores an object with username and timestamp in sessions, and returns the session ID."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the function, but make sure it generates the session ID, stores the session data with username and timestamp, and returns the ID.",
+        "feedbackWrong": "The function isn't complete. Remember to use generateSessionId, store the session data in the sessions object, and return the session ID.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "function createSession",
+            "username",
+            "generateSessionId",
+            "sessions[",
+            "Date.now()",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 10",
+        "title": "Define cookie parsing function",
+        "instruction": "Create a function named parseCookie that takes the request object as a parameter and returns the session ID value from the Cookie header.",
+        "hint": "The Cookie header is available in req.headers.cookie. You'll need to parse the cookie string to extract the session ID value.",
+        "analogousExample": "// Example: parsing a cookie string\nfunction parseCookie(req) {\n  const cookieHeader = req.headers.cookie || '';\n  const cookies = cookieHeader.split(';').reduce((acc, cookie) => {\n    const [name, value] = cookie.trim().split('=');\n    acc[name] = value;\n    return acc;\n  }, {});\n  return cookies.sessionId;\n}",
+        "seedCode": "const crypto = require('crypto');\nconst http = require('http');\nconst url = require('url');\n\nconst server = http.createServer((req, res) => {\n  // Request handling will be added later\n});\n\nconst sessions = {};\n\nfunction generateSessionId() {\n  return crypto.randomBytes(16).toString('hex');\n}\n\n// Define createSession function here\n\n// Define parseCookie function here",
+        "expectedOutcome": "A parseCookie function that extracts the session ID from the Cookie header.",
+        "successCriteria": [
+          "The parseCookie function is defined, takes the request object as a parameter, and returns the session ID value from the Cookie header."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure your function takes the request object as a parameter and returns the session ID value from the Cookie header.",
+        "feedbackWrong": "The function doesn't seem to parse cookies correctly. Remember to access req.headers.cookie and extract the session ID value.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "parseCookie",
+            "req",
+            "headers.cookie",
+            "sessionId",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 10",
+        "title": "Create session validation function",
+        "instruction": "Define a function named validateSession that takes a sessionId parameter and returns true if the session exists in the sessions object, otherwise returns false.",
+        "hint": "Check if the provided sessionId exists as a key in the sessions object using the in operator or hasOwnProperty.",
+        "analogousExample": "// Example: validating existence in an object\nfunction validateKey(key, obj) {\n  return key in obj;\n}",
+        "seedCode": "const crypto = require('crypto');\nconst http = require('http');\nconst url = require('url');\n\nconst server = http.createServer((req, res) => {\n  // Request handling will be added later\n});\n\nconst sessions = {};\n\nfunction generateSessionId() {\n  return crypto.randomBytes(16).toString('hex');\n}\n\n// Define createSession function here\n\n// Define parseCookie function here\n\n// Define validateSession function here",
+        "expectedOutcome": "A validateSession function is added that checks session existence for security validation.",
+        "successCriteria": [
+          "validateSession function exists, takes sessionId parameter, and returns boolean based on session existence."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure your function takes a sessionId parameter and returns true/false based on whether that session exists in the sessions object.",
+        "feedbackWrong": "The validation function isn't quite right. It should check if the sessionId exists as a key in the sessions object and return a boolean value.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "validateSession",
+            "sessionId",
+            "sessions",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 10",
+        "title": "Implement request handler logic",
+        "instruction": "Inside the server's request handler callback function, parse the request URL and check for an existing session cookie. If no valid session exists, create a new session and set a cookie in the response.",
+        "hint": "Use the url.parse() method to get the pathname, parseCookie() to extract cookies, validateSession() to check if the session is valid, and createSession() to create a new session if needed.",
+        "analogousExample": "// Example: basic request handler with session check\nfunction handleRequest(req, res) {\n  const parsedUrl = url.parse(req.url, true);\n  const cookies = parseCookie(req.headers.cookie);\n  \n  if (!cookies.sessionId || !validateSession(cookies.sessionId)) {\n    const newSessionId = createSession();\n    res.setHeader('Set-Cookie', `sessionId=${newSessionId}; HttpOnly`);\n  }\n}",
+        "seedCode": "const crypto = require('crypto');\nconst http = require('http');\nconst url = require('url');\n\nconst server = http.createServer((req, res) => {\n  // Parse URL and check for existing session\n  // If no valid session exists, create a new one and set cookie\n});\n\nconst sessions = {};\n\nfunction generateSessionId() {\n  return crypto.randomBytes(16).toString('hex');\n}\n\nfunction createSession() {\n  const sessionId = generateSessionId();\n  sessions[sessionId] = { createdAt: Date.now() };\n  return sessionId;\n}\n\nfunction parseCookie(cookieHeader) {\n  const cookies = {};\n  if (cookieHeader) {\n    cookieHeader.split(';').forEach(cookie => {\n      const [name, value] = cookie.trim().split('=');\n      cookies[name] = value;\n    });\n  }\n  return cookies;\n}\n\nfunction validateSession(sessionId) {\n  if (!sessions[sessionId]) return false;\n  const session = sessions[sessionId];\n  const now = Date.now();\n  const sessionAge = now - session.createdAt;\n  return sessionAge < 30 * 60 * 1000; // 30 minutes\n}",
+        "expectedOutcome": "The server will now process incoming requests by checking for valid sessions and creating new ones when needed, setting appropriate cookies in responses.",
+        "successCriteria": [
+          "The request handler parses the URL, extracts cookies, validates sessions, and creates new sessions with Set-Cookie headers when no valid session exists."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started implementing the request handler, but make sure to parse the URL, extract cookies, validate the session, and create a new session with a Set-Cookie header when needed.",
+        "feedbackWrong": "The request handler logic is incomplete or incorrect. Review the steps: parse the URL, extract cookies with parseCookie(), validate with validateSession(), and create a new session with createSession() and Set-Cookie header when no valid session exists.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "url.parse",
+            "parseCookie",
+            "validateSession",
+            "createSession",
+            "Set-Cookie"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 10",
+        "title": "Add secure cookie headers",
+        "instruction": "Inside the request handler, after creating a new session, add a Set-Cookie header to the response with HttpOnly and Secure flags.",
+        "hint": "Use res.setHeader('Set-Cookie', 'sessionId=...; HttpOnly; Secure') with the generated session ID.",
+        "analogousExample": "// Setting a secure cookie header\nres.setHeader('Set-Cookie', 'sessionId=abc123; HttpOnly; Secure');",
+        "seedCode": "const crypto = require('crypto');\nconst http = require('http');\nconst url = require('url');\n\nconst server = http.createServer((req, res) => {\n  // Parse URL and check for existing session\n  // If no valid session exists, create a new one and set cookie\n  const sessionId = createSession();\n  // Add Set-Cookie header here\n});\n\nconst sessions = {};\n\nfunction generateSessionId() {\n  return crypto.randomBytes(16).toString('hex');\n}\n\nfunction createSession() {\n  const sessionId = generateSessionId();\n  sessions[sessionId] = { createdAt: Date.now() };\n  return sessionId;\n}\n\nfunction parseCookie(cookieHeader) {\n  const cookies = {};\n  if (cookieHeader) {\n    cookieHeader.split(';').forEach(cookie => {\n      const [name, value] = cookie.trim().split('=');\n      cookies[name] = value;\n    });\n  }\n  return cookies;\n}\n\nfunction validateSession(sessionId) {\n  if (!sessions[sessionId]) return false;\n  const session = sessions[sessionId];\n  const now = Date.now();\n  const sessionAge = now - session.createdAt;\n  return sessionAge < 30 * 60 * 1000; // 30 minutes\n}",
+        "expectedOutcome": "The response will include a Set-Cookie header with HttpOnly and Secure flags when a new session is created.",
+        "successCriteria": [
+          "A Set-Cookie header is added to the response with HttpOnly and Secure flags."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure the Set-Cookie header includes both HttpOnly and Secure flags.",
+        "feedbackWrong": "Check that you're setting the header correctly with res.setHeader and including both HttpOnly and Secure flags.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "setHeader",
+            "Set-Cookie",
+            "HttpOnly",
+            "Secure"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 10",
+        "title": "Wire everything together",
+        "instruction": "Complete the server request handler by implementing the session logic and start the server listening on port 3000.",
+        "hint": "Inside the request handler callback, parse the request URL and cookies, validate any existing session, then either create a new session or use the existing one. Finally, start the server with server.listen().",
+        "analogousExample": "// Complete server implementation\nconst server = http.createServer((req, res) => {\n  const parsedUrl = url.parse(req.url, true);\n  const cookies = parseCookie(req.headers.cookie);\n  \n  let sessionId = cookies.sessionId;\n  \n  if (!sessionId || !validateSession(sessionId)) {\n    sessionId = createSession();\n    res.setHeader('Set-Cookie', `sessionId=${sessionId}; HttpOnly; Secure; SameSite=Strict`);\n  }\n  \n  res.writeHead(200, { 'Content-Type': 'text/plain' });\n  res.end('Session active');\n});\n\nserver.listen(3000, () => {\n  console.log('Server running on port 3000');\n});",
+        "seedCode": "const crypto = require('crypto');\nconst http = require('http');\nconst url = require('url');\n\nconst server = http.createServer((req, res) => {\n  // Parse URL and check for existing session\n  // If no valid session exists, create a new one and set cookie\n  const sessionId = createSession();\n  // Add Set-Cookie header here\n});\n\nconst sessions = {};\n\nfunction generateSessionId() {\n  return crypto.randomBytes(16).toString('hex');\n}\n\nfunction createSession() {\n  const sessionId = generateSessionId();\n  sessions[sessionId] = { createdAt: Date.now() };\n  return sessionId;\n}\n\nfunction parseCookie(cookieHeader) {\n  const cookies = {};\n  if (cookieHeader) {\n    cookieHeader.split(';').forEach(cookie => {\n      const [name, value] = cookie.trim().split('=');\n      cookies[name] = value;\n    });\n  }\n  return cookies;\n}\n\nfunction validateSession(sessionId) {\n  if (!sessions[sessionId]) return false;\n  const session = sessions[sessionId];\n  const now = Date.now();\n  const sessionAge = now - session.createdAt;\n  return sessionAge < 30 * 60 * 1000; // 30 minutes\n}\n\n// Complete the server handler and start the server",
+        "expectedOutcome": "A fully functional HTTP server that manages secure cookie-based sessions, with proper session validation, creation, and cookie headers.",
+        "successCriteria": [
+          "The server request handler implements complete session logic using parseCookie, validateSession, and createSession functions, sets secure cookie headers, and starts listening on port 3000."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure your request handler: 1) parses the URL and cookies, 2) validates any existing session, 3) creates a new session if needed, 4) sets secure cookie headers, and 5) starts the server on port 3000.",
+        "feedbackWrong": "The server implementation is incomplete. Review the session management functions you've built and ensure they're properly connected in the request handler, then start the server.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "url.parse",
+            "parseCookie",
+            "validateSession",
+            "createSession",
+            "Set-Cookie",
+            "server.listen",
+            "3000"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import required Node.js modules",
+        "id": "step1"
+      },
+      {
+        "label": "Create a basic HTTP server",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize session storage object",
+        "id": "step3"
+      },
+      {
+        "label": "Define session ID generation function",
+        "id": "step4"
+      },
+      {
+        "label": "Create session creation handler",
+        "id": "step5"
+      },
+      {
+        "label": "Define cookie parsing function",
+        "id": "step6"
+      },
+      {
+        "label": "Create session validation function",
+        "id": "step7"
+      },
+      {
+        "label": "Implement request handler logic",
+        "id": "step8"
+      },
+      {
+        "label": "Add secure cookie headers",
+        "id": "step9"
+      },
+      {
+        "label": "Wire everything together",
+        "id": "step10"
+      }
+    ]
+  },
+  "source": "content"
+}

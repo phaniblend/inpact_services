@@ -1,0 +1,479 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-node-34",
+    "track": "node",
+    "lessonNum": 34,
+    "title": "Build pagination filter sort API pattern",
+    "shortName": "P34",
+    "intro": {
+      "tag": "LESSON #34",
+      "title": "Build pagination filter sort API pattern",
+      "body": "In this lesson, you will build a REST API endpoint that supports pagination, filtering, and sorting for a list of data. You'll learn how to handle query parameters to control the number of results, filter by specific fields, and sort the output. The core concept involves processing HTTP request queries and applying them to manipulate an in-memory dataset. You'll use Node.js with its built-in modules to create a server and manage the API logic. By the end, you'll have a functional API that can efficiently return tailored data based on user input.",
+      "usecase": "Pagination, filtering, and sorting are fundamental patterns in data-driven applications where users need to navigate large datasets efficiently. You'll find this pattern in e-commerce product listings where customers filter by category, sort by price, and browse through pages of results. It's equally essential in admin dashboards displaying user records, analytics platforms showing metrics, or content management systems organizing articles. As a backend developer, implementing robust pagination-filter-sort APIs ensures your applications remain performant and scalable while providing intuitive data exploration experiences."
+    },
+    "objectives": [
+      "Construct an Express route handler that accepts query parameters for pagination, filtering, and sorting.",
+      "Apply query parameter parsing logic to extract and validate page, limit, and sort criteria.",
+      "Implement a filtering mechanism that dynamically builds database queries based on user-provided criteria.",
+      "Configure a sorting system that orders query results by specified fields and directions.",
+      "Manipulate a dataset to return a paginated subset using calculated skip and limit values.",
+      "Integrate pagination metadata (total pages, current page) into the API response structure.",
+      "Initialize a test suite to verify the combined functionality of pagination, filtering, and sorting endpoints."
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 13",
+        "title": "Import required Node.js modules",
+        "instruction": "Import the Express framework and create an Express application instance.",
+        "hint": "Use require() to import Express and assign it to a variable. Then call express() to create the app instance.",
+        "analogousExample": "// Importing a module and creating an instance\nconst http = require('http');\nconst server = http.createServer();",
+        "seedCode": "// Import Express and create an app instance\n",
+        "expectedOutcome": "You will have Express imported and an app instance ready for building your API.",
+        "successCriteria": [
+          "Express is imported using require() and an app instance is created with express()."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you've both imported Express and created the app instance.",
+        "feedbackWrong": "import Express and create an app instance using express().",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "require",
+            "express",
+            "app"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 13",
+        "title": "Create sample data array",
+        "instruction": "Below the import statement, create a constant array named 'products' containing at least 5 product objects. Each object should have properties: id (number), name (string), category (string), and price (number).",
+        "hint": "Use 'const products = [...]' to define an array of objects. Make sure each object has the required properties with appropriate values.",
+        "analogousExample": "// Example: creating an array of user objects\nconst users = [\n  { id: 1, name: 'Alice', age: 30 },\n  { id: 2, name: 'Bob', age: 25 }\n];",
+        "seedCode": "// Import Express and create an app instance\n\n// Create your products array here\n",
+        "expectedOutcome": "A 'products' array with at least 5 product objects will be created, ready for pagination, filtering, and sorting operations.",
+        "successCriteria": [
+          "The 'products' array exists with at least 5 objects, each containing id, name, category, and price properties."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've created an array, but check that it has at least 5 objects and each object contains all required properties: id, name, category, and price.",
+        "feedbackWrong": "The 'products' array wasn't created correctly. Make sure to define a constant array with at least 5 product objects, each having id, name, category, and price properties.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "const",
+            "products",
+            "=",
+            "[",
+            "{",
+            "id",
+            "name",
+            "category",
+            "price",
+            "}",
+            "]"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 13",
+        "title": "Define pagination helper function",
+        "instruction": "Create a function named paginate that takes three parameters: data (array), page (number), and limit (number). Inside the function, calculate the start index and return the appropriate slice of the data array.",
+        "hint": "The start index can be calculated as (page - 1) * limit. Use the slice() method to return the portion of the array from start index to start index + limit.",
+        "analogousExample": "// Example of a helper function\nfunction getSubset(arr, start, count) {\n  const startIndex = start * count;\n  return arr.slice(startIndex, startIndex + count);\n}",
+        "seedCode": "// Import Express and create an app instance\n\n// Create your products array here\n\n// Create paginate function here",
+        "expectedOutcome": "You'll have a reusable paginate function that can slice any array based on page number and items per page.",
+        "successCriteria": [
+          "The paginate function is defined with three parameters and returns the correct slice of data based on page and limit values."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the function, but make sure it takes all three parameters and returns the sliced array using the correct calculation.",
+        "feedbackWrong": "The paginate function isn't working yet. Remember it needs to calculate start index as (page - 1) * limit and return data.slice(start, start + limit).",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "paginate",
+            "function",
+            "data",
+            "page",
+            "limit",
+            "slice",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 13",
+        "title": "Define filtering helper function",
+        "instruction": "Create a function named 'filterData' that takes two parameters: 'data' (an array of items) and 'filters' (an object). Inside the function, use the array's filter method to return items where the category matches filters.category (if provided) and the name includes filters.search (if provided).",
+        "hint": "Start with 'function filterData(data, filters) { ... }' or 'const filterData = (data, filters) => { ... }'. Use data.filter(item => { ... }). Check if filters.category exists and matches item.category, and if filters.search exists and item.name includes it (case-insensitive).",
+        "analogousExample": "// Example of a filtering function\nfunction filterByPrice(products, maxPrice) {\n  return products.filter(product => product.price <= maxPrice);\n}",
+        "seedCode": "// Import Express and create an app instance\n\n// Create your products array here\n\n// Create paginate function here\n\n// Create filterData function here",
+        "expectedOutcome": "A filterData function is defined that can filter an array based on category and search criteria from a filters object.",
+        "successCriteria": [
+          "The filterData function is defined with two parameters (data, filters), uses the filter method, and returns filtered data based on category and search criteria."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the filterData function, but check that it handles both category and search filters properly.",
+        "feedbackWrong": "The filterData function is missing or doesn't filter correctly. Ensure it takes two parameters and uses the filter method with proper conditions.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "filterData",
+            "data",
+            "filters",
+            "filter",
+            "category",
+            "search",
+            "includes"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 13",
+        "title": "Define sorting helper function",
+        "instruction": "Create a function named sortData that takes three parameters: data (array), field (string), and order (string). The function should sort the data array based on the specified field and order,",
+        "hint": "You can use the array sort() method with a comparison function. Check if order is 'asc' or 'desc' to determine the sort direction.",
+        "analogousExample": "// Example of a sorting function\nfunction sortData(data, field, order) {\n  return data.sort((a, b) => {\n    let comparison = 0;\n    if (a[field] > b[field]) comparison = 1;\n    if (a[field] < b[field]) comparison = -1;\n    return order === 'desc' ? -comparison : comparison;\n  });\n}",
+        "seedCode": "// Import Express and create an app instance\n\n// Create your products array here\n\n// Create paginate function here\n\n// Create filterData function here\n\n// Create sortData function here",
+        "expectedOutcome": "A sortData function is defined that can sort an array by a given field in ascending or descending order.",
+        "successCriteria": [
+          "The sortData function is defined with three parameters (data, field, order) and returns a sorted array."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the sortData function, but make sure it takes three parameters and returns the sorted array.",
+        "feedbackWrong": "The sortData function is not defined correctly. It should take data, field, and order parameters and return a sorted array.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "function sortData",
+            "data",
+            "field",
+            "order",
+            "return",
+            "sort"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 13",
+        "title": "return the sorted array",
+        "instruction": "return the sorted array.",
+        "hint": "You can use the array sort() method with a comparison function. Check if order is 'asc' or 'desc' to determine the sort direction.",
+        "analogousExample": "// Example of a sorting function\nfunction sortData(data, field, order) {\n  return data.sort((a, b) => {\n    let comparison = 0;\n    if (a[field] > b[field]) comparison = 1;\n    if (a[field] < b[field]) comparison = -1;\n    return order === 'desc' ? -comparison : comparison;\n  });\n}",
+        "seedCode": "// Import Express and create an app instance\n\n// Create your products array here\n\n// Create paginate function here\n\n// Create filterData function here\n\n// Create sortData function here",
+        "expectedOutcome": "",
+        "successCriteria": [
+          "Complete the step as instructed."
+        ],
+        "feedbackCorrect": "Great! Step completed.",
+        "feedbackPartial": "Review the instruction and try again.",
+        "feedbackWrong": "Check the instruction and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "function sortData",
+            "data",
+            "field",
+            "order",
+            "return",
+            "sort"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 13",
+        "title": "Create combined data processing function",
+        "instruction": "Create a function named processData that takes data array, filter criteria, sort key, page number, and page size as parameters,",
+        "hint": "Define a function that calls your existing helper functions sequentially: first filterData, then sortData, then paginate.",
+        "analogousExample": "// Similar: a function that processes data through multiple steps\nfunction processData(data, filter, sortBy, page, pageSize) {\n  const filtered = filterData(data, filter);\n  const sorted = sortData(filtered, sortBy);\n  const paginated = paginate(sorted, page, pageSize);\n  return paginated;\n}",
+        "seedCode": "// Import Express and create an app instance\n\n// Create your products array here\n\n// Create paginate function here\n\n// Create filterData function here\n\n// Create sortData function here\n\n// Create processData function here",
+        "expectedOutcome": "A processData function that correctly chains the three helper functions and returns the final paginated result.",
+        "successCriteria": [
+          "The processData function is defined with the correct parameters and returns the result of paginate(sortData(filterData(...)))"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your function calls all three helper functions in the correct order: filter first, then sort, then paginate.",
+        "feedbackWrong": "The processData function isn't correctly implemented. It should take parameters and call filterData, sortData, and paginate sequentially.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "processData",
+            "filterData",
+            "sortData",
+            "paginate",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 13",
+        "title": "applies filtering, sorting, and pagination in",
+        "instruction": "applies filtering, sorting, and pagination in that order.",
+        "hint": "Define a function that calls your existing helper functions sequentially: first filterData, then sortData, then paginate.",
+        "analogousExample": "// Similar: a function that processes data through multiple steps\nfunction processData(data, filter, sortBy, page, pageSize) {\n  const filtered = filterData(data, filter);\n  const sorted = sortData(filtered, sortBy);\n  const paginated = paginate(sorted, page, pageSize);\n  return paginated;\n}",
+        "seedCode": "// Import Express and create an app instance\n\n// Create your products array here\n\n// Create paginate function here\n\n// Create filterData function here\n\n// Create sortData function here\n\n// Create processData function here",
+        "expectedOutcome": "",
+        "successCriteria": [
+          "Complete the step as instructed."
+        ],
+        "feedbackCorrect": "Great! Step completed.",
+        "feedbackPartial": "Review the instruction and try again.",
+        "feedbackWrong": "Check the instruction and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "processData",
+            "filterData",
+            "sortData",
+            "paginate",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 13",
+        "title": "Set up basic Express server",
+        "instruction": "Create a basic Express server with JSON middleware, define a port variable, and start the server listening for requests.",
+        "hint": "Use app.use(express.json()) for JSON middleware, define a port like 3000, and call app.listen() with the port and a console log.",
+        "analogousExample": "// Basic Express server setup\nconst express = require('express');\nconst app = express();\n\napp.use(express.json());\n\nconst PORT = 3000;\n\napp.listen(PORT, () => {\n  console.log(`Server running on port ${PORT}`);\n});",
+        "seedCode": "// Import Express and create an app instance\nconst express = require('express');\nconst app = express();\n\n// Create your products array here\nconst products = [\n  { id: 1, name: 'Laptop', category: 'Electronics', price: 999, stock: 10 },\n  { id: 2, name: 'Mouse', category: 'Electronics', price: 25, stock: 50 },\n  { id: 3, name: 'Desk', category: 'Furniture', price: 200, stock: 5 },\n  { id: 4, name: 'Chair', category: 'Furniture', price: 150, stock: 8 },\n  { id: 5, name: 'Monitor', category: 'Electronics', price: 300, stock: 15 }\n];\n\n// Create paginate function here\nfunction paginate(data, page, limit) {\n  const startIndex = (page - 1) * limit;\n  const endIndex = page * limit;\n  return data.slice(startIndex, endIndex);\n}\n\n// Create filterData function here\nfunction filterData(data, filters) {\n  return data.filter(item => {\n    return Object.keys(filters).every(key => {\n      if (key === 'category') {\n        return item[key].toLowerCase().includes(filters[key].toLowerCase());\n      }\n      if (key === 'minPrice') {\n        return item.price >= filters[key];\n      }\n      if (key === 'maxPrice') {\n        return item.price <= filters[key];\n      }\n      return true;\n    });\n  });\n}\n\n// Create sortData function here\nfunction sortData(data, sortBy, order = 'asc') {\n  return [...data].sort((a, b) => {\n    let aVal = a[sortBy];\n    let bVal = b[sortBy];\n    \n    if (typeof aVal === 'string') {\n      aVal = aVal.toLowerCase();\n      bVal = bVal.toLowerCase();\n    }\n    \n    if (order === 'asc') {\n      return aVal > bVal ? 1 : -1;\n    } else {\n      return aVal < bVal ? 1 : -1;\n    }\n  });\n}\n\n// Create processData function here\nfunction processData(data, options) {\n  let result = [...data];\n  \n  if (options.filters) {\n    result = filterData(result, options.filters);\n  }\n  \n  if (options.sortBy) {\n    result = sortData(result, options.sortBy, options.order);\n  }\n  \n  if (options.page && options.limit) {\n    result = paginate(result, options.page, options.limit);\n  }\n  \n  return result;\n}\n\n// Add Express server setup here",
+        "expectedOutcome": "A basic Express server is configured with JSON middleware, a port defined, and the server is listening for requests.",
+        "successCriteria": [
+          "JSON middleware is added with app.use(express.json()), a PORT variable is defined, and app.listen() is called with the port and a console log message."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've made progress, but check if you've included all three elements: JSON middleware, port definition, and app.listen() with a console log.",
+        "feedbackWrong": "The server setup is incomplete. Make sure to add JSON middleware, define a port, and start the server with app.listen().",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "app.use(express.json())",
+            "PORT",
+            "app.listen",
+            "console.log"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 13",
+        "title": "Create GET endpoint for products",
+        "instruction": "Create a GET route at '/api/products' that extracts query parameters from the request object.",
+        "hint": "Use app.get() with the route path and a callback function that receives req and res parameters. Access query parameters using req.query.",
+        "analogousExample": "// Example: Basic GET route with query parameters\napp.get('/api/items', (req, res) => {\n  const { category, sort } = req.query;\n  // Process parameters here\n});",
+        "seedCode": "// Import Express and create an app instance\nconst express = require('express');\nconst app = express();\n\n// Create your products array here\nconst products = [\n  { id: 1, name: 'Laptop', category: 'Electronics', price: 999, stock: 10 },\n  { id: 2, name: 'Mouse', category: 'Electronics', price: 25, stock: 50 },\n  { id: 3, name: 'Desk', category: 'Furniture', price: 200, stock: 5 },\n  { id: 4, name: 'Chair', category: 'Furniture', price: 150, stock: 8 },\n  { id: 5, name: 'Monitor', category: 'Electronics', price: 300, stock: 15 }\n];\n\n// Create paginate function here\nfunction paginate(data, page, limit) {\n  const startIndex = (page - 1) * limit;\n  const endIndex = page * limit;\n  return data.slice(startIndex, endIndex);\n}\n\n// Create filterData function here\nfunction filterData(data, filters) {\n  return data.filter(item => {\n    return Object.keys(filters).every(key => {\n      if (key === 'category') {\n        return item[key].toLowerCase().includes(filters[key].toLowerCase());\n      }\n      if (key === 'minPrice') {\n        return item.price >= filters[key];\n      }\n      if (key === 'maxPrice') {\n        return item.price <= filters[key];\n      }\n      return true;\n    });\n  });\n}\n\n// Create sortData function here\nfunction sortData(data, sortBy, order = 'asc') {\n  return [...data].sort((a, b) => {\n    let aVal = a[sortBy];\n    let bVal = b[sortBy];\n    \n    if (typeof aVal === 'string') {\n      aVal = aVal.toLowerCase();\n      bVal = bVal.toLowerCase();\n    }\n    \n    if (order === 'asc') {\n      return aVal > bVal ? 1 : -1;\n    } else {\n      return aVal < bVal ? 1 : -1;\n    }\n  });\n}\n\n// Create processData function here\nfunction processData(data, options) {\n  let result = [...data];\n  \n  if (options.filters) {\n    result = filterData(result, options.filters);\n  }\n  \n  if (options.sortBy) {\n    result = sortData(result, options.sortBy, options.order);\n  }\n  \n  if (options.page && options.limit) {\n    result = paginate(result, options.page, options.limit);\n  }\n  \n  return result;\n}\n\n// Add Express server setup here\n\n// Create GET endpoint for products here",
+        "expectedOutcome": "A GET route at '/api/products' is defined that extracts query parameters from the request.",
+        "successCriteria": [
+          "The route uses app.get() with '/api/products' path and a callback that accesses req.query."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure you're using app.get() with the correct route path and accessing req.query.",
+        "feedbackWrong": "The endpoint isn't quite right. Check that you're using app.get('/api/products', callback) and extracting query parameters from req.query.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "app.get",
+            "'/api/products'",
+            "req.query"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 13",
+        "title": "Process query parameters in the endpoint",
+        "instruction": "Inside your GET endpoint handler, extract the query parameters from the request object and store them in variables.",
+        "hint": "Use req.query to access the query parameters. You'll need to extract page, limit, category, minPrice, maxPrice, sortBy, and order.",
+        "analogousExample": "// Example: extracting query parameters in an Express endpoint\napp.get('/items', (req, res) => {\n  const page = req.query.page;\n  const limit = req.query.limit;\n  const category = req.query.category;\n  // ... other parameters\n});",
+        "seedCode": "// Import Express and create an app instance\nconst express = require('express');\nconst app = express();\n\n// Create your products array here\nconst products = [\n  { id: 1, name: 'Laptop', category: 'Electronics', price: 999, stock: 10 },\n  { id: 2, name: 'Mouse', category: 'Electronics', price: 25, stock: 50 },\n  { id: 3, name: 'Desk', category: 'Furniture', price: 200, stock: 5 },\n  { id: 4, name: 'Chair', category: 'Furniture', price: 150, stock: 8 },\n  { id: 5, name: 'Monitor', category: 'Electronics', price: 300, stock: 15 }\n];\n\n// Create paginate function here\nfunction paginate(data, page, limit) {\n  const startIndex = (page - 1) * limit;\n  const endIndex = page * limit;\n  return data.slice(startIndex, endIndex);\n}\n\n// Create filterData function here\nfunction filterData(data, filters) {\n  return data.filter(item => {\n    return Object.keys(filters).every(key => {\n      if (key === 'category') {\n        return item[key].toLowerCase().includes(filters[key].toLowerCase());\n      }\n      if (key === 'minPrice') {\n        return item.price >= filters[key];\n      }\n      if (key === 'maxPrice') {\n        return item.price <= filters[key];\n      }\n      return true;\n    });\n  });\n}\n\n// Create sortData function here\nfunction sortData(data, sortBy, order = 'asc') {\n  return [...data].sort((a, b) => {\n    let aVal = a[sortBy];\n    let bVal = b[sortBy];\n    \n    if (typeof aVal === 'string') {\n      aVal = aVal.toLowerCase();\n      bVal = bVal.toLowerCase();\n    }\n    \n    if (order === 'asc') {\n      return aVal > bVal ? 1 : -1;\n    } else {\n      return aVal < bVal ? 1 : -1;\n    }\n  });\n}\n\n// Create processData function here\nfunction processData(data, options) {\n  let result = [...data];\n  \n  if (options.filters) {\n    result = filterData(result, options.filters);\n  }\n  \n  if (options.sortBy) {\n    result = sortData(result, options.sortBy, options.order);\n  }\n  \n  if (options.page && options.limit) {\n    result = paginate(result, options.page, options.limit);\n  }\n  \n  return result;\n}\n\n// Add Express server setup here\n\n// Create GET endpoint for products here\napp.get('/products', (req, res) => {\n  // Extract query parameters here\n});",
+        "expectedOutcome": "Your endpoint handler will have variables containing the query parameters from the request.",
+        "successCriteria": [
+          "The endpoint handler extracts page, limit, category, minPrice, maxPrice, sortBy, and order from req.query."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've extracted some parameters, but make sure to get all of them: page, limit, category, minPrice, maxPrice, sortBy, and order.",
+        "feedbackWrong": "The query parameters aren't being extracted correctly. Use req.query to access them and store them in variables.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "req.query",
+            "page",
+            "limit",
+            "category",
+            "minPrice",
+            "maxPrice",
+            "sortBy",
+            "order"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step12",
+        "type": "question",
+        "phase": "Step 12 of 13",
+        "title": "Return processed data with metadata",
+        "instruction": "Inside the GET endpoint, call the processData function with the products array and the extracted query parameters,",
+        "hint": "Use the processData function you created earlier. The response should include a 'data' property with the processed results and a 'meta' property containing totalItems, totalPages, currentPage, and itemsPerPage.",
+        "analogousExample": "// Example response structure\nres.json({\n  data: processedResults,\n  meta: {\n    totalItems: total,\n    totalPages: Math.ceil(total / limit),\n    currentPage: page,\n    itemsPerPage: limit\n  }\n});",
+        "seedCode": "// Import Express and create an app instance\nconst express = require('express');\nconst app = express();\n\n// Create your products array here\nconst products = [\n  { id: 1, name: 'Laptop', category: 'Electronics', price: 999, stock: 10 },\n  { id: 2, name: 'Mouse', category: 'Electronics', price: 25, stock: 50 },\n  { id: 3, name: 'Desk', category: 'Furniture', price: 200, stock: 5 },\n  { id: 4, name: 'Chair', category: 'Furniture', price: 150, stock: 8 },\n  { id: 5, name: 'Monitor', category: 'Electronics', price: 300, stock: 15 }\n];\n\n// Create paginate function here\nfunction paginate(data, page, limit) {\n  const startIndex = (page - 1) * limit;\n  const endIndex = page * limit;\n  return data.slice(startIndex, endIndex);\n}\n\n// Create filterData function here\nfunction filterData(data, filters) {\n  return data.filter(item => {\n    return Object.keys(filters).every(key => {\n      if (key === 'category') {\n        return item[key].toLowerCase().includes(filters[key].toLowerCase());\n      }\n      if (key === 'minPrice') {\n        return item.price >= filters[key];\n      }\n      if (key === 'maxPrice') {\n        return item.price <= filters[key];\n      }\n      return true;\n    });\n  });\n}\n\n// Create sortData function here\nfunction sortData(data, sortBy, order = 'asc') {\n  return [...data].sort((a, b) => {\n    let aVal = a[sortBy];\n    let bVal = b[sortBy];\n    \n    if (typeof aVal === 'string') {\n      aVal = aVal.toLowerCase();\n      bVal = bVal.toLowerCase();\n    }\n    \n    if (order === 'asc') {\n      return aVal > bVal ? 1 : -1;\n    } else {\n      return aVal < bVal ? 1 : -1;\n    }\n  });\n}\n\n// Create processData function here\nfunction processData(data, options) {\n  let result = [...data];\n  \n  if (options.filters) {\n    result = filterData(result, options.filters);\n  }\n  \n  if (options.sortBy) {\n    result = sortData(result, options.sortBy, options.order);\n  }\n  \n  if (options.page && options.limit) {\n    result = paginate(result, options.page, options.limit);\n  }\n  \n  return result;\n}\n\n// Add Express server setup here\n\n// Create GET endpoint for products here\napp.get('/products', (req, res) => {\n  // Extract query parameters here\n  const { page = 1, limit = 2, category, minPrice, maxPrice, sortBy, order = 'asc' } = req.query;\n  \n  const filters = {};\n  if (category) filters.category = category;\n  if (minPrice) filters.minPrice = Number(minPrice);\n  if (maxPrice) filters.maxPrice = Number(maxPrice);\n  \n  const options = {\n    page: Number(page),\n    limit: Number(limit),\n    filters: Object.keys(filters).length > 0 ? filters : undefined,\n    sortBy,\n    order\n  };\n  \n  // Call processData and send response with metadata\n  const processedResults = processData(products, options);\n  const totalItems = options.filters ? filterData(products, options.filters).length : products.length;\n  const totalPages = Math.ceil(totalItems / options.limit);\n  \n  res.json({\n    data: processedResults,\n    meta: {\n      totalItems,\n      totalPages,\n      currentPage: options.page,\n      itemsPerPage: options.limit\n    }\n  });\n});",
+        "expectedOutcome": "The endpoint will now return a structured JSON response with paginated, filtered, and sorted data along with metadata about the total items and pages.",
+        "successCriteria": [
+          "The GET endpoint calls processData with the products array and query parameters, calculates totalItems and totalPages, and returns a JSON response with 'data' and 'meta' properties."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your response includes both the 'data' array and a 'meta' object with totalItems, totalPages, currentPage, and itemsPerPage properties.",
+        "feedbackWrong": "The response structure doesn't match the expected format. Review the example: you need to call processData and return a JSON object with 'data' and 'meta' properties.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "processData",
+            "res.json",
+            "data:",
+            "meta:",
+            "totalItems",
+            "totalPages"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step13",
+        "type": "question",
+        "phase": "Step 13 of 13",
+        "title": "send a JSON response containing the processed",
+        "instruction": "send a JSON response containing the processed results along with metadata about total items and pages.",
+        "hint": "Use the processData function you created earlier. The response should include a 'data' property with the processed results and a 'meta' property containing totalItems, totalPages, currentPage, and itemsPerPage.",
+        "analogousExample": "// Example response structure\nres.json({\n  data: processedResults,\n  meta: {\n    totalItems: total,\n    totalPages: Math.ceil(total / limit),\n    currentPage: page,\n    itemsPerPage: limit\n  }\n});",
+        "seedCode": "// Import Express and create an app instance\nconst express = require('express');\nconst app = express();\n\n// Create your products array here\nconst products = [\n  { id: 1, name: 'Laptop', category: 'Electronics', price: 999, stock: 10 },\n  { id: 2, name: 'Mouse', category: 'Electronics', price: 25, stock: 50 },\n  { id: 3, name: 'Desk', category: 'Furniture', price: 200, stock: 5 },\n  { id: 4, name: 'Chair', category: 'Furniture', price: 150, stock: 8 },\n  { id: 5, name: 'Monitor', category: 'Electronics', price: 300, stock: 15 }\n];\n\n// Create paginate function here\nfunction paginate(data, page, limit) {\n  const startIndex = (page - 1) * limit;\n  const endIndex = page * limit;\n  return data.slice(startIndex, endIndex);\n}\n\n// Create filterData function here\nfunction filterData(data, filters) {\n  return data.filter(item => {\n    return Object.keys(filters).every(key => {\n      if (key === 'category') {\n        return item[key].toLowerCase().includes(filters[key].toLowerCase());\n      }\n      if (key === 'minPrice') {\n        return item.price >= filters[key];\n      }\n      if (key === 'maxPrice') {\n        return item.price <= filters[key];\n      }\n      return true;\n    });\n  });\n}\n\n// Create sortData function here\nfunction sortData(data, sortBy, order = 'asc') {\n  return [...data].sort((a, b) => {\n    let aVal = a[sortBy];\n    let bVal = b[sortBy];\n    \n    if (typeof aVal === 'string') {\n      aVal = aVal.toLowerCase();\n      bVal = bVal.toLowerCase();\n    }\n    \n    if (order === 'asc') {\n      return aVal > bVal ? 1 : -1;\n    } else {\n      return aVal < bVal ? 1 : -1;\n    }\n  });\n}\n\n// Create processData function here\nfunction processData(data, options) {\n  let result = [...data];\n  \n  if (options.filters) {\n    result = filterData(result, options.filters);\n  }\n  \n  if (options.sortBy) {\n    result = sortData(result, options.sortBy, options.order);\n  }\n  \n  if (options.page && options.limit) {\n    result = paginate(result, options.page, options.limit);\n  }\n  \n  return result;\n}\n\n// Add Express server setup here\n\n// Create GET endpoint for products here\napp.get('/products', (req, res) => {\n  // Extract query parameters here\n  const { page = 1, limit = 2, category, minPrice, maxPrice, sortBy, order = 'asc' } = req.query;\n  \n  const filters = {};\n  if (category) filters.category = category;\n  if (minPrice) filters.minPrice = Number(minPrice);\n  if (maxPrice) filters.maxPrice = Number(maxPrice);\n  \n  const options = {\n    page: Number(page),\n    limit: Number(limit),\n    filters: Object.keys(filters).length > 0 ? filters : undefined,\n    sortBy,\n    order\n  };\n  \n  // Call processData and send response with metadata\n  const processedResults = processData(products, options);\n  const totalItems = options.filters ? filterData(products, options.filters).length : products.length;\n  const totalPages = Math.ceil(totalItems / options.limit);\n  \n  res.json({\n    data: processedResults,\n    meta: {\n      totalItems,\n      totalPages,\n      currentPage: options.page,\n      itemsPerPage: options.limit\n    }\n  });\n});",
+        "expectedOutcome": "",
+        "successCriteria": [
+          "Complete the step as instructed."
+        ],
+        "feedbackCorrect": "Great! Step completed.",
+        "feedbackPartial": "Review the instruction and try again.",
+        "feedbackWrong": "Check the instruction and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "processData",
+            "res.json",
+            "data:",
+            "meta:",
+            "totalItems",
+            "totalPages"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import required Node.js modules",
+        "id": "step1"
+      },
+      {
+        "label": "Create sample data array",
+        "id": "step2"
+      },
+      {
+        "label": "Define pagination helper function",
+        "id": "step3"
+      },
+      {
+        "label": "Define filtering helper function",
+        "id": "step4"
+      },
+      {
+        "label": "Define sorting helper function",
+        "id": "step5"
+      },
+      {
+        "label": "return the sorted array",
+        "id": "step6"
+      },
+      {
+        "label": "Create combined data processing function",
+        "id": "step7"
+      },
+      {
+        "label": "applies filtering, sorting, and pagination in",
+        "id": "step8"
+      },
+      {
+        "label": "Set up basic Express server",
+        "id": "step9"
+      },
+      {
+        "label": "Create GET endpoint for products",
+        "id": "step10"
+      },
+      {
+        "label": "Process query parameters in the endpoint",
+        "id": "step11"
+      },
+      {
+        "label": "Return processed data with metadata",
+        "id": "step12"
+      },
+      {
+        "label": "send a JSON response containing the processed",
+        "id": "step13"
+      }
+    ]
+  },
+  "source": "content"
+}

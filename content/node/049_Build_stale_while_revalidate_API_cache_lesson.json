@@ -1,0 +1,424 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-node-49",
+    "track": "node",
+    "lessonNum": 49,
+    "title": "Build stale while revalidate API cache",
+    "shortName": "P49",
+    "intro": {
+      "tag": "LESSON #49",
+      "title": "Build stale while revalidate API cache",
+      "body": "In this lesson, you will build a simple API cache using the 'stale-while-revalidate' pattern in Node.js. This pattern helps improve your app's performance by serving cached data immediately while fetching fresh data in the background. You'll learn how to implement this using JavaScript's built-in Map object to store and manage cached responses. By the end, you'll have a working cache that efficiently handles API requests, balancing speed and data freshness for a better user experience.",
+      "usecase": "The stale-while-revalidate pattern is essential for building responsive data-driven applications that need to balance freshness with performance. You'll see this implemented in dashboard interfaces like analytics platforms and financial tracking tools, where cached metrics display immediately while background updates fetch the latest data. E-commerce product listings use this approach to show cached inventory while checking for real-time stock changes. Social media feeds load cached posts instantly while quietly updating with new content in the background, creating a seamless user experience."
+    },
+    "objectives": [
+      "Initialize a basic in-memory cache object to store API responses",
+      "Implement a function that checks for cached data and returns it if available",
+      "Construct a stale-while-revalidate mechanism that serves stale data while fetching fresh data in the background",
+      "Configure cache expiration logic to determine when data becomes stale",
+      "Integrate the cache system with a mock API fetch function to demonstrate the pattern",
+      "Manipulate cache state to update it with fresh data after background revalidation",
+      "Apply error handling to ensure the system gracefully falls back when revalidation fails"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 12",
+        "title": "Import required Node.js modules",
+        "instruction": "Import the http module for creating a server and the fetch API for making HTTP requests.",
+        "hint": "Use the require() function to import Node.js built-in modules. The http module is built into Node.js, and fetch is available globally in modern Node.js versions.",
+        "analogousExample": "// Example: importing Node.js modules\nconst fs = require('fs');\nconst path = require('path');",
+        "seedCode": "// Import the http module and fetch API here",
+        "expectedOutcome": "The http module and fetch API are imported and ready to use for building the cache system.",
+        "successCriteria": [
+          "The http module is imported using require('http'), and fetch is available globally (no import needed for fetch in modern Node.js)."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've imported the http module, but remember that fetch is available globally in modern Node.js versions and doesn't require an explicit import. Check if you're using require('http') correctly.",
+        "feedbackWrong": "The imports aren't quite right. You need to import the http module using require('http') to create a server. The fetch API is built into Node.js and doesn't need importing.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "require",
+            "'http'",
+            "http"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 12",
+        "title": "Create a simple in-memory cache object",
+        "instruction": "Initialize an empty JavaScript object to serve as an in-memory cache for storing API responses.",
+        "hint": "Create a variable named 'cache' and assign it an empty object {}.",
+        "analogousExample": "// Example: creating a simple object\nconst cache = {};",
+        "seedCode": "// Import the http module and fetch API here\n\n// Initialize an empty cache object here",
+        "expectedOutcome": "An empty cache object is created and ready to store API response data.",
+        "successCriteria": [
+          "A variable named 'cache' is declared and assigned an empty object {}."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you've created a variable named 'cache' and assigned it an empty object {}.",
+        "feedbackWrong": "The cache object wasn't created correctly. You need to declare a variable named 'cache' and assign it an empty object {}.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "cache",
+            "=",
+            "{}"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 12",
+        "title": "Define cache structure with data and timestamp",
+        "instruction": "Update the cache object to store entries with both data and a timestamp property. Each cache entry should be an object containing 'data' and 'timestamp' fields.",
+        "hint": "Modify the cache object so each key maps to an object with two properties: 'data' (the cached value) and 'timestamp' (a Date object or timestamp number).",
+        "analogousExample": "// Example: structured cache entry\nconst cache = {\n  'user:123': {\n    data: { name: 'Alice', age: 30 },\n    timestamp: Date.now()\n  }\n};",
+        "seedCode": "// Import the http module and fetch API here\n\n// Initialize an empty cache object here\nconst cache = {};",
+        "expectedOutcome": "The cache object now stores structured entries with both data and timestamp metadata for each key.",
+        "successCriteria": [
+          "Cache entries are objects with 'data' and 'timestamp' properties"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure each cache entry has both 'data' and 'timestamp' properties.",
+        "feedbackWrong": "The cache structure should include both data and timestamp for each entry. Try modifying the cache object accordingly.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "cache",
+            "data",
+            "timestamp"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 12",
+        "title": "Create a function to fetch fresh data from API",
+        "instruction": "Create an async function named fetchFreshData that takes a URL as a parameter and uses fetch to get data from that API endpoint. The function should return the parsed JSON response.",
+        "hint": "Use the fetch API to make a GET request to the provided URL, await the response, and then parse it as JSON.",
+        "analogousExample": "// Example: async function to fetch data\nasync function fetchUserData(url) {\n  const response = await fetch(url);\n  const data = await response.json();\n  return data;\n}",
+        "seedCode": "// Import the http module and fetch API here\n\n// Initialize an empty cache object here\nconst cache = {};\n\n// Create an async function to fetch fresh data from API\n",
+        "expectedOutcome": "You will have a reusable async function that can fetch data from any public API URL.",
+        "successCriteria": [
+          "The fetchFreshData function is defined, takes a URL parameter, uses fetch and await, and returns parsed JSON data."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your function is async, properly uses fetch with await, and returns the parsed JSON data.",
+        "feedbackWrong": "The function doesn't meet the requirements. It should be async, take a URL parameter, use fetch to make a GET request, and return the parsed JSON response.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "async",
+            "fetchFreshData",
+            "url",
+            "fetch",
+            "await",
+            "json",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 12",
+        "title": "Create a function to check if cache is stale",
+        "instruction": "Create a function named isCacheStale that takes a cache key and returns true if the cached data is older than 5 seconds (5000 milliseconds).",
+        "hint": "Inside the function, get the current timestamp with Date.now() and compare it to the cache entry's timestamp. Return true if the difference exceeds 5000 ms.",
+        "analogousExample": "// Function that checks if food is expired\nfunction isFoodExpired(foodItem) {\n  const currentTime = Date.now();\n  const expirationTime = foodItem.timestamp + 7 * 24 * 60 * 60 * 1000; // 7 days\n  return currentTime > expirationTime;\n}",
+        "seedCode": "// Import the http module and fetch API here\n\n// Initialize an empty cache object here\nconst cache = {};\n\n// Create an async function to fetch fresh data from API\n\n// Create a function to check if cache is stale\n",
+        "expectedOutcome": "You will have a function that determines cache staleness based on time difference.",
+        "successCriteria": [
+          "The isCacheStale function exists, takes a key parameter, calculates time difference, and returns a boolean."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure your function calculates the time difference and returns true when it exceeds 5000 milliseconds.",
+        "feedbackWrong": "The function doesn't properly check cache staleness. Review how to compare timestamps.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "isCacheStale",
+            "Date.now()",
+            "timestamp",
+            "5000",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 12",
+        "title": "Implement the stale-while-revalidate logic",
+        "instruction": "Create a function named getDataWithSWR that takes a key parameter and returns cached data immediately while fetching fresh data in the background.",
+        "hint": "The function should first return the cached data if it exists, then asynchronously fetch fresh data and update the cache.",
+        "analogousExample": "// Similar: function that returns cached value and updates in background\nfunction getDataWithSWR(key) {\n  // Return cached value immediately\n  const cached = cache[key];\n  // Fetch fresh data asynchronously\n  fetchFreshData(key).then(freshData => {\n    // Update cache with fresh data\n    cache[key] = freshData;\n  });\n  return cached;\n}",
+        "seedCode": "// Import the http module and fetch API here\n\n// Initialize an empty cache object here\nconst cache = {};\n\n// Create an async function to fetch fresh data from API\n\n// Create a function to check if cache is stale\n\n// Create a function named getDataWithSWR that takes a key parameter and returns cached data immediately while fetching fresh data in the background\n",
+        "expectedOutcome": "A function named getDataWithSWR is created that implements the stale-while-revalidate pattern.",
+        "successCriteria": [
+          "The getDataWithSWR function exists, takes a key parameter, returns cached data immediately, and initiates an asynchronous fetch to update the cache."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure your function returns cached data immediately and also fetches fresh data asynchronously to update the cache.",
+        "feedbackWrong": "The function doesn't properly implement the stale-while-revalidate pattern. It should return cached data immediately while fetching fresh data in the background.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "getDataWithSWR",
+            "key",
+            "cache",
+            "return",
+            "fetch"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 12",
+        "title": "Create a simple HTTP server",
+        "instruction": "Create a basic HTTP server using the http module that listens on port 3000 and logs a startup message.",
+        "hint": "Use the http.createServer() method and the server.listen() method to start the server.",
+        "analogousExample": "// Basic HTTP server example\nconst http = require('http');\nconst server = http.createServer((req, res) => {\n  res.end('Hello World');\n});\nserver.listen(3000, () => {\n  console.log('Server running on port 3000');\n});",
+        "seedCode": "// Import the http module and fetch API here\n\n// Initialize an empty cache object here\nconst cache = {};\n\n// Create an async function to fetch fresh data from API\n\n// Create a function to check if cache is stale\n\n// Create a function named getDataWithSWR that takes a key parameter and returns cached data immediately while fetching fresh data in the background\n\n// Create your HTTP server here",
+        "expectedOutcome": "A basic HTTP server that starts and logs a message when running.",
+        "successCriteria": [
+          "Server is created using http.createServer() and listens on port 3000 with a console log message."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your server listens on port 3000 and logs a startup message.",
+        "feedbackWrong": "The server isn't set up correctly. Review how to create and start an HTTP server using the http module.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "createServer",
+            "listen",
+            "3000",
+            "console.log"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 12",
+        "title": "Add route handling to the server",
+        "instruction": "Inside your server's request handler, add logic to check the request URL and respond differently based on the path. For now, handle the root path '/' by calling your getDataWithSWR function and returning the cached data as a JSON response.",
+        "hint": "Check req.url property inside the request handler callback. Use if/else or switch to handle different paths. For the root path '/', call getDataWithSWR and send the result as JSON using res.writeHead and res.end.",
+        "analogousExample": "// Similar: routing in a simple server\nserver.on('request', (req, res) => {\n  if (req.url === '/') {\n    res.writeHead(200, { 'Content-Type': 'application/json' });\n    res.end(JSON.stringify({ message: 'Home page' }));\n  } else if (req.url === '/api') {\n    // handle API route\n  } else {\n    res.writeHead(404);\n    res.end('Not found');\n  }\n});",
+        "seedCode": "// Import the http module and fetch API here\n\n// Initialize an empty cache object here\nconst cache = {};\n\n// Create an async function to fetch fresh data from API\n\n// Create a function to check if cache is stale\n\n// Create a function named getDataWithSWR that takes a key parameter and returns cached data immediately while fetching fresh data in the background\n\n// Create your HTTP server here\nconst server = http.createServer((req, res) => {\n  // Add route handling logic here\n});",
+        "expectedOutcome": "Your server will now respond to requests to the root path '/' with JSON data from your cache, while implementing the stale-while-revalidate pattern in the background.",
+        "successCriteria": [
+          "The server request handler includes conditional logic that checks req.url and handles the '/' path by calling getDataWithSWR and returning the result as JSON."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added some routing logic, but make sure you're specifically handling the '/' path and calling getDataWithSWR with an appropriate key (like 'data'). Also ensure you're setting the correct Content-Type header for JSON responses.",
+        "feedbackWrong": "The route handling logic appears to be missing or incorrect. Check that you're examining req.url inside the request handler and properly handling the '/' path with your getDataWithSWR function.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "req.url",
+            "getDataWithSWR",
+            "JSON.stringify",
+            "writeHead",
+            "end"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 12",
+        "title": "Connect cache to server route",
+        "instruction": "Inside your server route handler, call the getDataWithSWR function when the request URL is '/data' and send the cached data as the response.",
+        "hint": "Check if req.url equals '/data', then await getDataWithSWR with a cache key like 'apiData', and use res.end() to send the data as a JSON string.",
+        "analogousExample": "// Example: calling a function in a route handler\nif (req.url === '/example') {\n  const result = await exampleFunction();\n  res.end(JSON.stringify(result));\n}",
+        "seedCode": "// Import the http module and fetch API here\n\n// Initialize an empty cache object here\nconst cache = {};\n\n// Create an async function to fetch fresh data from API\n\n// Create a function to check if cache is stale\n\n// Create a function named getDataWithSWR that takes a key parameter and returns cached data immediately while fetching fresh data in the background\n\n// Create your HTTP server here\nconst server = http.createServer((req, res) => {\n  // Add route handling logic here\n  if (req.url === '/data') {\n    // Call getDataWithSWR and send response\n  }\n});",
+        "expectedOutcome": "The server will now respond to GET requests at '/data' with cached data, using stale-while-revalidate to update the cache in the background.",
+        "successCriteria": [
+          "The route handler checks for '/data', calls getDataWithSWR, and sends the result as a JSON response."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're calling getDataWithSWR inside the '/data' route check and sending the response with res.end().",
+        "feedbackWrong": "The route handler isn't properly set up. Check if you're handling the '/data' URL and calling getDataWithSWR to get the data to send.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "req.url",
+            "'/data'",
+            "getDataWithSWR",
+            "res.end",
+            "JSON.stringify"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 12",
+        "title": "Add logging to see cache behavior",
+        "instruction": "Add console.log statements inside your getDataWithSWR function to log when cached data is returned immediately and when background fetches are triggered.",
+        "hint": "Place console.log messages at key points: when returning stale cached data, when starting a background fetch, and when the background fetch completes.",
+        "analogousExample": "// Example: logging in an async function\nasync function fetchWithLog(key) {\n  console.log(`Fetching fresh data for ${key}`);\n  const data = await fetchData();\n  console.log(`Background fetch completed for ${key}`);\n  return data;\n}",
+        "seedCode": "// Import the http module and fetch API here\n\n// Initialize an empty cache object here\nconst cache = {};\n\n// Create an async function to fetch fresh data from API\n\n// Create a function to check if cache is stale\n\n// Create a function named getDataWithSWR that takes a key parameter and returns cached data immediately while fetching fresh data in the background\n\n// Create your HTTP server here\nconst server = http.createServer((req, res) => {\n  // Add route handling logic here\n  if (req.url === '/data') {\n    // Call getDataWithSWR and send response\n  }\n});",
+        "expectedOutcome": "Your getDataWithSWR function will now output clear console messages showing cache hits, stale data returns, and background fetch activity.",
+        "successCriteria": [
+          "Console logs are added to track: 1) when cached data is returned immediately, 2) when background fetch starts, and 3) when background fetch completes."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You added some logging, but make sure to cover all three key events: cache hit, background fetch start, and background fetch completion.",
+        "feedbackWrong": "No console.log statements were added to track cache behavior. Add logging to understand when cached data is used and when background fetches occur.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "console.log",
+            "getDataWithSWR",
+            "background",
+            "cache"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 12",
+        "title": "Set cache expiration time",
+        "instruction": "Define a constant named CACHE_TTL at the top of your file to set how long cached data remains fresh (in milliseconds).",
+        "hint": "Add a constant near your imports. For example, 5000 milliseconds = 5 seconds.",
+        "analogousExample": "// Similar: defining a constant time duration\nconst TIMEOUT_DURATION = 3000;",
+        "seedCode": "// Import the http module and fetch API here\n\n// Initialize an empty cache object here\nconst cache = {};\n\n// Create an async function to fetch fresh data from API\n\n// Create a function to check if cache is stale\n\n// Create a function named getDataWithSWR that takes a key parameter and returns cached data immediately while fetching fresh data in the background\n\n// Create your HTTP server here\nconst server = http.createServer((req, res) => {\n  // Add route handling logic here\n  if (req.url === '/data') {\n    // Call getDataWithSWR and send response\n  }\n});",
+        "expectedOutcome": "You'll have a CACHE_TTL constant defined that will be used to control cache freshness duration.",
+        "successCriteria": [
+          "A constant named CACHE_TTL is defined with a numeric value (in milliseconds) at the top of the file."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you've defined a constant named CACHE_TTL with a numeric value (like 5000 for 5 seconds).",
+        "feedbackWrong": "The step requires defining a constant named CACHE_TTL to set the cache expiration time. Please add this constant near the top of your file.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "CACHE_TTL",
+            "const",
+            "="
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step12",
+        "type": "question",
+        "phase": "Step 12 of 12",
+        "title": "Start the server and test the cache",
+        "instruction": "Start the HTTP server by calling server.listen() on port 3000 and add a console.log to confirm it's running.",
+        "hint": "Use server.listen() with port 3000 and a callback function that logs a message.",
+        "analogousExample": "// Starting a server\nconst server = http.createServer(handler);\nserver.listen(3000, () => {\n  console.log('Server running on port 3000');\n});",
+        "seedCode": "// Import the http module and fetch API here\n\n// Initialize an empty cache object here\nconst cache = {};\n\n// Create an async function to fetch fresh data from API\n\n// Create a function to check if cache is stale\n\n// Create a function named getDataWithSWR that takes a key parameter and returns cached data immediately while fetching fresh data in the background\n\n// Create your HTTP server here\nconst server = http.createServer((req, res) => {\n  // Add route handling logic here\n  if (req.url === '/data') {\n    // Call getDataWithSWR and send response\n  }\n});\n\n// Start the server here",
+        "expectedOutcome": "The server will start listening on port 3000 and log a confirmation message to the console.",
+        "successCriteria": [
+          "server.listen() is called with port 3000 and a callback that logs a message."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the server, but make sure to include a console.log in the callback to confirm it's running.",
+        "feedbackWrong": "The server isn't properly started. Use server.listen(3000, callback) to start it on port 3000.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "server.listen",
+            "3000",
+            "console.log"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import required Node.js modules",
+        "id": "step1"
+      },
+      {
+        "label": "Create a simple in-memory cache object",
+        "id": "step2"
+      },
+      {
+        "label": "Define cache structure with data and timestamp",
+        "id": "step3"
+      },
+      {
+        "label": "Create a function to fetch fresh data from API",
+        "id": "step4"
+      },
+      {
+        "label": "Create a function to check if cache is stale",
+        "id": "step5"
+      },
+      {
+        "label": "Implement the stale-while-revalidate logic",
+        "id": "step6"
+      },
+      {
+        "label": "Create a simple HTTP server",
+        "id": "step7"
+      },
+      {
+        "label": "Add route handling to the server",
+        "id": "step8"
+      },
+      {
+        "label": "Connect cache to server route",
+        "id": "step9"
+      },
+      {
+        "label": "Add logging to see cache behavior",
+        "id": "step10"
+      },
+      {
+        "label": "Set cache expiration time",
+        "id": "step11"
+      },
+      {
+        "label": "Start the server and test the cache",
+        "id": "step12"
+      }
+    ]
+  },
+  "source": "content"
+}

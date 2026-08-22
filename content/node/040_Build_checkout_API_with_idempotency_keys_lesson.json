@@ -1,0 +1,390 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-node-40",
+    "track": "node",
+    "lessonNum": 40,
+    "title": "Build checkout API with idempotency keys",
+    "shortName": "P40",
+    "intro": {
+      "tag": "LESSON #40",
+      "title": "Build checkout API with idempotency keys",
+      "body": "In this lesson, you will build a checkout API endpoint in Node.js that uses idempotency keys to prevent duplicate payments. You will learn how idempotency ensures that the same request can be safely repeated without unintended side effects, such as charging a customer twice. The main technologies involved include Express.js for routing, an in-memory object to simulate storing idempotency keys, and HTTP POST requests. By the end, you'll have a functional API that handles payment requests idempotently, a key concept for reliable financial transactions.",
+      "usecase": "Idempotency keys are essential in payment processing systems where duplicate charges must be prevented. When a user clicks 'Pay Now' multiple times due to network delays or impatience, idempotent APIs ensure only one transaction occurs. This pattern is used by e-commerce platforms like Shopify, payment gateways like Stripe, and financial apps where checkout reliability is critical. Developers implement idempotency keys in checkout APIs to handle retries safely without creating duplicate orders or charging customers twice."
+    },
+    "objectives": [
+      "Construct a Node.js Express server with a checkout endpoint",
+      "Configure middleware to parse JSON request bodies",
+      "Initialize an in-memory store for idempotency key tracking",
+      "Implement idempotency key validation logic in request handlers",
+      "Apply conditional logic to prevent duplicate checkout processing",
+      "Manipulate response data to include idempotency key status",
+      "Integrate error handling for missing or invalid idempotency keys"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 11",
+        "title": "Import required Node.js modules",
+        "instruction": "Import the Express, body-parser, and crypto modules using require statements.",
+        "hint": "Use require() to import each module. Express is for building the API, body-parser handles JSON request bodies, and crypto provides cryptographic functions for generating idempotency keys.",
+        "analogousExample": "// Example: importing modules in Node.js\nconst express = require('express');\nconst bodyParser = require('body-parser');\nconst crypto = require('crypto');",
+        "seedCode": "// Import Express, body-parser, and crypto modules here",
+        "expectedOutcome": "The file will have three require statements at the top, making the modules available for use.",
+        "successCriteria": [
+          "Express, body-parser, and crypto are imported using require statements."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've imported some modules, but not all three. Make sure to import Express, body-parser, and crypto using require statements.",
+        "feedbackWrong": "The imports are missing or incorrect. You need to import Express, body-parser, and crypto modules using require() statements.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "require('express')",
+            "require('body-parser')",
+            "require('crypto')"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 11",
+        "title": "Initialize Express application",
+        "instruction": "Create an Express app instance and assign it to a constant variable named 'app'.",
+        "hint": "Use the imported Express module to create an app instance with express().",
+        "analogousExample": "// Creating an Express app instance\nconst app = express();",
+        "seedCode": "// Import Express, body-parser, and crypto modules here\n\n// Create an Express app instance here",
+        "expectedOutcome": "An Express app instance is created and assigned to a constant variable named 'app'.",
+        "successCriteria": [
+          "The constant variable 'app' is declared and assigned the value of express()."
+        ],
+        "feedbackCorrect": "Great! You've successfully created an Express app instance.",
+        "feedbackPartial": "You're close. Make sure you're using the imported Express module to create the app instance.",
+        "feedbackWrong": "The Express app instance wasn't created correctly. Remember to use express() and assign it to a constant named 'app'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "const",
+            "app",
+            "=",
+            "express()"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 11",
+        "title": "Configure middleware for JSON parsing",
+        "instruction": "Add the body-parser middleware to your Express app to parse incoming JSON request bodies.",
+        "hint": "Use app.use() with bodyParser.json() to add the JSON parsing middleware.",
+        "analogousExample": "// Adding middleware to parse JSON\napp.use(bodyParser.json());",
+        "seedCode": "const express = require('express');\nconst bodyParser = require('body-parser');\nconst crypto = require('crypto');\n\nconst app = express();\n\n// Add JSON parsing middleware here",
+        "expectedOutcome": "The Express app will be able to parse JSON data from incoming HTTP requests.",
+        "successCriteria": [
+          "The app.use() method is called with bodyParser.json() as middleware."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure you're using bodyParser.json() with app.use().",
+        "feedbackWrong": "That doesn't look right. Remember to use app.use() with bodyParser.json() to add JSON parsing middleware.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "app.use",
+            "bodyParser.json"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 11",
+        "title": "Create in-memory storage for idempotency keys",
+        "instruction": "Initialize an empty object to store idempotency key data. Add it after the middleware configuration and before any route handlers.",
+        "hint": "Declare a constant variable named 'idempotencyStore' and assign it an empty object {}.",
+        "analogousExample": "// Example: in-memory storage for temporary data\nconst userSessions = {};",
+        "seedCode": "const express = require('express');\nconst bodyParser = require('body-parser');\nconst crypto = require('crypto');\n\nconst app = express();\n\napp.use(bodyParser.json());\n\n// Initialize idempotency key storage here",
+        "expectedOutcome": "You'll have a variable ready to track processed requests by their idempotency keys.",
+        "successCriteria": [
+          "An object named 'idempotencyStore' is declared and initialized as empty."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're declaring a variable named 'idempotencyStore' and setting it to an empty object {}.",
+        "feedbackWrong": "We need to create an empty object to store idempotency key data.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "idempotencyStore",
+            "=",
+            "{}"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 11",
+        "title": "Define helper function to validate idempotency key",
+        "instruction": "Create a function named `isKeyProcessed` that takes an idempotency key as a parameter and returns true if the key exists in storage, false otherwise.",
+        "hint": "Define a function that checks the storage object for the provided key. Use the `idempotencyStorage` object to look up the key.",
+        "analogousExample": "// Example: a validation function\nfunction isUserValid(username) {\n    return userDatabase.has(username);\n}",
+        "seedCode": "const express = require('express');\nconst bodyParser = require('body-parser');\nconst crypto = require('crypto');\n\nconst app = express();\n\napp.use(bodyParser.json());\n\n// Initialize idempotency key storage here\nconst idempotencyStorage = {};\n\n// Define helper function to validate idempotency key\n",
+        "expectedOutcome": "A function `isKeyProcessed` is defined that checks if a given idempotency key exists in the storage.",
+        "successCriteria": [
+          "The function `isKeyProcessed` is defined, takes a key parameter, and returns a boolean based on whether the key exists in `idempotencyStorage`."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've defined a function, but make sure it checks `idempotencyStorage` for the key and returns true or false accordingly.",
+        "feedbackWrong": "The function is not defined correctly. It should take a key parameter and check if it exists in `idempotencyStorage`.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "function",
+            "isKeyProcessed",
+            "key",
+            "idempotencyStorage",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 11",
+        "title": "Define helper function to generate response",
+        "instruction": "Create a function named formatResponse that takes status, message, and optional data parameters, and returns a consistent response object.",
+        "hint": "The function should return an object with status, message, and data properties. Use default parameters for data.",
+        "analogousExample": "// Similar: a response formatting function\nfunction formatResponse(status, message, data = null) {\n  return { status, message, data };\n}",
+        "seedCode": "const express = require('express');\nconst bodyParser = require('body-parser');\nconst crypto = require('crypto');\n\nconst app = express();\n\napp.use(bodyParser.json());\n\n// Initialize idempotency key storage here\nconst idempotencyStorage = {};\n\n// Define helper function to validate idempotency key\n\n// Define helper function to generate response\n",
+        "expectedOutcome": "You will have a formatResponse function that returns structured response objects for your API endpoints.",
+        "successCriteria": [
+          "The formatResponse function is defined and returns an object with status, message, and data properties."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure your function takes status, message, and optional data parameters and returns an object with those properties.",
+        "feedbackWrong": "The formatResponse function should accept parameters and return a structured response object. Check the analogous example for guidance.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "formatResponse",
+            "function",
+            "status",
+            "message",
+            "data",
+            "return",
+            "{"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 11",
+        "title": "Create checkout route handler",
+        "instruction": "Define the POST /checkout route handler function signature using app.post().",
+        "hint": "Use app.post() with '/checkout' as the first argument and a callback function as the second argument.",
+        "analogousExample": "// Example route handler signature\napp.post('/example', (req, res) => {\n  // Route logic here\n});",
+        "seedCode": "const express = require('express');\nconst bodyParser = require('body-parser');\nconst crypto = require('crypto');\n\nconst app = express();\n\napp.use(bodyParser.json());\n\n// Initialize idempotency key storage here\nconst idempotencyStorage = {};\n\n// Define helper function to validate idempotency key\n\n// Define helper function to generate response\n\n// Define POST /checkout route handler here",
+        "expectedOutcome": "The Express app will have a POST route handler for '/checkout' defined with the correct function signature.",
+        "successCriteria": [
+          "app.post() is called with '/checkout' and a callback function that takes req and res parameters."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure you're using app.post() with '/checkout' and a callback function.",
+        "feedbackWrong": "The route handler signature isn't quite right. Remember to use app.post() with '/checkout' and a callback function.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "app.post",
+            "'/checkout'",
+            "(req,res)",
+            "=>",
+            "{"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 11",
+        "title": "Add idempotency key validation to checkout handler",
+        "instruction": "Inside the checkout route handler, add validation at the beginning to check if the provided idempotency key already exists in storage.",
+        "hint": "Use an if statement to check if the idempotency key exists in idempotencyStorage. If it exists, return the stored response immediately.",
+        "analogousExample": "// Example: checking if a key exists in an object\nif (storage[key]) {\n  return storage[key];\n}",
+        "seedCode": "const express = require('express');\nconst bodyParser = require('body-parser');\nconst crypto = require('crypto');\n\nconst app = express();\n\napp.use(bodyParser.json());\n\n// Initialize idempotency key storage here\nconst idempotencyStorage = {};\n\n// Define helper function to validate idempotency key\n\n// Define helper function to generate response\n\n// Define POST /checkout route handler here\napp.post('/checkout', (req, res) => {\n  // Add idempotency key validation here\n});",
+        "expectedOutcome": "The checkout handler will immediately return a stored response if the same idempotency key is reused, preventing duplicate processing.",
+        "successCriteria": [
+          "The checkout route handler includes an if statement that checks if the idempotency key from the request exists in idempotencyStorage."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're checking if the idempotency key exists in the storage object.",
+        "feedbackWrong": "The validation logic is missing or incorrect. Remember to check if the idempotency key already exists in storage.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "if",
+            "idempotencyStorage",
+            "req.body.idempotencyKey",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 11",
+        "title": "Process checkout request and store idempotency key",
+        "instruction": "Inside the POST /checkout route handler, after validating the idempotency key, add the checkout processing logic and store the key with the response data in idempotencyStorage.",
+        "hint": "After the validation check, simulate processing the checkout request (e.g., calculate total, create order), then store the idempotency key as a key in idempotencyStorage with the response data as its value.",
+        "analogousExample": "// Example: processing and storing data\nfunction processOrder(req) {\n  const orderId = 'ORD_' + Date.now();\n  const total = req.body.items.reduce((sum, item) => sum + item.price, 0);\n  return { orderId, total, status: 'completed' };\n}\n\nconst storage = {};\nconst key = 'some-idempotency-key';\nconst responseData = processOrder(request);\nstorage[key] = responseData;",
+        "seedCode": "const express = require('express');\nconst bodyParser = require('body-parser');\nconst crypto = require('crypto');\n\nconst app = express();\n\napp.use(bodyParser.json());\n\n// Initialize idempotency key storage here\nconst idempotencyStorage = {};\n\n// Define helper function to validate idempotency key\n\n// Define helper function to generate response\n\n// Define POST /checkout route handler here\napp.post('/checkout', (req, res) => {\n  // Add idempotency key validation here\n  // Add checkout processing and idempotency key storage here\n});",
+        "expectedOutcome": "The checkout handler will now process new requests and store the idempotency key with the response data, preventing duplicate processing for the same key.",
+        "successCriteria": [
+          "The route handler includes checkout processing logic and stores the idempotency key with response data in idempotencyStorage."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added some processing logic, but make sure to also store the idempotency key with the response data in idempotencyStorage to complete the idempotency mechanism.",
+        "feedbackWrong": "The checkout handler is missing the processing logic and idempotency key storage. Ensure you add both to properly handle new requests and mark them as completed.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "idempotencyStorage",
+            "req.body",
+            "order",
+            "total",
+            "completed"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 11",
+        "title": "Set up the POST /checkout route",
+        "instruction": "Register the checkout handler with the Express app by ensuring the route is properly configured in your application.",
+        "hint": "Make sure the route is defined using app.post() with the correct path and handler function.",
+        "analogousExample": "// Example of registering a route\napp.post('/api/users', (req, res) => {\n  // Handle user creation\n});",
+        "seedCode": "const express = require('express');\nconst bodyParser = require('body-parser');\nconst crypto = require('crypto');\n\nconst app = express();\n\napp.use(bodyParser.json());\n\n// Initialize idempotency key storage here\nconst idempotencyStorage = {};\n\n// Define helper function to validate idempotency key\n\n// Define helper function to generate response\n\n// Define POST /checkout route handler here\napp.post('/checkout', (req, res) => {\n  // Add idempotency key validation here\n  // Add checkout processing and idempotency key storage here\n  // Add logic to return cached response for duplicate requests here\n});",
+        "expectedOutcome": "The POST /checkout route is properly registered with Express, ready to handle incoming checkout requests.",
+        "successCriteria": [
+          "The route is defined using app.post('/checkout', handler) and the handler function is correctly set up."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've made progress, but ensure the route is defined with app.post() and the correct path '/checkout'.",
+        "feedbackWrong": "The route registration is incomplete or incorrect. Please verify that you're using app.post('/checkout', handler) with the proper handler function.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "app.post",
+            "'/checkout'",
+            "(req, res)"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 11",
+        "title": "Start the Express server",
+        "instruction": "Add code to start the Express server listening on port 3000.",
+        "hint": "Use the app.listen() method with port 3000 and a callback function that logs a message when the server starts.",
+        "analogousExample": "// Starting a server on port 3000\napp.listen(3000, () => {\n  console.log('Server running on port 3000');\n});",
+        "seedCode": "const express = require('express');\nconst bodyParser = require('body-parser');\nconst crypto = require('crypto');\n\nconst app = express();\n\napp.use(bodyParser.json());\n\n// Initialize idempotency key storage here\nconst idempotencyStorage = {};\n\n// Define helper function to validate idempotency key\n\n// Define helper function to generate response\n\n// Define POST /checkout route handler here\napp.post('/checkout', (req, res) => {\n  // Add idempotency key validation here\n  // Add checkout processing and idempotency key storage here\n  // Add logic to return cached response for duplicate requests here\n});\n\n// Start the server here",
+        "expectedOutcome": "The server will be configured to listen on port 3000 and log a startup message.",
+        "successCriteria": [
+          "The app.listen() method is called with port 3000 and a callback function that logs a message."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the server, but make sure to include a callback function that logs a startup message.",
+        "feedbackWrong": "The server isn't started yet. Use app.listen() with port 3000 and a callback.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "app.listen",
+            "3000",
+            "console.log"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import required Node.js modules",
+        "id": "step1"
+      },
+      {
+        "label": "Initialize Express application",
+        "id": "step2"
+      },
+      {
+        "label": "Configure middleware for JSON parsing",
+        "id": "step3"
+      },
+      {
+        "label": "Create in-memory storage for idempotency keys",
+        "id": "step4"
+      },
+      {
+        "label": "Define helper function to validate idempotency key",
+        "id": "step5"
+      },
+      {
+        "label": "Define helper function to generate response",
+        "id": "step6"
+      },
+      {
+        "label": "Create checkout route handler",
+        "id": "step7"
+      },
+      {
+        "label": "Add idempotency key validation to checkout handler",
+        "id": "step8"
+      },
+      {
+        "label": "Process checkout request and store idempotency key",
+        "id": "step9"
+      },
+      {
+        "label": "Set up the POST /checkout route",
+        "id": "step10"
+      },
+      {
+        "label": "Start the Express server",
+        "id": "step11"
+      }
+    ]
+  },
+  "source": "content"
+}

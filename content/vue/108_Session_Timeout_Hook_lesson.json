@@ -1,0 +1,330 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-vue-108",
+    "track": "vue",
+    "lessonNum": 108,
+    "title": "Session Timeout Hook",
+    "shortName": "P108",
+    "intro": {
+      "tag": "LESSON #108",
+      "title": "Session Timeout Hook",
+      "body": "In this lesson, you will build a reusable Vue composable called `useSessionTimeout` that automatically logs a user out after a period of inactivity. You will learn how to use Vue's Composition API to create custom hooks that manage state and side effects. The main technologies involved are Vue 3's `ref`, `onMounted`, `onUnmounted`, and browser events like `mousemove` and `keydown`. By the end, you'll have a practical hook that enhances application security by handling session timeouts.",
+      "usecase": "Session timeout hooks are essential in security-sensitive applications where user inactivity could compromise data. In banking dashboards, they automatically log users out after periods of inactivity to prevent unauthorized access to financial information. E-commerce admin panels use them to protect order management systems, while healthcare portals implement them to maintain patient data confidentiality under HIPAA regulations. Developers add these hooks to any application handling sensitive user data or transactions."
+    },
+    "objectives": [
+      "Construct a custom Vue composition function to manage session timeout logic",
+      "Initialize reactive state variables to track user activity and remaining time",
+      "Implement event listeners to detect user interactions and reset the timeout",
+      "Configure computed properties to display formatted countdown information",
+      "Integrate the session timeout hook into a Vue component and control its behavior",
+      "Manipulate the DOM to show/hide timeout warnings based on session state",
+      "Apply the session timeout mechanism to protect sensitive application routes"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 9",
+        "title": "Import Vue and composition API functions (ref, onMounted, onUnmounted)",
+        "instruction": "Import Vue, ref, onMounted, and onUnmounted from 'vue'",
+        "hint": "Use a single import statement to bring in all the necessary functions from the Vue package.",
+        "analogousExample": "// Importing multiple functions from a module\nimport { useState, useEffect } from 'react'",
+        "seedCode": "// Import Vue, ref, onMounted, and onUnmounted from 'vue'",
+        "expectedOutcome": "The Vue composition API functions are imported and ready to use in your component.",
+        "successCriteria": [
+          "Vue, ref, onMounted, and onUnmounted are imported from 'vue'"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close, but make sure you're importing all four items: Vue, ref, onMounted, and onUnmounted from 'vue'.",
+        "feedbackWrong": "import Vue, ref, onMounted, and onUnmounted from the 'vue' package.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "vue",
+            "ref",
+            "onMounted",
+            "onUnmounted"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 9",
+        "title": "Create the main App component",
+        "instruction": "Create a Vue component named App using defineComponent or a setup function. The component should return a template with a root <div> element.",
+        "hint": "In Vue, you can define a component using defineComponent or a setup function. The component must return a template.",
+        "analogousExample": "// Example of a basic Vue component\nconst App = defineComponent({\n  setup() {\n    return () => <div>Hello Vue</div>;\n  }\n});",
+        "seedCode": "// Import Vue, ref, onMounted, and onUnmounted from 'vue'\n\n// Create the App component here",
+        "expectedOutcome": "A functional Vue component named App is created with a root <div> in its template.",
+        "successCriteria": [
+          "The App component is defined using defineComponent or a setup function and returns a template with a root <div>."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started creating the component, but make sure it's named App and returns a template with a root <div> element.",
+        "feedbackWrong": "The App component isn't properly defined. Ensure you use defineComponent or a setup function and return a template with a root <div>.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "App",
+            "defineComponent",
+            "setup",
+            "return",
+            "<div>"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 9",
+        "title": "Initialize session timeout state with ref",
+        "instruction": "Inside your App component, initialize a reactive state variable called 'isSessionExpired' using ref, with a default value of false.",
+        "hint": "Use the ref function you imported earlier to create reactive state. The syntax is: const isSessionExpired = ref(false)",
+        "analogousExample": "// Creating reactive state for a toggle\nconst isVisible = ref(false);",
+        "seedCode": "// Import Vue, ref, onMounted, and onUnmounted from 'vue'\n\n// Create the App component here\nconst App = {\n  setup() {\n    // Initialize session timeout state here\n    \n    return {};\n  }\n};",
+        "expectedOutcome": "You should have a reactive state variable 'isSessionExpired' initialized to false inside the setup function.",
+        "successCriteria": [
+          "The App component's setup function contains 'const isSessionExpired = ref(false)'"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're using ref() with the correct default value (false) and assigning it to a variable named 'isSessionExpired'.",
+        "feedbackWrong": "The session timeout state wasn't initialized correctly. Remember to use ref() inside the setup function.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "isSessionExpired",
+            "ref",
+            "false"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 9",
+        "title": "Initialize timer reference with ref",
+        "instruction": "Inside the setup function, create a reactive reference called 'timeoutId' using ref, initialized with null.",
+        "hint": "Use the ref function imported earlier to create a reactive reference. The syntax is: const timeoutId = ref(null);",
+        "analogousExample": "// Creating a reactive reference for a timer ID\nconst timerRef = ref(null);",
+        "seedCode": "// Import Vue, ref, onMounted, and onUnmounted from 'vue'\n\n// Create the App component here\nconst App = {\n  setup() {\n    // Initialize session timeout state here\n    \n    // Initialize timer reference with ref\n    \n    return {};\n  }\n};",
+        "expectedOutcome": "A reactive reference 'timeoutId' is created with an initial value of null, ready to store the timeout ID for session management.",
+        "successCriteria": [
+          "The 'timeoutId' reference is created using ref and initialized with null."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're using the ref function to create the reference and initializing it with null.",
+        "feedbackWrong": "create a reactive reference called 'timeoutId' using the ref function and set its initial value to null.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "timeoutId",
+            "ref",
+            "null"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 9",
+        "title": "Define resetSessionTimeout function",
+        "instruction": "Inside the setup function, define a function named resetSessionTimeout that clears any existing timeout and sets a new 10-second timeout.",
+        "hint": "Use clearTimeout to clear the timer reference value, then set a new setTimeout that updates the session timeout state to true after 10000 milliseconds.",
+        "analogousExample": "// Example: a function that resets a timer\nfunction resetTimer() {\n  clearTimeout(timerRef.value);\n  timerRef.value = setTimeout(() => {\n    isExpired.value = true;\n  }, 10000);\n}",
+        "seedCode": "// Import Vue, ref, onMounted, and onUnmounted from 'vue'\n\n// Create the App component here\nconst App = {\n  setup() {\n    // Initialize session timeout state here\n    const sessionTimeout = ref(false);\n    \n    // Initialize timer reference with ref\n    const timerRef = ref(null);\n    \n    // Define resetSessionTimeout function here\n    \n    return {};\n  }\n};",
+        "expectedOutcome": "The resetSessionTimeout function will be defined, ready to clear and restart the session timeout timer.",
+        "successCriteria": [
+          "A function named resetSessionTimeout is defined that clears the existing timeout and sets a new 10-second timeout."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've defined a function, but make sure it clears the existing timeout and sets a new 10-second timeout that updates sessionTimeout to true.",
+        "feedbackWrong": "The function isn't defined correctly. It should clear any existing timeout and set a new 10-second timeout that sets sessionTimeout to true.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "resetSessionTimeout",
+            "clearTimeout",
+            "setTimeout",
+            "sessionTimeout.value",
+            "10000"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 9",
+        "title": "Set up event listeners in onMounted",
+        "instruction": "Inside the setup function, use Vue's onMounted lifecycle hook to add event listeners for 'mousemove' and 'keydown' events that will call your handleUserActivity function.",
+        "hint": "Call onMounted with a callback function. Inside that callback, use window.addEventListener for both event types.",
+        "analogousExample": "// Similar: adding event listeners on mount\nonMounted(() => {\n  window.addEventListener('scroll', handleScroll);\n  window.addEventListener('resize', handleResize);\n});",
+        "seedCode": "// Import Vue, ref, onMounted, and onUnmounted from 'vue'\n\n// Create the App component here\nconst App = {\n  setup() {\n    // Initialize session timeout state here\n    const sessionTimeout = ref(false);\n    \n    // Initialize timer reference with ref\n    const timerRef = ref(null);\n    \n    // Define resetSessionTimeout function here\n    \n    // Define handleUserActivity function here\n    \n    // Add onMounted hook here to set up event listeners\n    \n    return {};\n  }\n};",
+        "expectedOutcome": "The component will now automatically start listening for user activity when it mounts to the DOM.",
+        "successCriteria": [
+          "onMounted is called with a callback that adds both 'mousemove' and 'keydown' event listeners to the window object, each calling handleUserActivity."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added the onMounted hook, but make sure you're adding both event listeners ('mousemove' and 'keydown') and calling handleUserActivity.",
+        "feedbackWrong": "The event listeners aren't set up correctly. Remember to use onMounted to add both 'mousemove' and 'keydown' listeners that call handleUserActivity.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "onMounted",
+            "addEventListener",
+            "mousemove",
+            "keydown",
+            "handleUserActivity"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 9",
+        "title": "Clean up event listeners in onUnmounted",
+        "instruction": "Add an onUnmounted hook inside the setup function to remove the 'mousemove' and 'keydown' event listeners and clear any active timeout.",
+        "hint": "Use onUnmounted from Vue to run cleanup code when the component is destroyed. Inside it, call removeEventListener for both events and clearTimeout with timerRef.value.",
+        "analogousExample": "// Cleanup example in a Vue component\nonUnmounted(() => {\n  window.removeEventListener('scroll', handleScroll);\n  clearInterval(intervalId);\n});",
+        "seedCode": "// Import Vue, ref, onMounted, and onUnmounted from 'vue'\n\n// Create the App component here\nconst App = {\n  setup() {\n    // Initialize session timeout state here\n    const sessionTimeout = ref(false);\n    \n    // Initialize timer reference with ref\n    const timerRef = ref(null);\n    \n    // Define resetSessionTimeout function here\n    \n    // Define handleUserActivity function here\n    \n    // Add onMounted hook here to set up event listeners\n    \n    // Add onUnmounted hook here to clean up event listeners and timeout\n    \n    return {};\n  }\n};",
+        "expectedOutcome": "The component will properly clean up event listeners and timeouts when it unmounts, preventing memory leaks.",
+        "successCriteria": [
+          "An onUnmounted hook is added that removes both 'mousemove' and 'keydown' event listeners and clears the timeout using timerRef.value."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You added onUnmounted, but make sure to remove both event listeners ('mousemove' and 'keydown') and clear the timeout.",
+        "feedbackWrong": "The cleanup step is missing or incomplete. Add an onUnmounted hook that removes event listeners and clears the timeout.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "onUnmounted",
+            "removeEventListener",
+            "mousemove",
+            "keydown",
+            "clearTimeout",
+            "timerRef.value"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 9",
+        "title": "Return template structure with conditional rendering",
+        "instruction": "Inside the App component's setup function, return a template object that conditionally renders different content based on the sessionTimeout value. When sessionTimeout is true, show a session expired message. When false, show a normal session active message.",
+        "hint": "The return statement should include a template object with conditional rendering using v-if or a ternary expression. You can use sessionTimeout.value to check the state.",
+        "analogousExample": "// Conditional rendering in Vue template\nreturn {\n  template: `<div>\n    <p v-if=\"isVisible\">Content is visible!</p>\n    <p v-else>Content is hidden.</p>\n  </div>`\n};",
+        "seedCode": "// Import Vue, ref, onMounted, and onUnmounted from 'vue'\n\n// Create the App component here\nconst App = {\n  setup() {\n    // Initialize session timeout state here\n    const sessionTimeout = ref(false);\n    \n    // Initialize timer reference with ref\n    const timerRef = ref(null);\n    \n    // Define resetSessionTimeout function here\n    \n    // Define handleUserActivity function here\n    \n    // Add onMounted hook here to set up event listeners\n    \n    // Add onUnmounted hook here to clean up event listeners and timeout\n    \n    return {};\n  }\n};",
+        "expectedOutcome": "The App component now returns a template that conditionally displays content based on the sessionTimeout state, showing either a session expired or active message.",
+        "successCriteria": [
+          "The setup function returns a template object with conditional rendering that checks sessionTimeout.value and displays appropriate messages."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your template properly checks sessionTimeout.value and shows both the expired and active messages.",
+        "feedbackWrong": "The template doesn't yet conditionally render based on sessionTimeout. Review how to use v-if or ternary expressions in Vue templates.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "return",
+            "template",
+            "sessionTimeout",
+            "v-if",
+            "v-else"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 9",
+        "title": "Add refresh button and wire click event",
+        "instruction": "In the template's return statement, add a button element with the text 'Refresh Session' that calls the resetSessionTimeout function when clicked.",
+        "hint": "Use the @click directive to attach the resetSessionTimeout function to the button's click event.",
+        "analogousExample": "// Adding a button with click handler\n<button @click=\"handleClick\">Click me</button>",
+        "seedCode": "// Import Vue, ref, onMounted, and onUnmounted from 'vue'\n\n// Create the App component here\nconst App = {\n  setup() {\n    // Initialize session timeout state here\n    const sessionTimeout = ref(false);\n    \n    // Initialize timer reference with ref\n    const timerRef = ref(null);\n    \n    // Define resetSessionTimeout function here\n    \n    // Define handleUserActivity function here\n    \n    // Add onMounted hook here to set up event listeners\n    \n    // Add onUnmounted hook here to clean up event listeners and timeout\n    \n    return {\n      sessionTimeout\n    };\n  }\n};",
+        "expectedOutcome": "A button labeled 'Refresh Session' appears in the UI, and clicking it resets the session timeout.",
+        "successCriteria": [
+          "The template includes a button element with @click=\"resetSessionTimeout\" and displays 'Refresh Session' text."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You added a button, but make sure it calls resetSessionTimeout on click and has the correct text.",
+        "feedbackWrong": "The button is missing or not properly connected to resetSessionTimeout. Check the @click directive and button text.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<button",
+            "@click=\"resetSessionTimeout\"",
+            "Refresh Session"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import Vue and composition API functions (ref, onMounted, onUnmounted)",
+        "id": "step1"
+      },
+      {
+        "label": "Create the main App component",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize session timeout state with ref",
+        "id": "step3"
+      },
+      {
+        "label": "Initialize timer reference with ref",
+        "id": "step4"
+      },
+      {
+        "label": "Define resetSessionTimeout function",
+        "id": "step5"
+      },
+      {
+        "label": "Set up event listeners in onMounted",
+        "id": "step6"
+      },
+      {
+        "label": "Clean up event listeners in onUnmounted",
+        "id": "step7"
+      },
+      {
+        "label": "Return template structure with conditional rendering",
+        "id": "step8"
+      },
+      {
+        "label": "Add refresh button and wire click event",
+        "id": "step9"
+      }
+    ]
+  },
+  "source": "content"
+}

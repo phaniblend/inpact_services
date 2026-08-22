@@ -1,0 +1,533 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-mobile-angular-13",
+    "track": "mobile-angular",
+    "lessonNum": 13,
+    "title": "Network Awareness & Resilience",
+    "shortName": "P13",
+    "intro": {
+      "tag": "LESSON #13",
+      "title": "Network Awareness & Resilience",
+      "body": "In this lesson, you will build a mobile app that detects when the device is online or offline and displays a clear status message to the user. You will learn the core concept of network awareness by using the Capacitor Network API to listen for connectivity changes. The main technologies involved are Ionic for the UI, Angular for the app structure, and Capacitor for native device access. By the end, you'll have a resilient app that can gracefully handle network interruptions.",
+      "usecase": "Network awareness is crucial in mobile apps where connectivity can be unreliable. In ride-sharing apps like Uber, the UI shows 'offline mode' indicators and cached trip history when network drops. E-commerce apps like Amazon display cached product listings and queue cart updates until reconnection. Travel apps like Airbnb show saved itineraries and sync booking attempts automatically when back online. Implementing these patterns prevents user frustration and data loss during connectivity changes."
+    },
+    "objectives": [
+      "Import and inject the Ionic Network service into an Angular component to access network status functionality.",
+      "Define a network status state variable using TypeScript interfaces to store current connection information.",
+      "Implement a subscription handler to monitor network status changes in real-time.",
+      "Execute conditional logic to display different UI elements based on online/offline connection state.",
+      "Apply Angular lifecycle hooks (ngOnInit, ngOnDestroy) to properly initialize and clean up network subscriptions.",
+      "Construct a user interface with Ionic components that visually indicates the current network status.",
+      "Utilize the Capacitor Network plugin to retrieve the initial network connection state on app startup.",
+      "Handle network disconnection events by storing pending data operations in local storage for later synchronization.",
+      "Modify application behavior to queue API requests when offline and retry them when connectivity is restored.",
+      "Implement a retry mechanism with exponential backoff to handle transient network failures during API calls.",
+      "Use Ionic loading controllers to provide user feedback during network state transitions and retry operations.",
+      "Apply network-aware routing guards to prevent navigation to data-intensive pages when offline."
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 13",
+        "title": "Import Ionic and Angular core dependencies",
+        "instruction": "Import the Ionic UI components and Angular CommonModule into your component file. Add the import statements at the top of your TypeScript file.",
+        "hint": "Use the import keyword followed by the component names from '@ionic/angular' and CommonModule from '@angular/common'.",
+        "analogousExample": "// Example of importing Ionic components and Angular modules\nimport { IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular';\nimport { CommonModule } from '@angular/common';",
+        "seedCode": {
+          "App.tsx": "// Import Ionic UI components and Angular CommonModule here\n\n// Your component code will go below",
+          "store.ts": "// store setup",
+          "selectors.ts": "// selectors"
+        },
+        "expectedOutcome": "The import statements for Ionic components and Angular CommonModule are added to the file.",
+        "successCriteria": [
+          "The code includes import statements for IonContent, IonHeader, IonTitle, IonToolbar, IonCard, IonCardContent, IonCardHeader, IonCardTitle, IonIcon, IonLabel, IonList, IonItem, IonBadge from '@ionic/angular' and CommonModule from '@angular/common'."
+        ],
+        "feedbackCorrect": "Great! You've successfully imported the required Ionic components and Angular CommonModule. These imports will allow you to use Ionic UI elements and Angular's common directives in your component.",
+        "feedbackPartial": "You've imported some of the required components, but not all. Make sure to import all listed Ionic components (IonContent, IonHeader, IonTitle, IonToolbar, IonCard, IonCardContent, IonCardHeader, IonCardTitle, IonIcon, IonLabel, IonList, IonItem, IonBadge) from '@ionic/angular' and CommonModule from '@angular/common'.",
+        "feedbackWrong": "The import statements are missing or incorrect. You need to import the specified Ionic components from '@ionic/angular' and CommonModule from '@angular/common' using proper TypeScript import syntax.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "IonContent",
+            "IonHeader",
+            "IonTitle",
+            "IonToolbar",
+            "IonCard",
+            "IonCardContent",
+            "IonCardHeader",
+            "IonCardTitle",
+            "IonIcon",
+            "IonLabel",
+            "IonList",
+            "IonItem",
+            "IonBadge",
+            "'@ionic/angular'",
+            "CommonModule",
+            "'@angular/common'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 13",
+        "title": "Import Capacitor Network plugin",
+        "instruction": "Import the Network plugin from '@capacitor/network' to enable network status detection.",
+        "hint": "Use a standard ES6 import statement to bring in the Network module from the specified package.",
+        "analogousExample": "// Example of importing a Capacitor plugin\nimport { Network } from '@capacitor/network';",
+        "seedCode": {
+          "App.tsx": "// Import Ionic UI components and Angular CommonModule here\n\n// Import Capacitor Network plugin here\n\n// Your component code will go below",
+          "store.ts": "// store setup",
+          "selectors.ts": "// selectors"
+        },
+        "expectedOutcome": "The Network plugin is imported and available for use in your component.",
+        "successCriteria": [
+          "The import statement for Network from '@capacitor/network' is correctly added."
+        ],
+        "feedbackCorrect": "Great! You've successfully imported the Capacitor Network plugin. This gives you access to network status APIs.",
+        "feedbackPartial": "You're on the right track, but check the import syntax. Make sure you're importing from '@capacitor/network'.",
+        "feedbackWrong": "The import statement is missing or incorrect. You need to import Network from '@capacitor/network'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "Network",
+            "'@capacitor/network'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 13",
+        "title": "Create the NetworkStatus component",
+        "instruction": "Create a standalone Angular component named NetworkStatus with the @Component decorator, setting standalone: true and selector: 'app-network-status'.",
+        "hint": "Use the @Component decorator from '@angular/core' to define your component class.",
+        "analogousExample": "// Example of creating a standalone component\nimport { Component } from '@angular/core';\n\n@Component({\n  standalone: true,\n  selector: 'app-example',\n  template: '<p>Example component</p>'\n})\nexport class ExampleComponent {}",
+        "seedCode": {
+          "App.tsx": "// Import Ionic UI components and Angular CommonModule here\nimport { Component } from '@angular/core';\nimport { CommonModule } from '@angular/common';\nimport { IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular/standalone';\n\n// Import Capacitor Network plugin here\nimport { Network } from '@capacitor/network';\n\n// Create the NetworkStatus component below\n",
+          "store.ts": "// store setup",
+          "selectors.ts": "// selectors"
+        },
+        "expectedOutcome": "A standalone Angular component class named NetworkStatus is created with the correct decorator configuration.",
+        "successCriteria": [
+          "The component must:\n1. Have the @Component decorator\n2. Set standalone: true\n3. Have selector: 'app-network-status'\n4. Be exported as a class named NetworkStatus"
+        ],
+        "feedbackCorrect": "Perfect! You've successfully created the NetworkStatus component with the correct standalone configuration. This component will serve as the foundation for displaying network status information.",
+        "feedbackPartial": "You're on the right track, but there are some issues. Make sure you've:\n1. Used the @Component decorator\n2. Set standalone: true\n3. Used selector: 'app-network-status'\n4. Exported the class as NetworkStatus\nCheck your syntax and try again.",
+        "feedbackWrong": "The component wasn't created correctly. Remember to:\n1. Import Component from '@angular/core'\n2. Use @Component decorator with standalone: true and selector: 'app-network-status'\n3. Export a class named NetworkStatus\nReview the example and try creating the component again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "@Component",
+            "standalone: true",
+            "selector: 'app-network-status'",
+            "export class NetworkStatus"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 13",
+        "title": "Define component template imports",
+        "instruction": "Add the imports array to the @Component decorator, including CommonModule and the Ionic UI components imported earlier.",
+        "hint": "The imports array should be placed inside the @Component decorator and list the modules/components needed for the template.",
+        "analogousExample": "// Example of component decorator with imports array\n@Component({\n  selector: 'app-example',\n  standalone: true,\n  imports: [CommonModule, IonHeader, IonToolbar, IonTitle, IonContent]\n})",
+        "seedCode": {
+          "App.tsx": "// Import Ionic UI components and Angular CommonModule here\nimport { Component } from '@angular/core';\nimport { CommonModule } from '@angular/common';\nimport { IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular/standalone';\n\n// Import Capacitor Network plugin here\nimport { Network } from '@capacitor/network';\n\n// Create the NetworkStatus component below\n@Component({\n  selector: 'app-network-status',\n  standalone: true,\n  // Add imports array here\n})",
+          "store.ts": "// store setup",
+          "selectors.ts": "// selectors"
+        },
+        "expectedOutcome": "The @Component decorator now has an imports array containing CommonModule and the Ionic components.",
+        "successCriteria": [
+          "The component decorator includes an imports array with at least CommonModule, IonHeader, IonToolbar, IonTitle, and IonContent."
+        ],
+        "feedbackCorrect": "Great! You've properly added the imports array to the component decorator. This makes the CommonModule and Ionic components available for use in your template.",
+        "feedbackPartial": "You've added an imports array, but it might be missing some required modules. Make sure to include CommonModule and all four Ionic components (IonHeader, IonToolbar, IonTitle, IonContent).",
+        "feedbackWrong": "The imports array is missing or incorrect. Remember to add the imports array inside the @Component decorator with the required modules.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "imports:",
+            "[CommonModule",
+            "IonHeader",
+            "IonToolbar",
+            "IonTitle",
+            "IonContent"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 13",
+        "title": "Initialize network status state",
+        "instruction": "Inside the NetworkStatus component class, define a TypeScript interface named NetworkStatus with two properties: 'connected' (boolean) and 'connectionType' (string).",
+        "hint": "Define the interface first, then add the property to your component class. Use TypeScript syntax for both the interface and property declaration.",
+        "analogousExample": "// Example of defining an interface and component property\ninterface UserStatus {\n  isActive: boolean;\n  role: string;\n}\n\n@Component({\n  selector: 'app-user',\n  standalone: true\n})\nexport class UserComponent {\n  userStatus: UserStatus = { isActive: false, role: 'guest' };\n}",
+        "seedCode": {
+          "App.tsx": "// Import Ionic UI components and Angular CommonModule here\nimport { Component } from '@angular/core';\nimport { CommonModule } from '@angular/common';\nimport { IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular/standalone';\n\n// Import Capacitor Network plugin here\nimport { Network } from '@capacitor/network';\n\n// Create the NetworkStatus component below\n@Component({\n  selector: 'app-network-status',\n  standalone: true,\n  // Add imports array here\n})\nexport class NetworkStatusComponent {\n  // Define NetworkStatus interface and networkStatus property here\n}",
+          "store.ts": "// store setup",
+          "selectors.ts": "// selectors"
+        },
+        "expectedOutcome": "The component now has a typed networkStatus property with default values, ready to store actual network information.",
+        "successCriteria": [
+          "The code should include: 1) A NetworkStatus interface with correct properties, 2) A networkStatus property of that type, 3) Default initialization values."
+        ],
+        "feedbackCorrect": "Great! You've successfully defined the NetworkStatus interface and initialized the networkStatus property with default values. This gives us a typed structure to store network connectivity information.",
+        "feedbackPartial": "You're on the right track, but something is missing. Make sure you've defined both the NetworkStatus interface (with connected: boolean and connectionType: string) AND the networkStatus property initialized with default values (connected: false, connectionType: 'unknown').",
+        "feedbackWrong": "The code doesn't match what was requested. You need to define a NetworkStatus interface with two properties (connected: boolean, connectionType: string) and then create a networkStatus property of that type with default values inside the component class.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "interface NetworkStatus",
+            "connected: boolean",
+            "connectionType: string",
+            "networkStatus: NetworkStatus",
+            "=",
+            "{",
+            "connected: false",
+            "connectionType: 'unknown'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 13",
+        "title": "create a component property named 'networkSta",
+        "instruction": "create a component property named 'networkStatus' of type NetworkStatus and initialize it with default values (connected: false, connectionType: 'unknown').",
+        "hint": "Define the interface first, then add the property to your component class. Use TypeScript syntax for both the interface and property declaration.",
+        "analogousExample": "// Example of defining an interface and component property\ninterface UserStatus {\n  isActive: boolean;\n  role: string;\n}\n\n@Component({\n  selector: 'app-user',\n  standalone: true\n})\nexport class UserComponent {\n  userStatus: UserStatus = { isActive: false, role: 'guest' };\n}",
+        "seedCode": {
+          "App.tsx": "// Import Ionic UI components and Angular CommonModule here\nimport { Component } from '@angular/core';\nimport { CommonModule } from '@angular/common';\nimport { IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular/standalone';\n\n// Import Capacitor Network plugin here\nimport { Network } from '@capacitor/network';\n\n// Create the NetworkStatus component below\n@Component({\n  selector: 'app-network-status',\n  standalone: true,\n  // Add imports array here\n})\nexport class NetworkStatusComponent {\n  // Define NetworkStatus interface and networkStatus property here\n}",
+          "store.ts": "// store setup",
+          "selectors.ts": "// selectors"
+        },
+        "expectedOutcome": "",
+        "successCriteria": [
+          "Complete the step as instructed."
+        ],
+        "feedbackCorrect": "Great! Step completed.",
+        "feedbackPartial": "Review the instruction and try again.",
+        "feedbackWrong": "Check the instruction and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "interface NetworkStatus",
+            "connected: boolean",
+            "connectionType: string",
+            "networkStatus: NetworkStatus",
+            "=",
+            "{",
+            "connected: false",
+            "connectionType: 'unknown'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 13",
+        "title": "Initialize network listener state",
+        "instruction": "Inside the NetworkStatusComponent class, create a property named networkListener with type any to store the network status change listener.",
+        "hint": "Add a class property declaration with the type annotation ': any'.",
+        "analogousExample": "// Example of adding a typed property to an Angular component class\nexport class ExampleComponent {\n  // Property to store a listener\n  private listener: any;\n}",
+        "seedCode": {
+          "App.tsx": "// Import Ionic UI components and Angular CommonModule here\nimport { Component } from '@angular/core';\nimport { CommonModule } from '@angular/common';\nimport { IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular/standalone';\n\n// Import Capacitor Network plugin here\nimport { Network } from '@capacitor/network';\n\n// Create the NetworkStatus component below\n@Component({\n  selector: 'app-network-status',\n  standalone: true,\n  // Add imports array here\n})\nexport class NetworkStatusComponent {\n  // Define NetworkStatus interface and networkStatus property here\n  // Add networkListener property here\n}",
+          "store.ts": "// store setup",
+          "selectors.ts": "// selectors"
+        },
+        "expectedOutcome": "The component class now has a networkListener property ready to store the network status listener.",
+        "successCriteria": [
+          "The NetworkStatusComponent class contains a property declaration for networkListener with type any."
+        ],
+        "feedbackCorrect": "Great! You've successfully added the networkListener property. This will be used to store the network status change listener so we can properly manage and clean it up later.",
+        "feedbackPartial": "You're on the right track, but the networkListener property isn't quite complete. Make sure you've declared it with the correct name and type annotation ': any'.",
+        "feedbackWrong": "The networkListener property is missing or incorrect. You need to add a property declaration inside the NetworkStatusComponent class with the name 'networkListener' and type 'any'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "networkListener",
+            ":",
+            "any"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 13",
+        "title": "Create method to get initial network status",
+        "instruction": "Inside the NetworkStatusComponent class, create an async method named getNetworkStatus that calls Network.getStatus() and updates the networkStatus property with the result.",
+        "hint": "Use the async keyword before the method name. Call Network.getStatus() which returns a Promise. Use await to get the result and assign it to this.networkStatus.",
+        "analogousExample": "// Example of an async method in an Angular component\nasync getCurrentLocation(): Promise<void> {\n  const coordinates = await Geolocation.getCurrentPosition();\n  this.location = coordinates.coords;\n}",
+        "seedCode": {
+          "App.tsx": "// Import Ionic UI components and Angular CommonModule here\nimport { Component } from '@angular/core';\nimport { CommonModule } from '@angular/common';\nimport { IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular/standalone';\n\n// Import Capacitor Network plugin here\nimport { Network } from '@capacitor/network';\n\n// Create the NetworkStatus component below\n@Component({\n  selector: 'app-network-status',\n  standalone: true,\n  // Add imports array here\n})\nexport class NetworkStatusComponent {\n  // Define NetworkStatus interface and networkStatus property here\n  // Add networkListener property here\n  \n  // Create getNetworkStatus method here\n}",
+          "store.ts": "// store setup",
+          "selectors.ts": "// selectors"
+        },
+        "expectedOutcome": "The component now has an async method that can fetch the current network status from the Capacitor Network plugin.",
+        "successCriteria": [
+          "The method must be named getNetworkStatus, be marked as async, call Network.getStatus(), and assign the result to this.networkStatus."
+        ],
+        "feedbackCorrect": "Great! You've successfully created the getNetworkStatus method that will fetch the initial network status.",
+        "feedbackPartial": "You're on the right track, but check: Is the method async? Does it call Network.getStatus()? Does it assign the result to this.networkStatus?",
+        "feedbackWrong": "The method isn't quite right. Remember to create an async method named getNetworkStatus that calls Network.getStatus() and updates the networkStatus property.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "async",
+            "getNetworkStatus",
+            "Network.getStatus",
+            "this.networkStatus"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 13",
+        "title": "Create method to start network monitoring",
+        "instruction": "Inside the NetworkStatusComponent class, create a method named startNetworkListener that will set up a listener for network status changes using the Network plugin.",
+        "hint": "Define a method that calls Network.addListener() and stores the returned listener in the networkListener property.",
+        "analogousExample": "// Example of a method that starts a listener\nstartNetworkListener() {\n  this.networkListener = Network.addListener('networkStatusChange', (status) => {\n    // Handle status change here\n  });\n}",
+        "seedCode": {
+          "App.tsx": "// Import Ionic UI components and Angular CommonModule here\nimport { Component } from '@angular/core';\nimport { CommonModule } from '@angular/common';\nimport { IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular/standalone';\n\n// Import Capacitor Network plugin here\nimport { Network } from '@capacitor/network';\n\n// Create the NetworkStatus component below\n@Component({\n  selector: 'app-network-status',\n  standalone: true,\n  // Add imports array here\n})\nexport class NetworkStatusComponent {\n  // Define NetworkStatus interface and networkStatus property here\n  // Add networkListener property here\n  \n  // Create getNetworkStatus method here\n  \n  // Create startNetworkListener method here\n}",
+          "store.ts": "// store setup",
+          "selectors.ts": "// selectors"
+        },
+        "expectedOutcome": "The component will have a startNetworkListener method defined that will be ready to monitor network changes.",
+        "successCriteria": [
+          "The method should be named startNetworkListener, be defined inside the NetworkStatusComponent class, and include a call to Network.addListener."
+        ],
+        "feedbackCorrect": "Great! You've successfully created the startNetworkListener method. This method will be responsible for monitoring network status changes when called.",
+        "feedbackPartial": "You're on the right track, but make sure the method is named exactly 'startNetworkListener' and includes the Network.addListener call. Check your syntax.",
+        "feedbackWrong": "The startNetworkListener method is not properly defined. Ensure you create a method with the correct name inside the NetworkStatusComponent class.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "startNetworkListener",
+            "Network.addListener"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 13",
+        "title": "Implement Angular lifecycle methods",
+        "instruction": "Inside the NetworkStatusComponent class, implement the ngOnInit lifecycle method. In this method, call both the getNetworkStatus() and startNetworkListener() methods.",
+        "hint": "Use the ngOnInit() method from Angular's lifecycle hooks. Call the existing methods inside it.",
+        "analogousExample": "// Example of implementing ngOnInit\nngOnInit(): void {\n  this.loadInitialData();\n  this.startUpdates();\n}",
+        "seedCode": {
+          "App.tsx": "// Import Ionic UI components and Angular CommonModule here\nimport { Component } from '@angular/core';\nimport { CommonModule } from '@angular/common';\nimport { IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular/standalone';\n\n// Import Capacitor Network plugin here\nimport { Network } from '@capacitor/network';\n\n// Create the NetworkStatus component below\n@Component({\n  selector: 'app-network-status',\n  standalone: true,\n  // Add imports array here\n})\nexport class NetworkStatusComponent {\n  // Define NetworkStatus interface and networkStatus property here\n  // Add networkListener property here\n  \n  // Create getNetworkStatus method here\n  \n  // Create startNetworkListener method here\n  \n  // Implement ngOnInit lifecycle method here\n}",
+          "store.ts": "// store setup",
+          "selectors.ts": "// selectors"
+        },
+        "expectedOutcome": "The component will now automatically initialize network status and start monitoring when it loads.",
+        "successCriteria": [
+          "The component class should have an ngOnInit method that calls getNetworkStatus() and startNetworkListener()."
+        ],
+        "feedbackCorrect": "Great! You've implemented the ngOnInit lifecycle method to initialize network monitoring when the component loads.",
+        "feedbackPartial": "You're on the right track, but make sure ngOnInit calls both getNetworkStatus() and startNetworkListener().",
+        "feedbackWrong": "The ngOnInit method should be implemented in the component class and call both existing methods.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "ngOnInit",
+            "getNetworkStatus",
+            "startNetworkListener"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 13",
+        "title": "Clean up network listener on destroy",
+        "instruction": "Implement the ngOnDestroy lifecycle method in your component to properly clean up the network listener when the component is destroyed.",
+        "hint": "Angular's ngOnDestroy method is called just before the component is destroyed. Inside this method, check if the networkListener property exists and remove it.",
+        "analogousExample": "// Example of implementing ngOnDestroy to clean up a listener\nngOnDestroy() {\n  if (this.someListener) {\n    this.someListener.remove();\n    this.someListener = null;\n  }\n}",
+        "seedCode": {
+          "App.tsx": "// Import Ionic UI components and Angular CommonModule here\nimport { Component } from '@angular/core';\nimport { CommonModule } from '@angular/common';\nimport { IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular/standalone';\n\n// Import Capacitor Network plugin here\nimport { Network } from '@capacitor/network';\n\n// Create the NetworkStatus component below\n@Component({\n  selector: 'app-network-status',\n  standalone: true,\n  // Add imports array here\n})\nexport class NetworkStatusComponent {\n  // Define NetworkStatus interface and networkStatus property here\n  // Add networkListener property here\n  \n  // Create getNetworkStatus method here\n  \n  // Create startNetworkListener method here\n  \n  // Implement ngOnInit lifecycle method here\n  \n  // Implement ngOnDestroy lifecycle method here\n}",
+          "store.ts": "// store setup",
+          "selectors.ts": "// selectors"
+        },
+        "expectedOutcome": "The component will now properly clean up the network listener when it's destroyed, preventing memory leaks.",
+        "successCriteria": [
+          "The ngOnDestroy method should be implemented, check if networkListener exists, and call remove() on it."
+        ],
+        "feedbackCorrect": "Perfect! You've implemented ngOnDestroy to clean up the network listener. This prevents memory leaks by removing the listener when the component is destroyed.",
+        "feedbackPartial": "You're on the right track, but make sure to check if networkListener exists before trying to remove it, and call the remove() method on it.",
+        "feedbackWrong": "The ngOnDestroy method should be implemented to clean up the network listener. Check if networkListener exists and call remove() on it.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "ngOnDestroy",
+            "networkListener",
+            "remove"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step12",
+        "type": "question",
+        "phase": "Step 12 of 13",
+        "title": "Create the component template structure",
+        "instruction": "Create the component's template with basic Ionic UI structure: an IonHeader containing IonToolbar and IonTitle, and an IonContent wrapper.",
+        "hint": "Add a template property to the @Component decorator with the Ionic UI structure. Use the Ionic components you imported earlier.",
+        "analogousExample": "// Example of a basic Ionic component template structure\n@Component({\n  selector: 'app-example',\n  standalone: true,\n  imports: [CommonModule, IonContent, IonHeader, IonTitle, IonToolbar],\n  template: `\n    <ion-header>\n      <ion-toolbar>\n        <ion-title>Example Title</ion-title>\n      </ion-toolbar>\n    </ion-header>\n    <ion-content>\n      <!-- Content will go here -->\n    </ion-content>\n  `\n})",
+        "seedCode": {
+          "App.tsx": "// Import Ionic UI components and Angular CommonModule here\nimport { Component } from '@angular/core';\nimport { CommonModule } from '@angular/common';\nimport { IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular/standalone';\n\n// Import Capacitor Network plugin here\nimport { Network } from '@capacitor/network';\n\n// Create the NetworkStatus component below\n@Component({\n  selector: 'app-network-status',\n  standalone: true,\n  imports: [CommonModule, IonContent, IonHeader, IonTitle, IonToolbar]\n})\nexport class NetworkStatusComponent {\n  // Define NetworkStatus interface and networkStatus property here\n  // Add networkListener property here\n  \n  // Create getNetworkStatus method here\n  \n  // Create startNetworkListener method here\n  \n  // Implement ngOnInit lifecycle method here\n  \n  // Implement ngOnDestroy lifecycle method here\n}",
+          "store.ts": "// store setup",
+          "selectors.ts": "// selectors"
+        },
+        "expectedOutcome": "The component will have a basic Ionic UI structure with header and content areas ready for network status display.",
+        "successCriteria": [
+          "The @Component decorator should include a template property with the required Ionic structure containing ion-header, ion-toolbar, ion-title, and ion-content elements."
+        ],
+        "feedbackCorrect": "Great! You've successfully created the basic Ionic UI structure for your component. The template now has the header and content areas ready for displaying network information.",
+        "feedbackPartial": "You've added a template, but it's missing some required Ionic elements. Make sure your template includes: ion-header with ion-toolbar and ion-title inside, and an ion-content wrapper.",
+        "feedbackWrong": "The component template structure is not properly implemented. You need to add a template property to the @Component decorator with the Ionic UI structure using the imported Ionic components.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "template:",
+            "ion-header",
+            "ion-toolbar",
+            "ion-title",
+            "ion-content"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step13",
+        "type": "question",
+        "phase": "Step 13 of 13",
+        "title": "Display network status in template",
+        "instruction": "Add an IonCard to your component's template that displays the network connection status using an IonBadge (with color based on connected state) and shows the connection type.",
+        "hint": "Use *ngIf to conditionally apply CSS classes to IonBadge based on networkStatus.connected, and display networkStatus.connectionType in the IonCard content.",
+        "analogousExample": "// Example of conditional styling and data binding in Ionic Angular template\n<ion-card>\n  <ion-card-header>\n    <ion-card-title>Network Status</ion-card-title>\n  </ion-card-header>\n  <ion-card-content>\n    <ion-badge [class.connected]=\"isConnected\" [class.disconnected]=\"!isConnected\">\n      {{ isConnected ? 'Online' : 'Offline' }}\n    </ion-badge>\n    <p>Connection type: {{ connectionType }}</p>\n  </ion-card-content>\n</ion-card>",
+        "seedCode": {
+          "App.tsx": "// Import Ionic UI components and Angular CommonModule here\nimport { Component } from '@angular/core';\nimport { CommonModule } from '@angular/common';\nimport { IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular/standalone';\n\n// Import Capacitor Network plugin here\nimport { Network } from '@capacitor/network';\n\n// Create the NetworkStatus component below\n@Component({\n  selector: 'app-network-status',\n  standalone: true,\n  imports: [CommonModule, IonContent, IonHeader, IonTitle, IonToolbar]\n})\nexport class NetworkStatusComponent {\n  // Define NetworkStatus interface and networkStatus property here\n  // Add networkListener property here\n  \n  // Create getNetworkStatus method here\n  \n  // Create startNetworkListener method here\n  \n  // Implement ngOnInit lifecycle method here\n  \n  // Implement ngOnDestroy lifecycle method here\n  \n  // Add IonCard with IonBadge showing connection status (color based on connected state) and display connectionType here\n}",
+          "store.ts": "// store setup",
+          "selectors.ts": "// selectors"
+        },
+        "expectedOutcome": "The template now displays network status information with visual feedback using Ionic components.",
+        "successCriteria": [
+          "IonCard component present",
+          "IonBadge component present with conditional styling",
+          "networkStatus.connected used for badge text/color",
+          "networkStatus.connectionType displayed"
+        ],
+        "feedbackCorrect": "Great! You've successfully bound the network status data to the template with conditional visual feedback. The IonBadge now clearly shows whether the device is online or offline, and the connection type is displayed.",
+        "feedbackPartial": "You've added some of the required elements. Make sure you have: 1) An IonCard component, 2) An IonBadge that changes appearance based on networkStatus.connected, 3) The connection type displayed from networkStatus.connectionType.",
+        "feedbackWrong": "The template doesn't yet display the network status information. You need to add an IonCard containing an IonBadge that shows connection status (with color based on connected state) and displays the connection type.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "ion-card",
+            "ion-badge",
+            "networkStatus.connected",
+            "networkStatus.connectionType"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import Ionic and Angular core dependencies",
+        "id": "step1"
+      },
+      {
+        "label": "Import Capacitor Network plugin",
+        "id": "step2"
+      },
+      {
+        "label": "Create the NetworkStatus component",
+        "id": "step3"
+      },
+      {
+        "label": "Define component template imports",
+        "id": "step4"
+      },
+      {
+        "label": "Initialize network status state",
+        "id": "step5"
+      },
+      {
+        "label": "create a component property named 'networkSta",
+        "id": "step6"
+      },
+      {
+        "label": "Initialize network listener state",
+        "id": "step7"
+      },
+      {
+        "label": "Create method to get initial network status",
+        "id": "step8"
+      },
+      {
+        "label": "Create method to start network monitoring",
+        "id": "step9"
+      },
+      {
+        "label": "Implement Angular lifecycle methods",
+        "id": "step10"
+      },
+      {
+        "label": "Clean up network listener on destroy",
+        "id": "step11"
+      },
+      {
+        "label": "Create the component template structure",
+        "id": "step12"
+      },
+      {
+        "label": "Display network status in template",
+        "id": "step13"
+      }
+    ],
+    "answerShape": "multi-file"
+  },
+  "source": "content"
+}

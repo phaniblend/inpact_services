@@ -1,0 +1,418 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-react-js-51",
+    "track": "react-js",
+    "lessonNum": 51,
+    "title": "Image Lazy Loading",
+    "shortName": "P51",
+    "intro": {
+      "tag": "LESSON #51",
+      "title": "Image Lazy Loading",
+      "body": "In this lesson, you will build a React component that implements image lazy loading, a technique to improve website performance by loading images only when they are about to appear in the viewport. You will learn how to use the Intersection Observer API to detect when an image enters the visible area of the screen. The main technologies involved are React's useState and useEffect hooks, along with the native browser Intersection Observer. By the end, you'll create a reusable LazyImage component that efficiently loads images on demand, enhancing user experience and page speed.",
+      "usecase": "Image lazy loading is essential in modern web applications where large numbers of images are displayed, such as e-commerce product galleries, social media feeds, and news/article websites. Developers implement this pattern to improve initial page load performance by deferring off-screen image loading until users scroll near them. In practice, this means product listings on Amazon, Instagram's infinite scroll feed, or news sites like BBC News only load images as they become visible, reducing bandwidth usage and speeding up page interaction. As a React developer, you'll use this technique to optimize dashboard components, gallery widgets, and any UI with scrollable image collections."
+    },
+    "objectives": [
+      "Implement a React component that conditionally renders an image based on viewport visibility.",
+      "Initialize and manage component state to track the image's intersection with the viewport.",
+      "Construct an IntersectionObserver to monitor when the image enters the browser viewport.",
+      "Bind the IntersectionObserver to the image element using a ref for direct DOM access.",
+      "Configure the IntersectionObserver options to control the threshold and root margin for triggering.",
+      "Manipulate the component to load the image source only when the observer triggers.",
+      "Integrate cleanup logic to disconnect the observer when the component unmounts."
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 12",
+        "title": "Import React, useState, useEffect, and useRef",
+        "instruction": "Import React and the hooks useState, useEffect, and useRef from the 'react' library.",
+        "hint": "Use a single import statement to bring in all four items from 'react'.",
+        "analogousExample": "// Example: importing multiple hooks\nimport React, { useState, useEffect } from 'react';",
+        "seedCode": "// Import React, useState, useEffect, and useRef from 'react'",
+        "expectedOutcome": "The necessary React hooks for lazy loading are imported and ready to use.",
+        "successCriteria": [
+          "React, useState, useEffect, and useRef are imported from 'react'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure to import all four items: React, useState, useEffect, and useRef from 'react'.",
+        "feedbackWrong": "The imports are incomplete or incorrect. Please import React, useState, useEffect, and useRef from 'react'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "React",
+            "useState",
+            "useEffect",
+            "useRef",
+            "'react'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 12",
+        "title": "Create the main ImageGallery component",
+        "instruction": "Create a functional component named ImageGallery that returns an empty div element.",
+        "hint": "Define the component using either a function declaration or arrow function syntax, and make it return a div.",
+        "analogousExample": "// Similar: a component that returns an empty wrapper\nfunction MyComponent() {\n  return <div></div>;\n}",
+        "seedCode": "// Import React, useState, useEffect, and useRef from 'react'\n\n// Create the ImageGallery component here",
+        "expectedOutcome": "The component is defined and returns an empty div.",
+        "successCriteria": [
+          "A functional component named ImageGallery exists and returns a div element."
+        ],
+        "feedbackCorrect": "Great! You've created the ImageGallery component structure.",
+        "feedbackPartial": "You're close. Make sure the component returns a div element.",
+        "feedbackWrong": "The component isn't defined correctly. Create a function named ImageGallery that returns a div.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "ImageGallery",
+            "return",
+            "<div>"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 12",
+        "title": "Initialize state for loaded images",
+        "instruction": "Inside your ImageGallery component, use the useState hook to create a state variable named loadedImages initialized as an empty array.",
+        "hint": "Call useState with an empty array [] as the initial value and destructure the returned array into loadedImages and setLoadedImages.",
+        "analogousExample": "// Similar: state for a list\nconst [items, setItems] = useState([]);",
+        "seedCode": "// Import React, useState, useEffect, and useRef from 'react'\n\n// Create the ImageGallery component here\nconst ImageGallery = () => {\n  // Initialize loadedImages state here\n  \n  return null;\n};",
+        "expectedOutcome": "The component will have a loadedImages state variable that starts as an empty array, ready to track which images have loaded.",
+        "successCriteria": [
+          "The useState hook is called with [] as initial value, and the destructured array includes loadedImages and setLoadedImages."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're using useState with an empty array and destructuring both the value and setter.",
+        "feedbackWrong": "That doesn't look right. Remember to use useState to create a state variable initialized as an empty array.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "useState",
+            "loadedImages",
+            "[]"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 12",
+        "title": "Create a ref for the image container",
+        "instruction": "Inside the ImageGallery component, use the useRef hook to create a ref called containerRef that will reference the DOM element that will contain your images.",
+        "hint": "Call useRef() and assign the result to a variable named containerRef. This will be used later to observe when images enter the viewport.",
+        "analogousExample": "// Creating a ref for a DOM element\nconst inputRef = useRef(null);",
+        "seedCode": "// Import React, useState, useEffect, and useRef from 'react'\n\n// Create the ImageGallery component here\nconst ImageGallery = () => {\n  // Initialize loadedImages state here\n  \n  // Create containerRef here\n  \n  return null;\n};",
+        "expectedOutcome": "The component will have a containerRef created with useRef, ready to be attached to a DOM element in a future step.",
+        "successCriteria": [
+          "containerRef is declared using useRef() inside the component."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're using the useRef hook to create a ref variable named containerRef.",
+        "feedbackWrong": "That doesn't look right. Remember to use the useRef hook to create a ref called containerRef inside the component.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "containerRef",
+            "useRef"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 12",
+        "title": "Define image data array",
+        "instruction": "Inside the ImageGallery component, create an array called 'images' containing objects with id, src, and alt properties. Place this array above the return statement.",
+        "hint": "Define a constant variable named 'images' and set it to an array of objects. Each object should have properties like id (number), src (string URL), and alt (string description).",
+        "analogousExample": "// Example: array of data objects\nconst products = [\n  { id: 1, name: 'Laptop', price: 999 },\n  { id: 2, name: 'Phone', price: 699 }\n];",
+        "seedCode": "// Import React, useState, useEffect, and useRef from 'react'\n\n// Create the ImageGallery component here\nconst ImageGallery = () => {\n  // Initialize loadedImages state here\n  \n  // Create containerRef here\n  \n  // Define image data array here\n  \n  return null;\n};",
+        "expectedOutcome": "An 'images' array is defined inside the component, containing sample image data objects.",
+        "successCriteria": [
+          "The component contains a constant 'images' array with at least one object having id, src, and alt properties."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your array is named 'images' and contains objects with id, src, and alt properties.",
+        "feedbackWrong": "The image data array isn't properly defined. Create an array called 'images' with objects containing id, src, and alt properties.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "images",
+            "[",
+            "]",
+            "id",
+            "src",
+            "alt"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 12",
+        "title": "Create the handleImageLoad function",
+        "instruction": "Inside your ImageGallery component, create a function named handleImageLoad that takes an image id as a parameter and adds that id to the loadedImages state.",
+        "hint": "Remember that setLoadedImages updates the state. You can use the functional update pattern: setLoadedImages(prev => [...prev, id]) to add the new id to the existing array.",
+        "analogousExample": "// Example: a function that updates state\nfunction handleCompleteTask(taskId) {\n  setCompletedTasks(prev => [...prev, taskId]);\n}",
+        "seedCode": "// Import React, useState, useEffect, and useRef from 'react'\n\n// Create the ImageGallery component here\nconst ImageGallery = () => {\n  // Initialize loadedImages state here\n  \n  // Create containerRef here\n  \n  // Define image data array here\n  \n  // Create handleImageLoad function here\n  \n  return null;\n};",
+        "expectedOutcome": "You should have a handleImageLoad function that updates the loadedImages state by adding the provided image id.",
+        "successCriteria": [
+          "The handleImageLoad function is defined, takes an id parameter, and calls setLoadedImages to add that id to the state array."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure your function takes an id parameter and updates the loadedImages state correctly.",
+        "feedbackWrong": "The handleImageLoad function isn't defined correctly. It should take an id and update the loadedImages state.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "handleImageLoad",
+            "setLoadedImages",
+            "id"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 12",
+        "title": "Set up the Intersection Observer in useEffect",
+        "instruction": "Add a useEffect hook inside your ImageGallery component that creates an Intersection Observer to observe image elements.",
+        "hint": "Inside the useEffect callback, create a new IntersectionObserver instance and use it to observe elements from your containerRef.",
+        "analogousExample": "// Example: useEffect with Intersection Observer\nuseEffect(() => {\n  const observer = new IntersectionObserver((entries) => {\n    entries.forEach(entry => {\n      if (entry.isIntersecting) {\n        // Load image\n      }\n    });\n  });\n  \n  // Observe elements\n  const elements = containerRef.current.querySelectorAll('img');\n  elements.forEach(el => observer.observe(el));\n  \n  return () => observer.disconnect();\n}, []);",
+        "seedCode": "// Import React, useState, useEffect, and useRef from 'react'\n\n// Create the ImageGallery component here\nconst ImageGallery = () => {\n  // Initialize loadedImages state here\n  \n  // Create containerRef here\n  \n  // Define image data array here\n  \n  // Create handleImageLoad function here\n  \n  // Add useEffect for Intersection Observer here\n  \n  return null;\n};",
+        "expectedOutcome": "The useEffect hook is added to the component with an Intersection Observer that will observe image elements.",
+        "successCriteria": [
+          "The useEffect hook is implemented with an Intersection Observer instance that observes elements from containerRef."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure your useEffect creates a new IntersectionObserver and observes elements from containerRef.current.",
+        "feedbackWrong": "The useEffect hook for the Intersection Observer isn't set up correctly. Check that you're creating an IntersectionObserver instance and observing image elements.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "useEffect",
+            "IntersectionObserver",
+            "observe",
+            "containerRef"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 12",
+        "title": "Add the main container with ref",
+        "instruction": "In the ImageGallery component's return statement, add a div element with className 'image-gallery' and attach the containerRef to it.",
+        "hint": "Use JSX to create a div with the ref attribute set to containerRef and className set to 'image-gallery'.",
+        "analogousExample": "// Similar: a container div with ref\n<div className=\"container\" ref={myRef}>\n  {/* content goes here */}\n</div>",
+        "seedCode": "import React, { useState, useEffect, useRef } from 'react';\n\nconst ImageGallery = () => {\n  const [loadedImages, setLoadedImages] = useState([]);\n  const containerRef = useRef(null);\n  \n  const imageData = [\n    { id: 1, src: 'image1.jpg', alt: 'Image 1' },\n    { id: 2, src: 'image2.jpg', alt: 'Image 2' },\n    { id: 3, src: 'image3.jpg', alt: 'Image 3' }\n  ];\n  \n  const handleImageLoad = (id) => {\n    setLoadedImages(prev => [...prev, id]);\n  };\n  \n  useEffect(() => {\n    const observer = new IntersectionObserver((entries) => {\n      entries.forEach(entry => {\n        if (entry.isIntersecting) {\n          // Load image logic will go here\n        }\n      });\n    }, { threshold: 0.1 });\n    \n    if (containerRef.current) {\n      const imageElements = containerRef.current.querySelectorAll('img');\n      imageElements.forEach(img => observer.observe(img));\n    }\n    \n    return () => observer.disconnect();\n  }, []);\n  \n  return (\n    // Add your div with ref and className here\n  );\n};",
+        "expectedOutcome": "The component returns a div with className 'image-gallery' and the containerRef attached to it.",
+        "successCriteria": [
+          "A div element with className 'image-gallery' and ref={containerRef} is returned from the component."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you've added both the className 'image-gallery' and attached containerRef to the div.",
+        "feedbackWrong": "The main container with ref wasn't added correctly. Check that you're returning a div with className 'image-gallery' and ref={containerRef}.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "div",
+            "className=\"image-gallery\"",
+            "ref={containerRef}"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 12",
+        "title": "Map through images to create image elements",
+        "instruction": "Inside the return statement of your ImageGallery component, use the map method on the imageData array to create an img element for each image object. For now, just return the basic img elements with src and alt attributes from the data.",
+        "hint": "Call imageData.map() and return an img element for each item. Use the item's src for the src attribute and alt for the alt attribute.",
+        "analogousExample": "// Example: mapping an array to elements\nconst items = ['apple', 'banana', 'orange'];\nconst list = items.map((item, index) => (\n  <li key={index}>{item}</li>\n));",
+        "seedCode": "import React, { useState, useEffect, useRef } from 'react';\n\nconst ImageGallery = () => {\n  const [loadedImages, setLoadedImages] = useState([]);\n  const containerRef = useRef(null);\n  \n  const imageData = [\n    { id: 1, src: 'image1.jpg', alt: 'Image 1' },\n    { id: 2, src: 'image2.jpg', alt: 'Image 2' },\n    { id: 3, src: 'image3.jpg', alt: 'Image 3' }\n  ];\n  \n  const handleImageLoad = (id) => {\n    setLoadedImages(prev => [...prev, id]);\n  };\n  \n  useEffect(() => {\n    const observer = new IntersectionObserver((entries) => {\n      entries.forEach(entry => {\n        if (entry.isIntersecting) {\n          // Load image logic will go here\n        }\n      });\n    }, { threshold: 0.1 });\n    \n    if (containerRef.current) {\n      const imageElements = containerRef.current.querySelectorAll('img');\n      imageElements.forEach(img => observer.observe(img));\n    }\n    \n    return () => observer.disconnect();\n  }, []);\n  \n  return (\n    <div ref={containerRef} className=\"image-gallery\">\n      {/* Map through imageData to create img elements here */}\n    </div>\n  );\n};",
+        "expectedOutcome": "The return statement will contain a div with the image-gallery class and ref, and inside it, three img elements generated from the imageData array.",
+        "successCriteria": [
+          "The imageData array is mapped to img elements, each with src and alt attributes from the data."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're using the map method on imageData and returning an img element for each item with the correct src and alt attributes.",
+        "feedbackWrong": "That doesn't look right. Remember to use imageData.map() inside the return statement to generate img elements from the array data.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "imageData.map",
+            "img",
+            "src",
+            "alt"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 12",
+        "title": "Add lazy loading attributes to images",
+        "instruction": "In the map function where you create img elements, add the loading='lazy' attribute to each img element to enable native browser lazy loading.",
+        "hint": "Add the loading attribute with value 'lazy' to the img JSX element, similar to how you add src and alt attributes.",
+        "analogousExample": "// Adding lazy loading to an image element\n<img src='photo.jpg' alt='A photo' loading='lazy' />",
+        "seedCode": "import React, { useState, useEffect, useRef } from 'react';\n\nconst ImageGallery = () => {\n  const [loadedImages, setLoadedImages] = useState([]);\n  const containerRef = useRef(null);\n  \n  const imageData = [\n    { id: 1, src: 'image1.jpg', alt: 'Image 1' },\n    { id: 2, src: 'image2.jpg', alt: 'Image 2' },\n    { id: 3, src: 'image3.jpg', alt: 'Image 3' }\n  ];\n  \n  const handleImageLoad = (id) => {\n    setLoadedImages(prev => [...prev, id]);\n  };\n  \n  useEffect(() => {\n    const observer = new IntersectionObserver((entries) => {\n      entries.forEach(entry => {\n        if (entry.isIntersecting) {\n          // Load image logic will go here\n        }\n      });\n    }, { threshold: 0.1 });\n    \n    if (containerRef.current) {\n      const imageElements = containerRef.current.querySelectorAll('img');\n      imageElements.forEach(img => observer.observe(img));\n    }\n    \n    return () => observer.disconnect();\n  }, []);\n  \n  return (\n    <div ref={containerRef} className=\"image-gallery\">\n      {imageData.map((image) => (\n        <img\n          key={image.id}\n          src={image.src}\n          alt={image.alt}\n          // Add loading='lazy' attribute here\n        />\n      ))}\n    </div>\n  );\n};",
+        "expectedOutcome": "Each img element in the gallery will have the loading='lazy' attribute, enabling native browser lazy loading.",
+        "successCriteria": [
+          "All img elements in the map function include the loading='lazy' attribute."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but not all img elements have the loading='lazy' attribute. Make sure to add it to each img element in the map function.",
+        "feedbackWrong": "The loading='lazy' attribute is missing from the img elements. Add it to enable native browser lazy loading.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "loading='lazy'",
+            "loading=\"lazy\""
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 12",
+        "title": "Wire onLoad event to handleImageLoad",
+        "instruction": "Add an onLoad event handler to each img element that calls handleImageLoad with the image's id.",
+        "hint": "Use the onLoad attribute on the img element and pass a function that calls handleImageLoad(image.id).",
+        "analogousExample": "// Example: wiring an onLoad event\n<img src=\"photo.jpg\" onLoad={() => handleLoad('photo1')} />",
+        "seedCode": "import React, { useState, useEffect, useRef } from 'react';\n\nconst ImageGallery = () => {\n  const [loadedImages, setLoadedImages] = useState([]);\n  const containerRef = useRef(null);\n  \n  const imageData = [\n    { id: 1, src: 'image1.jpg', alt: 'Image 1' },\n    { id: 2, src: 'image2.jpg', alt: 'Image 2' },\n    { id: 3, src: 'image3.jpg', alt: 'Image 3' }\n  ];\n  \n  const handleImageLoad = (id) => {\n    setLoadedImages(prev => [...prev, id]);\n  };\n  \n  useEffect(() => {\n    const observer = new IntersectionObserver((entries) => {\n      entries.forEach(entry => {\n        if (entry.isIntersecting) {\n          // Load image logic will go here\n        }\n      });\n    }, { threshold: 0.1 });\n    \n    if (containerRef.current) {\n      const imageElements = containerRef.current.querySelectorAll('img');\n      imageElements.forEach(img => observer.observe(img));\n    }\n    \n    return () => observer.disconnect();\n  }, []);\n  \n  return (\n    <div ref={containerRef} className=\"image-gallery\">\n      {imageData.map((image) => (\n        <img\n          key={image.id}\n          src={image.src}\n          alt={image.alt}\n          // Add loading='lazy' attribute here\n        />\n      ))}\n    </div>\n  );\n};",
+        "expectedOutcome": "Each img element will have an onLoad handler that tracks when images finish loading by calling handleImageLoad with the image's id.",
+        "successCriteria": [
+          "Every img element includes an onLoad attribute that calls handleImageLoad with the correct image id."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure each img element has an onLoad handler that calls handleImageLoad with the image's id.",
+        "feedbackWrong": "The onLoad event handler isn't properly connected. Each img element needs an onLoad attribute that calls handleImageLoad(image.id).",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "onLoad",
+            "handleImageLoad",
+            "image.id"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step12",
+        "type": "question",
+        "phase": "Step 12 of 12",
+        "title": "Add visual feedback for loaded state",
+        "instruction": "Add a conditional className to each img element based on whether its id is in the loadedImages state array. Use a ternary operator to set className to 'loaded' when loaded, or 'loading' when not loaded.",
+        "hint": "Check if loadedImages includes the current image.id. Use the ternary operator: className={loadedImages.includes(image.id) ? 'loaded' : 'loading'}",
+        "analogousExample": "// Conditional className based on state\nconst Item = ({ id, isActive }) => {\n  return (\n    <div className={isActive ? 'active' : 'inactive'}>\n      Item {id}\n    </div>\n  );\n};",
+        "seedCode": "import React, { useState, useEffect, useRef } from 'react';\n\nconst ImageGallery = () => {\n  const [loadedImages, setLoadedImages] = useState([]);\n  const containerRef = useRef(null);\n  \n  const imageData = [\n    { id: 1, src: 'image1.jpg', alt: 'Image 1' },\n    { id: 2, src: 'image2.jpg', alt: 'Image 2' },\n    { id: 3, src: 'image3.jpg', alt: 'Image 3' }\n  ];\n  \n  const handleImageLoad = (id) => {\n    setLoadedImages(prev => [...prev, id]);\n  };\n  \n  useEffect(() => {\n    const observer = new IntersectionObserver((entries) => {\n      entries.forEach(entry => {\n        if (entry.isIntersecting) {\n          // Load image logic will go here\n        }\n      });\n    }, { threshold: 0.1 });\n    \n    if (containerRef.current) {\n      const imageElements = containerRef.current.querySelectorAll('img');\n      imageElements.forEach(img => observer.observe(img));\n    }\n    \n    return () => observer.disconnect();\n  }, []);\n  \n  return (\n    <div ref={containerRef} className=\"image-gallery\">\n      {imageData.map((image) => (\n        <img\n          key={image.id}\n          src={image.src}\n          alt={image.alt}\n          // Add loading='lazy' attribute here\n        />\n      ))}\n    </div>\n  );\n};",
+        "expectedOutcome": "Each image element will have a className that changes based on its loading status, providing visual feedback.",
+        "successCriteria": [
+          "Each img element has a className attribute with a ternary operator checking loadedImages.includes(image.id), setting 'loaded' when true and 'loading' when false."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure each img element has a className attribute with a ternary operator that checks loadedImages.includes(image.id).",
+        "feedbackWrong": "The img elements don't have the conditional className yet. Add className={loadedImages.includes(image.id) ? 'loaded' : 'loading'} to each img element.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "className",
+            "loadedImages.includes",
+            "?",
+            "'loaded'",
+            "'loading'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import React, useState, useEffect, and useRef",
+        "id": "step1"
+      },
+      {
+        "label": "Create the main ImageGallery component",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize state for loaded images",
+        "id": "step3"
+      },
+      {
+        "label": "Create a ref for the image container",
+        "id": "step4"
+      },
+      {
+        "label": "Define image data array",
+        "id": "step5"
+      },
+      {
+        "label": "Create the handleImageLoad function",
+        "id": "step6"
+      },
+      {
+        "label": "Set up the Intersection Observer in useEffect",
+        "id": "step7"
+      },
+      {
+        "label": "Add the main container with ref",
+        "id": "step8"
+      },
+      {
+        "label": "Map through images to create image elements",
+        "id": "step9"
+      },
+      {
+        "label": "Add lazy loading attributes to images",
+        "id": "step10"
+      },
+      {
+        "label": "Wire onLoad event to handleImageLoad",
+        "id": "step11"
+      },
+      {
+        "label": "Add visual feedback for loaded state",
+        "id": "step12"
+      }
+    ]
+  },
+  "source": "content"
+}

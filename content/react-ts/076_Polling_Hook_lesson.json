@@ -1,0 +1,427 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-react-ts-76",
+    "track": "react-ts",
+    "lessonNum": 76,
+    "title": "Polling Hook",
+    "shortName": "P76",
+    "intro": {
+      "tag": "LESSON #76",
+      "title": "Polling Hook",
+      "body": "In this lesson, you will build a custom React hook called `usePolling` that automatically fetches data from an API at regular intervals. You'll learn how to use the `useEffect` and `useState` hooks to manage side effects and state in a polling mechanism. The main technologies involved are React hooks, TypeScript for type safety, and the `setInterval` function for timing. By the end, you'll have a reusable hook that can fetch and update data periodically, which is useful for live dashboards or real-time updates.",
+      "usecase": "Polling hooks are essential for building real-time dashboards and monitoring systems that need to fetch updated data at regular intervals. In production applications, you'll see this pattern in live cryptocurrency price trackers, sports scoreboards, and stock trading platforms where prices update every few seconds. Developers implement polling hooks for status monitoring dashboards that check server health, CI/CD pipeline status, or IoT device connectivity. This approach provides users with current information without requiring manual page refreshes while being more lightweight than WebSocket connections for simpler use cases."
+    },
+    "objectives": [
+      "Implement a custom React hook that manages polling intervals",
+      "Initialize and control state variables for polling data and error handling",
+      "Configure the polling interval duration and manage its lifecycle",
+      "Manipulate the polling process by starting, stopping, and resetting it",
+      "Integrate the polling hook into a React component to fetch and display data",
+      "Apply TypeScript interfaces to define the shape of polling data and hook parameters",
+      "Bind UI controls to the polling hook's state and handler functions",
+      "Update the component's rendered output based on polling status and results"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 12",
+        "title": "Import React and all hooks needed for this lesson (useState, useEffect, useRef, useCallback)",
+        "instruction": "Import React, useState, useEffect, useRef, and useCallback from 'react'.",
+        "hint": "Use the import statement with curly braces to bring in multiple named exports from the 'react' package.",
+        "analogousExample": "// Importing multiple hooks from React\nimport React, { useState, useEffect } from 'react';",
+        "seedCode": "// Import React and the required hooks here\n",
+        "expectedOutcome": "The imports are added at the top of the file, making React and the hooks available for use.",
+        "successCriteria": [
+          "React, useState, useEffect, useRef, and useCallback are imported from 'react'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've imported some of the required hooks, but make sure to include React, useState, useEffect, useRef, and useCallback.",
+        "feedbackWrong": "The imports are missing or incorrect. Please import React, useState, useEffect, useRef, and useCallback from 'react'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "React",
+            "useState",
+            "useEffect",
+            "useRef",
+            "useCallback",
+            "'react'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 12",
+        "title": "Define the PollingHookOptions interface for configuration",
+        "instruction": "Define a TypeScript interface named PollingHookOptions with three properties: interval (number), enabled (boolean), and onPoll (function that returns void).",
+        "hint": "Use the 'interface' keyword followed by the interface name and property definitions. Remember to type the function property correctly.",
+        "analogousExample": "// Example: defining an interface for configuration\ninterface TimerOptions {\n  duration: number;\n  autoStart: boolean;\n  onComplete: () => void;\n}",
+        "seedCode": "// Import React and the required hooks here\nimport React, { useState, useEffect, useRef, useCallback } from 'react';\n\n// Define the PollingHookOptions interface here",
+        "expectedOutcome": "You will have a PollingHookOptions interface that defines the configuration options for your polling hook.",
+        "successCriteria": [
+          "The PollingHookOptions interface is defined with interval: number, enabled: boolean, and onPoll: () => void properties."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure all three properties are included with the correct types: interval (number), enabled (boolean), and onPoll (function that returns void).",
+        "feedbackWrong": "The interface definition is missing or incorrect. Remember to use the 'interface' keyword and define all three required properties with proper TypeScript types.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "interface",
+            "PollingHookOptions",
+            "interval:",
+            "number",
+            "enabled:",
+            "boolean",
+            "onPoll:",
+            "()",
+            "void"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 12",
+        "title": "Create the usePolling custom hook function",
+        "instruction": "Create a function called usePolling that accepts options of type PollingHookOptions and returns void. Use either a function declaration or arrow function syntax.",
+        "hint": "Start by writing the function signature with the correct parameter type and return type.",
+        "analogousExample": "// Example: a custom hook function\nfunction useCustomHook(config: ConfigType): void {\n  // hook implementation\n}",
+        "seedCode": "// Import React and the required hooks here\nimport React, { useState, useEffect, useRef, useCallback } from 'react';\n\n// Define the PollingHookOptions interface here\ninterface PollingHookOptions {\n  url: string;\n  interval: number;\n}\n\n// Create the usePolling custom hook function here",
+        "expectedOutcome": "A usePolling function with the correct TypeScript signature will be created.",
+        "successCriteria": [
+          "The usePolling function is defined with options parameter typed as PollingHookOptions and returns void."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure the function accepts options of type PollingHookOptions and returns void.",
+        "feedbackWrong": "Check the function signature. It should be named usePolling, accept PollingHookOptions, and return void.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "usePolling",
+            "PollingHookOptions",
+            "void"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 12",
+        "title": "Initialize state for tracking polling status",
+        "instruction": "Inside the usePolling function, use useState to create an isActive state variable. Initialize it to true (polling should start active by default).",
+        "hint": "Call useState with the initial value true and destructure the returned array to get the state variable and setter function.",
+        "analogousExample": "// Example: state for a toggle\nconst [isOn, setIsOn] = useState(true);",
+        "seedCode": "// Import React and the required hooks here\nimport React, { useState, useEffect, useRef, useCallback } from 'react';\n\n// Define the PollingHookOptions interface here\ninterface PollingHookOptions {\n  url: string;\n  interval: number;\n}\n\n// Create the usePolling custom hook function here\nconst usePolling = (options: PollingHookOptions) => {\n  // Initialize isActive state here\n};",
+        "expectedOutcome": "The usePolling function will have an isActive state variable initialized to true, ready to control polling activation.",
+        "successCriteria": [
+          "The usePolling function contains a useState call that declares an isActive state variable initialized to true."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you've properly declared the isActive state using useState with an initial value of true.",
+        "feedbackWrong": "The isActive state hasn't been properly initialized. Remember to use useState with true as the initial value inside the usePolling function.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "useState",
+            "isActive",
+            "true"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 12",
+        "title": "Create a ref to store the interval ID",
+        "instruction": "Inside the usePolling hook, create a ref using useRef to store the interval ID. Initialize it with null.",
+        "hint": "Use the useRef hook to create a mutable ref object that persists across renders without causing re-renders.",
+        "analogousExample": "// Example: creating a ref for a timer ID\nconst timerRef = useRef<NodeJS.Timeout | null>(null);",
+        "seedCode": "// Import React and the required hooks here\nimport React, { useState, useEffect, useRef, useCallback } from 'react';\n\n// Define the PollingHookOptions interface here\ninterface PollingHookOptions {\n  url: string;\n  interval: number;\n}\n\n// Create the usePolling custom hook function here\nconst usePolling = (options: PollingHookOptions) => {\n  // Initialize isActive state here\n  // Create a ref to store the interval ID here\n};",
+        "expectedOutcome": "The hook now has a ref that can hold the interval ID returned by setInterval.",
+        "successCriteria": [
+          "A ref named intervalRef is created with useRef, initialized to null, and typed to hold NodeJS.Timeout | null."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've created a ref, but check the type annotation. It should be NodeJS.Timeout | null to match the interval ID type.",
+        "feedbackWrong": "The ref wasn't created correctly. Use useRef to create a ref object, initialize it with null, and type it appropriately.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "useRef",
+            "intervalRef",
+            "null"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 12",
+        "title": "Define the startPolling function",
+        "instruction": "Inside the usePolling hook, create a function named startPolling that sets up the polling interval using setInterval and stores the interval ID in the intervalRef.",
+        "hint": "Use the setInterval function to call a function repeatedly. Store the returned interval ID in the intervalRef.current property.",
+        "analogousExample": "// Similar: a function that starts a timer\nfunction startTimer() {\n  const intervalId = setInterval(() => {\n    console.log('Tick');\n  }, 1000);\n  timerRef.current = intervalId;\n}",
+        "seedCode": "import React, { useState, useEffect, useRef, useCallback } from 'react';\n\ninterface PollingHookOptions {\n  url: string;\n  interval: number;\n}\n\nconst usePolling = (options: PollingHookOptions) => {\n  // Initialize isActive state here\n  // Create a ref to store the interval ID here\n  // Define the startPolling function here\n};",
+        "expectedOutcome": "The startPolling function should be defined inside the usePolling hook, ready to be called to begin polling.",
+        "successCriteria": [
+          "A startPolling function is defined inside usePolling that uses setInterval and stores the interval ID in intervalRef.current."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started defining the startPolling function, but make sure it uses setInterval and stores the interval ID in intervalRef.current.",
+        "feedbackWrong": "The startPolling function isn't properly defined yet. Remember to create a function that sets up setInterval and stores the ID in the intervalRef.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "startPolling",
+            "setInterval",
+            "intervalRef.current"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 12",
+        "title": "Define the stopPolling function",
+        "instruction": "Inside the usePolling hook, define a function named stopPolling that clears the stored interval using intervalRef.current.",
+        "hint": "Use clearInterval with the current value of the interval ref to stop the polling.",
+        "analogousExample": "// Similar: a function that stops a timer\nfunction stopTimer(timerRef) {\n  clearInterval(timerRef.current);\n}",
+        "seedCode": "import React, { useState, useEffect, useRef, useCallback } from 'react';\n\ninterface PollingHookOptions {\n  url: string;\n  interval: number;\n}\n\nconst usePolling = (options: PollingHookOptions) => {\n  // Initialize isActive state here\n  // Create a ref to store the interval ID here\n  // Define the startPolling function here\n  // Define the stopPolling function here\n};",
+        "expectedOutcome": "The stopPolling function is defined and ready to be used to stop the polling interval.",
+        "successCriteria": [
+          "A stopPolling function is defined inside usePolling that calls clearInterval with intervalRef.current."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your stopPolling function properly clears the interval using intervalRef.current.",
+        "feedbackWrong": "The stopPolling function isn't defined correctly. It should clear the interval stored in intervalRef.current.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "stopPolling",
+            "clearInterval",
+            "intervalRef.current"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 12",
+        "title": "Create the togglePolling function using useCallback",
+        "instruction": "Inside the usePolling hook, create a togglePolling function using useCallback that toggles the isActive state between true and false.",
+        "hint": "Use useCallback to memoize the function, and call setIsActive with a function that receives the previous state and returns its opposite.",
+        "analogousExample": "// Example: memoized toggle function\nconst toggleVisibility = useCallback(() => {\n  setIsVisible(prev => !prev);\n}, []);",
+        "seedCode": "import React, { useState, useEffect, useRef, useCallback } from 'react';\n\ninterface PollingHookOptions {\n  url: string;\n  interval: number;\n}\n\nconst usePolling = (options: PollingHookOptions) => {\n  const [isActive, setIsActive] = useState(false);\n  const intervalRef = useRef<NodeJS.Timeout | null>(null);\n\n  const startPolling = useCallback(() => {\n    if (isActive) return;\n    setIsActive(true);\n  }, [isActive]);\n\n  const stopPolling = useCallback(() => {\n    if (!isActive) return;\n    setIsActive(false);\n  }, [isActive]);\n\n  // Create togglePolling function here\n};",
+        "expectedOutcome": "A togglePolling function is defined inside the hook, using useCallback to memoize it and toggling the isActive state.",
+        "successCriteria": [
+          "The togglePolling function is created with useCallback, calls setIsActive with a function that toggles the previous state, and has an empty dependency array."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're using useCallback with an empty dependency array and toggling the state correctly.",
+        "feedbackWrong": "The togglePolling function is missing or incorrect. It should be created with useCallback and toggle the isActive state.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "togglePolling",
+            "useCallback",
+            "setIsActive",
+            "prev",
+            "!prev"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 12",
+        "title": "Set up the useEffect for managing polling lifecycle",
+        "instruction": "Add a useEffect hook inside your usePolling function that handles the polling lifecycle based on the isActive state.",
+        "hint": "The useEffect should set up an interval to log a message when isActive is true, and clear that interval when isActive becomes false or when the component unmounts.",
+        "analogousExample": "// Example: useEffect for side effects\nuseEffect(() => {\n  if (isActive) {\n    const id = setInterval(() => {\n      console.log('Fetching data...');\n    }, interval);\n    return () => clearInterval(id);\n  }\n}, [isActive, interval]);",
+        "seedCode": "import React, { useState, useEffect, useRef, useCallback } from 'react';\n\ninterface PollingHookOptions {\n  url: string;\n  interval: number;\n}\n\nconst usePolling = (options: PollingHookOptions) => {\n  const [isActive, setIsActive] = useState(false);\n  const intervalRef = useRef<NodeJS.Timeout | null>(null);\n\n  const startPolling = useCallback(() => {\n    if (isActive) return;\n    setIsActive(true);\n  }, [isActive]);\n\n  const stopPolling = useCallback(() => {\n    if (!isActive) return;\n    setIsActive(false);\n  }, [isActive]);\n\n  // Create togglePolling function here\n\n  // Add useEffect here\n};\n",
+        "expectedOutcome": "The useEffect hook is added with proper dependency array and cleanup function.",
+        "successCriteria": [
+          "The useEffect hook is implemented with logic that starts polling when isActive is true and stops polling when isActive is false or on cleanup."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your useEffect includes both the interval setup and cleanup logic.",
+        "feedbackWrong": "The useEffect hook is missing or incomplete. Remember to handle both active and inactive states with proper cleanup.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "useEffect",
+            "isActive",
+            "setInterval",
+            "clearInterval",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 12",
+        "title": "Return the toggle function from the custom hook",
+        "instruction": "Return the togglePolling function from your usePolling hook so components can control polling.",
+        "hint": "At the end of your custom hook, add a return statement that includes togglePolling.",
+        "analogousExample": "// Similar: returning a function from a custom hook\nfunction useCounter() {\n  const [count, setCount] = useState(0);\n  const increment = () => setCount(count + 1);\n  return { increment };\n}",
+        "seedCode": "import React, { useState, useEffect, useRef, useCallback } from 'react';\n\ninterface PollingHookOptions {\n  url: string;\n  interval: number;\n}\n\nconst usePolling = (options: PollingHookOptions) => {\n  const [isActive, setIsActive] = useState(false);\n  const intervalRef = useRef<NodeJS.Timeout | null>(null);\n\n  const startPolling = useCallback(() => {\n    if (isActive) return;\n    setIsActive(true);\n  }, [isActive]);\n\n  const stopPolling = useCallback(() => {\n    if (!isActive) return;\n    setIsActive(false);\n  }, [isActive]);\n\n  // Create togglePolling function here\n\n  // Add useEffect here\n\n  // Return togglePolling from the hook\n};\n",
+        "expectedOutcome": "The usePolling hook should return the togglePolling function, making it available to components that use the hook.",
+        "successCriteria": [
+          "The usePolling hook returns togglePolling in its return statement."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure you're returning togglePolling from the usePolling hook. Check that your return statement includes the togglePolling function.",
+        "feedbackWrong": "The togglePolling function isn't being returned from the hook. Add a return statement at the end of usePolling that includes togglePolling.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "return",
+            "togglePolling"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 12",
+        "title": "Create the main PollingDemo component",
+        "instruction": "Create a functional component named PollingDemo that returns a JSX fragment containing a heading with the text 'Polling Demo'.",
+        "hint": "Define a component using either function declaration or arrow function syntax. The component should return JSX with an <h1> element containing the specified text.",
+        "analogousExample": "// Similar: a simple component returning a heading\nfunction Welcome() {\n  return <h1>Welcome to the App</h1>;\n}",
+        "seedCode": "import React, { useState, useEffect, useRef, useCallback } from 'react';\n\ninterface PollingHookOptions {\n  url: string;\n  interval: number;\n}\n\nconst usePolling = (options: PollingHookOptions) => {\n  const [isActive, setIsActive] = useState(false);\n  const intervalRef = useRef<NodeJS.Timeout | null>(null);\n\n  const startPolling = useCallback(() => {\n    if (isActive) return;\n    setIsActive(true);\n  }, [isActive]);\n\n  const stopPolling = useCallback(() => {\n    if (!isActive) return;\n    setIsActive(false);\n  }, [isActive]);\n\n  // Create togglePolling function here\n\n  // Add useEffect here\n\n  // Return togglePolling from the hook\n};\n\n// Create the PollingDemo component here",
+        "expectedOutcome": "A PollingDemo component is defined with a heading element displaying 'Polling Demo'.",
+        "successCriteria": [
+          "The PollingDemo component is created and returns JSX containing an <h1> with the text 'Polling Demo'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've created a component, but make sure it returns an <h1> with exactly 'Polling Demo' as text content.",
+        "feedbackWrong": "The component is missing or doesn't return the required heading. Please create a functional component named PollingDemo that returns an <h1> with 'Polling Demo'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "PollingDemo",
+            "return",
+            "<h1>",
+            "Polling Demo"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step12",
+        "type": "question",
+        "phase": "Step 12 of 12",
+        "title": "Add UI with a toggle button and wire it to the polling hook",
+        "instruction": "Inside the PollingDemo component, add a button element with text that toggles polling and a paragraph that displays the current polling status. Use the togglePolling function from the usePolling hook for the button's onClick handler.",
+        "hint": "The button should call togglePolling when clicked. The paragraph should show whether polling is active or not based on the isActive state.",
+        "analogousExample": "// Example: Button and status display\nfunction StatusDisplay() {\n  const [isActive, setIsActive] = useState(false);\n  const toggle = () => setIsActive(!isActive);\n  \n  return (\n    <div>\n      <button onClick={toggle}>Toggle Status</button>\n      <p>Status: {isActive ? 'Active' : 'Inactive'}</p>\n    </div>\n  );\n}",
+        "seedCode": "import React, { useState, useEffect, useRef, useCallback } from 'react';\n\ninterface PollingHookOptions {\n  url: string;\n  interval: number;\n}\n\nconst usePolling = (options: PollingHookOptions) => {\n  const [isActive, setIsActive] = useState(false);\n  const intervalRef = useRef<NodeJS.Timeout | null>(null);\n\n  const startPolling = useCallback(() => {\n    if (isActive) return;\n    setIsActive(true);\n  }, [isActive]);\n\n  const stopPolling = useCallback(() => {\n    if (!isActive) return;\n    setIsActive(false);\n  }, [isActive]);\n\n  // Create togglePolling function here\n\n  // Add useEffect here\n\n  // Return togglePolling from the hook\n};\n\nconst PollingDemo = () => {\n  const options = { url: 'https://api.example.com/data', interval: 5000 };\n  const { isActive, togglePolling } = usePolling(options);\n  \n  return (\n    <div>\n      {/* Add button and status display here */}\n    </div>\n  );\n};",
+        "expectedOutcome": "The PollingDemo component renders a button that toggles polling and a paragraph showing the current polling status.",
+        "successCriteria": [
+          "A button element with onClick={togglePolling} and a paragraph displaying the polling status using the isActive value are added to the PollingDemo component's return statement."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you've added both the button with onClick handler and the paragraph showing the polling status. Check that you're using togglePolling and isActive from the hook.",
+        "feedbackWrong": "The UI elements aren't properly connected to the polling hook. Review the instruction to add a button with onClick handler and a paragraph displaying the polling status.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<button",
+            "onClick={togglePolling}",
+            "<p",
+            "{isActive",
+            "PollingDemo"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import React and all hooks needed for this lesson (useState, useEffect, useRef, useCallback)",
+        "id": "step1"
+      },
+      {
+        "label": "Define the PollingHookOptions interface for configuration",
+        "id": "step2"
+      },
+      {
+        "label": "Create the usePolling custom hook function",
+        "id": "step3"
+      },
+      {
+        "label": "Initialize state for tracking polling status",
+        "id": "step4"
+      },
+      {
+        "label": "Create a ref to store the interval ID",
+        "id": "step5"
+      },
+      {
+        "label": "Define the startPolling function",
+        "id": "step6"
+      },
+      {
+        "label": "Define the stopPolling function",
+        "id": "step7"
+      },
+      {
+        "label": "Create the togglePolling function using useCallback",
+        "id": "step8"
+      },
+      {
+        "label": "Set up the useEffect for managing polling lifecycle",
+        "id": "step9"
+      },
+      {
+        "label": "Return the toggle function from the custom hook",
+        "id": "step10"
+      },
+      {
+        "label": "Create the main PollingDemo component",
+        "id": "step11"
+      },
+      {
+        "label": "Add UI with a toggle button and wire it to the polling hook",
+        "id": "step12"
+      }
+    ]
+  },
+  "source": "content"
+}

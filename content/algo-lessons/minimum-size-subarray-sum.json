@@ -1,0 +1,825 @@
+{
+  "id": "minimum-size-subarray-sum",
+  "title": "Minimum Size Subarray Sum",
+  "pattern": "sliding-window",
+  "difficulty": "medium",
+  "language": "javascript",
+  "status": "draft",
+  "flow": [
+    {
+      "stepId": "title",
+      "mentorSays": "At the end of this lesson, you will be able to:\n\n1. Understand what the Minimum Size Subarray Sum lesson asks for\n2. Use a sliding window to find the minimum length subarray with sum >= target\n3. Expand and shrink the window efficiently\n4. Implement the solution step by step in your chosen language",
+      "action": "continue",
+      "next": "lesson-illustration"
+    },
+    {
+      "stepId": "lesson-illustration",
+      "mentorSays": "Perfect! Now let's understand what the Minimum Size Subarray Sum lesson is asking.\n\n**Lesson Definition:**\nGiven an array of positive integers `nums` and a positive integer `target`, return the minimum length of a contiguous subarray whose sum is greater than or equal to `target`. If there is no such subarray, return 0.\n\n**Key Observations:**\n- All numbers are positive (this is crucial!)\n- Subarrays must be contiguous\n- We're finding the minimum length, not maximum\n- Sum increases when we expand the window (since all numbers are positive)\n\n**Example 1:** nums = [2, 3, 1, 2, 4, 3], target = 7\n\nWe need to find the shortest subarray with sum >= 7.\n\nLet's check subarrays:\n- [2, 3, 1, 2] → sum = 8 >= 7 ✓, length = 4\n- [4, 3] → sum = 7 >= 7 ✓, length = 2 ✓\n- [2, 4, 3] → sum = 9 >= 7 ✓, length = 3\n\nMinimum length: 2 (subarray [4, 3])\n\n**Example 2:** nums = [1, 4, 4], target = 4\n\nSubarrays with sum >= 4:\n- [4] → sum = 4 >= 4 ✓, length = 1 ✓\n- [4, 4] → sum = 8 >= 4 ✓, length = 2\n\nMinimum length: 1 (subarray [4])\n\n**Example 3:** nums = [1, 1, 1, 1, 1, 1, 1, 1], target = 11\n\nNo subarray has sum >= 11 (max sum = 8)\nAnswer: 0\n\n**Step-by-step trace for Example 1:**\n\nnums = [2, 3, 1, 2, 4, 3], target = 7\n\nWe'll use a sliding window approach:\n- **right = 0**: [2], sum = 2 < 7, continue\n- **right = 1**: [2, 3], sum = 5 < 7, continue\n- **right = 2**: [2, 3, 1], sum = 6 < 7, continue\n- **right = 3**: [2, 3, 1, 2], sum = 8 >= 7 ✓, shrink: left = 0, minLen = 4\n  - **left = 1**: [3, 1, 2], sum = 6 < 7, stop shrinking\n- **right = 4**: [3, 1, 2, 4], sum = 10 >= 7 ✓, shrink: left = 1, minLen = 4\n  - **left = 2**: [1, 2, 4], sum = 7 >= 7 ✓, minLen = 3\n  - **left = 3**: [2, 4], sum = 6 < 7, stop\n- **right = 5**: [2, 4, 3], sum = 9 >= 7 ✓, shrink: left = 3, minLen = 3\n  - **left = 4**: [4, 3], sum = 7 >= 7 ✓, minLen = 2 ✓\n  - **left = 5**: [3], sum = 3 < 7, stop\n\nAnswer: 2\n\n**What makes this tricky:**\n1. Understanding that we need to shrink when sum >= target to find minimum length\n2. Since all numbers are positive, shrinking from the left will decrease the sum\n3. We need to track the minimum length seen so far\n4. Edge case: if no subarray has sum >= target, return 0\n\n**Common pitfalls:**\n- Not shrinking the window when sum >= target\n- Not tracking the minimum length correctly\n- Off-by-one errors when calculating window length\n- Forgetting to handle the case where no valid subarray exists",
+      "example": "Example 1:\nnums = [2, 3, 1, 2, 4, 3], target = 7\n\nSubarrays with sum >= 7:\n[2, 3, 1, 2] → sum = 8, length = 4\n[4, 3] → sum = 7, length = 2 ✓\n[2, 4, 3] → sum = 9, length = 3\n\nAnswer: 2\n\nExample 2:\nnums = [1, 4, 4], target = 4\n\nMinimum: [4] → length = 1\n\nExample 3:\nnums = [1, 1, 1, 1, 1, 1, 1, 1], target = 11\n\nNo valid subarray\nAnswer: 0",
+      "action": "continue",
+      "next": "thinking-challenge"
+    },
+    {
+      "stepId": "thinking-challenge",
+      "mentorSays": "Now that you understand what the lesson wants, here's the real question:\n\nHow would YOU find the minimum length subarray with sum >= target?\n\nThink about it for a moment. What approach feels natural to you?",
+      "choices": [
+        {
+          "label": "Use a sliding window - expand until sum >= target, then shrink to find minimum",
+          "next": "explore-sliding-window"
+        },
+        {
+          "label": "Check all possible subarrays and find the minimum length",
+          "next": "explore-brute-force"
+        },
+        {
+          "label": "Use prefix sums to quickly calculate subarray sums",
+          "next": "explore-prefix-sums"
+        }
+      ]
+    },
+    {
+      "stepId": "explore-brute-force",
+      "mentorSays": "That's a straightforward approach! You're thinking: \"I'll check every possible subarray and find the one with minimum length that has sum >= target.\"\n\nFor nums = [2, 3, 1, 2, 4, 3], target = 7:\n- Check [2]: sum = 2 < 7\n- Check [2, 3]: sum = 5 < 7\n- Check [2, 3, 1, 2]: sum = 8 >= 7 ✓, length = 4\n- Check [4, 3]: sum = 7 >= 7 ✓, length = 2 ✓\n- ... and so on\n\nThis works! However, it's O(n²) time because we check O(n²) subarrays.\n\nThere's a more efficient O(n) approach using a sliding window. Would you like to learn that?",
+      "action": "continue",
+      "next": "explore-sliding-window"
+    },
+    {
+      "stepId": "explore-prefix-sums",
+      "mentorSays": "Great thinking! Prefix sums can help calculate subarray sums quickly.\n\nFor nums = [2, 3, 1, 2, 4, 3]:\nPrefix sums: [0, 2, 5, 6, 8, 12, 15]\n\nTo get sum of [3, 1, 2] (indices 1-3): prefix[4] - prefix[1] = 8 - 2 = 6 ✓\n\nThis works, but we still need to check all O(n²) subarrays to find the minimum length.\n\nThere's a cleaner O(n) approach using a sliding window. Would you like to learn that?",
+      "action": "continue",
+      "next": "explore-sliding-window"
+    },
+    {
+      "stepId": "explore-sliding-window",
+      "mentorSays": "Excellent choice! The sliding window approach is both efficient and elegant. Here's the core idea:\n\n**The Algorithm:**\n1. **Key insight**: Since all numbers are positive, sum only increases when we expand the window. If sum >= target, we can shrink from the left to find the minimum length.\n2. **Initialize**: left = 0, sum = 0, minLen = Infinity\n3. **For each right index**:\n   - Expand window: `sum += nums[right]`\n   - Shrink if needed: While `sum >= target`, update minLen and subtract `nums[left]`, then move `left++`\n4. **Return minLen** (or 0 if minLen is still Infinity)\n\n**Why it works**:\n- When we have a window with sum >= target, we shrink from the left to find the minimum length\n- Since all numbers are positive, shrinking will eventually make sum < target\n- The minimum length we've seen is our answer\n\nLet's trace with nums = [2, 3, 1, 2, 4, 3], target = 7:\n\n- **right = 0**: sum = 2, sum < 7, continue\n- **right = 1**: sum = 5, sum < 7, continue\n- **right = 2**: sum = 6, sum < 7, continue\n- **right = 3**: sum = 8, sum >= 7 ✓, minLen = 4, shrink: sum = 6, left = 1\n- **right = 4**: sum = 10, sum >= 7 ✓, minLen = 4, shrink: sum = 7, left = 2, minLen = 3, shrink: sum = 6, left = 3\n- **right = 5**: sum = 9, sum >= 7 ✓, minLen = 3, shrink: sum = 7, left = 4, minLen = 2 ✓, shrink: sum = 3, left = 5\n\n**Return 2** ✓\n\nThis is O(n) time and O(1) space! Now let's code it step by step.",
+      "action": "continue",
+      "next": "language-selection"
+    },
+    {
+      "stepId": "language-selection",
+      "mentorSays": "Great! Now let's code this solution. Which programming language would you like to use?",
+      "choices": [
+        {
+          "label": "JavaScript",
+          "next": "variable-check-js"
+        },
+        {
+          "label": "Python",
+          "next": "variable-check-python"
+        },
+        {
+          "label": "Java",
+          "next": "variable-check-java"
+        },
+        {
+          "label": "C++",
+          "next": "variable-check-cpp"
+        },
+        {
+          "label": "TypeScript",
+          "next": "variable-check-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-check-js",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-js"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-js",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'left' or 'sum') and put data inside it.\n\nFor example, 'let left = 0;' creates a variable that stores the number 0. Later, you can use that variable name to refer to it. We'll use variables to track the left pointer, the current sum, and the minimum length.",
+      "example": "let left = 0;      // Left pointer\nlet sum = 0;       // Current sum\nlet minLen = Infinity;  // Minimum length",
+      "action": "continue",
+      "next": "function-check-js"
+    },
+    {
+      "stepId": "function-check-js",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-js"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-js",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.\n\nThink of it like a recipe: you provide ingredients (parameters), the function does the work, and gives you a result (return value).",
+      "example": "function minSubArrayLen(nums, target) {\n  // Returns minimum length\n  return 0;\n}",
+      "action": "continue",
+      "next": "parameter-check-js"
+    },
+    {
+      "stepId": "parameter-check-js",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "array-check-js"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-js",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'function minSubArrayLen(nums, target)', the 'nums' and 'target' are parameters - they're placeholders that will receive actual values when you call the function.",
+      "example": "function minSubArrayLen(nums, target) {\n  // Parameters receive values\n}\n\n// Call: minSubArrayLen([2, 3, 1, 2, 4, 3], 7)",
+      "action": "continue",
+      "next": "array-check-js"
+    },
+    {
+      "stepId": "array-check-js",
+      "mentorSays": "To solve this lesson, we'll need to work with arrays. Do you know what an array is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know arrays",
+          "next": "loop-check-js"
+        },
+        {
+          "label": "No, explain arrays",
+          "next": "array-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "array-explanation-js",
+      "mentorSays": "An array is a list of values stored in order. Each value has a position number called an 'index'. Array indices start counting from 0, not 1.\n\nFor example, nums = [2, 3, 1, 2, 4, 3] means:\n- nums[0] = 2 (first element)\n- nums[1] = 3 (second element)\n- etc.\n\nWe'll slide a window over this array to find the minimum length subarray.",
+      "example": "nums = [2, 3, 1, 2, 4, 3];\n\nnums[0] = 2\nnums[1] = 3\nnums[2] = 1",
+      "action": "continue",
+      "next": "loop-check-js"
+    },
+    {
+      "stepId": "loop-check-js",
+      "mentorSays": "To solve this lesson, we'll need to use loops. Do you know what a loop is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know loops",
+          "next": "coding-start-js"
+        },
+        {
+          "label": "No, explain loops",
+          "next": "loop-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "loop-explanation-js",
+      "mentorSays": "A loop lets you repeat code multiple times. A 'for' loop in JavaScript runs code for each value in a sequence.\n\nFor example, 'for (let right = 0; right < nums.length; right++)' means: run the code for each index from 0 to the length of the array. This lets us move our right pointer through the array.",
+      "example": "for (let right = 0; right < 6; right++) {\n  console.log(right);\n}\n\nThis prints: 0, 1, 2, 3, 4, 5",
+      "action": "continue",
+      "next": "coding-start-js"
+    },
+    {
+      "stepId": "coding-start-js",
+      "mentorSays": "Perfect! Let's implement the minimum size subarray sum solution in JavaScript. We'll create a function that takes an array and target, and returns the minimum length.",
+      "example": "function minSubArrayLen(target, nums) {\n  \n}",
+      "action": "continue",
+      "next": "coding-init-js"
+    },
+    {
+      "stepId": "coding-init-js",
+      "mentorSays": "First, initialize variables: left pointer, sum, and minLen. We'll track the minimum length found so far.",
+      "example": "function minSubArrayLen(target, nums) {\n  let left = 0;\n  let sum = 0;\n  let minLen = Infinity;\n  // minLen will store the minimum length found\n}",
+      "action": "continue",
+      "next": "coding-loop-js"
+    },
+    {
+      "stepId": "coding-loop-js",
+      "mentorSays": "Now, loop through the array with right pointer. For each element, add it to the sum.",
+      "example": "function minSubArrayLen(target, nums) {\n  let left = 0, sum = 0, minLen = Infinity;\n  \n  for (let right = 0; right < nums.length; right++) {\n    sum += nums[right];\n    // Add current element to sum\n  }\n}",
+      "action": "continue",
+      "next": "coding-shrink-js"
+    },
+    {
+      "stepId": "coding-shrink-js",
+      "mentorSays": "While sum >= target, shrink the window from the left. Update minLen with the current window length, then subtract the left element and move left forward.",
+      "example": "function minSubArrayLen(target, nums) {\n  let left = 0, sum = 0, minLen = Infinity;\n  \n  for (let right = 0; right < nums.length; right++) {\n    sum += nums[right];\n    \n    while (sum >= target) {\n      minLen = Math.min(minLen, right - left + 1);\n      sum -= nums[left];\n      left++;\n    }\n  }\n}",
+      "action": "continue",
+      "next": "coding-return-js"
+    },
+    {
+      "stepId": "coding-return-js",
+      "mentorSays": "Finally, return minLen if it was updated, otherwise return 0 (no valid subarray found).",
+      "example": "function minSubArrayLen(target, nums) {\n  let left = 0, sum = 0, minLen = Infinity;\n  \n  for (let right = 0; right < nums.length; right++) {\n    sum += nums[right];\n    \n    while (sum >= target) {\n      minLen = Math.min(minLen, right - left + 1);\n      sum -= nums[left];\n      left++;\n    }\n  }\n  \n  return minLen === Infinity ? 0 : minLen;\n}",
+      "action": "continue",
+      "next": "test-code-js"
+    },
+    {
+      "stepId": "test-code-js",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** nums = [2, 3, 1, 2, 4, 3], target = 7\nExpected: 2 (subarray [4, 3])\n\n**Test 2:** nums = [1, 4, 4], target = 4\nExpected: 1 (subarray [4])\n\n**Test 3:** nums = [1, 1, 1, 1, 1, 1, 1, 1], target = 11\nExpected: 0 (no valid subarray)\n\n**Test 4:** nums = [1, 2, 3, 4, 5], target = 11\nExpected: 3 (subarray [3, 4, 5])\n\n**Test 5:** nums = [5, 1, 3, 5, 10, 7, 4, 9, 2, 8], target = 15\nExpected: 2 (subarray [10, 7] or [7, 4, 9])\n\n**Test 6:** nums = [1], target = 1\nExpected: 1 (single element)\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: [2,3,1,2,4,3], 7 → 2\nTest 2: [1,4,4], 4 → 1\nTest 3: [1,1,1,1,1,1,1,1], 11 → 0\nTest 4: [1,2,3,4,5], 11 → 3\nTest 5: [5,1,3,5,10,7,4,9,2,8], 15 → 2\nTest 6: [1], 1 → 1",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-python",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-python"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-python",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'left' or 'sum') and put data inside it.\n\nFor example, ' left = 0;' creates a variable that stores the number 0. Later, you can use that variable name to refer to it. We'll use variables to track the left pointer, the current sum, and the minimum length.",
+      "example": " left = 0;      // Left pointer\n sum = 0;       // Current sum\n minLen = Infinity;  // Minimum length",
+      "action": "continue",
+      "next": "function-check-python"
+    },
+    {
+      "stepId": "function-check-python",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-python"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-python",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.\n\nThink of it like a recipe: you provide ingredients (parameters), the function does the work, and gives you a result (return value).",
+      "example": "def minSubArrayLen(nums, target) {\n  // Returns minimum length\n  return 0;\n}",
+      "action": "continue",
+      "next": "parameter-check-python"
+    },
+    {
+      "stepId": "parameter-check-python",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "array-check-python"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-python",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'def minSubArrayLen(nums, target)', the 'nums' and 'target' are parameters - they're placeholders that will receive actual values when you call the function.",
+      "example": "def minSubArrayLen(nums, target) {\n  // Parameters receive values\n}\n\n// Call: minSubArrayLen([2, 3, 1, 2, 4, 3], 7)",
+      "action": "continue",
+      "next": "array-check-python"
+    },
+    {
+      "stepId": "array-check-python",
+      "mentorSays": "To solve this lesson, we'll need to work with arrays. Do you know what an array is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know arrays",
+          "next": "loop-check-python"
+        },
+        {
+          "label": "No, explain arrays",
+          "next": "array-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "array-explanation-python",
+      "mentorSays": "An array is a list of values stored in order. Each value has a position number called an 'index'. Array indices start counting from 0, not 1.\n\nFor example, nums = [2, 3, 1, 2, 4, 3] means:\n- nums[0] = 2 (first element)\n- nums[1] = 3 (second element)\n- etc.\n\nWe'll slide a window over this array to find the minimum length subarray.",
+      "example": "nums = [2, 3, 1, 2, 4, 3];\n\nnums[0] = 2\nnums[1] = 3\nnums[2] = 1",
+      "action": "continue",
+      "next": "loop-check-python"
+    },
+    {
+      "stepId": "loop-check-python",
+      "mentorSays": "To solve this lesson, we'll need to use loops. Do you know what a loop is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know loops",
+          "next": "coding-start-python"
+        },
+        {
+          "label": "No, explain loops",
+          "next": "loop-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "loop-explanation-python",
+      "mentorSays": "A loop lets you repeat code multiple times. A 'for' loop in Python runs code for each value in a sequence.\n\nFor example, 'for (let right = 0; right < nums.length; right++)' means: run the code for each index from 0 to the length of the array. This lets us move our right pointer through the array.",
+      "example": "for (let right = 0; right < 6; right++) {\n  console.log(right);\n}\n\nThis prints: 0, 1, 2, 3, 4, 5",
+      "action": "continue",
+      "next": "coding-start-python"
+    },
+    {
+      "stepId": "coding-start-python",
+      "mentorSays": "Perfect! Let's implement the minimum size subarray sum solution in Python. We'll create a function that takes a list and target, and returns the minimum length.",
+      "example": "def minSubArrayLen(target, nums):\n    pass",
+      "action": "continue",
+      "next": "coding-init-python"
+    },
+    {
+      "stepId": "coding-init-python",
+      "mentorSays": "First, initialize variables: left pointer, sum, and minLen. We'll track the minimum length found so far.",
+      "example": "def minSubArrayLen(target, nums):\n    left = 0\n    sum_val = 0\n    min_len = float('inf')\n    # min_len will store the minimum length found",
+      "action": "continue",
+      "next": "coding-loop-python"
+    },
+    {
+      "stepId": "coding-loop-python",
+      "mentorSays": "Now, loop through the list with right pointer. For each element, add it to the sum.",
+      "example": "def minSubArrayLen(target, nums):\n    left, sum_val, min_len = 0, 0, float('inf')\n    \n    for right in range(len(nums)):\n        sum_val += nums[right]\n        # Add current element to sum",
+      "action": "continue",
+      "next": "coding-shrink-python"
+    },
+    {
+      "stepId": "coding-shrink-python",
+      "mentorSays": "While sum >= target, shrink the window from the left. Update minLen with the current window length, then subtract the left element and move left forward.",
+      "example": "def minSubArrayLen(target, nums):\n    left, sum_val, min_len = 0, 0, float('inf')\n    \n    for right in range(len(nums)):\n        sum_val += nums[right]\n        \n        while sum_val >= target:\n            min_len = min(min_len, right - left + 1)\n            sum_val -= nums[left]\n            left += 1",
+      "action": "continue",
+      "next": "coding-return-python"
+    },
+    {
+      "stepId": "coding-return-python",
+      "mentorSays": "Finally, return minLen if it was updated, otherwise return 0 (no valid subarray found).",
+      "example": "def minSubArrayLen(target, nums):\n    left, sum_val, min_len = 0, 0, float('inf')\n    \n    for right in range(len(nums)):\n        sum_val += nums[right]\n        \n        while sum_val >= target:\n            min_len = min(min_len, right - left + 1)\n            sum_val -= nums[left]\n            left += 1\n    \n    return 0 if min_len == float('inf') else min_len",
+      "action": "continue",
+      "next": "test-code-python"
+    },
+    {
+      "stepId": "test-code-python",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** nums = [2, 3, 1, 2, 4, 3], target = 7\nExpected: 2 (subarray [4, 3])\n\n**Test 2:** nums = [1, 4, 4], target = 4\nExpected: 1 (subarray [4])\n\n**Test 3:** nums = [1, 1, 1, 1, 1, 1, 1, 1], target = 11\nExpected: 0 (no valid subarray)\n\n**Test 4:** nums = [1, 2, 3, 4, 5], target = 11\nExpected: 3 (subarray [3, 4, 5])\n\n**Test 5:** nums = [5, 1, 3, 5, 10, 7, 4, 9, 2, 8], target = 15\nExpected: 2 (subarray [10, 7] or [7, 4, 9])\n\n**Test 6:** nums = [1], target = 1\nExpected: 1 (single element)\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: [2,3,1,2,4,3], 7 → 2\nTest 2: [1,4,4], 4 → 1\nTest 3: [1,1,1,1,1,1,1,1], 11 → 0\nTest 4: [1,2,3,4,5], 11 → 3\nTest 5: [5,1,3,5,10,7,4,9,2,8], 15 → 2\nTest 6: [1], 1 → 1",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-java",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-java"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-java",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'left' or 'sum') and put data inside it.\n\nFor example, 'int left = 0;' creates a variable that stores the number 0. Later, you can use that variable name to refer to it. We'll use variables to track the left pointer, the current sum, and the minimum length.",
+      "example": "int left = 0;      // Left pointer\nint sum = 0;       // Current sum\nint minLen = Infinity;  // Minimum length",
+      "action": "continue",
+      "next": "function-check-java"
+    },
+    {
+      "stepId": "function-check-java",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-java"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-java",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.\n\nThink of it like a recipe: you provide ingredients (parameters), the function does the work, and gives you a result (return value).",
+      "example": "public int minSubArrayLen(nums, target) {\n  // Returns minimum length\n  return 0;\n}",
+      "action": "continue",
+      "next": "parameter-check-java"
+    },
+    {
+      "stepId": "parameter-check-java",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "array-check-java"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-java",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'public int minSubArrayLen(nums, target)', the 'nums' and 'target' are parameters - they're placeholders that will receive actual values when you call the function.",
+      "example": "public int minSubArrayLen(nums, target) {\n  // Parameters receive values\n}\n\n// Call: minSubArrayLen([2, 3, 1, 2, 4, 3], 7)",
+      "action": "continue",
+      "next": "array-check-java"
+    },
+    {
+      "stepId": "array-check-java",
+      "mentorSays": "To solve this lesson, we'll need to work with arrays. Do you know what an array is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know arrays",
+          "next": "loop-check-java"
+        },
+        {
+          "label": "No, explain arrays",
+          "next": "array-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "array-explanation-java",
+      "mentorSays": "An array is a list of values stored in order. Each value has a position number called an 'index'. Array indices start counting from 0, not 1.\n\nFor example, nums = [2, 3, 1, 2, 4, 3] means:\n- nums[0] = 2 (first element)\n- nums[1] = 3 (second element)\n- etc.\n\nWe'll slide a window over this array to find the minimum length subarray.",
+      "example": "nums = [2, 3, 1, 2, 4, 3];\n\nnums[0] = 2\nnums[1] = 3\nnums[2] = 1",
+      "action": "continue",
+      "next": "loop-check-java"
+    },
+    {
+      "stepId": "loop-check-java",
+      "mentorSays": "To solve this lesson, we'll need to use loops. Do you know what a loop is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know loops",
+          "next": "coding-start-java"
+        },
+        {
+          "label": "No, explain loops",
+          "next": "loop-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "loop-explanation-java",
+      "mentorSays": "A loop lets you repeat code multiple times. A 'for' loop in Java runs code for each value in a sequence.\n\nFor example, 'for (let right = 0; right < nums.length; right++)' means: run the code for each index from 0 to the length of the array. This lets us move our right pointer through the array.",
+      "example": "for (let right = 0; right < 6; right++) {\n  console.log(right);\n}\n\nThis prints: 0, 1, 2, 3, 4, 5",
+      "action": "continue",
+      "next": "coding-start-java"
+    },
+    {
+      "stepId": "coding-start-java",
+      "mentorSays": "Perfect! Let's implement the minimum size subarray sum solution in Java. We'll create a method that takes an array and target, and returns the minimum length.",
+      "example": "public int minSubArrayLen(int target, int[] nums) {\n    \n}",
+      "action": "continue",
+      "next": "coding-init-java"
+    },
+    {
+      "stepId": "coding-init-java",
+      "mentorSays": "First, initialize variables: left pointer, sum, and minLen. We'll track the minimum length found so far.",
+      "example": "public int minSubArrayLen(int target, int[] nums) {\n    int left = 0;\n    int sum = 0;\n    int minLen = Integer.MAX_VALUE;\n    // minLen will store the minimum length found\n}",
+      "action": "continue",
+      "next": "coding-loop-java"
+    },
+    {
+      "stepId": "coding-loop-java",
+      "mentorSays": "Now, loop through the array with right pointer. For each element, add it to the sum.",
+      "example": "public int minSubArrayLen(int target, int[] nums) {\n    int left = 0, sum = 0, minLen = Integer.MAX_VALUE;\n    \n    for (int right = 0; right < nums.length; right++) {\n        sum += nums[right];\n        // Add current element to sum\n    }\n}",
+      "action": "continue",
+      "next": "coding-shrink-java"
+    },
+    {
+      "stepId": "coding-shrink-java",
+      "mentorSays": "While sum >= target, shrink the window from the left. Update minLen with the current window length, then subtract the left element and move left forward.",
+      "example": "public int minSubArrayLen(int target, int[] nums) {\n    int left = 0, sum = 0, minLen = Integer.MAX_VALUE;\n    \n    for (int right = 0; right < nums.length; right++) {\n        sum += nums[right];\n        \n        while (sum >= target) {\n            minLen = Math.min(minLen, right - left + 1);\n            sum -= nums[left];\n            left++;\n        }\n    }\n}",
+      "action": "continue",
+      "next": "coding-return-java"
+    },
+    {
+      "stepId": "coding-return-java",
+      "mentorSays": "Finally, return minLen if it was updated, otherwise return 0 (no valid subarray found).",
+      "example": "public int minSubArrayLen(int target, int[] nums) {\n    int left = 0, sum = 0, minLen = Integer.MAX_VALUE;\n    \n    for (int right = 0; right < nums.length; right++) {\n        sum += nums[right];\n        \n        while (sum >= target) {\n            minLen = Math.min(minLen, right - left + 1);\n            sum -= nums[left];\n            left++;\n        }\n    }\n    \n    return minLen == Integer.MAX_VALUE ? 0 : minLen;\n}",
+      "action": "continue",
+      "next": "test-code-java"
+    },
+    {
+      "stepId": "test-code-java",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** nums = [2, 3, 1, 2, 4, 3], target = 7\nExpected: 2 (subarray [4, 3])\n\n**Test 2:** nums = [1, 4, 4], target = 4\nExpected: 1 (subarray [4])\n\n**Test 3:** nums = [1, 1, 1, 1, 1, 1, 1, 1], target = 11\nExpected: 0 (no valid subarray)\n\n**Test 4:** nums = [1, 2, 3, 4, 5], target = 11\nExpected: 3 (subarray [3, 4, 5])\n\n**Test 5:** nums = [5, 1, 3, 5, 10, 7, 4, 9, 2, 8], target = 15\nExpected: 2 (subarray [10, 7] or [7, 4, 9])\n\n**Test 6:** nums = [1], target = 1\nExpected: 1 (single element)\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: [2,3,1,2,4,3], 7 → 2\nTest 2: [1,4,4], 4 → 1\nTest 3: [1,1,1,1,1,1,1,1], 11 → 0\nTest 4: [1,2,3,4,5], 11 → 3\nTest 5: [5,1,3,5,10,7,4,9,2,8], 15 → 2\nTest 6: [1], 1 → 1",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-cpp",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-cpp"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-cpp",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'left' or 'sum') and put data inside it.\n\nFor example, 'int left = 0;' creates a variable that stores the number 0. Later, you can use that variable name to refer to it. We'll use variables to track the left pointer, the current sum, and the minimum length.",
+      "example": "int left = 0;      // Left pointer\nint sum = 0;       // Current sum\nint minLen = Infinity;  // Minimum length",
+      "action": "continue",
+      "next": "function-check-cpp"
+    },
+    {
+      "stepId": "function-check-cpp",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-cpp"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-cpp",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.\n\nThink of it like a recipe: you provide ingredients (parameters), the function does the work, and gives you a result (return value).",
+      "example": "int minSubArrayLen(nums, target) {\n  // Returns minimum length\n  return 0;\n}",
+      "action": "continue",
+      "next": "parameter-check-cpp"
+    },
+    {
+      "stepId": "parameter-check-cpp",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "array-check-cpp"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-cpp",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'int minSubArrayLen(nums, target)', the 'nums' and 'target' are parameters - they're placeholders that will receive actual values when you call the function.",
+      "example": "int minSubArrayLen(nums, target) {\n  // Parameters receive values\n}\n\n// Call: minSubArrayLen([2, 3, 1, 2, 4, 3], 7)",
+      "action": "continue",
+      "next": "array-check-cpp"
+    },
+    {
+      "stepId": "array-check-cpp",
+      "mentorSays": "To solve this lesson, we'll need to work with arrays. Do you know what an array is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know arrays",
+          "next": "loop-check-cpp"
+        },
+        {
+          "label": "No, explain arrays",
+          "next": "array-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "array-explanation-cpp",
+      "mentorSays": "An array is a list of values stored in order. Each value has a position number called an 'index'. Array indices start counting from 0, not 1.\n\nFor example, nums = [2, 3, 1, 2, 4, 3] means:\n- nums[0] = 2 (first element)\n- nums[1] = 3 (second element)\n- etc.\n\nWe'll slide a window over this array to find the minimum length subarray.",
+      "example": "nums = [2, 3, 1, 2, 4, 3];\n\nnums[0] = 2\nnums[1] = 3\nnums[2] = 1",
+      "action": "continue",
+      "next": "loop-check-cpp"
+    },
+    {
+      "stepId": "loop-check-cpp",
+      "mentorSays": "To solve this lesson, we'll need to use loops. Do you know what a loop is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know loops",
+          "next": "coding-start-cpp"
+        },
+        {
+          "label": "No, explain loops",
+          "next": "loop-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "loop-explanation-cpp",
+      "mentorSays": "A loop lets you repeat code multiple times. A 'for' loop in C++ runs code for each value in a sequence.\n\nFor example, 'for (let right = 0; right < nums.length; right++)' means: run the code for each index from 0 to the length of the array. This lets us move our right pointer through the array.",
+      "example": "for (let right = 0; right < 6; right++) {\n  console.log(right);\n}\n\nThis prints: 0, 1, 2, 3, 4, 5",
+      "action": "continue",
+      "next": "coding-start-cpp"
+    },
+    {
+      "stepId": "coding-start-cpp",
+      "mentorSays": "Perfect! Let's implement the minimum size subarray sum solution in C++. We'll create a function that takes a vector and target, and returns the minimum length.",
+      "example": "int minSubArrayLen(int target, vector<int>& nums) {\n    \n}",
+      "action": "continue",
+      "next": "coding-init-cpp"
+    },
+    {
+      "stepId": "coding-init-cpp",
+      "mentorSays": "First, initialize variables: left pointer, sum, and minLen. We'll track the minimum length found so far.",
+      "example": "int minSubArrayLen(int target, vector<int>& nums) {\n    int left = 0;\n    int sum = 0;\n    int minLen = INT_MAX;\n    // minLen will store the minimum length found\n}",
+      "action": "continue",
+      "next": "coding-loop-cpp"
+    },
+    {
+      "stepId": "coding-loop-cpp",
+      "mentorSays": "Now, loop through the vector with right pointer. For each element, add it to the sum.",
+      "example": "int minSubArrayLen(int target, vector<int>& nums) {\n    int left = 0, sum = 0, minLen = INT_MAX;\n    \n    for (int right = 0; right < nums.size(); right++) {\n        sum += nums[right];\n        // Add current element to sum\n    }\n}",
+      "action": "continue",
+      "next": "coding-shrink-cpp"
+    },
+    {
+      "stepId": "coding-shrink-cpp",
+      "mentorSays": "While sum >= target, shrink the window from the left. Update minLen with the current window length, then subtract the left element and move left forward.",
+      "example": "int minSubArrayLen(int target, vector<int>& nums) {\n    int left = 0, sum = 0, minLen = INT_MAX;\n    \n    for (int right = 0; right < nums.size(); right++) {\n        sum += nums[right];\n        \n        while (sum >= target) {\n            minLen = min(minLen, right - left + 1);\n            sum -= nums[left];\n            left++;\n        }\n    }\n}",
+      "action": "continue",
+      "next": "coding-return-cpp"
+    },
+    {
+      "stepId": "coding-return-cpp",
+      "mentorSays": "Finally, return minLen if it was updated, otherwise return 0 (no valid subarray found).",
+      "example": "int minSubArrayLen(int target, vector<int>& nums) {\n    int left = 0, sum = 0, minLen = INT_MAX;\n    \n    for (int right = 0; right < nums.size(); right++) {\n        sum += nums[right];\n        \n        while (sum >= target) {\n            minLen = min(minLen, right - left + 1);\n            sum -= nums[left];\n            left++;\n        }\n    }\n    \n    return minLen == INT_MAX ? 0 : minLen;\n}",
+      "action": "continue",
+      "next": "test-code-cpp"
+    },
+    {
+      "stepId": "test-code-cpp",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** nums = [2, 3, 1, 2, 4, 3], target = 7\nExpected: 2 (subarray [4, 3])\n\n**Test 2:** nums = [1, 4, 4], target = 4\nExpected: 1 (subarray [4])\n\n**Test 3:** nums = [1, 1, 1, 1, 1, 1, 1, 1], target = 11\nExpected: 0 (no valid subarray)\n\n**Test 4:** nums = [1, 2, 3, 4, 5], target = 11\nExpected: 3 (subarray [3, 4, 5])\n\n**Test 5:** nums = [5, 1, 3, 5, 10, 7, 4, 9, 2, 8], target = 15\nExpected: 2 (subarray [10, 7] or [7, 4, 9])\n\n**Test 6:** nums = [1], target = 1\nExpected: 1 (single element)\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: [2,3,1,2,4,3], 7 → 2\nTest 2: [1,4,4], 4 → 1\nTest 3: [1,1,1,1,1,1,1,1], 11 → 0\nTest 4: [1,2,3,4,5], 11 → 3\nTest 5: [5,1,3,5,10,7,4,9,2,8], 15 → 2\nTest 6: [1], 1 → 1",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-ts",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-ts"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-ts",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'left' or 'sum') and put data inside it.\n\nFor example, 'let left = 0;' creates a variable that stores the number 0. Later, you can use that variable name to refer to it. We'll use variables to track the left pointer, the current sum, and the minimum length.",
+      "example": "let left = 0;      // Left pointer\nlet sum = 0;       // Current sum\nlet minLen = Infinity;  // Minimum length",
+      "action": "continue",
+      "next": "function-check-ts"
+    },
+    {
+      "stepId": "function-check-ts",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-ts"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-ts",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.\n\nThink of it like a recipe: you provide ingredients (parameters), the function does the work, and gives you a result (return value).",
+      "example": "function minSubArrayLen(nums, target) {\n  // Returns minimum length\n  return 0;\n}",
+      "action": "continue",
+      "next": "parameter-check-ts"
+    },
+    {
+      "stepId": "parameter-check-ts",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "array-check-ts"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-ts",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'function minSubArrayLen(nums, target)', the 'nums' and 'target' are parameters - they're placeholders that will receive actual values when you call the function.",
+      "example": "function minSubArrayLen(nums, target) {\n  // Parameters receive values\n}\n\n// Call: minSubArrayLen([2, 3, 1, 2, 4, 3], 7)",
+      "action": "continue",
+      "next": "array-check-ts"
+    },
+    {
+      "stepId": "array-check-ts",
+      "mentorSays": "To solve this lesson, we'll need to work with arrays. Do you know what an array is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know arrays",
+          "next": "loop-check-ts"
+        },
+        {
+          "label": "No, explain arrays",
+          "next": "array-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "array-explanation-ts",
+      "mentorSays": "An array is a list of values stored in order. Each value has a position number called an 'index'. Array indices start counting from 0, not 1.\n\nFor example, nums = [2, 3, 1, 2, 4, 3] means:\n- nums[0] = 2 (first element)\n- nums[1] = 3 (second element)\n- etc.\n\nWe'll slide a window over this array to find the minimum length subarray.",
+      "example": "nums = [2, 3, 1, 2, 4, 3];\n\nnums[0] = 2\nnums[1] = 3\nnums[2] = 1",
+      "action": "continue",
+      "next": "loop-check-ts"
+    },
+    {
+      "stepId": "loop-check-ts",
+      "mentorSays": "To solve this lesson, we'll need to use loops. Do you know what a loop is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know loops",
+          "next": "coding-start-ts"
+        },
+        {
+          "label": "No, explain loops",
+          "next": "loop-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "loop-explanation-ts",
+      "mentorSays": "A loop lets you repeat code multiple times. A 'for' loop in TypeScript runs code for each value in a sequence.\n\nFor example, 'for (let right = 0; right < nums.length; right++)' means: run the code for each index from 0 to the length of the array. This lets us move our right pointer through the array.",
+      "example": "for (let right = 0; right < 6; right++) {\n  console.log(right);\n}\n\nThis prints: 0, 1, 2, 3, 4, 5",
+      "action": "continue",
+      "next": "coding-start-ts"
+    },
+    {
+      "stepId": "coding-start-ts",
+      "mentorSays": "Perfect! Let's implement the minimum size subarray sum solution in TypeScript. We'll create a function that takes an array and target, and returns the minimum length.",
+      "example": "function minSubArrayLen(target: number, nums: number[]): number {\n    \n}",
+      "action": "continue",
+      "next": "coding-init-ts"
+    },
+    {
+      "stepId": "coding-init-ts",
+      "mentorSays": "First, initialize variables: left pointer, sum, and minLen. We'll track the minimum length found so far.",
+      "example": "function minSubArrayLen(target: number, nums: number[]): number {\n    let left: number = 0;\n    let sum: number = 0;\n    let minLen: number = Infinity;\n    // minLen will store the minimum length found\n}",
+      "action": "continue",
+      "next": "coding-loop-ts"
+    },
+    {
+      "stepId": "coding-loop-ts",
+      "mentorSays": "Now, loop through the array with right pointer. For each element, add it to the sum.",
+      "example": "function minSubArrayLen(target: number, nums: number[]): number {\n    let left: number = 0, sum: number = 0, minLen: number = Infinity;\n    \n    for (let right = 0; right < nums.length; right++) {\n        sum += nums[right];\n        // Add current element to sum\n    }\n}",
+      "action": "continue",
+      "next": "coding-shrink-ts"
+    },
+    {
+      "stepId": "coding-shrink-ts",
+      "mentorSays": "While sum >= target, shrink the window from the left. Update minLen with the current window length, then subtract the left element and move left forward.",
+      "example": "function minSubArrayLen(target: number, nums: number[]): number {\n    let left: number = 0, sum: number = 0, minLen: number = Infinity;\n    \n    for (let right = 0; right < nums.length; right++) {\n        sum += nums[right];\n        \n        while (sum >= target) {\n            minLen = Math.min(minLen, right - left + 1);\n            sum -= nums[left];\n            left++;\n        }\n    }\n}",
+      "action": "continue",
+      "next": "coding-return-ts"
+    },
+    {
+      "stepId": "coding-return-ts",
+      "mentorSays": "Finally, return minLen if it was updated, otherwise return 0 (no valid subarray found).",
+      "example": "function minSubArrayLen(target: number, nums: number[]): number {\n    let left: number = 0, sum: number = 0, minLen: number = Infinity;\n    \n    for (let right = 0; right < nums.length; right++) {\n        sum += nums[right];\n        \n        while (sum >= target) {\n            minLen = Math.min(minLen, right - left + 1);\n            sum -= nums[left];\n            left++;\n        }\n    }\n    \n    return minLen === Infinity ? 0 : minLen;\n}",
+      "action": "continue",
+      "next": "test-code-ts"
+    },
+    {
+      "stepId": "test-code-ts",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** nums = [2, 3, 1, 2, 4, 3], target = 7\nExpected: 2 (subarray [4, 3])\n\n**Test 2:** nums = [1, 4, 4], target = 4\nExpected: 1 (subarray [4])\n\n**Test 3:** nums = [1, 1, 1, 1, 1, 1, 1, 1], target = 11\nExpected: 0 (no valid subarray)\n\n**Test 4:** nums = [1, 2, 3, 4, 5], target = 11\nExpected: 3 (subarray [3, 4, 5])\n\n**Test 5:** nums = [5, 1, 3, 5, 10, 7, 4, 9, 2, 8], target = 15\nExpected: 2 (subarray [10, 7] or [7, 4, 9])\n\n**Test 6:** nums = [1], target = 1\nExpected: 1 (single element)\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: [2,3,1,2,4,3], 7 → 2\nTest 2: [1,4,4], 4 → 1\nTest 3: [1,1,1,1,1,1,1,1], 11 → 0\nTest 4: [1,2,3,4,5], 11 → 3\nTest 5: [5,1,3,5,10,7,4,9,2,8], 15 → 2\nTest 6: [1], 1 → 1",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "final",
+      "mentorSays": "🎉 Well done! You've successfully implemented the Minimum Size Subarray Sum solution!\n\n**Time Complexity:** O(n)\n- We iterate through the array once with the right pointer\n- Each element is added and removed from the window at most once\n- Even though we have a nested while loop, each element is processed at most twice (once when added, once when removed)\n\n**Space Complexity:** O(1)\n- We only use a constant amount of extra space (left, sum, minLen variables)\n- No additional data structures are needed\n\n**Key Takeaways:**\n1. **Sliding window with shrinking**: Expand the window until sum >= target, then shrink to find minimum length\n2. **Positive numbers guarantee**: Since all numbers are positive, shrinking from the left will decrease the sum\n3. **Track minimum**: Update the minimum length whenever we have a valid window (sum >= target)\n4. **Edge case handling**: Return 0 if no valid subarray exists (minLen is still Infinity)\n5. **Window length formula**: The length of window [left, right] is `right - left + 1`\n\n**Related Practice Lessons:**\n- Smallest Subarray with Sum >= S (similar lesson)\n- Maximum Size Subarray Sum Equals K (LeetCode #325)\n- Subarray Sum Equals K (LeetCode #560)\n- Minimum Window Substring (LeetCode #76)\n\nKeep practicing sliding window lessons - they're a powerful technique for array lessons!",
+      "action": "continue"
+    }
+  ]
+}

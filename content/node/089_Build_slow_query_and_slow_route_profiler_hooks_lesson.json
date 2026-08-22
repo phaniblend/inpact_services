@@ -1,0 +1,356 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-node-89",
+    "track": "node",
+    "lessonNum": 89,
+    "title": "Build slow query and slow route profiler hooks",
+    "shortName": "P89",
+    "intro": {
+      "tag": "LESSON #89",
+      "title": "Build slow query and slow route profiler hooks",
+      "body": "In this lesson, you will build a simple Node.js application that uses hooks to monitor and log slow database queries and slow API routes. You'll learn the core concept of middleware and event hooks to intercept and measure execution time. The main technologies involved are Node.js's built-in modules for timing and the Express.js framework for handling routes. By the end, you'll understand how to profile performance issues in a web server to identify bottlenecks.",
+      "usecase": "In production web applications, monitoring performance is critical for user experience and system health. This pattern is used in observability dashboards, like those in Datadog or New Relic, where developers track slow API endpoints and database queries to identify bottlenecks. For example, an admin panel might display a real-time table of slow routes, allowing engineers to quickly pinpoint and optimize problematic endpoints. Implementing these hooks enables proactive performance tuning, preventing degraded service during high traffic."
+    },
+    "objectives": [
+      "Implement a middleware function to capture route execution time",
+      "Configure threshold values to identify slow routes in a Node.js application",
+      "Construct a database query wrapper to measure query execution duration",
+      "Integrate timing hooks with logging mechanisms to report performance data",
+      "Manipulate request and response objects to inject timing metadata",
+      "Initialize profiler hooks at application startup",
+      "Apply conditional logic to trigger alerts for slow operations"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 10",
+        "title": "Import required Node.js modules",
+        "instruction": "Import the http, url, and querystring modules using require() statements at the top of your file.",
+        "hint": "Use the require() function to import each module. Separate each import with a comma or place them on separate lines.",
+        "analogousExample": "// Example: importing core modules\nconst fs = require('fs');\nconst path = require('path');",
+        "seedCode": "// Import http, url, and querystring modules here",
+        "expectedOutcome": "Your file will have the three required modules imported and ready to use for profiling.",
+        "successCriteria": [
+          "The http, url, and querystring modules are imported using require() statements."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure to import all three modules: http, url, and querystring.",
+        "feedbackWrong": "Check the syntax: use require('module_name') for each import. Make sure you're importing http, url, and querystring.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "require('http')",
+            "require('url')",
+            "require('querystring')"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 10",
+        "title": "Create the main server function",
+        "instruction": "Create a function named 'createServer' that initializes an HTTP server and listens on port 3000.",
+        "hint": "Use the http.createServer() method and call server.listen() with port 3000 and a console log message.",
+        "analogousExample": "// Similar: basic server setup\nfunction createServer() {\n  const server = http.createServer();\n  server.listen(3000, () => {\n    console.log('Server listening on port 3000');\n  });\n}",
+        "seedCode": "// Import http, url, and querystring modules here\n\n// Create the main server function here",
+        "expectedOutcome": "A function named createServer that sets up an HTTP server listening on port 3000.",
+        "successCriteria": [
+          "The createServer function is defined, uses http.createServer(), and calls server.listen(3000) with a callback that logs a message."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure your function is named 'createServer' and includes both http.createServer() and server.listen(3000) with a console log.",
+        "feedbackWrong": "The server function isn't set up correctly. Check that you're using http.createServer() and calling listen() on port 3000.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "createServer",
+            "http.createServer",
+            "listen(3000)",
+            "console.log"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 10",
+        "title": "Initialize slow query tracking object",
+        "instruction": "Inside your server function, create an empty object named 'slowQueries' to store slow query information.",
+        "hint": "Declare a variable using 'const' or 'let' and assign it an empty object {}.",
+        "analogousExample": "// Example: creating an empty tracking object\nconst userSessions = {};",
+        "seedCode": "// Import http, url, and querystring modules here\n\n// Create the main server function here\nconst server = (req, res) => {\n  // Initialize slow query tracking object here\n};",
+        "expectedOutcome": "The server function now contains a 'slowQueries' object that will be used to track query timing data.",
+        "successCriteria": [
+          "An empty object named 'slowQueries' is declared inside the server function."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you've declared an empty object named 'slowQueries' inside the server function.",
+        "feedbackWrong": "The 'slowQueries' object is missing or incorrectly placed. It should be an empty object declared inside the server function.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "slowQueries",
+            "=",
+            "{}"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 10",
+        "title": "Initialize slow route tracking array",
+        "instruction": "Inside the server function, create an empty array named 'slowRoutes' to store slow route information.",
+        "hint": "You can declare an array using const and square brackets: const slowRoutes = [];",
+        "analogousExample": "// Example: creating an empty array\nconst items = [];",
+        "seedCode": "// Import http, url, and querystring modules here\n\n// Create the main server function here\nconst server = (req, res) => {\n  // Initialize slow query tracking object here\n  // Initialize slow route tracking array here\n};",
+        "expectedOutcome": "The server function will have a 'slowRoutes' array variable ready to store route paths and response times.",
+        "successCriteria": [
+          "An empty array named 'slowRoutes' is declared inside the server function."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you've declared an array named 'slowRoutes' inside the server function.",
+        "feedbackWrong": "The slow route tracking array wasn't created correctly. Try declaring 'const slowRoutes = [];' inside the server function.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "slowRoutes",
+            "=",
+            "[]"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 10",
+        "title": "Create query parsing helper function",
+        "instruction": "Inside the server function, create a helper function named parseQuery that takes a URL string as a parameter and returns parsed query parameters using the querystring module.",
+        "hint": "You can use querystring.parse() after extracting the query string from the URL. Remember to extract the query portion after the '?' character.",
+        "analogousExample": "// Similar: a function that extracts and parses data\nfunction parseQuery(url) {\n  const queryString = url.split('?')[1];\n  return querystring.parse(queryString);\n}",
+        "seedCode": "// Import http, url, and querystring modules here\n\n// Create the main server function here\nconst server = (req, res) => {\n  // Initialize slow query tracking object here\n  // Initialize slow route tracking array here\n  \n  // Create parseQuery helper function here\n};",
+        "expectedOutcome": "A parseQuery function is defined inside the server function that can extract and parse query parameters from URLs.",
+        "successCriteria": [
+          "The parseQuery function is created, takes a URL parameter, extracts the query string, and uses querystring.parse() to return parsed parameters."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure your parseQuery function takes a URL parameter, extracts the query string (the part after '?'), and uses querystring.parse() to return the parsed object.",
+        "feedbackWrong": "The parseQuery function isn't quite right. It should extract the query string from the URL and parse it using querystring.parse(). Check the analogous example for guidance.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "parseQuery",
+            "querystring.parse",
+            "url",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 10",
+        "title": "Create slow query detection hook",
+        "instruction": "Inside the server function, create a function named detectSlowQuery that takes queryString and startTime as parameters.",
+        "hint": "Define the function with the given name and parameters. You can use either function declaration or arrow function syntax.",
+        "analogousExample": "// Similar: a function with parameters\nfunction processData(data, timestamp) {\n  // logic here\n}",
+        "seedCode": "// Import http, url, and querystring modules here\nconst http = require('http');\nconst url = require('url');\nconst querystring = require('querystring');\n\n// Create the main server function here\nconst server = (req, res) => {\n  // Initialize slow query tracking object here\n  const slowQueries = {};\n  // Initialize slow route tracking array here\n  const slowRoutes = [];\n  \n  // Create parseQuery helper function here\n  const parseQuery = (queryString) => {\n    return querystring.parse(queryString);\n  };\n  \n  // Create slow query detection hook here\n  \n};",
+        "expectedOutcome": "A detectSlowQuery function is defined inside the server function with the correct parameters.",
+        "successCriteria": [
+          "The detectSlowQuery function exists with queryString and startTime parameters."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've created a function, but check the name or parameters. It should be named detectSlowQuery and accept queryString and startTime.",
+        "feedbackWrong": "The detectSlowQuery function is not properly defined. Make sure to create it inside the server function with the specified parameters.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "detectSlowQuery",
+            "queryString",
+            "startTime"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 10",
+        "title": "Implement request handling with profiling hooks",
+        "instruction": "Inside the server function, after the helper functions, add code to call both profiling hooks for each incoming request. Start by calling the slow query detection hook with the parsed query object,",
+        "hint": "You'll need to parse the query from the request URL first, then pass it to the slow query detection hook. Then pass the request URL to the slow route detection hook.",
+        "analogousExample": "// Example: calling helper functions in sequence\nconst result1 = helper1(data);\nconst result2 = helper2(data);",
+        "seedCode": "// Import http, url, and querystring modules here\nconst http = require('http');\nconst url = require('url');\nconst querystring = require('querystring');\n\n// Create the main server function here\nconst server = (req, res) => {\n  // Initialize slow query tracking object here\n  const slowQueries = {};\n  // Initialize slow route tracking array here\n  const slowRoutes = [];\n  \n  // Create parseQuery helper function here\n  const parseQuery = (queryString) => {\n    return querystring.parse(queryString);\n  };\n  \n  // Create slow query detection hook here\n  \n  // Create slow route detection hook here\n  \n  // Call profiling hooks for each request here\n  \n};",
+        "expectedOutcome": "The server function now includes calls to both profiling hooks that will execute for every incoming request.",
+        "successCriteria": [
+          "Both profiling hooks are called inside the server function with appropriate parameters."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've made progress, but make sure both hooks are called with the correct parameters.",
+        "feedbackWrong": "The profiling hooks aren't properly integrated. Remember to call both hooks inside the server function.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "parseQuery",
+            "slowQueries",
+            "slowRoutes",
+            "req.url"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 10",
+        "title": "call the slow route detection hook with the r",
+        "instruction": "call the slow route detection hook with the request URL.",
+        "hint": "You'll need to parse the query from the request URL first, then pass it to the slow query detection hook. Then pass the request URL to the slow route detection hook.",
+        "analogousExample": "// Example: calling helper functions in sequence\nconst result1 = helper1(data);\nconst result2 = helper2(data);",
+        "seedCode": "// Import http, url, and querystring modules here\nconst http = require('http');\nconst url = require('url');\nconst querystring = require('querystring');\n\n// Create the main server function here\nconst server = (req, res) => {\n  // Initialize slow query tracking object here\n  const slowQueries = {};\n  // Initialize slow route tracking array here\n  const slowRoutes = [];\n  \n  // Create parseQuery helper function here\n  const parseQuery = (queryString) => {\n    return querystring.parse(queryString);\n  };\n  \n  // Create slow query detection hook here\n  \n  // Create slow route detection hook here\n  \n  // Call profiling hooks for each request here\n  \n};",
+        "expectedOutcome": "",
+        "successCriteria": [
+          "Complete the step as instructed."
+        ],
+        "feedbackCorrect": "Great! Step completed.",
+        "feedbackPartial": "Review the instruction and try again.",
+        "feedbackWrong": "Check the instruction and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "parseQuery",
+            "slowQueries",
+            "slowRoutes",
+            "req.url"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 10",
+        "title": "Add profiling data endpoint",
+        "instruction": "Inside the server function, add a route handler that returns the slowQueries object and slowRoutes array as JSON when the request URL path is '/profiling-data'.",
+        "hint": "Check if req.url starts with '/profiling-data', then set appropriate headers and send a JSON response using JSON.stringify.",
+        "analogousExample": "// Example route handler\nif (req.url.startsWith('/data')) {\n  res.writeHead(200, { 'Content-Type': 'application/json' });\n  res.end(JSON.stringify({ data: 'example' }));\n}",
+        "seedCode": "// Import http, url, and querystring modules here\nconst http = require('http');\nconst url = require('url');\nconst querystring = require('querystring');\n\n// Create the main server function here\nconst server = (req, res) => {\n  // Initialize slow query tracking object here\n  const slowQueries = {};\n  // Initialize slow route tracking array here\n  const slowRoutes = [];\n  \n  // Create parseQuery helper function here\n  const parseQuery = (queryString) => {\n    return querystring.parse(queryString);\n  };\n  \n  // Create slow query detection hook here\n  \n  // Create slow route detection hook here\n  \n  // Call profiling hooks for each request here\n  \n  // Add profiling data endpoint here\n  \n};",
+        "expectedOutcome": "The server will respond with JSON containing profiling data when accessing '/profiling-data'.",
+        "successCriteria": [
+          "A route handler is added that checks for '/profiling-data' and returns slowQueries and slowRoutes as JSON."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure to check the URL path and return both slowQueries and slowRoutes in the JSON response.",
+        "feedbackWrong": "The endpoint isn't working as expected. Check if you're correctly handling the '/profiling-data' route and returning JSON with both data structures.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "/profiling-data",
+            "slowQueries",
+            "slowRoutes",
+            "JSON.stringify",
+            "writeHead",
+            "Content-Type",
+            "application/json"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 10",
+        "title": "Test the profiler with sample requests",
+        "instruction": "Inside the server function, add a console.log statement at the end to output the slowQueries and slowRoutes data after processing requests.",
+        "hint": "Add console.log(slowQueries) and console.log(slowRoutes) before the closing brace of the server function to see the profiling data.",
+        "analogousExample": "// Logging data after processing\nconsole.log({ queries: slowQueries, routes: slowRoutes });",
+        "seedCode": "// Import http, url, and querystring modules here\nconst http = require('http');\nconst url = require('url');\nconst querystring = require('querystring');\n\n// Create the main server function here\nconst server = (req, res) => {\n  // Initialize slow query tracking object here\n  const slowQueries = {};\n  // Initialize slow route tracking array here\n  const slowRoutes = [];\n  \n  // Create parseQuery helper function here\n  const parseQuery = (queryString) => {\n    return querystring.parse(queryString);\n  };\n  \n  // Create slow query detection hook here\n  \n  // Create slow route detection hook here\n  \n  // Call profiling hooks for each request here\n  \n  // Add profiling data endpoint here\n  \n  // Add console.log here to output profiling data\n};",
+        "expectedOutcome": "The server will log the slowQueries object and slowRoutes array to the console after processing requests, allowing you to verify the profiler collects data.",
+        "successCriteria": [
+          "The server function includes console.log statements for both slowQueries and slowRoutes at the end of its body."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You added some logging, but make sure to include both slowQueries and slowRoutes in the console.log statements.",
+        "feedbackWrong": "The server function doesn't have the required console.log statements for profiling data. Add them at the end of the function body.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "console.log",
+            "slowQueries",
+            "slowRoutes"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import required Node.js modules",
+        "id": "step1"
+      },
+      {
+        "label": "Create the main server function",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize slow query tracking object",
+        "id": "step3"
+      },
+      {
+        "label": "Initialize slow route tracking array",
+        "id": "step4"
+      },
+      {
+        "label": "Create query parsing helper function",
+        "id": "step5"
+      },
+      {
+        "label": "Create slow query detection hook",
+        "id": "step6"
+      },
+      {
+        "label": "Implement request handling with profiling hooks",
+        "id": "step7"
+      },
+      {
+        "label": "call the slow route detection hook with the r",
+        "id": "step8"
+      },
+      {
+        "label": "Add profiling data endpoint",
+        "id": "step9"
+      },
+      {
+        "label": "Test the profiler with sample requests",
+        "id": "step10"
+      }
+    ]
+  },
+  "source": "content"
+}

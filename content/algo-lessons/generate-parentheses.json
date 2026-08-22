@@ -1,0 +1,790 @@
+{
+  "id": "generate-parentheses",
+  "title": "Generate Parentheses",
+  "pattern": "backtracking",
+  "difficulty": "medium",
+  "language": "javascript",
+  "status": "draft",
+  "flow": [
+    {
+      "stepId": "title",
+      "mentorSays": "At the end of this lesson, you will be able to:\n\n1. Understand what the Generate Parentheses lesson asks for\n2. Use backtracking to generate all valid combinations\n3. Understand when to add '(' and when to add ')'\n4. Track open and close counts during generation\n5. Implement the solution step by step in your chosen language",
+      "action": "continue",
+      "next": "lesson-illustration"
+    },
+    {
+      "stepId": "lesson-illustration",
+      "mentorSays": "Perfect! Now let's understand what the Generate Parentheses lesson is asking.\n\n**Lesson Definition:**\nGiven `n` pairs of parentheses, write a function to generate all combinations of well-formed parentheses.\n\n**Key Observations:**\n- We need to generate all valid combinations of n pairs\n- Each combination must have exactly n '(' and n ')'\n- Parentheses must be well-formed (balanced)\n- We'll use backtracking to explore all possibilities\n\n**Example 1:** n = 1\n\nValid combinations:\n- \"()\"\n\nAnswer: [\"()\"]\n\n**Example 2:** n = 2\n\nValid combinations:\n- \"(())\"\n- \"()()\"\n\nAnswer: [\"(())\", \"()()\"]\n\n**Example 3:** n = 3\n\nValid combinations:\n- \"((()))\"\n- \"(()())\"\n- \"(())()\"\n- \"()(())\"\n- \"()()()\"\n\nAnswer: [\"((()))\", \"(()())\", \"(())()\", \"()(())\", \"()()()\"]\n\n**Step-by-step trace for Example 2 (Backtracking approach):**\n\nn = 2\n\nWe'll use backtracking with open and close counts:\n- Start: current = \"\", open = 0, close = 0\n\n**Decision tree:**\n\n1. **Add '('**: current = \"(\", open = 1, close = 0\n   - Can add '('? open (1) < n (2) ✓\n   - Add '(': current = \"((\", open = 2, close = 0\n     - Can add '('? open (2) < n (2) ✗\n     - Can add ')'? close (0) < open (2) ✓\n     - Add ')': current = \"(()\", open = 2, close = 1\n       - Can add '('? open (2) < n (2) ✗\n       - Can add ')'? close (1) < open (2) ✓\n       - Add ')': current = \"(())\", open = 2, close = 2\n         - Length = 4 = 2*n ✓, add to result: [\"(())\"]\n   - Can add ')'? close (0) < open (1) ✗\n   - Backtrack\n\n2. **Add ')'**: Not allowed (close (0) >= open (0))\n\n3. **Backtrack, try different path**:\n   - current = \"(\", open = 1, close = 0\n   - Add ')': current = \"()\", open = 1, close = 1\n     - Can add '('? open (1) < n (2) ✓\n     - Add '(': current = \"()(\", open = 2, close = 1\n       - Can add '('? open (2) < n (2) ✗\n       - Can add ')'? close (1) < open (2) ✓\n       - Add ')': current = \"()()\", open = 2, close = 2\n         - Length = 4 = 2*n ✓, add to result: [\"(())\", \"()()\"]\n\nResult: [\"(())\", \"()()\"] ✓\n\n**Key Insight:**\nWe can only:\n- Add '(' when open < n (we haven't used all opening parentheses)\n- Add ')' when close < open (we have unmatched opening parentheses)\n- When current.length == 2*n, we have a valid combination!\n\n**What makes this tricky:**\n1. Understanding when to add '(' vs ')'\n2. Tracking open and close counts\n3. Backtracking to explore all possibilities\n4. Ensuring parentheses are well-formed\n\n**Common pitfalls:**\n- Adding ')' when close >= open (creates invalid combination)\n- Not backtracking properly\n- Forgetting to check if combination is complete (length == 2*n)\n- Generating duplicates or invalid combinations",
+      "example": "Example 1: n = 1 → [\"()\"]\n\nExample 2: n = 2 → [\"(())\", \"()()\"]\n\nExample 3: n = 3 → [\"((()))\", \"(()())\", \"(())()\", \"()(())\", \"()()()\"]",
+      "action": "continue",
+      "next": "thinking-challenge"
+    },
+    {
+      "stepId": "thinking-challenge",
+      "mentorSays": "Now that you understand what the lesson wants, here's the real question:\n\nHow would YOU generate all valid parentheses combinations?\n\nThink about it for a moment. What approach feels natural to you?",
+      "choices": [
+        {
+          "label": "Use backtracking - add '(' when open < n, add ')' when close < open",
+          "next": "explore-backtracking"
+        },
+        {
+          "label": "Generate all combinations and filter valid ones",
+          "next": "explore-generate-all"
+        },
+        {
+          "label": "Use recursion to build combinations level by level",
+          "next": "explore-recursive"
+        }
+      ]
+    },
+    {
+      "stepId": "explore-generate-all",
+      "mentorSays": "That's a straightforward approach! You're thinking: \"I'll generate all possible combinations of '(' and ')', then filter to keep only valid ones.\"\n\nThis works! However, it's inefficient:\n- For n=3, we'd generate 2^6 = 64 combinations\n- Only 5 are valid, so we waste a lot of computation\n- Time complexity: O(2^(2n)) which is exponential\n\nThere's a more efficient backtracking approach that only explores valid paths. Would you like to learn that?",
+      "action": "continue",
+      "next": "explore-backtracking"
+    },
+    {
+      "stepId": "explore-recursive",
+      "mentorSays": "That's a good approach! You're thinking: \"I'll use recursion to build combinations level by level.\"\n\nThis is actually the same as backtracking! Backtracking is a form of recursion where we:\n- Make a choice (add '(' or ')')\n- Recursively explore that choice\n- Undo the choice (backtrack) and try the next option\n\nLet's learn the backtracking approach with proper constraints!",
+      "action": "continue",
+      "next": "explore-backtracking"
+    },
+    {
+      "stepId": "explore-backtracking",
+      "mentorSays": "Excellent choice! Backtracking is the optimal solution. Here's the core idea:\n\n**The Algorithm:**\n1. **Initialize**: result = [], current = \"\", open = 0, close = 0\n2. **Backtrack function**: backtrack(current, open, close)\n3. **Base case**: If current.length == 2*n, add to result and return\n4. **Add '('**: If open < n, add '(' and recurse\n5. **Add ')'**: If close < open, add ')' and recurse\n6. **Backtrack**: After recursion, the string automatically backtracks (we pass new string)\n\n**Why it works**:\n- We only add '(' when we haven't used all n opening parentheses\n- We only add ')' when we have unmatched opening parentheses (close < open)\n- This ensures we only explore valid paths\n- When length == 2*n, we have a complete valid combination\n\n**Key insight**: We use constraints (open < n, close < open) to prune invalid paths early, making this much more efficient than generating all combinations!\n\nLet's trace with n = 2:\n\n- **backtrack(\"\", 0, 0)**:\n  - Length < 4, continue\n  - Add '(': backtrack(\"(\", 1, 0)\n  - Add ')': Not allowed (close (0) >= open (0))\n\n- **backtrack(\"(\", 1, 0)**:\n  - Length < 4, continue\n  - Add '(': backtrack(\"((\", 2, 0)\n  - Add ')': Not allowed (close (0) >= open (1)? No, 0 < 1 ✓)\n    - Actually, close (0) < open (1) ✓, so we can add ')'\n    - backtrack(\"()\", 1, 1)\n\n- **backtrack(\"((\", 2, 0)**:\n  - Length < 4, continue\n  - Add '(': Not allowed (open (2) >= n (2))\n  - Add ')': Allowed (close (0) < open (2))\n    - backtrack(\"(()\", 2, 1)\n      - backtrack(\"(())\", 2, 2) → length == 4, add to result!\n\nThis is O(4^n / √n) time (Catalan number) and O(n) space! Now let's code it step by step.",
+      "action": "continue",
+      "next": "language-selection"
+    },
+    {
+      "stepId": "language-selection",
+      "mentorSays": "Great! Now let's code this solution. Which programming language would you like to use?",
+      "choices": [
+        {
+          "label": "JavaScript",
+          "next": "variable-check-js"
+        },
+        {
+          "label": "Python",
+          "next": "variable-check-python"
+        },
+        {
+          "label": "Java",
+          "next": "variable-check-java"
+        },
+        {
+          "label": "C++",
+          "next": "variable-check-cpp"
+        },
+        {
+          "label": "TypeScript",
+          "next": "variable-check-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-check-js",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-js"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-js",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'result' or 'open') and put data inside it.",
+      "example": "let result = [];  // Store results\nlet open = 0;   // Count of '(' used",
+      "action": "continue",
+      "next": "function-check-js"
+    },
+    {
+      "stepId": "function-check-js",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-js"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-js",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "function generateParenthesis(n) {\n  // Returns all valid parentheses combinations\n  return [];\n}",
+      "action": "continue",
+      "next": "parameter-check-js"
+    },
+    {
+      "stepId": "parameter-check-js",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "backtracking-check-js"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-js",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'function generateParenthesis(n)', the 'n' is a parameter.",
+      "example": "function generateParenthesis(n) {\n  // Parameter receives n\n}\n\n// Call: generateParenthesis(3)",
+      "action": "continue",
+      "next": "backtracking-check-js"
+    },
+    {
+      "stepId": "backtracking-check-js",
+      "mentorSays": "To solve this lesson, we'll use backtracking. Do you know what backtracking is?",
+      "choices": [
+        {
+          "label": "Yes, I know backtracking",
+          "next": "coding-start-js"
+        },
+        {
+          "label": "No, explain backtracking",
+          "next": "backtracking-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "backtracking-explanation-js",
+      "mentorSays": "Backtracking is a technique where we:\n1. Make a choice (e.g., add '(')\n2. Recursively explore that choice\n3. Undo the choice and try the next option\n\nFor parentheses: we try adding '(' and ')' in all valid ways, building up combinations.",
+      "example": "function backtrack(current, open, close) {\n  // Make choice: add '('\n  backtrack(current + '(', open + 1, close);\n  \n  // Try next choice: add ')'\n  backtrack(current + ')', open, close + 1);\n}",
+      "action": "continue",
+      "next": "coding-start-js"
+    },
+    {
+      "stepId": "coding-start-js",
+      "mentorSays": "Perfect! Let's implement the generate parentheses solution in JavaScript. We'll create a function that takes n and returns all valid combinations.",
+      "example": "function generateParenthesis(n) {\n  \n}",
+      "action": "continue",
+      "next": "coding-init-result-js"
+    },
+    {
+      "stepId": "coding-init-result-js",
+      "mentorSays": "Initialize a result array to store all valid combinations.",
+      "example": "function generateParenthesis(n) {\n  const result = [];\n  \n}",
+      "action": "continue",
+      "next": "coding-backtrack-helper-js"
+    },
+    {
+      "stepId": "coding-backtrack-helper-js",
+      "mentorSays": "Create a backtrack helper function that takes current string, open count, and close count.",
+      "example": "function generateParenthesis(n) {\n  const result = [];\n  \n  function backtrack(current, open, close) {\n    // Backtracking logic will go here\n  }\n  \n}",
+      "action": "continue",
+      "next": "coding-base-case-js"
+    },
+    {
+      "stepId": "coding-base-case-js",
+      "mentorSays": "Add the base case: when current string length equals 2*n, we have a complete combination. Add it to result and return.",
+      "example": "function generateParenthesis(n) {\n  const result = [];\n  \n  function backtrack(current, open, close) {\n    // Base case: complete combination\n    if (current.length === 2 * n) {\n      result.push(current);\n      return;\n    }\n    \n  }\n  \n}",
+      "action": "continue",
+      "next": "coding-add-open-js"
+    },
+    {
+      "stepId": "coding-add-open-js",
+      "mentorSays": "Add '(' when open < n (we haven't used all opening parentheses). Recursively call backtrack with updated values.",
+      "example": "function generateParenthesis(n) {\n  const result = [];\n  \n  function backtrack(current, open, close) {\n    if (current.length === 2 * n) {\n      result.push(current);\n      return;\n    }\n    \n    // Add '(' if we haven't used all n opening parentheses\n    if (open < n) {\n      backtrack(current + '(', open + 1, close);\n    }\n    \n  }\n  \n}",
+      "action": "continue",
+      "next": "coding-add-close-js"
+    },
+    {
+      "stepId": "coding-add-close-js",
+      "mentorSays": "Add ')' when close < open (we have unmatched opening parentheses). Recursively call backtrack with updated values.",
+      "example": "function generateParenthesis(n) {\n  const result = [];\n  const result = [];\n  \n  function backtrack(current, open, close) {\n    if (current.length === 2 * n) {\n      result.push(current);\n      return;\n    }\n    \n    if (open < n) {\n      backtrack(current + '(', open + 1, close);\n    }\n    \n    // Add ')' if we have unmatched opening parentheses\n    if (close < open) {\n      backtrack(current + ')', open, close + 1);\n    }\n  }\n  \n}",
+      "action": "continue",
+      "next": "coding-return-js"
+    },
+    {
+      "stepId": "coding-return-js",
+      "mentorSays": "Call the backtrack function with initial values (empty string, open=0, close=0), then return the result array.",
+      "example": "function generateParenthesis(n) {\n  const result = [];\n  \n  function backtrack(current, open, close) {\n    if (current.length === 2 * n) {\n      result.push(current);\n      return;\n    }\n    \n    if (open < n) {\n      backtrack(current + '(', open + 1, close);\n    }\n    \n    if (close < open) {\n      backtrack(current + ')', open, close + 1);\n    }\n  }\n  \n  // Start backtracking with empty string\n  backtrack('', 0, 0);\n  \n  return result;\n}",
+      "action": "continue",
+      "next": "test-code-js"
+    },
+    {
+      "stepId": "test-code-js",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** n = 1\nExpected: [\"()\"]\n\n**Test 2:** n = 2\nExpected: [\"(())\", \"()()\"]\n\n**Test 3:** n = 3\nExpected: [\"((()))\", \"(()())\", \"(())()\", \"()(())\", \"()()()\"]\n\n**Test 4:** n = 0\nExpected: [\"\"]\n\n**Test 5:** n = 4\nExpected: 14 combinations (Catalan number C4)\n\n**Test 6:** Verify all combinations are valid (balanced parentheses)\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: n=1 → [\"()\"]\nTest 2: n=2 → [\"(())\", \"()()\"]\nTest 3: n=3 → [\"((()))\", \"(()())\", \"(())()\", \"()(())\", \"()()()\"]",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-python",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-python"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-python",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'result' or 'open') and put data inside it.",
+      "example": " result = [];  // Store results\n open = 0;   // Count of '(' used",
+      "action": "continue",
+      "next": "function-check-python"
+    },
+    {
+      "stepId": "function-check-python",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-python"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-python",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "def generateParenthesis(n) {\n  // Returns all valid parentheses combinations\n  return [];\n}",
+      "action": "continue",
+      "next": "parameter-check-python"
+    },
+    {
+      "stepId": "parameter-check-python",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "backtracking-check-python"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-python",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'def generateParenthesis(n)', the 'n' is a parameter.",
+      "example": "def generateParenthesis(n) {\n  // Parameter receives n\n}\n\n// Call: generateParenthesis(3)",
+      "action": "continue",
+      "next": "backtracking-check-python"
+    },
+    {
+      "stepId": "backtracking-check-python",
+      "mentorSays": "To solve this lesson, we'll use backtracking. Do you know what backtracking is?",
+      "choices": [
+        {
+          "label": "Yes, I know backtracking",
+          "next": "coding-start-python"
+        },
+        {
+          "label": "No, explain backtracking",
+          "next": "backtracking-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "backtracking-explanation-python",
+      "mentorSays": "Backtracking is a technique where we:\n1. Make a choice (e.g., add '(')\n2. Recursively explore that choice\n3. Undo the choice and try the next option\n\nFor parentheses: we try adding '(' and ')' in all valid ways, building up combinations.",
+      "example": "function backtrack(current, open, close) {\n  // Make choice: add '('\n  backtrack(current + '(', open + 1, close);\n  \n  // Try next choice: add ')'\n  backtrack(current + ')', open, close + 1);\n}",
+      "action": "continue",
+      "next": "coding-start-python"
+    },
+    {
+      "stepId": "coding-start-python",
+      "mentorSays": "Perfect! Let's implement the solution in Python.",
+      "example": "// Python implementation",
+      "action": "continue",
+      "next": "coding-init-result-python"
+    },
+    {
+      "stepId": "coding-init-result-python",
+      "mentorSays": "Initialize result array.",
+      "example": "// Python implementation",
+      "action": "continue",
+      "next": "coding-backtrack-helper-python"
+    },
+    {
+      "stepId": "coding-backtrack-helper-python",
+      "mentorSays": "Create backtrack helper function.",
+      "example": "// Python implementation",
+      "action": "continue",
+      "next": "coding-base-case-python"
+    },
+    {
+      "stepId": "coding-base-case-python",
+      "mentorSays": "Add base case (length == 2*n).",
+      "example": "// Python implementation",
+      "action": "continue",
+      "next": "coding-add-open-python"
+    },
+    {
+      "stepId": "coding-add-open-python",
+      "mentorSays": "Add '(' when open < n.",
+      "example": "// Python implementation",
+      "action": "continue",
+      "next": "coding-add-close-python"
+    },
+    {
+      "stepId": "coding-add-close-python",
+      "mentorSays": "Add ')' when close < open.",
+      "example": "// Python implementation",
+      "action": "continue",
+      "next": "coding-return-python"
+    },
+    {
+      "stepId": "coding-return-python",
+      "mentorSays": "Call backtrack and return result.",
+      "example": "// Python implementation",
+      "action": "continue",
+      "next": "test-code-python"
+    },
+    {
+      "stepId": "test-code-python",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** n = 1\nExpected: [\"()\"]\n\n**Test 2:** n = 2\nExpected: [\"(())\", \"()()\"]\n\n**Test 3:** n = 3\nExpected: [\"((()))\", \"(()())\", \"(())()\", \"()(())\", \"()()()\"]\n\n**Test 4:** n = 0\nExpected: [\"\"]\n\n**Test 5:** n = 4\nExpected: 14 combinations (Catalan number C4)\n\n**Test 6:** Verify all combinations are valid (balanced parentheses)\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: n=1 → [\"()\"]\nTest 2: n=2 → [\"(())\", \"()()\"]\nTest 3: n=3 → [\"((()))\", \"(()())\", \"(())()\", \"()(())\", \"()()()\"]",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-java",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-java"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-java",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'result' or 'open') and put data inside it.",
+      "example": "List<String> result = [];  // Store results\nList<String> open = 0;   // Count of '(' used",
+      "action": "continue",
+      "next": "function-check-java"
+    },
+    {
+      "stepId": "function-check-java",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-java"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-java",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "public List<String> generateParenthesis(n) {\n  // Returns all valid parentheses combinations\n  return [];\n}",
+      "action": "continue",
+      "next": "parameter-check-java"
+    },
+    {
+      "stepId": "parameter-check-java",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "backtracking-check-java"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-java",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'public List<String> generateParenthesis(n)', the 'n' is a parameter.",
+      "example": "public List<String> generateParenthesis(n) {\n  // Parameter receives n\n}\n\n// Call: generateParenthesis(3)",
+      "action": "continue",
+      "next": "backtracking-check-java"
+    },
+    {
+      "stepId": "backtracking-check-java",
+      "mentorSays": "To solve this lesson, we'll use backtracking. Do you know what backtracking is?",
+      "choices": [
+        {
+          "label": "Yes, I know backtracking",
+          "next": "coding-start-java"
+        },
+        {
+          "label": "No, explain backtracking",
+          "next": "backtracking-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "backtracking-explanation-java",
+      "mentorSays": "Backtracking is a technique where we:\n1. Make a choice (e.g., add '(')\n2. Recursively explore that choice\n3. Undo the choice and try the next option\n\nFor parentheses: we try adding '(' and ')' in all valid ways, building up combinations.",
+      "example": "function backtrack(current, open, close) {\n  // Make choice: add '('\n  backtrack(current + '(', open + 1, close);\n  \n  // Try next choice: add ')'\n  backtrack(current + ')', open, close + 1);\n}",
+      "action": "continue",
+      "next": "coding-start-java"
+    },
+    {
+      "stepId": "coding-start-java",
+      "mentorSays": "Perfect! Let's implement the solution in Java.",
+      "example": "// Java implementation",
+      "action": "continue",
+      "next": "coding-init-result-java"
+    },
+    {
+      "stepId": "coding-init-result-java",
+      "mentorSays": "Initialize result array.",
+      "example": "// Java implementation",
+      "action": "continue",
+      "next": "coding-backtrack-helper-java"
+    },
+    {
+      "stepId": "coding-backtrack-helper-java",
+      "mentorSays": "Create backtrack helper function.",
+      "example": "// Java implementation",
+      "action": "continue",
+      "next": "coding-base-case-java"
+    },
+    {
+      "stepId": "coding-base-case-java",
+      "mentorSays": "Add base case (length == 2*n).",
+      "example": "// Java implementation",
+      "action": "continue",
+      "next": "coding-add-open-java"
+    },
+    {
+      "stepId": "coding-add-open-java",
+      "mentorSays": "Add '(' when open < n.",
+      "example": "// Java implementation",
+      "action": "continue",
+      "next": "coding-add-close-java"
+    },
+    {
+      "stepId": "coding-add-close-java",
+      "mentorSays": "Add ')' when close < open.",
+      "example": "// Java implementation",
+      "action": "continue",
+      "next": "coding-return-java"
+    },
+    {
+      "stepId": "coding-return-java",
+      "mentorSays": "Call backtrack and return result.",
+      "example": "// Java implementation",
+      "action": "continue",
+      "next": "test-code-java"
+    },
+    {
+      "stepId": "test-code-java",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** n = 1\nExpected: [\"()\"]\n\n**Test 2:** n = 2\nExpected: [\"(())\", \"()()\"]\n\n**Test 3:** n = 3\nExpected: [\"((()))\", \"(()())\", \"(())()\", \"()(())\", \"()()()\"]\n\n**Test 4:** n = 0\nExpected: [\"\"]\n\n**Test 5:** n = 4\nExpected: 14 combinations (Catalan number C4)\n\n**Test 6:** Verify all combinations are valid (balanced parentheses)\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: n=1 → [\"()\"]\nTest 2: n=2 → [\"(())\", \"()()\"]\nTest 3: n=3 → [\"((()))\", \"(()())\", \"(())()\", \"()(())\", \"()()()\"]",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-cpp",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-cpp"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-cpp",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'result' or 'open') and put data inside it.",
+      "example": "vector<string> result = [];  // Store results\nvector<string> open = 0;   // Count of '(' used",
+      "action": "continue",
+      "next": "function-check-cpp"
+    },
+    {
+      "stepId": "function-check-cpp",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-cpp"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-cpp",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "vector<string> generateParenthesis(n) {\n  // Returns all valid parentheses combinations\n  return [];\n}",
+      "action": "continue",
+      "next": "parameter-check-cpp"
+    },
+    {
+      "stepId": "parameter-check-cpp",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "backtracking-check-cpp"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-cpp",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'vector<string> generateParenthesis(n)', the 'n' is a parameter.",
+      "example": "vector<string> generateParenthesis(n) {\n  // Parameter receives n\n}\n\n// Call: generateParenthesis(3)",
+      "action": "continue",
+      "next": "backtracking-check-cpp"
+    },
+    {
+      "stepId": "backtracking-check-cpp",
+      "mentorSays": "To solve this lesson, we'll use backtracking. Do you know what backtracking is?",
+      "choices": [
+        {
+          "label": "Yes, I know backtracking",
+          "next": "coding-start-cpp"
+        },
+        {
+          "label": "No, explain backtracking",
+          "next": "backtracking-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "backtracking-explanation-cpp",
+      "mentorSays": "Backtracking is a technique where we:\n1. Make a choice (e.g., add '(')\n2. Recursively explore that choice\n3. Undo the choice and try the next option\n\nFor parentheses: we try adding '(' and ')' in all valid ways, building up combinations.",
+      "example": "function backtrack(current, open, close) {\n  // Make choice: add '('\n  backtrack(current + '(', open + 1, close);\n  \n  // Try next choice: add ')'\n  backtrack(current + ')', open, close + 1);\n}",
+      "action": "continue",
+      "next": "coding-start-cpp"
+    },
+    {
+      "stepId": "coding-start-cpp",
+      "mentorSays": "Perfect! Let's implement the solution in C++.",
+      "example": "// C++ implementation",
+      "action": "continue",
+      "next": "coding-init-result-cpp"
+    },
+    {
+      "stepId": "coding-init-result-cpp",
+      "mentorSays": "Initialize result array.",
+      "example": "// C++ implementation",
+      "action": "continue",
+      "next": "coding-backtrack-helper-cpp"
+    },
+    {
+      "stepId": "coding-backtrack-helper-cpp",
+      "mentorSays": "Create backtrack helper function.",
+      "example": "// C++ implementation",
+      "action": "continue",
+      "next": "coding-base-case-cpp"
+    },
+    {
+      "stepId": "coding-base-case-cpp",
+      "mentorSays": "Add base case (length == 2*n).",
+      "example": "// C++ implementation",
+      "action": "continue",
+      "next": "coding-add-open-cpp"
+    },
+    {
+      "stepId": "coding-add-open-cpp",
+      "mentorSays": "Add '(' when open < n.",
+      "example": "// C++ implementation",
+      "action": "continue",
+      "next": "coding-add-close-cpp"
+    },
+    {
+      "stepId": "coding-add-close-cpp",
+      "mentorSays": "Add ')' when close < open.",
+      "example": "// C++ implementation",
+      "action": "continue",
+      "next": "coding-return-cpp"
+    },
+    {
+      "stepId": "coding-return-cpp",
+      "mentorSays": "Call backtrack and return result.",
+      "example": "// C++ implementation",
+      "action": "continue",
+      "next": "test-code-cpp"
+    },
+    {
+      "stepId": "test-code-cpp",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** n = 1\nExpected: [\"()\"]\n\n**Test 2:** n = 2\nExpected: [\"(())\", \"()()\"]\n\n**Test 3:** n = 3\nExpected: [\"((()))\", \"(()())\", \"(())()\", \"()(())\", \"()()()\"]\n\n**Test 4:** n = 0\nExpected: [\"\"]\n\n**Test 5:** n = 4\nExpected: 14 combinations (Catalan number C4)\n\n**Test 6:** Verify all combinations are valid (balanced parentheses)\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: n=1 → [\"()\"]\nTest 2: n=2 → [\"(())\", \"()()\"]\nTest 3: n=3 → [\"((()))\", \"(()())\", \"(())()\", \"()(())\", \"()()()\"]",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-ts",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-ts"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-ts",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'result' or 'open') and put data inside it.",
+      "example": "let result = [];  // Store results\nlet open = 0;   // Count of '(' used",
+      "action": "continue",
+      "next": "function-check-ts"
+    },
+    {
+      "stepId": "function-check-ts",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-ts"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-ts",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "function generateParenthesis(n) {\n  // Returns all valid parentheses combinations\n  return [];\n}",
+      "action": "continue",
+      "next": "parameter-check-ts"
+    },
+    {
+      "stepId": "parameter-check-ts",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "backtracking-check-ts"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-ts",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'function generateParenthesis(n)', the 'n' is a parameter.",
+      "example": "function generateParenthesis(n) {\n  // Parameter receives n\n}\n\n// Call: generateParenthesis(3)",
+      "action": "continue",
+      "next": "backtracking-check-ts"
+    },
+    {
+      "stepId": "backtracking-check-ts",
+      "mentorSays": "To solve this lesson, we'll use backtracking. Do you know what backtracking is?",
+      "choices": [
+        {
+          "label": "Yes, I know backtracking",
+          "next": "coding-start-ts"
+        },
+        {
+          "label": "No, explain backtracking",
+          "next": "backtracking-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "backtracking-explanation-ts",
+      "mentorSays": "Backtracking is a technique where we:\n1. Make a choice (e.g., add '(')\n2. Recursively explore that choice\n3. Undo the choice and try the next option\n\nFor parentheses: we try adding '(' and ')' in all valid ways, building up combinations.",
+      "example": "function backtrack(current, open, close) {\n  // Make choice: add '('\n  backtrack(current + '(', open + 1, close);\n  \n  // Try next choice: add ')'\n  backtrack(current + ')', open, close + 1);\n}",
+      "action": "continue",
+      "next": "coding-start-ts"
+    },
+    {
+      "stepId": "coding-start-ts",
+      "mentorSays": "Perfect! Let's implement the solution in TypeScript.",
+      "example": "// TypeScript implementation",
+      "action": "continue",
+      "next": "coding-init-result-ts"
+    },
+    {
+      "stepId": "coding-init-result-ts",
+      "mentorSays": "Initialize result array.",
+      "example": "// TypeScript implementation",
+      "action": "continue",
+      "next": "coding-backtrack-helper-ts"
+    },
+    {
+      "stepId": "coding-backtrack-helper-ts",
+      "mentorSays": "Create backtrack helper function.",
+      "example": "// TypeScript implementation",
+      "action": "continue",
+      "next": "coding-base-case-ts"
+    },
+    {
+      "stepId": "coding-base-case-ts",
+      "mentorSays": "Add base case (length == 2*n).",
+      "example": "// TypeScript implementation",
+      "action": "continue",
+      "next": "coding-add-open-ts"
+    },
+    {
+      "stepId": "coding-add-open-ts",
+      "mentorSays": "Add '(' when open < n.",
+      "example": "// TypeScript implementation",
+      "action": "continue",
+      "next": "coding-add-close-ts"
+    },
+    {
+      "stepId": "coding-add-close-ts",
+      "mentorSays": "Add ')' when close < open.",
+      "example": "// TypeScript implementation",
+      "action": "continue",
+      "next": "coding-return-ts"
+    },
+    {
+      "stepId": "coding-return-ts",
+      "mentorSays": "Call backtrack and return result.",
+      "example": "// TypeScript implementation",
+      "action": "continue",
+      "next": "test-code-ts"
+    },
+    {
+      "stepId": "test-code-ts",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** n = 1\nExpected: [\"()\"]\n\n**Test 2:** n = 2\nExpected: [\"(())\", \"()()\"]\n\n**Test 3:** n = 3\nExpected: [\"((()))\", \"(()())\", \"(())()\", \"()(())\", \"()()()\"]\n\n**Test 4:** n = 0\nExpected: [\"\"]\n\n**Test 5:** n = 4\nExpected: 14 combinations (Catalan number C4)\n\n**Test 6:** Verify all combinations are valid (balanced parentheses)\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: n=1 → [\"()\"]\nTest 2: n=2 → [\"(())\", \"()()\"]\nTest 3: n=3 → [\"((()))\", \"(()())\", \"(())()\", \"()(())\", \"()()()\"]",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "final",
+      "mentorSays": "🎉 Well done! You've successfully implemented the Generate Parentheses solution!\n\n**Time Complexity:** O(4^n / √n)\n- This is the Catalan number C_n = (2n)! / ((n+1)! * n!)\n- For n=3: C_3 = 5 combinations\n- For n=4: C_4 = 14 combinations\n- We generate each valid combination exactly once\n\n**Space Complexity:** O(n)\n- The recursion stack uses O(n) space (depth of recursion)\n- The result array stores O(C_n) strings, each of length 2n\n- Total: O(n) for recursion + O(n * C_n) for output\n\n**Key Takeaways:**\n1. **Backtracking**: Try choices, explore, backtrack, try next\n2. **Constraints**: Only add '(' when open < n, only add ')' when close < open\n3. **Base case**: When length == 2*n, we have a complete combination\n4. **Efficiency**: Pruning invalid paths early makes this much faster than generating all combinations\n5. **Catalan numbers**: The number of valid combinations follows Catalan sequence\n\n**Common Mistakes to Avoid:**\n- Adding ')' when close >= open (creates invalid combination)\n- Not checking if combination is complete (length == 2*n)\n- Forgetting to backtrack properly\n- Generating duplicates\n\n**Related Practice Lessons:**\n- Valid Parentheses (LeetCode #20) - check if valid\n- Remove Invalid Parentheses (LeetCode #301) - remove minimum to make valid\n- Different Ways to Add Parentheses (LeetCode #241) - similar backtracking\n\nKeep practicing backtracking lessons - they're common in interviews!",
+      "action": "continue"
+    }
+  ]
+}

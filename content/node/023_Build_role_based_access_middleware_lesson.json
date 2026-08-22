@@ -1,0 +1,400 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-node-23",
+    "track": "node",
+    "lessonNum": 23,
+    "title": "Build role based access middleware",
+    "shortName": "P23",
+    "intro": {
+      "tag": "LESSON #23",
+      "title": "Build role based access middleware",
+      "body": "In this lesson, you will build a role-based access middleware function for a Node.js application. This middleware will check a user's role from a request and allow or deny access to specific routes. You'll learn how to use Express middleware, conditional logic, and HTTP status codes to enforce access control. The main technologies involved are Node.js, Express, and JavaScript functions. By the end, you'll have a reusable middleware that can protect routes based on user roles.",
+      "usecase": "Role-based access control (RBAC) middleware is a fundamental pattern in any multi-user application where permissions differ by user type. For example, in a SaaS dashboard, an admin might see user management panels and billing settings, while a regular user only sees their own profile and usage data. This middleware ensures that API endpoints or UI routes are protected, preventing unauthorized access to sensitive operations like deleting records or viewing financial reports. As a Node.js developer, you'll implement this to secure backend services for e-commerce platforms, internal admin tools, or collaborative apps, where defining clear access boundaries is critical for security and user experience."
+    },
+    "objectives": [
+      "Implement middleware functions that intercept HTTP requests in a Node.js application",
+      "Construct role-based access control logic using conditional statements and role arrays",
+      "Configure Express middleware to validate user roles before allowing access to protected routes",
+      "Apply role checking middleware to specific routes while leaving public routes unrestricted",
+      "Initialize a role verification system that extracts user information from request objects",
+      "Integrate role-based middleware with existing authentication systems to create layered security",
+      "Manipulate HTTP response objects to send appropriate status codes when access is denied"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 11",
+        "title": "Import required Node.js modules",
+        "instruction": "Create a new JavaScript file and import the 'http' and 'url' modules using require() statements.",
+        "hint": "Use require('moduleName') to import Node.js built-in modules.",
+        "analogousExample": "// Example: importing built-in modules\nconst fs = require('fs');\nconst path = require('path');",
+        "seedCode": "// Import the required Node.js modules here",
+        "expectedOutcome": "The file will have the http and url modules imported and ready for use in middleware implementation.",
+        "successCriteria": [
+          "The http and url modules are imported using require() statements."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've imported some modules, but make sure to import both 'http' and 'url' using require().",
+        "feedbackWrong": "The required modules aren't imported yet. Use require() to import both 'http' and 'url' modules.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "require('http')",
+            "require('url')"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 11",
+        "title": "Create a basic HTTP server",
+        "instruction": "Create a basic HTTP server using the imported 'http' module that listens on port 3000 and logs a message when it starts.",
+        "hint": "Use http.createServer() to create a server and server.listen() to start it on port 3000. Add a console.log() to confirm it's running.",
+        "analogousExample": "// Example: Basic HTTP server\nconst http = require('http');\n\nconst server = http.createServer((req, res) => {\n  res.end('Hello');\n});\n\nserver.listen(3000, () => {\n  console.log('Server running on port 3000');\n});",
+        "seedCode": "const http = require('http');\n\n// Create a basic HTTP server here",
+        "expectedOutcome": "A functional HTTP server that starts on port 3000 and logs a startup message to the console.",
+        "successCriteria": [
+          "Server created with http.createServer()",
+          "Server listens on port 3000",
+          "Console logs a startup message"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure your server listens on port 3000 and logs a message when it starts.",
+        "feedbackWrong": "Check that you're using http.createServer() and server.listen() correctly. The server should log a message when it starts on port 3000.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "createServer",
+            "listen",
+            "3000",
+            "console.log"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 11",
+        "title": "Define user roles and permissions",
+        "instruction": "Create a roles object that maps role names to arrays of permissions. Define three roles: 'admin' with permissions ['read', 'write', 'delete'], 'user' with permissions ['read', 'write'], and 'guest' with permissions ['read'].",
+        "hint": "Create a JavaScript object where keys are role names and values are arrays of permission strings.",
+        "analogousExample": "// Example: defining a simple mapping\nconst accessLevels = {\n  admin: ['create', 'edit', 'view'],\n  editor: ['edit', 'view'],\n  viewer: ['view']\n};",
+        "seedCode": "const http = require('http');\n\n// Create a basic HTTP server here\n\n// Define roles and permissions object here",
+        "expectedOutcome": "A roles object is created with three roles (admin, user, guest) and their corresponding permission arrays.",
+        "successCriteria": [
+          "The roles object exists with correct role names and permission arrays as specified."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started defining roles, but check that all three roles (admin, user, guest) are included with their correct permission arrays.",
+        "feedbackWrong": "The roles object is missing or doesn't match the required structure. Make sure to create an object with three roles and their permission arrays as specified.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "roles",
+            "admin",
+            "user",
+            "guest",
+            "read",
+            "write",
+            "delete"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 11",
+        "title": "Create mock user data",
+        "instruction": "Create an array named 'users' containing at least two user objects. Each object should have 'id', 'name', and 'role' properties.",
+        "hint": "Define an array with user objects like { id: 1, name: 'Alice', role: 'admin' } and { id: 2, name: 'Bob', role: 'user' }.",
+        "analogousExample": "// Example: creating an array of objects\nconst products = [\n  { id: 1, name: 'Laptop', price: 999 },\n  { id: 2, name: 'Mouse', price: 25 }\n];",
+        "seedCode": "const http = require('http');\n\n// Create a basic HTTP server here\n\n// Define roles and permissions object here\n\n// Create mock user data array here",
+        "expectedOutcome": "An array named 'users' is created with at least two user objects containing id, name, and role properties.",
+        "successCriteria": [
+          "The 'users' array exists and contains objects with id, name, and role properties."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your array is named 'users' and contains at least two objects with id, name, and role properties.",
+        "feedbackWrong": "The mock user data wasn't created correctly. Create an array named 'users' with objects containing id, name, and role properties.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "users",
+            "[",
+            "]",
+            "id",
+            "name",
+            "role"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 11",
+        "title": "Define the role checking function",
+        "instruction": "Create a function named 'checkPermission' that takes two parameters: 'userRole' and 'requiredPermission', and returns true if the user role has that permission, false otherwise.",
+        "hint": "You can use the roles and permissions object you defined earlier to look up the permissions array for the given userRole, then check if requiredPermission is included in that array.",
+        "analogousExample": "// Example: A function that validates access\nfunction checkAccess(userLevel, requiredLevel) {\n  return userLevel >= requiredLevel;\n}",
+        "seedCode": "const http = require('http');\n\n// Create a basic HTTP server here\n\n// Define roles and permissions object here\n\n// Create mock user data array here\n\n// Define the role checking function here\n",
+        "expectedOutcome": "A function named 'checkPermission' is created that correctly validates permissions based on user roles.",
+        "successCriteria": [
+          "The 'checkPermission' function exists, accepts two parameters, and returns a boolean value based on permission validation."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've created a function, but make sure it's named 'checkPermission' and properly checks if the required permission exists in the user role's permissions.",
+        "feedbackWrong": "The function isn't quite right. Create a function named 'checkPermission' that takes userRole and requiredPermission parameters and returns true/false based on permission validation.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "function",
+            "checkPermission",
+            "userRole",
+            "requiredPermission",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 11",
+        "title": "Create the middleware function structure",
+        "instruction": "Create a middleware function named 'roleMiddleware' that takes three parameters: req, res, and next.",
+        "hint": "Define a function that accepts these three parameters in order. You can use either a function declaration or arrow function syntax.",
+        "analogousExample": "// Example: middleware function structure\nfunction authMiddleware(req, res, next) {\n  // middleware logic here\n}",
+        "seedCode": "const http = require('http');\n\n// Create a basic HTTP server here\n\n// Define roles and permissions object here\n\n// Create mock user data array here\n\n// Define the role checking function here\n\n// Create the middleware function structure here\n",
+        "expectedOutcome": "A middleware function named 'roleMiddleware' with req, res, and next parameters is defined.",
+        "successCriteria": [
+          "The 'roleMiddleware' function is defined with three parameters: req, res, and next."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your function is named 'roleMiddleware' and accepts all three parameters (req, res, next).",
+        "feedbackWrong": "The middleware function structure isn't quite right. Create a function named 'roleMiddleware' that takes req, res, and next as parameters.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "roleMiddleware",
+            "req",
+            "res",
+            "next"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 11",
+        "title": "Add role extraction logic to middleware",
+        "instruction": "Inside your middleware function, add logic to extract the user ID from the request URL query parameters and find the corresponding user from your mock data array.",
+        "hint": "You can access the request URL with req.url, parse it with the url module's parse method, and then use the query property to get the user ID. Then use Array.find() to locate the matching user.",
+        "analogousExample": "// Example: extracting a query parameter and finding data\nconst url = require('url');\nfunction processRequest(req) {\n  const parsedUrl = url.parse(req.url, true);\n  const userId = parsedUrl.query.userId;\n  const user = users.find(u => u.id === userId);\n  return user;\n}",
+        "seedCode": "const http = require('http');\nconst url = require('url');\n\nconst roles = {\n  admin: ['read', 'write', 'delete'],\n  editor: ['read', 'write'],\n  viewer: ['read']\n};\n\nconst users = [\n  { id: '1', name: 'Alice', role: 'admin' },\n  { id: '2', name: 'Bob', role: 'editor' },\n  { id: '3', name: 'Charlie', role: 'viewer' }\n];\n\nfunction checkRole(userRole, requiredPermission) {\n  return roles[userRole] && roles[userRole].includes(requiredPermission);\n}\n\nfunction roleMiddleware(req, res, next) {\n  // Add role extraction logic here\n}",
+        "expectedOutcome": "The middleware function will be able to extract a user ID from the URL and locate the corresponding user object from the mock data.",
+        "successCriteria": [
+          "The middleware function contains logic to parse the request URL, extract a userId query parameter, and find the matching user from the users array."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're using the url module to parse the request URL and extract the userId query parameter, then using Array.find() to locate the matching user from the users array.",
+        "feedbackWrong": "The middleware function doesn't yet extract user information from the request. Remember to parse the URL to get query parameters and find the matching user from your mock data.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "parsedUrl",
+            "query.userId",
+            "users.find",
+            "userId"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 11",
+        "title": "Implement permission checking in middleware",
+        "instruction": "Inside the roleMiddleware function, call the checkRole function to verify if the user's role has the required permission,",
+        "hint": "Extract the user's role from the request (e.g., from a query parameter or header), define a required permission, and use an if-else statement with checkRole.",
+        "analogousExample": "// Example: permission checking in middleware\nfunction authMiddleware(req, res, next) {\n  const userRole = req.headers.role;\n  const requiredPermission = 'write';\n  if (checkRole(userRole, requiredPermission)) {\n    next();\n  } else {\n    res.status(403).send('Forbidden');\n  }\n}",
+        "seedCode": "const http = require('http');\nconst url = require('url');\n\nconst roles = {\n  admin: ['read', 'write', 'delete'],\n  editor: ['read', 'write'],\n  viewer: ['read']\n};\n\nconst users = [\n  { id: '1', name: 'Alice', role: 'admin' },\n  { id: '2', name: 'Bob', role: 'editor' },\n  { id: '3', name: 'Charlie', role: 'viewer' }\n];\n\nfunction checkRole(userRole, requiredPermission) {\n  return roles[userRole] && roles[userRole].includes(requiredPermission);\n}\n\nfunction roleMiddleware(req, res, next) {\n  // Add role extraction logic here\n  // Implement permission checking here\n}",
+        "expectedOutcome": "The middleware now validates user permissions and controls request flow based on role.",
+        "successCriteria": [
+          "roleMiddleware calls checkRole with extracted role and a permission, uses if-else to call next() or send a 403 response."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but ensure you call checkRole, handle both allowed and denied cases, and send a proper 403 response.",
+        "feedbackWrong": "Check the structure: extract role, define permission, call checkRole, and conditionally call next() or send a 403 response.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "checkRole",
+            "next()",
+            "403",
+            "if",
+            "else"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 11",
+        "title": "call next() if allowed or send a 403 response",
+        "instruction": "call next() if allowed or send a 403 response if denied.",
+        "hint": "Extract the user's role from the request (e.g., from a query parameter or header), define a required permission, and use an if-else statement with checkRole.",
+        "analogousExample": "// Example: permission checking in middleware\nfunction authMiddleware(req, res, next) {\n  const userRole = req.headers.role;\n  const requiredPermission = 'write';\n  if (checkRole(userRole, requiredPermission)) {\n    next();\n  } else {\n    res.status(403).send('Forbidden');\n  }\n}",
+        "seedCode": "const http = require('http');\nconst url = require('url');\n\nconst roles = {\n  admin: ['read', 'write', 'delete'],\n  editor: ['read', 'write'],\n  viewer: ['read']\n};\n\nconst users = [\n  { id: '1', name: 'Alice', role: 'admin' },\n  { id: '2', name: 'Bob', role: 'editor' },\n  { id: '3', name: 'Charlie', role: 'viewer' }\n];\n\nfunction checkRole(userRole, requiredPermission) {\n  return roles[userRole] && roles[userRole].includes(requiredPermission);\n}\n\nfunction roleMiddleware(req, res, next) {\n  // Add role extraction logic here\n  // Implement permission checking here\n}",
+        "expectedOutcome": "",
+        "successCriteria": [
+          "Complete the step as instructed."
+        ],
+        "feedbackCorrect": "Great! Step completed.",
+        "feedbackPartial": "Review the instruction and try again.",
+        "feedbackWrong": "Check the instruction and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "checkRole",
+            "next()",
+            "403",
+            "if",
+            "else"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 11",
+        "title": "Add the middleware to server routes",
+        "instruction": "Inside the server's request handler, call the roleMiddleware function before handling protected routes.",
+        "hint": "The middleware function takes three arguments: req, res, and next. You need to call it with those arguments where you want to check permissions.",
+        "analogousExample": "// Example: applying a middleware function\nfunction loggingMiddleware(req, res, next) {\n  console.log('Request received');\n  next();\n}\n\n// In server request handler\nif (req.url === '/protected') {\n  loggingMiddleware(req, res, function() {\n    // Handle protected route\n  });\n}",
+        "seedCode": "const http = require('http');\nconst url = require('url');\n\nconst roles = {\n  admin: ['read', 'write', 'delete'],\n  editor: ['read', 'write'],\n  viewer: ['read']\n};\n\nconst users = [\n  { id: '1', name: 'Alice', role: 'admin' },\n  { id: '2', name: 'Bob', role: 'editor' },\n  { id: '3', name: 'Charlie', role: 'viewer' }\n];\n\nfunction checkRole(userRole, requiredPermission) {\n  return roles[userRole] && roles[userRole].includes(requiredPermission);\n}\n\nfunction roleMiddleware(req, res, next) {\n  // Add role extraction logic here\n  // Implement permission checking here\n}\n\nconst server = http.createServer((req, res) => {\n  const parsedUrl = url.parse(req.url, true);\n  \n  // Add middleware call here\n  \n  if (parsedUrl.pathname === '/admin') {\n    // Handle admin route\n    res.writeHead(200, { 'Content-Type': 'text/plain' });\n    res.end('Admin area');\n  } else {\n    res.writeHead(404, { 'Content-Type': 'text/plain' });\n    res.end('Not found');\n  }\n});\n\nserver.listen(3000, () => {\n  console.log('Server running on port 3000');\n});",
+        "expectedOutcome": "The server will now use the roleMiddleware function to check permissions before handling the /admin route.",
+        "successCriteria": [
+          "The roleMiddleware function is called inside the server's request handler before the /admin route logic."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're calling the roleMiddleware function with the correct arguments (req, res, next) before the /admin route handler.",
+        "feedbackWrong": "The middleware isn't properly integrated. Remember to call roleMiddleware(req, res, next) where you want to check permissions before handling protected routes.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "roleMiddleware",
+            "req",
+            "res",
+            "next",
+            "/admin"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 11",
+        "title": "Test the middleware with different user roles",
+        "instruction": "Add a test function that makes HTTP requests to verify the middleware works correctly with different user roles.",
+        "hint": "Create a function that simulates requests with different user IDs and logs the responses.",
+        "analogousExample": "// Example test function\nfunction testMiddleware() {\n  // Simulate requests with different users\n  console.log('Testing middleware...');\n}",
+        "seedCode": "const http = require('http');\nconst url = require('url');\n\nconst roles = {\n  admin: ['read', 'write', 'delete'],\n  editor: ['read', 'write'],\n  viewer: ['read']\n};\n\nconst users = [\n  { id: '1', name: 'Alice', role: 'admin' },\n  { id: '2', name: 'Bob', role: 'editor' },\n  { id: '3', name: 'Charlie', role: 'viewer' }\n];\n\nfunction checkRole(userRole, requiredPermission) {\n  return roles[userRole] && roles[userRole].includes(requiredPermission);\n}\n\nfunction roleMiddleware(req, res, next) {\n  // Add role extraction logic here\n  // Implement permission checking here\n}\n\nconst server = http.createServer((req, res) => {\n  const parsedUrl = url.parse(req.url, true);\n  \n  // Add middleware call here\n  \n  if (parsedUrl.pathname === '/admin') {\n    // Handle admin route\n    res.writeHead(200, { 'Content-Type': 'text/plain' });\n    res.end('Admin area');\n  } else {\n    res.writeHead(404, { 'Content-Type': 'text/plain' });\n    res.end('Not found');\n  }\n});\n\nserver.listen(3000, () => {\n  console.log('Server running on port 3000');\n});\n\n// Add your test function here",
+        "expectedOutcome": "A test function is created that will help verify the middleware behavior with different user roles.",
+        "successCriteria": [
+          "A test function is defined that can simulate HTTP requests with different user IDs."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started creating a test function, but make sure it's complete and can simulate requests.",
+        "feedbackWrong": "The test function is missing or incomplete. Create a function that can test the middleware with different user roles.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "function",
+            "test",
+            "middleware",
+            "requests",
+            "users"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import required Node.js modules",
+        "id": "step1"
+      },
+      {
+        "label": "Create a basic HTTP server",
+        "id": "step2"
+      },
+      {
+        "label": "Define user roles and permissions",
+        "id": "step3"
+      },
+      {
+        "label": "Create mock user data",
+        "id": "step4"
+      },
+      {
+        "label": "Define the role checking function",
+        "id": "step5"
+      },
+      {
+        "label": "Create the middleware function structure",
+        "id": "step6"
+      },
+      {
+        "label": "Add role extraction logic to middleware",
+        "id": "step7"
+      },
+      {
+        "label": "Implement permission checking in middleware",
+        "id": "step8"
+      },
+      {
+        "label": "call next() if allowed or send a 403 response",
+        "id": "step9"
+      },
+      {
+        "label": "Add the middleware to server routes",
+        "id": "step10"
+      },
+      {
+        "label": "Test the middleware with different user roles",
+        "id": "step11"
+      }
+    ]
+  },
+  "source": "content"
+}

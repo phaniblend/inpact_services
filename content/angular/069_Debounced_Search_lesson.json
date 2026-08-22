@@ -1,0 +1,425 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-angular-69",
+    "track": "angular",
+    "lessonNum": 69,
+    "title": "Debounced Search",
+    "shortName": "P69",
+    "intro": {
+      "tag": "LESSON #69",
+      "title": "Debounced Search",
+      "body": "In this lesson, you will build a real-time search input that filters a list of items as the user types, using a debounced function to optimize performance. You will learn how to implement debouncing to delay the execution of a search function, preventing excessive API calls or computations on every keystroke. The main technologies and constructs involved include Angular's template-driven forms, RxJS Observables, and the `debounceTime` operator. By the end, you'll have a functional, efficient search component that enhances user experience in Angular applications.",
+      "usecase": "Debounced search is a critical performance pattern in any UI where users type to filter or query data in real-time. You'll see it in e-commerce search bars, like on Amazon, to prevent sending an API request on every keystroke while users type product names. It's equally vital in admin dashboards with large data tables, where typing in a filter input should update results smoothly without jank. Implementing debounce ensures your application remains responsive and efficient, providing a polished user experience while reducing unnecessary server load."
+    },
+    "objectives": [
+      "Construct a reactive form with a search input field in an Angular component",
+      "Initialize a FormControl instance to manage the search input's value changes",
+      "Configure a debounce operator on the FormControl's valueChanges observable",
+      "Implement a subscription to handle debounced search value emissions",
+      "Bind the search results to the component template using Angular's data binding",
+      "Integrate a loading indicator that displays during debounce delays",
+      "Control subscription lifecycle to prevent memory leaks in the component"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 11",
+        "title": "Import Angular modules and dependencies",
+        "instruction": "Import Component, OnInit, FormsModule, HttpClientModule, HttpClient, and CommonModule from their respective Angular packages.",
+        "hint": "Use import statements at the top of your TypeScript file. Remember to import from '@angular/core', '@angular/forms', '@angular/common/http', and '@angular/common'.",
+        "analogousExample": "// Example: importing Angular modules\nimport { Component } from '@angular/core';\nimport { FormsModule } from '@angular/forms';\nimport { HttpClientModule, HttpClient } from '@angular/common/http';\nimport { CommonModule } from '@angular/common';",
+        "seedCode": {
+          "App.tsx": "// Import the required Angular modules and dependencies here",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "The necessary Angular modules and dependencies are imported for building a debounced search component with forms and HTTP capabilities.",
+        "successCriteria": [
+          "Component, OnInit, FormsModule, HttpClientModule, HttpClient, and CommonModule are all imported from their correct Angular packages."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've imported some modules, but not all required ones. Check that you have Component and OnInit from '@angular/core', FormsModule from '@angular/forms', HttpClientModule and HttpClient from '@angular/common/http', and CommonModule from '@angular/common'.",
+        "feedbackWrong": "The imports are missing or incorrect. You need to import Component, OnInit, FormsModule, HttpClientModule, HttpClient, and CommonModule from their respective Angular packages to proceed with building the debounced search component.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "Component",
+            "OnInit",
+            "FormsModule",
+            "HttpClientModule",
+            "HttpClient",
+            "CommonModule",
+            "@angular/core",
+            "@angular/forms",
+            "@angular/common/http",
+            "@angular/common"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 11",
+        "title": "Create the main component class",
+        "instruction": "Create the SearchComponent class with the @Component decorator and implement the OnInit interface.",
+        "hint": "Use the class keyword to define the component class. Add the @Component decorator above it and implement OnInit.",
+        "analogousExample": "// Example: Component class with decorator\n@Component({\n  selector: 'app-example',\n  templateUrl: './example.component.html',\n  styleUrls: ['./example.component.css']\n})\nexport class ExampleComponent implements OnInit {\n  constructor() {}\n\n  ngOnInit(): void {}\n}",
+        "seedCode": {
+          "App.tsx": "import { Component, OnInit } from '@angular/core';\n\n// Create the SearchComponent class with @Component decorator and implement OnInit here\n",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "A SearchComponent class is defined with the @Component decorator and implements OnInit.",
+        "successCriteria": [
+          "SearchComponent class exists, has @Component decorator, and implements OnInit interface."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure your class has both the @Component decorator and implements OnInit.",
+        "feedbackWrong": "The component class isn't properly set up. Check that you're using @Component and implementing OnInit.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "class SearchComponent",
+            "@Component",
+            "implements OnInit"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 11",
+        "title": "Initialize search query state",
+        "instruction": "Inside the SearchComponent class, add a property named 'searchQuery' with type 'string' and initialize it as an empty string.",
+        "hint": "Add 'searchQuery: string = \"\";' inside the class body, after the constructor if present.",
+        "analogousExample": "// Example: property with type and initial value\nclass ExampleComponent {\n  message: string = \"Hello\";\n}",
+        "seedCode": {
+          "App.tsx": "import { Component, OnInit } from '@angular/core';\n\n@Component({\n  selector: 'app-search',\n  template: '',\n  styleUrls: []\n})\nexport class SearchComponent implements OnInit {\n  // Add searchQuery property here\n\n  constructor() { }\n\n  ngOnInit(): void {\n  }\n}",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "The component now has a reactive state property to store the user's search input.",
+        "successCriteria": [
+          "The SearchComponent class contains a 'searchQuery' property of type string initialized to empty string."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you've declared a property named 'searchQuery' with type 'string' and initialized it as empty string.",
+        "feedbackWrong": "The searchQuery property is missing or incorrect. It should be a string property initialized to empty string.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "searchQuery",
+            "string",
+            "=",
+            "\"\""
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 11",
+        "title": "Initialize search results state",
+        "instruction": "In the SearchComponent class, add a property named 'searchResults' with a type annotation of 'any[]' and initialize it as an empty array.",
+        "hint": "Add the property inside the class body, similar to how you added the searchQuery property.",
+        "analogousExample": "// Example: initializing an array property\nclass ExampleComponent {\n  items: any[] = [];\n}",
+        "seedCode": {
+          "App.tsx": "import { Component, OnInit } from '@angular/core';\n\n@Component({\n  selector: 'app-search',\n  template: '',\n  styleUrls: []\n})\nexport class SearchComponent implements OnInit {\n  // Add searchQuery property here\n\n  constructor() { }\n\n  ngOnInit(): void {\n  }\n}",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "The component will have a searchResults property ready to store API response data.",
+        "successCriteria": [
+          "The SearchComponent class contains a 'searchResults' property typed as 'any[]' and initialized to an empty array."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you've added a property named 'searchResults' with the correct type and initialization.",
+        "feedbackWrong": "The searchResults property is missing or incorrect. It should be typed as 'any[]' and initialized as an empty array.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "searchResults",
+            "any[]",
+            "=",
+            "[]"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 11",
+        "title": "Inject HttpClient service",
+        "instruction": "Inject the HttpClient service in the constructor of your SearchComponent to enable HTTP requests.",
+        "hint": "Add a parameter with type HttpClient to the constructor and use Angular's dependency injection.",
+        "analogousExample": "// Injecting a service in Angular\nconstructor(private http: HttpClient) {}",
+        "seedCode": {
+          "App.tsx": "import { Component, OnInit } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\n\n@Component({\n  selector: 'app-search',\n  template: '',\n  styleUrls: []\n})\nexport class SearchComponent implements OnInit {\n  // Add searchQuery property here\n\n  constructor() { }\n\n  ngOnInit(): void {\n  }\n}",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "The SearchComponent constructor now has HttpClient injected as a dependency.",
+        "successCriteria": [
+          "HttpClient is properly injected in the constructor with the correct type annotation."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure HttpClient is properly typed in the constructor parameter.",
+        "feedbackWrong": "HttpClient injection is missing or incorrect. Check the constructor parameter type and import.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "constructor",
+            "HttpClient",
+            "private"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 11",
+        "title": "Create search method",
+        "instruction": "Inside the SearchComponent class, create a method named performSearch that will handle the search logic. The method should be public and return void.",
+        "hint": "Add a method declaration inside the class body, after the constructor and ngOnInit.",
+        "analogousExample": "// Example: a method in an Angular component\npublic fetchData(): void {\n  // Method logic goes here\n}",
+        "seedCode": {
+          "App.tsx": "import { Component, OnInit } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\n\n@Component({\n  selector: 'app-search',\n  template: '',\n  styleUrls: []\n})\nexport class SearchComponent implements OnInit {\n  // Add searchQuery property here\n\n  constructor() { }\n\n  ngOnInit(): void {\n  }\n\n  // Create performSearch method here\n}",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "The SearchComponent class now contains a performSearch method declaration ready for implementing the API call logic.",
+        "successCriteria": [
+          "The SearchComponent class has a public performSearch method that returns void."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure you've created a method named performSearch that is public and returns void. Check that it's placed inside the SearchComponent class.",
+        "feedbackWrong": "The performSearch method is not correctly defined. Ensure you create a public method named performSearch that returns void inside the SearchComponent class.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "performSearch",
+            "public",
+            "void"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 11",
+        "title": "Add debounce timer variable",
+        "instruction": "Add a private property named 'debounceTimer' of type 'any' to store the setTimeout reference in your SearchComponent class.",
+        "hint": "Declare the property inside the class body, before the constructor. Use TypeScript's type annotation to specify the type.",
+        "analogousExample": "// Similar: a timer property in a class\nclass ExampleComponent {\n  private timer: any;\n  \n  constructor() {}\n}",
+        "seedCode": {
+          "App.tsx": "import { Component, OnInit } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\n\n@Component({\n  selector: 'app-search',\n  template: '',\n  styleUrls: []\n})\nexport class SearchComponent implements OnInit {\n  // Add searchQuery property here\n  \n  // Add debounceTimer property here\n  \n  constructor() { }\n\n  ngOnInit(): void {\n  }\n\n  // Create performSearch method here\n}",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "The SearchComponent class will have a private debounceTimer property to manage the debounce timeout.",
+        "successCriteria": [
+          "The SearchComponent class contains a private property named 'debounceTimer' with type 'any'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you've declared a private property named 'debounceTimer' with type 'any' inside the SearchComponent class.",
+        "feedbackWrong": "The debounce timer variable is missing or incorrect. Add a private property named 'debounceTimer' of type 'any' to the SearchComponent class.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "debounceTimer",
+            "private",
+            "any"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 11",
+        "title": "Add template structure with search input",
+        "instruction": "In the component decorator's template property, add an input element with two-way binding to the searchQuery property using [(ngModel)].",
+        "hint": "Use the Angular template syntax with ngModel for two-way data binding between the input field and the searchQuery property.",
+        "analogousExample": "// Example: template with input binding\n@Component({\n  selector: 'app-example',\n  template: '<input type=\"text\" [(ngModel)]=\"userInput\">',\n  styleUrls: []\n})",
+        "seedCode": {
+          "App.tsx": "import { Component, OnInit } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\n\n@Component({\n  selector: 'app-search',\n  template: '',\n  styleUrls: []\n})\nexport class SearchComponent implements OnInit {\n  // Add searchQuery property here\n  \n  // Add debounceTimer property here\n  \n  constructor() { }\n\n  ngOnInit(): void {\n  }\n\n  // Create performSearch method here\n  \n  // Create onSearchInput method here\n}",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "The component template now contains an input element that will update the searchQuery property when the user types.",
+        "successCriteria": [
+          "The template property contains an input element with [(ngModel)] binding to searchQuery."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added an input element, but it needs two-way binding using [(ngModel)] to connect with searchQuery.",
+        "feedbackWrong": "The template still doesn't have the required input element with two-way binding to searchQuery.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "[(ngModel)]",
+            "searchQuery",
+            "input"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 11",
+        "title": "Wire input event to debounced handler",
+        "instruction": "In the component's template, add an (input) event binding to the search input element that calls the onSearchInput method with $event.target.value.",
+        "hint": "Use Angular's event binding syntax: (input)=\"onSearchInput($event.target.value)\" on the input element.",
+        "analogousExample": "// Example: binding input event to a handler\n<input (input)=\"handleInput($event.target.value)\" />",
+        "seedCode": {
+          "App.tsx": "import { Component, OnInit } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\n\n@Component({\n  selector: 'app-search',\n  template: `\n    <input type=\"text\" placeholder=\"Search...\" />\n  `,\n  styleUrls: []\n})\nexport class SearchComponent implements OnInit {\n  searchQuery: string = '';\n  searchResults: any[] = [];\n  debounceTimer: any;\n\n  constructor(private http: HttpClient) { }\n\n  ngOnInit(): void {\n  }\n\n  performSearch(query: string): void {\n    // Search logic will be implemented later\n  }\n\n  onSearchInput(value: string): void {\n    // Debounced search logic will be implemented later\n  }\n}",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "The search input element will have an event binding that triggers the onSearchInput method whenever the user types.",
+        "successCriteria": [
+          "The input element in the template includes (input)=\"onSearchInput($event.target.value)\" binding."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're using Angular's event binding syntax correctly. The input element should have (input)=\"onSearchInput($event.target.value)\".",
+        "feedbackWrong": "The input event isn't properly connected to the handler. Remember to use Angular's (input) event binding and pass $event.target.value to the onSearchInput method.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "(input)",
+            "onSearchInput",
+            "$event.target.value"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 11",
+        "title": "Add results display section",
+        "instruction": "Add a <div> element below the search input to display the search results. Use *ngFor to iterate over the searchResults array and show each result item.",
+        "hint": "Use Angular's *ngFor directive to loop through the searchResults array and display each item. You can use interpolation {{ }} to show the result value.",
+        "analogousExample": "// Displaying list items with *ngFor\n<ul>\n  <li *ngFor=\"let item of items\">{{ item.name }}</li>\n</ul>",
+        "seedCode": {
+          "App.tsx": "import { Component, OnInit } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\n\n@Component({\n  selector: 'app-search',\n  template: `\n    <input type=\"text\" placeholder=\"Search...\" />\n    \n  `,\n  styleUrls: []\n})\nexport class SearchComponent implements OnInit {\n  searchQuery: string = '';\n  searchResults: any[] = [];\n  debounceTimer: any;\n\n  constructor(private http: HttpClient) { }\n\n  ngOnInit(): void {\n  }\n\n  performSearch(query: string): void {\n    // Search logic will be implemented later\n  }\n\n  onSearchInput(value: string): void {\n    // Debounced search logic will be implemented later\n  }\n}",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "The template will have a results section that displays each item from the searchResults array.",
+        "successCriteria": [
+          "A <div> element with *ngFor directive is added to the template, iterating over searchResults and displaying each item."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're using *ngFor correctly to iterate over searchResults and display each item.",
+        "feedbackWrong": "The results display section wasn't added correctly. Check that you're using *ngFor to loop through searchResults and display each result.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "*ngFor",
+            "searchResults",
+            "{{",
+            "}}"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 11",
+        "title": "Add loading state and cleanup",
+        "instruction": "Add a loading state property to track when searches are in progress and implement the ngOnDestroy lifecycle hook to clear the debounce timer.",
+        "hint": "Add a boolean property called 'isLoading' initialized to false, then implement the ngOnDestroy method to clear the debounceTimer if it exists.",
+        "analogousExample": "// Adding lifecycle cleanup\nclass ExampleComponent implements OnDestroy {\n  private timer: any;\n  \n  ngOnDestroy() {\n    if (this.timer) {\n      clearTimeout(this.timer);\n    }\n  }\n}",
+        "seedCode": {
+          "App.tsx": "import { Component, OnInit } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\n\n@Component({\n  selector: 'app-search',\n  template: `\n    <input type=\"text\" placeholder=\"Search...\" />\n    \n  `,\n  styleUrls: []\n})\nexport class SearchComponent implements OnInit {\n  searchQuery: string = '';\n  searchResults: any[] = [];\n  debounceTimer: any;\n\n  constructor(private http: HttpClient) { }\n\n  ngOnInit(): void {\n  }\n\n  performSearch(query: string): void {\n    // Search logic will be implemented later\n  }\n\n  onSearchInput(value: string): void {\n    // Debounced search logic will be implemented later\n  }\n}",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "The component will have a loading state property and proper cleanup of the debounce timer when the component is destroyed.",
+        "successCriteria": [
+          "Component has 'isLoading' boolean property initialized to false and implements ngOnDestroy method that clears debounceTimer"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you've added both the isLoading property and the ngOnDestroy method with timer cleanup.",
+        "feedbackWrong": "The component still needs a loading state property and lifecycle cleanup. Review the Angular lifecycle hooks and timer management.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "isLoading",
+            "ngOnDestroy",
+            "clearTimeout",
+            "debounceTimer"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import Angular modules and dependencies",
+        "id": "step1"
+      },
+      {
+        "label": "Create the main component class",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize search query state",
+        "id": "step3"
+      },
+      {
+        "label": "Initialize search results state",
+        "id": "step4"
+      },
+      {
+        "label": "Inject HttpClient service",
+        "id": "step5"
+      },
+      {
+        "label": "Create search method",
+        "id": "step6"
+      },
+      {
+        "label": "Add debounce timer variable",
+        "id": "step7"
+      },
+      {
+        "label": "Add template structure with search input",
+        "id": "step8"
+      },
+      {
+        "label": "Wire input event to debounced handler",
+        "id": "step9"
+      },
+      {
+        "label": "Add results display section",
+        "id": "step10"
+      },
+      {
+        "label": "Add loading state and cleanup",
+        "id": "step11"
+      }
+    ],
+    "answerShape": "multi-file"
+  },
+  "source": "content"
+}

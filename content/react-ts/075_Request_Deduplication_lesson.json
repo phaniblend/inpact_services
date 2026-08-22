@@ -1,0 +1,358 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-react-ts-75",
+    "track": "react-ts",
+    "lessonNum": 75,
+    "title": "Request Deduplication",
+    "shortName": "P75",
+    "intro": {
+      "tag": "LESSON #75",
+      "title": "Request Deduplication",
+      "body": "In this lesson, you will build a simple React app that fetches user data from a mock API. You'll learn how to implement request deduplication, a technique that prevents sending multiple identical API requests at the same time. This concept uses a caching mechanism to store ongoing requests, ensuring only one request is made for duplicate calls. You'll work with React hooks like useState and useEffect, and use TypeScript to define types for your data and functions. By the end, you'll understand how deduplication improves performance and reduces unnecessary network traffic in your applications.",
+      "usecase": "Request deduplication is essential in modern web applications where multiple UI components might trigger the same API call simultaneously. In dashboard interfaces, multiple widgets displaying related metrics could independently request the same user data, causing unnecessary network traffic. Search autocomplete components benefit from deduplication when rapid keystrokes trigger identical queries, preventing redundant API calls. E-commerce product filters that update multiple display areas simultaneously also rely on this pattern to avoid duplicate inventory checks and ensure consistent data across the interface."
+    },
+    "objectives": [
+      "Implement a deduplication cache to store ongoing requests",
+      "Construct a custom hook that manages request deduplication logic",
+      "Apply deduplication to prevent duplicate API calls for identical requests",
+      "Configure TypeScript interfaces for deduplication cache entries",
+      "Initialize request tracking with unique identifiers",
+      "Integrate deduplication logic with existing API fetching patterns",
+      "Manipulate cache state to clear completed requests"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 10",
+        "title": "Import React and useState",
+        "instruction": "Import React and the useState hook from the 'react' package.",
+        "hint": "Use the import statement to bring in React and useState from the 'react' module.",
+        "analogousExample": "// Example: importing React and a hook\nimport React, { useState } from 'react';",
+        "seedCode": "// Import React and useState here\n",
+        "expectedOutcome": "The necessary React APIs are imported for building components with state.",
+        "successCriteria": [
+          "React and useState are imported from 'react'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure to import both React and useState from 'react'.",
+        "feedbackWrong": "The imports are missing or incorrect. Please import React and useState from the 'react' package.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "React",
+            "useState",
+            "'react'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 10",
+        "title": "Create the main App component",
+        "instruction": "Create a functional component named App that returns JSX. Use proper TypeScript typing for the component.",
+        "hint": "You can use either a function declaration or arrow function syntax. Remember to include the return statement with JSX.",
+        "analogousExample": "// Example of a functional component with TypeScript\nconst MyComponent: React.FC = () => {\n  return <div>Hello World</div>;\n};",
+        "seedCode": "import React, { useState } from 'react';\n\n// Create your App component here\n",
+        "expectedOutcome": "A functional App component is defined with TypeScript typing and returns JSX.",
+        "successCriteria": [
+          "App component is defined as a functional component with proper TypeScript typing and returns JSX."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure your App component has TypeScript typing and returns JSX.",
+        "feedbackWrong": "The App component isn't properly defined. Check that you've created a functional component with TypeScript typing that returns JSX.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "App",
+            "return",
+            "<",
+            ">"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 10",
+        "title": "Initialize state for request tracking",
+        "instruction": "Inside your App component, use useState to create a state variable named 'pendingRequests' with proper TypeScript type annotation to track in-flight requests. Initialize it as an empty array.",
+        "hint": "Use useState<RequestType[]> to specify the type. Since we're tracking request IDs, you can use string[] as the type for now.",
+        "analogousExample": "// Similar: state for tracking items\nconst [items, setItems] = useState<string[]>([]);",
+        "seedCode": "import React, { useState } from 'react';\n\n// Create your App component here\nconst App = () => {\n  // Initialize state for pending requests here\n  \n  return null;\n};",
+        "expectedOutcome": "The component should have a state variable 'pendingRequests' initialized as an empty array with proper TypeScript typing.",
+        "successCriteria": [
+          "The useState hook is called with type annotation string[] and initial value []"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure to include the type annotation <string[]> and initialize with an empty array [].",
+        "feedbackWrong": "Use useState with type annotation string[] and initialize with an empty array to track request IDs.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "useState",
+            "pendingRequests",
+            "string[]",
+            "[]"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 10",
+        "title": "Define the fetchData function",
+        "instruction": "Inside your App component, create an async function named fetchData that simulates a network request. The function should return a promise that resolves with a mock data string after a 2-second delay.",
+        "hint": "Use async/await syntax with setTimeout inside a Promise to simulate a delayed API response.",
+        "analogousExample": "// Similar: async function that returns data after delay\nasync function fetchUser() {\n  return new Promise((resolve) => {\n    setTimeout(() => {\n      resolve('User data loaded');\n    }, 2000);\n  });\n}",
+        "seedCode": "import React, { useState } from 'react';\n\nconst App = () => {\n  // Initialize state for pending requests here\n  \n  // Create your fetchData function here\n  \n  return null;\n};",
+        "expectedOutcome": "You'll have an async fetchData function that returns a promise resolving with mock data after a delay, ready to be used for request deduplication.",
+        "successCriteria": [
+          "The App component contains an async fetchData function that returns a promise resolving with a string after 2 seconds."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure your function is async, returns a promise, and resolves with mock data after a 2-second delay.",
+        "feedbackWrong": "The fetchData function needs to be async and simulate a network request with a delay. Try creating a function that returns a promise with setTimeout.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "async",
+            "fetchData",
+            "Promise",
+            "setTimeout",
+            "2000",
+            "resolve"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 10",
+        "title": "Add the basic UI structure",
+        "instruction": "Return a container div with a main heading, a subheading, and a section for request controls inside your App component.",
+        "hint": "Replace the current return statement with JSX that includes these elements. Use semantic HTML tags like h1, h2, and section.",
+        "analogousExample": "// Example: returning basic UI structure\nreturn (\n  <div>\n    <h1>My App</h1>\n    <h2>Subtitle</h2>\n    <section>\n      {/* Controls will go here */}\n    </section>\n  </div>\n);",
+        "seedCode": "import React, { useState } from 'react';\n\nconst App = () => {\n  // Initialize state for pending requests here\n  \n  // Create your fetchData function here\n  \n  // Create your makeRequest handler here\n  \n  return null;\n};",
+        "expectedOutcome": "The component now renders a basic UI structure with headings and a section placeholder.",
+        "successCriteria": [
+          "The App component returns a div containing an h1, an h2, and a section element."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're returning a div with an h1, an h2, and a section element.",
+        "feedbackWrong": "Check that you're returning JSX with a div containing an h1, an h2, and a section element. The return statement should start with parentheses for multi-line JSX.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "return",
+            "div",
+            "h1",
+            "h2",
+            "section"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 10",
+        "title": "Add request button and display state",
+        "instruction": "Inside your component's return statement, add a button element with an onClick handler that calls makeRequest, and add a paragraph element that displays the current request status from state.",
+        "hint": "Use JSX to create a button with onClick={makeRequest} and a paragraph that shows the state value.",
+        "analogousExample": "// Similar: button and display in a component\nfunction Counter() {\n  const [count, setCount] = useState(0);\n  const increment = () => setCount(count + 1);\n  return (\n    <div>\n      <button onClick={increment}>Increment</button>\n      <p>Current count: {count}</p>\n    </div>\n  );\n}",
+        "seedCode": "import React, { useState } from 'react';\n\nconst App = () => {\n  // Initialize state for pending requests here\n  \n  // Create your fetchData function here\n  \n  // Create your makeRequest handler here\n  \n  return (\n    <div>\n      {/* Add button and paragraph here */}\n    </div>\n  );\n};",
+        "expectedOutcome": "The component will render a button that triggers the request handler and a paragraph showing the request status.",
+        "successCriteria": [
+          "Button element with onClick={makeRequest} and paragraph element displaying state value are added to the return statement."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You added some UI elements, but make sure you have both a button with onClick={makeRequest} and a paragraph showing the state value.",
+        "feedbackWrong": "The UI elements are missing or incorrect. Add a button with onClick={makeRequest} and a paragraph that displays the state value.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "onClick={makeRequest}",
+            "<p>",
+            "{",
+            "}"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 10",
+        "title": "Identify the duplicate request lesson",
+        "instruction": "Add a console.log statement inside your makeRequest handler to log each time a request is made, so you can observe duplicate requests when clicking the button rapidly.",
+        "hint": "Place console.log('Making request...') at the beginning of your makeRequest function before the fetchData call.",
+        "analogousExample": "// Example: logging function activity\nfunction processOrder() {\n  console.log('Processing order...');\n  // rest of order logic\n}",
+        "seedCode": "import React, { useState } from 'react';\n\nconst App = () => {\n  const [pendingRequests, setPendingRequests] = useState<Set<string>>(new Set());\n  const [data, setData] = useState<string>('');\n\n  const fetchData = async (requestId: string): Promise<string> => {\n    // Simulate API delay\n    await new Promise(resolve => setTimeout(resolve, 1000));\n    return `Data for ${requestId}`;\n  };\n\n  const makeRequest = async () => {\n    const requestId = Date.now().toString();\n    // Add console.log here\n    \n    const result = await fetchData(requestId);\n    setData(result);\n  };\n\n  return (\n    <div>\n      <button onClick={makeRequest}>Make Request</button>\n      <p>{data}</p>\n    </div>\n  );\n};\n\nexport default App;",
+        "expectedOutcome": "When you click the button rapidly multiple times, you'll see multiple 'Making request...' logs in the console, demonstrating the duplicate request lesson.",
+        "successCriteria": [
+          "console.log statement is added inside makeRequest function",
+          "Log message clearly indicates a request is being made"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure the console.log is placed inside the makeRequest function where it will execute each time the button is clicked.",
+        "feedbackWrong": "The logging isn't set up correctly. Add console.log('Making request...') at the beginning of your makeRequest function to track when requests are initiated.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "console.log",
+            "makeRequest"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 10",
+        "title": "Implement request deduplication logic",
+        "instruction": "Modify the makeRequest function to check if a request with the same ID is already pending before calling fetchData. If it is pending, return the existing promise instead of starting a new request.",
+        "hint": "Before calling fetchData, check if the requestId already exists in pendingRequests. If it does, return early without making a new request.",
+        "analogousExample": "// Example: deduplicating function calls\nconst makeRequest = async (requestId: string) => {\n  if (pendingRequests.has(requestId)) {\n    return;\n  }\n  // Proceed with the request\n};",
+        "seedCode": "import React, { useState } from 'react';\n\nconst App = () => {\n  const [pendingRequests, setPendingRequests] = useState<Set<string>>(new Set());\n  const [data, setData] = useState<string>('');\n\n  const fetchData = async (requestId: string): Promise<string> => {\n    // Simulate API delay\n    await new Promise(resolve => setTimeout(resolve, 1000));\n    return `Data for ${requestId}`;\n  };\n\n  const makeRequest = async () => {\n    const requestId = Date.now().toString();\n    // Add console.log here\n    \n    const result = await fetchData(requestId);\n    setData(result);\n  };\n\n  return (\n    <div>\n      <button onClick={makeRequest}>Make Request</button>\n      <p>{data}</p>\n    </div>\n  );\n};\n\nexport default App;",
+        "expectedOutcome": "The makeRequest function now includes a check to prevent duplicate requests for the same requestId.",
+        "successCriteria": [
+          "The makeRequest function checks pendingRequests before calling fetchData and returns early if the requestId already exists."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure to check pendingRequests and return early if the requestId already exists.",
+        "feedbackWrong": "The deduplication logic is missing. Modify makeRequest to check pendingRequests before calling fetchData.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "pendingRequests",
+            "has",
+            "requestId",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 10",
+        "title": "Test the deduplication behavior",
+        "instruction": "Add a console.log statement inside the makeRequest function to log when a request is made,",
+        "hint": "Add console.log('Making request:', requestId) right after generating the requestId in the makeRequest function.",
+        "analogousExample": "// Logging function calls\nfunction processItem(itemId: string) {\n  console.log('Processing item:', itemId);\n  // ... rest of the function\n}",
+        "seedCode": "import React, { useState } from 'react';\n\nconst App = () => {\n  const [pendingRequests, setPendingRequests] = useState<Set<string>>(new Set());\n  const [data, setData] = useState<string>('');\n\n  const fetchData = async (requestId: string): Promise<string> => {\n    // Simulate API delay\n    await new Promise(resolve => setTimeout(resolve, 1000));\n    return `Data for ${requestId}`;\n  };\n\n  const makeRequest = async () => {\n    const requestId = Date.now().toString();\n    // Add console.log here\n    \n    const result = await fetchData(requestId);\n    setData(result);\n  };\n\n  return (\n    <div>\n      <button onClick={makeRequest}>Make Request</button>\n      <p>{data}</p>\n    </div>\n  );\n};\n\nexport default App;",
+        "expectedOutcome": "When you click the button rapidly multiple times, you should see only one console log message per second, demonstrating that duplicate requests are being prevented.",
+        "successCriteria": [
+          "A console.log statement is added inside makeRequest that logs the requestId, and clicking the button rapidly shows only one log per second in the console."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added some logging, but make sure it's inside the makeRequest function and logs the requestId. Try adding console.log('Making request:', requestId) right after generating the requestId.",
+        "feedbackWrong": "The console.log statement is missing or not in the correct location. Add console.log('Making request:', requestId) inside the makeRequest function, right after const requestId = Date.now().toString();",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "console.log",
+            "requestId",
+            "makeRequest"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 10",
+        "title": "click the button rapidly multiple times in th",
+        "instruction": "click the button rapidly multiple times in the preview and observe the console output.",
+        "hint": "Add console.log('Making request:', requestId) right after generating the requestId in the makeRequest function.",
+        "analogousExample": "// Logging function calls\nfunction processItem(itemId: string) {\n  console.log('Processing item:', itemId);\n  // ... rest of the function\n}",
+        "seedCode": "import React, { useState } from 'react';\n\nconst App = () => {\n  const [pendingRequests, setPendingRequests] = useState<Set<string>>(new Set());\n  const [data, setData] = useState<string>('');\n\n  const fetchData = async (requestId: string): Promise<string> => {\n    // Simulate API delay\n    await new Promise(resolve => setTimeout(resolve, 1000));\n    return `Data for ${requestId}`;\n  };\n\n  const makeRequest = async () => {\n    const requestId = Date.now().toString();\n    // Add console.log here\n    \n    const result = await fetchData(requestId);\n    setData(result);\n  };\n\n  return (\n    <div>\n      <button onClick={makeRequest}>Make Request</button>\n      <p>{data}</p>\n    </div>\n  );\n};\n\nexport default App;",
+        "expectedOutcome": "",
+        "successCriteria": [
+          "Complete the step as instructed."
+        ],
+        "feedbackCorrect": "Great! Step completed.",
+        "feedbackPartial": "Review the instruction and try again.",
+        "feedbackWrong": "Check the instruction and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "console.log",
+            "requestId",
+            "makeRequest"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import React and useState",
+        "id": "step1"
+      },
+      {
+        "label": "Create the main App component",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize state for request tracking",
+        "id": "step3"
+      },
+      {
+        "label": "Define the fetchData function",
+        "id": "step4"
+      },
+      {
+        "label": "Add the basic UI structure",
+        "id": "step5"
+      },
+      {
+        "label": "Add request button and display state",
+        "id": "step6"
+      },
+      {
+        "label": "Identify the duplicate request lesson",
+        "id": "step7"
+      },
+      {
+        "label": "Implement request deduplication logic",
+        "id": "step8"
+      },
+      {
+        "label": "Test the deduplication behavior",
+        "id": "step9"
+      },
+      {
+        "label": "click the button rapidly multiple times in th",
+        "id": "step10"
+      }
+    ]
+  },
+  "source": "content"
+}

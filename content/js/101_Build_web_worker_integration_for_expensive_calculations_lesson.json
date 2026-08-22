@@ -1,0 +1,354 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-js-101",
+    "track": "js",
+    "lessonNum": 101,
+    "title": "Build web worker integration for expensive calculations",
+    "shortName": "P101",
+    "intro": {
+      "tag": "LESSON #101",
+      "title": "Build web worker integration for expensive calculations",
+      "body": "In this lesson, you will build a simple web page that uses a Web Worker to perform a heavy calculation in the background, preventing the main interface from freezing. You will learn how to offload expensive computations to a separate thread to keep your web application responsive. The core concepts involve creating a Web Worker, sending messages to it, and handling the results it returns. You'll work with JavaScript's Worker API, message passing via postMessage, and event listeners for handling responses.",
+      "usecase": "Web workers are essential for maintaining responsive interfaces when performing heavy computations in real applications. In data dashboards, they enable smooth chart rendering while calculating complex statistics from large datasets. Image editing tools use web workers to apply filters and transformations without freezing the UI. Financial applications leverage them for real-time risk calculations and algorithmic trading simulations. Even in e-commerce sites, web workers can handle complex price calculations and inventory checks during checkout processes."
+    },
+    "objectives": [
+      "Initialize a web worker with a separate JavaScript file for background execution",
+      "Configure message event listeners to handle communication between the main thread and worker",
+      "Implement a calculation function within the web worker that processes data received via messages",
+      "Construct a postMessage call from the main thread to send data to the web worker",
+      "Manipulate the DOM to display calculation results returned from the web worker",
+      "Integrate error handling for web worker loading failures and runtime errors",
+      "Control the web worker lifecycle by properly terminating it when calculations are complete"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 10",
+        "title": "Import required APIs for web worker and UI",
+        "instruction": "Import useState from 'react' for state management and create a reference for the web worker using useRef.",
+        "hint": "You'll need to import both useState and useRef from 'react' to manage state and create a worker reference.",
+        "analogousExample": "// Importing hooks for state and refs\nimport { useState, useRef } from 'react';",
+        "seedCode": "// Import useState and useRef from 'react'\n",
+        "expectedOutcome": "The imports for useState and useRef are added at the top of the file.",
+        "successCriteria": [
+          "useState and useRef are imported from 'react'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure you're importing both useState and useRef from 'react'.",
+        "feedbackWrong": "Check that you're importing both useState and useRef from the 'react' package.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "useState",
+            "useRef",
+            "'react'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 10",
+        "title": "Create the main App component structure",
+        "instruction": "Create a functional component named App that returns a div container.",
+        "hint": "Define a function called App that returns a JSX div element.",
+        "analogousExample": "// Similar: a basic component structure\nfunction App() {\n  return (\n    <div>\n      {/* content will go here */}\n    </div>\n  );\n}",
+        "seedCode": "// Import useState and useRef from 'react'\n\n// Create a functional component named App that returns a div container",
+        "expectedOutcome": "The App component is defined and returns a div element.",
+        "successCriteria": [
+          "A functional component named App is created and returns a JSX div."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you've defined a function named App that returns a div element.",
+        "feedbackWrong": "The App component structure is not yet correct. Create a function named App that returns a div.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "function App",
+            "return",
+            "<div>"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 10",
+        "title": "Initialize state for calculation results",
+        "instruction": "Inside your App component, use the useState hook to declare a state variable named 'result' with an initial value of null.",
+        "hint": "Call useState with null as the initial argument and destructure the returned array into 'result' and 'setResult'.",
+        "analogousExample": "// Example: state for storing data\nconst [data, setData] = useState(null);",
+        "seedCode": "// Import useState and useRef from 'react'\nimport { useState, useRef } from 'react';\n\n// Create a functional component named App that returns a div container\nfunction App() {\n  // Initialize state for calculation results\n  \n  return (\n    <div>\n      {/* UI will go here */}\n    </div>\n  );\n}\n\nexport default App;",
+        "expectedOutcome": "The component will have a state variable ready to store the calculation result from the web worker.",
+        "successCriteria": [
+          "The App component contains a useState call that declares a 'result' state variable initialized to null."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure you're using useState to declare a variable named 'result' with null as the initial value.",
+        "feedbackWrong": "The state variable wasn't properly initialized. Remember to use useState with null to create a 'result' state variable.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "useState",
+            "result",
+            "null"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 10",
+        "title": "Initialize state for loading status",
+        "instruction": "Inside your App component, initialize a state variable called 'isLoading' using useState, defaulting to false.",
+        "hint": "Use the useState hook you imported earlier. The state variable should be named 'isLoading' and initially set to false.",
+        "analogousExample": "// Example: initializing a loading state\nconst [isLoading, setIsLoading] = useState(false);",
+        "seedCode": "// Import useState and useRef from 'react'\nimport { useState, useRef } from 'react';\n\n// Create a functional component named App that returns a div container\nfunction App() {\n  // Initialize state for calculation results\n  \n  // Initialize state for loading status\n  \n  return (\n    <div>\n      {/* UI will go here */}\n    </div>\n  );\n}\n\nexport default App;",
+        "expectedOutcome": "Your App component will have a state variable 'isLoading' that tracks whether the web worker is currently processing a calculation.",
+        "successCriteria": [
+          "The 'isLoading' state variable is declared using useState with an initial value of false."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure you're using the useState hook to declare a variable named 'isLoading' with an initial value of false.",
+        "feedbackWrong": "add a state variable called 'isLoading' that starts as false, using the useState hook.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "isLoading",
+            "useState",
+            "false"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 10",
+        "title": "Create a web worker instance reference",
+        "instruction": "Inside your App component, create a reference using useRef to store the web worker instance. Name it workerRef and initialize it to null.",
+        "hint": "Use the useRef hook to create a mutable reference that will hold the web worker object.",
+        "analogousExample": "// Creating a ref for a DOM element\nconst inputRef = useRef(null);",
+        "seedCode": "// Import useState and useRef from 'react'\nimport { useState, useRef } from 'react';\n\n// Create a functional component named App that returns a div container\nfunction App() {\n  // Initialize state for calculation results\n  \n  // Initialize state for loading status\n  \n  // Create a web worker instance reference\n  \n  return (\n    <div>\n      {/* UI will go here */}\n    </div>\n  );\n}\n\nexport default App;",
+        "expectedOutcome": "A workerRef variable is created using useRef and initialized to null, ready to store the web worker instance.",
+        "successCriteria": [
+          "The workerRef is declared with useRef and initialized to null inside the App component."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're using useRef and initializing it to null.",
+        "feedbackWrong": "That doesn't look right. Remember to create a reference using useRef and name it workerRef.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "workerRef",
+            "useRef",
+            "null"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 10",
+        "title": "Define handler to start expensive calculation",
+        "instruction": "Inside the App component, create a function named handleStartCalculation that initializes a new Worker and sends a message to start the calculation.",
+        "hint": "Define a function that creates a new Worker instance using the worker reference, sets up an onmessage handler to receive results, and posts a message to the worker.",
+        "analogousExample": "// Example: function that creates a worker and sends data\nfunction startWorkerTask() {\n  const worker = new Worker('worker.js');\n  worker.onmessage = (event) => {\n    console.log('Result:', event.data);\n  };\n  worker.postMessage({ type: 'calculate', data: 100 });\n}",
+        "seedCode": "// Import useState and useRef from 'react'\nimport { useState, useRef } from 'react';\n\n// Create a functional component named App that returns a div container\nfunction App() {\n  // Initialize state for calculation results\n  \n  // Initialize state for loading status\n  \n  // Create a web worker instance reference\n  \n  // Define handler to start expensive calculation\n  \n  return (\n    <div>\n      {/* UI will go here */}\n    </div>\n  );\n}\n\nexport default App;",
+        "expectedOutcome": "The App component now contains a handleStartCalculation function that creates a Worker, sets up message handling, and posts a calculation request.",
+        "successCriteria": [
+          "A function named handleStartCalculation is defined inside the App component, it creates a new Worker, sets an onmessage handler, and posts a message."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the handler function, but make sure it creates a Worker, sets up message handling, and posts a calculation request.",
+        "feedbackWrong": "The handler function is missing or incomplete. Create a function named handleStartCalculation that initializes a Worker and sends a calculation message.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "handleStartCalculation",
+            "Worker",
+            "onmessage",
+            "postMessage"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 10",
+        "title": "Add UI structure with calculation button",
+        "instruction": "Inside the main div container, add a button element with the text 'Start Expensive Calculation'.",
+        "hint": "Place the button directly inside the div element using JSX syntax.",
+        "analogousExample": "// Adding a button to a container\ndiv>\n  <button>Click me</button>\n</div>",
+        "seedCode": "// Import useState and useRef from 'react'\nimport { useState, useRef } from 'react';\n\n// Create a functional component named App that returns a div container\nfunction App() {\n  // Initialize state for calculation results\n  \n  // Initialize state for loading status\n  \n  // Create a web worker instance reference\n  \n  // Define handler to start expensive calculation\n  \n  return (\n    <div>\n      <button>Start Expensive Calculation</button>\n    </div>\n  );\n}\n\nexport default App;",
+        "expectedOutcome": "The UI will display a button labeled 'Start Expensive Calculation' inside the main container.",
+        "successCriteria": [
+          "A button element with the text 'Start Expensive Calculation' is present inside the div container."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You added a button, but make sure the text exactly matches 'Start Expensive Calculation'.",
+        "feedbackWrong": "The button element is missing or not properly placed inside the div container.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<button>",
+            "Start Expensive Calculation",
+            "</button>"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 10",
+        "title": "Wire button click to calculation handler",
+        "instruction": "Add an onClick handler to the existing button that calls the handleStartCalculation function.",
+        "hint": "Use the onClick attribute on the button element and set it to reference your handler function.",
+        "analogousExample": "// Example: wiring a button to a handler\n<button onClick={handleClick}>Click Me</button>",
+        "seedCode": "// Import useState and useRef from 'react'\nimport { useState, useRef } from 'react';\n\n// Create a functional component named App that returns a div container\nfunction App() {\n  // Initialize state for calculation results\n  \n  // Initialize state for loading status\n  \n  // Create a web worker instance reference\n  \n  // Define handler to start expensive calculation\n  \n  return (\n    <div>\n      <button>Start Expensive Calculation</button>\n    </div>\n  );\n}\n\nexport default App;",
+        "expectedOutcome": "The button will be wired to trigger the calculation handler when clicked.",
+        "successCriteria": [
+          "The button element has an onClick attribute that calls handleStartCalculation."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure the onClick attribute is properly set to call handleStartCalculation.",
+        "feedbackWrong": "The button is not yet wired to the handler. Add an onClick attribute that calls handleStartCalculation.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "onClick",
+            "handleStartCalculation"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 10",
+        "title": "Display loading status in UI",
+        "instruction": "Add a paragraph element that shows 'Calculating...' when isLoading is true. Place it below the button in the return statement.",
+        "hint": "Use a ternary operator to conditionally render the paragraph. The syntax is: {isLoading ? <p>Calculating...</p> : null}",
+        "analogousExample": "// Conditional rendering example\nfunction StatusIndicator() {\n  const isLoading = true;\n  return (\n    <div>\n      <button>Start Process</button>\n      {isLoading ? <p>Processing...</p> : null}\n    </div>\n  );\n}",
+        "seedCode": "// Import useState and useRef from 'react'\nimport { useState, useRef } from 'react';\n\n// Create a functional component named App that returns a div container\nfunction App() {\n  // Initialize state for calculation results\n  \n  // Initialize state for loading status\n  \n  // Create a web worker instance reference\n  \n  // Define handler to start expensive calculation\n  \n  return (\n    <div>\n      <button>Start Expensive Calculation</button>\n      \n    </div>\n  );\n}\n\nexport default App;",
+        "expectedOutcome": "The UI will show a 'Calculating...' message below the button when the web worker is processing.",
+        "successCriteria": [
+          "A paragraph element with the text 'Calculating...' is conditionally rendered using isLoading state"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure you're using the isLoading state variable and the ternary operator syntax correctly.",
+        "feedbackWrong": "The loading status paragraph isn't properly implemented. Check that you're using the isLoading state and conditional rendering syntax.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "isLoading",
+            "?",
+            "<p>Calculating...</p>",
+            ":",
+            "null"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 10",
+        "title": "Display calculation result in UI",
+        "instruction": "Add a paragraph element inside the div that displays the calculation result when it's available. Use the result state variable and conditional rendering to only show the paragraph when result is not null.",
+        "hint": "You can use a ternary operator or logical && operator to conditionally render the paragraph. The paragraph should display something like 'Result: ' followed by the result value.",
+        "analogousExample": "// Conditional rendering example\nfunction DisplayResult() {\n  const [result, setResult] = useState(null);\n  \n  return (\n    <div>\n      {result && <p>Result: {result}</p>}\n    </div>\n  );\n}",
+        "seedCode": "// Import useState and useRef from 'react'\nimport { useState, useRef } from 'react';\n\n// Create a functional component named App that returns a div container\nfunction App() {\n  // Initialize state for calculation results\n  const [result, setResult] = useState(null);\n  \n  // Initialize state for loading status\n  const [isLoading, setIsLoading] = useState(false);\n  \n  // Create a web worker instance reference\n  const workerRef = useRef(null);\n  \n  // Define handler to start expensive calculation\n  const handleStartCalculation = () => {\n    setIsLoading(true);\n    // Web worker logic would go here\n    // For now, simulate completion\n    setTimeout(() => {\n      setResult(42);\n      setIsLoading(false);\n    }, 1000);\n  };\n  \n  return (\n    <div>\n      <button onClick={handleStartCalculation}>Start Expensive Calculation</button>\n      {isLoading && <p>Calculating...</p>}\n      \n    </div>\n  );\n}\n\nexport default App;",
+        "expectedOutcome": "The UI will show the calculation result when it's available, appearing below the loading message after the calculation completes.",
+        "successCriteria": [
+          "A paragraph element is added that conditionally displays the result value when result is not null"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added some UI for the result, but check that it only displays when result has a value (not null). Make sure you're using the result state variable correctly.",
+        "feedbackWrong": "The result isn't displaying properly. Remember to add a paragraph element that shows the result value only when result is not null. You can use conditional rendering with a ternary operator or logical &&.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<p>",
+            "{result}",
+            "result",
+            "null",
+            "&&",
+            "?"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import required APIs for web worker and UI",
+        "id": "step1"
+      },
+      {
+        "label": "Create the main App component structure",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize state for calculation results",
+        "id": "step3"
+      },
+      {
+        "label": "Initialize state for loading status",
+        "id": "step4"
+      },
+      {
+        "label": "Create a web worker instance reference",
+        "id": "step5"
+      },
+      {
+        "label": "Define handler to start expensive calculation",
+        "id": "step6"
+      },
+      {
+        "label": "Add UI structure with calculation button",
+        "id": "step7"
+      },
+      {
+        "label": "Wire button click to calculation handler",
+        "id": "step8"
+      },
+      {
+        "label": "Display loading status in UI",
+        "id": "step9"
+      },
+      {
+        "label": "Display calculation result in UI",
+        "id": "step10"
+      }
+    ]
+  },
+  "source": "content"
+}

@@ -1,0 +1,364 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-vue-59",
+    "track": "vue",
+    "lessonNum": 59,
+    "title": "Infinite Scroll",
+    "shortName": "P59",
+    "intro": {
+      "tag": "LESSON #59",
+      "title": "Infinite Scroll",
+      "body": "In this lesson, you will build a Vue app that implements an infinite scroll feature, allowing users to continuously load more items as they scroll down a list. You will learn the core concept of detecting scroll position and triggering data fetching when the user reaches the bottom of the page. The main technologies involved include Vue's reactive state, lifecycle hooks, and event listeners for scroll events. By the end, you'll have a functional component that dynamically loads and displays data, enhancing user experience with seamless content loading.",
+      "usecase": "Infinite scroll is a fundamental pattern in modern web applications where content loads progressively as users scroll down, creating a seamless browsing experience. You'll implement this in social media feeds like Facebook or Twitter, e-commerce product listings on Amazon, and content-heavy platforms like YouTube or news aggregators. As a Vue developer, you'll use this technique to build efficient dashboards that display large datasets without overwhelming initial load times, or in admin panels where users need to browse through extensive records. Mastering infinite scroll helps you create applications that feel responsive while managing performance and data fetching intelligently."
+    },
+    "objectives": [
+      "Initialize a Vue component with reactive state for managing scrollable data",
+      "Implement a scroll event handler to detect when users reach the bottom of a page",
+      "Construct an API data fetching method that integrates with Vue's lifecycle hooks",
+      "Configure conditional rendering to display loading indicators during data retrieval",
+      "Manipulate arrays in Vue's reactive system to append new items to existing lists",
+      "Apply computed properties to control when infinite scroll triggers should activate",
+      "Bind scroll event listeners to DOM elements using Vue template directives"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 10",
+        "title": "Import Vue and required APIs (ref, onMounted)",
+        "instruction": "Import Vue, ref, and onMounted from the 'vue' package.",
+        "hint": "Use the import statement to bring in the necessary functions from Vue's Composition API.",
+        "analogousExample": "// Importing multiple functions from a module\nimport { useState, useEffect } from 'react';",
+        "seedCode": "// Import Vue, ref, and onMounted from 'vue'",
+        "expectedOutcome": "You'll have access to Vue's Composition API functions for state management (ref) and lifecycle hooks (onMounted).",
+        "successCriteria": [
+          "Vue, ref, and onMounted are imported from 'vue'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You imported some items, but make sure to import Vue, ref, and onMounted from 'vue'.",
+        "feedbackWrong": "Check your import statement. You need to import Vue, ref, and onMounted from 'vue'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "vue",
+            "ref",
+            "onMounted",
+            "from",
+            "'vue'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 10",
+        "title": "Create the main Vue component",
+        "instruction": "Create a Vue component named 'InfiniteScrollDemo' using the <script setup> syntax. The component should have a template that returns a <div> wrapper element.",
+        "hint": "Use the <script setup> syntax to define a Vue component. The template should contain a single root <div> element.",
+        "analogousExample": "// Example Vue component with script setup\n<script setup>\n// Component logic goes here\n</script>\n\n<template>\n  <div>\n    <!-- Content will go here -->\n  </div>\n</template>",
+        "seedCode": "<script setup>\n// Import Vue, ref, and onMounted from 'vue'\n</script>\n\n<template>\n  <!-- Create a root <div> element here -->\n</template>",
+        "expectedOutcome": "A Vue component named 'InfiniteScrollDemo' is created with a template containing a root <div> element.",
+        "successCriteria": [
+          "The component uses <script setup> syntax and has a template with a root <div> element."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure you have both the <script setup> section and a template with a root <div> element.",
+        "feedbackWrong": "The component structure isn't quite right. Check that you're using <script setup> and have a template with a root <div> element.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<script setup>",
+            "</script>",
+            "<template>",
+            "<div>",
+            "</div>",
+            "</template>"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 10",
+        "title": "Initialize state for items and loading",
+        "instruction": "Inside the <script setup> section, create two reactive variables using ref: one named 'items' initialized as an empty array, and another named 'loading' initialized as false.",
+        "hint": "Use the ref function from Vue to create reactive state. For example: const count = ref(0).",
+        "analogousExample": "// Creating reactive state variables\nconst items = ref([])\nconst loading = ref(false)",
+        "seedCode": "<script setup>\n// Import Vue, ref, and onMounted from 'vue'\nimport { ref } from 'vue'\n\n// Create reactive state variables here\n</script>\n\n<template>\n  <!-- Create a root <div> element here -->\n</template>",
+        "expectedOutcome": "You will have two reactive variables ready to store your list items and track loading status.",
+        "successCriteria": [
+          "Two ref variables are created: 'items' (array) and 'loading' (boolean)."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You created one of the variables, but both 'items' and 'loading' are required.",
+        "feedbackWrong": "The step requires creating two reactive variables using ref: 'items' as an empty array and 'loading' as false.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "items",
+            "ref([])",
+            "loading",
+            "ref(false)"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 10",
+        "title": "Create a function to fetch more items",
+        "instruction": "Create an async function named 'loadMoreItems' inside your component's script setup section.",
+        "hint": "Define an async function that will later handle fetching and adding new items to your reactive state.",
+        "analogousExample": "// Example of an async function in Vue\nasync function fetchData() {\n  // Function body here\n}",
+        "seedCode": "<script setup>\n// Import Vue, ref, and onMounted from 'vue'\nimport { ref } from 'vue'\n\n// Create reactive state variables here\n\n// Create an async function to load more items\n</script>\n\n<template>\n  <!-- Create a root <div> element here -->\n</template>",
+        "expectedOutcome": "You'll have an empty async function defined that can be called to load more items.",
+        "successCriteria": [
+          "An async function named 'loadMoreItems' is defined in the script setup section."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure the function is async and named exactly 'loadMoreItems'.",
+        "feedbackWrong": "The function should be async and named 'loadMoreItems'. Check the function declaration syntax.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "async",
+            "function",
+            "loadMoreItems",
+            "()",
+            "{"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 10",
+        "title": "Add onMounted lifecycle hook",
+        "instruction": "Import the onMounted lifecycle hook from 'vue' and use it to call your fetch function when the component loads.",
+        "hint": "Import onMounted alongside ref, then call onMounted with your fetch function as the callback.",
+        "analogousExample": "// Import and use onMounted\nimport { ref, onMounted } from 'vue';\n\nconst items = ref([]);\nconst loadItems = () => { /* fetch logic */ };\n\nonMounted(() => {\n  loadItems();\n});",
+        "seedCode": "<script setup>\n// Import Vue, ref, and onMounted from 'vue'\nimport { ref } from 'vue'\n\n// Create reactive state variables here\nconst items = ref([])\nconst loading = ref(false)\n\n// Create an async function to load more items\nconst loadMoreItems = async () => {\n  loading.value = true\n  // Simulate API call\n  await new Promise(resolve => setTimeout(resolve, 1000))\n  const newItems = Array.from({ length: 10 }, (_, i) => `Item ${items.value.length + i + 1}`)\n  items.value.push(...newItems)\n  loading.value = false\n}\n\n// Add onMounted hook here\n</script>\n\n<template>\n  <!-- Create a root <div> element here -->\n  <div></div>\n</template>",
+        "expectedOutcome": "The component will automatically call loadMoreItems when it first mounts, loading initial items.",
+        "successCriteria": [
+          "onMounted is imported from 'vue' and used with loadMoreItems as its callback."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you've imported onMounted and called it with loadMoreItems inside.",
+        "feedbackWrong": "Check that you've imported onMounted and used it to call loadMoreItems when the component loads.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "onMounted",
+            "'vue'",
+            "onMounted(",
+            "loadMoreItems"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 10",
+        "title": "Create the main container template",
+        "instruction": "Inside the template, add a CSS class to the root <div> element for styling.",
+        "hint": "Use the class attribute to assign a CSS class name to the div.",
+        "analogousExample": "// Adding a CSS class to a div\n<div class=\"container\"></div>",
+        "seedCode": "<script setup>\n// Import Vue, ref, and onMounted from 'vue'\nimport { ref } from 'vue'\n\n// Create reactive state variables here\nconst items = ref([])\nconst loading = ref(false)\n\n// Create an async function to load more items\nconst loadMoreItems = async () => {\n  loading.value = true\n  // Simulate API call\n  await new Promise(resolve => setTimeout(resolve, 1000))\n  const newItems = Array.from({ length: 10 }, (_, i) => `Item ${items.value.length + i + 1}`)\n  items.value.push(...newItems)\n  loading.value = false\n}\n\n// Add onMounted hook here\n</script>\n\n<template>\n  <!-- Create a root <div> element here -->\n  <div></div>\n</template>",
+        "expectedOutcome": "The root div element will have a CSS class attribute applied.",
+        "successCriteria": [
+          "The root <div> element includes a class attribute with a valid CSS class name."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you've added a class attribute to the div element.",
+        "feedbackWrong": "The root div element should have a class attribute. Try adding something like class=\"container\" to the div.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<div",
+            "class="
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 10",
+        "title": "Display the list of items",
+        "instruction": "Inside the template's root div, add a <ul> element that uses v-for to render each item in the items array as an <li>.",
+        "hint": "Use v-for to iterate over items.value and display each item's content.",
+        "analogousExample": "<!-- Example: rendering a list with v-for -->\n<ul>\n  <li v-for=\"item in items\" :key=\"item.id\">{{ item.name }}</li>\n</ul>",
+        "seedCode": "<script setup>\n// Import Vue, ref, and onMounted from 'vue'\nimport { ref } from 'vue'\n\n// Create reactive state variables here\nconst items = ref([])\nconst loading = ref(false)\n\n// Create an async function to load more items\nconst loadMoreItems = async () => {\n  loading.value = true\n  // Simulate API call\n  await new Promise(resolve => setTimeout(resolve, 1000))\n  const newItems = Array.from({ length: 10 }, (_, i) => `Item ${items.value.length + i + 1}`)\n  items.value.push(...newItems)\n  loading.value = false\n}\n\n// Add onMounted hook here\n</script>\n\n<template>\n  <!-- Create a root <div> element here -->\n  <div>\n    <!-- Add your list here -->\n  </div>\n</template>",
+        "expectedOutcome": "A bulleted list of items appears in the UI when items are loaded.",
+        "successCriteria": [
+          "The template contains a <ul> with v-for that renders each item from items.value as an <li>."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're using v-for correctly and rendering each item as an <li> inside a <ul>.",
+        "feedbackWrong": "The list is not displaying correctly. Check that you've added a <ul> with v-for and each item is rendered as an <li>.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<ul>",
+            "v-for",
+            "items",
+            "<li>"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 10",
+        "title": "Add loading indicator",
+        "instruction": "Add a paragraph element inside your template that shows 'Loading more items...' only when the loading state is true, using Vue's v-if directive.",
+        "hint": "Use v-if=\"loading\" on a <p> element to conditionally render the loading message.",
+        "analogousExample": "// Conditional rendering example\n<p v-if=\"isLoading\">Loading data...</p>",
+        "seedCode": "<script setup>\n// Import Vue, ref, and onMounted from 'vue'\nimport { ref } from 'vue'\n\n// Create reactive state variables here\nconst items = ref([])\nconst loading = ref(false)\n\n// Create an async function to load more items\nconst loadMoreItems = async () => {\n  loading.value = true\n  // Simulate API call\n  await new Promise(resolve => setTimeout(resolve, 1000))\n  const newItems = Array.from({ length: 10 }, (_, i) => `Item ${items.value.length + i + 1}`)\n  items.value.push(...newItems)\n  loading.value = false\n}\n\n// Add onMounted hook here\n</script>\n\n<template>\n  <!-- Create a root <div> element here -->\n  <div>\n    <!-- Add your list here -->\n    <!-- Add loading indicator here -->\n  </div>\n</template>",
+        "expectedOutcome": "The template now includes a loading indicator that appears only when loading is true.",
+        "successCriteria": [
+          "A <p> element with v-if=\"loading\" and the text 'Loading more items...' is added to the template."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You added a loading indicator, but check the condition or text content.",
+        "feedbackWrong": "The loading indicator isn't implemented correctly. Review how to use v-if with the loading state.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "v-if=\"loading\"",
+            "<p>",
+            "Loading more items"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 10",
+        "title": "Create scroll detection handler",
+        "instruction": "Create a function named checkScroll that determines if the user has scrolled to the bottom of the page.",
+        "hint": "The function should compare the scroll position to the total scrollable height of the document.",
+        "analogousExample": "// Example: A function that checks scroll position\nfunction checkScroll() {\n  const scrollTop = document.documentElement.scrollTop;\n  const scrollHeight = document.documentElement.scrollHeight;\n  const clientHeight = document.documentElement.clientHeight;\n  return scrollTop + clientHeight >= scrollHeight - 10;\n}",
+        "seedCode": "<script setup>\n// Import Vue, ref, and onMounted from 'vue'\nimport { ref } from 'vue'\n\n// Create reactive state variables here\nconst items = ref([])\nconst loading = ref(false)\n\n// Create an async function to load more items\nconst loadMoreItems = async () => {\n  loading.value = true\n  // Simulate API call\n  await new Promise(resolve => setTimeout(resolve, 1000))\n  const newItems = Array.from({ length: 10 }, (_, i) => `Item ${items.value.length + i + 1}`)\n  items.value.push(...newItems)\n  loading.value = false\n}\n\n// Add onMounted hook here\n\n// Create scroll detection handler\n</script>\n\n<template>\n  <!-- Create a root <div> element here -->\n  <div>\n    <!-- Add your list here -->\n    <!-- Add loading indicator here -->\n  </div>\n</template>",
+        "expectedOutcome": "A function named checkScroll is defined that returns true when the user has scrolled near the bottom of the page.",
+        "successCriteria": [
+          "The checkScroll function is created and returns a boolean based on scroll position."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the function, but make sure it properly calculates the scroll position and returns a boolean value.",
+        "feedbackWrong": "The scroll detection handler isn't properly defined. Create a function named checkScroll that checks if the user has scrolled to the bottom.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "checkScroll",
+            "function",
+            "scrollTop",
+            "scrollHeight",
+            "clientHeight",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 10",
+        "title": "Wire scroll handler to window scroll event",
+        "instruction": "Add an event listener for the 'scroll' event on the window object that calls your scroll detection handler, and also add the cleanup to remove it when the component unmounts.",
+        "hint": "Use window.addEventListener('scroll', handler) inside onMounted, and window.removeEventListener('scroll', handler) in onUnmounted.",
+        "analogousExample": "// Adding and cleaning up an event listener\nimport { onMounted, onUnmounted } from 'vue';\n\nconst handleScroll = () => {\n  console.log('Scrolling!');\n};\n\nonMounted(() => {\n  window.addEventListener('scroll', handleScroll);\n});\n\nonUnmounted(() => {\n  window.removeEventListener('scroll', handleScroll);\n});",
+        "seedCode": "<script setup>\n// Import Vue, ref, and onMounted from 'vue'\nimport { ref } from 'vue'\n\n// Create reactive state variables here\nconst items = ref([])\nconst loading = ref(false)\n\n// Create an async function to load more items\nconst loadMoreItems = async () => {\n  loading.value = true\n  // Simulate API call\n  await new Promise(resolve => setTimeout(resolve, 1000))\n  const newItems = Array.from({ length: 10 }, (_, i) => `Item ${items.value.length + i + 1}`)\n  items.value.push(...newItems)\n  loading.value = false\n}\n\n// Add onMounted hook here\n\n// Create scroll detection handler\n</script>\n\n<template>\n  <!-- Create a root <div> element here -->\n  <div>\n    <!-- Add your list here -->\n    <!-- Add loading indicator here -->\n  </div>\n</template>",
+        "expectedOutcome": "The scroll handler will be triggered when the user scrolls, and the event listener will be properly cleaned up when the component is destroyed.",
+        "successCriteria": [
+          "The window scroll event listener is added in onMounted, calls the scroll detection handler, and is removed in onUnmounted."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure to both add the event listener in onMounted and remove it in onUnmounted.",
+        "feedbackWrong": "The scroll handler isn't properly connected to the window scroll event. Check that you're using window.addEventListener and window.removeEventListener correctly.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "onMounted",
+            "addEventListener",
+            "scroll",
+            "onUnmounted",
+            "removeEventListener"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import Vue and required APIs (ref, onMounted)",
+        "id": "step1"
+      },
+      {
+        "label": "Create the main Vue component",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize state for items and loading",
+        "id": "step3"
+      },
+      {
+        "label": "Create a function to fetch more items",
+        "id": "step4"
+      },
+      {
+        "label": "Add onMounted lifecycle hook",
+        "id": "step5"
+      },
+      {
+        "label": "Create the main container template",
+        "id": "step6"
+      },
+      {
+        "label": "Display the list of items",
+        "id": "step7"
+      },
+      {
+        "label": "Add loading indicator",
+        "id": "step8"
+      },
+      {
+        "label": "Create scroll detection handler",
+        "id": "step9"
+      },
+      {
+        "label": "Wire scroll handler to window scroll event",
+        "id": "step10"
+      }
+    ]
+  },
+  "source": "content"
+}

@@ -1,0 +1,895 @@
+{
+  "id": "validate-binary-search-tree",
+  "title": "Validate Binary Search Tree",
+  "pattern": "tree",
+  "difficulty": "medium",
+  "language": "javascript",
+  "status": "draft",
+  "flow": [
+    {
+      "stepId": "title",
+      "mentorSays": "At the end of this lesson, you will be able to:\n\n1. Understand what the Validate Binary Search Tree lesson asks for\n2. Use recursion with min/max bounds to validate BST properties\n3. Understand why just checking left < root < right is insufficient\n4. Track valid ranges for each node during traversal\n5. Implement the solution step by step in your chosen language",
+      "action": "continue",
+      "next": "lesson-illustration"
+    },
+    {
+      "stepId": "lesson-illustration",
+      "mentorSays": "Perfect! Now let's understand what the Validate Binary Search Tree lesson is asking.\n\n**Lesson Definition:**\nGiven the root of a binary tree, determine if it is a valid binary search tree (BST).\n\nA valid BST is defined as follows:\n- The left subtree of a node contains only nodes with keys less than the node's key\n- The right subtree of a node contains only nodes with keys greater than the node's key\n- Both the left and right subtrees must also be binary search trees\n\n**Key Observations:**\n- Every node must satisfy: all left descendants < node < all right descendants\n- Just checking left child < root < right child is NOT enough!\n- We need to track min/max bounds for each node\n- The entire left subtree must be < root, entire right subtree must be > root\n\n**Example 1:** Valid BST\nTree:\n    2\n   / \\\n  1   3\n\n- Node 2: valid (no bounds)\n- Node 1: valid (must be < 2, and 1 < 2 ✓)\n- Node 3: valid (must be > 2, and 3 > 2 ✓)\n\nAnswer: true\n\n**Example 2:** Invalid BST (common mistake!)\nTree:\n    5\n   / \\\n  1   4\n     / \\\n    3   6\n\nAt first glance: 1 < 5 < 4? Wait, 4 < 5, so invalid at root level.\nBut even if we fix that...\n\nTree:\n    5\n   / \\\n  1   6\n     / \\\n    3   7\n\n- Node 5: valid\n- Node 1: valid (1 < 5 ✓)\n- Node 6: valid (6 > 5 ✓)\n- Node 3: INVALID! (3 < 5, but 3 is in right subtree, should be > 5)\n\nAnswer: false\n\n**Example 3:** Invalid BST (subtle case)\nTree:\n    10\n   /  \\\n  5    15\n      /  \\\n     6    20\n\n- Node 10: valid\n- Node 5: valid (5 < 10 ✓)\n- Node 15: valid (15 > 10 ✓)\n- Node 6: INVALID! (6 < 10, but 6 is in right subtree of 10, should be > 10)\n\nAnswer: false\n\n**Step-by-step trace for Example 1 (Recursive approach with bounds):**\n\nTree:\n    2\n   / \\\n  1   3\n\nWe'll use recursion with min/max bounds:\n- **validate(2, min=-∞, max=+∞)**:\n  - Check: -∞ < 2 < +∞ ✓\n  - Left: validate(1, min=-∞, max=2) - must be < 2\n  - Right: validate(3, min=2, max=+∞) - must be > 2\n  - Return left && right\n\n- **validate(1, min=-∞, max=2)**:\n  - Check: -∞ < 1 < 2 ✓\n  - Left: validate(null, ...) = true\n  - Right: validate(null, ...) = true\n  - Return true\n\n- **validate(3, min=2, max=+∞)**:\n  - Check: 2 < 3 < +∞ ✓\n  - Left: validate(null, ...) = true\n  - Right: validate(null, ...) = true\n  - Return true\n\nResult: true ✓\n\n**Key Insight:**\nWe must track min/max bounds for each node:\n- When going left: update max = current node value\n- When going right: update min = current node value\n- This ensures ALL descendants satisfy the BST property, not just immediate children!\n\n**What makes this tricky:**\n1. Understanding that left < root < right is NOT sufficient\n2. The entire left subtree must be < root, entire right subtree > root\n3. Tracking min/max bounds during recursion\n4. Using -∞ and +∞ for root bounds\n\n**Common pitfalls:**\n- Only checking immediate children (left < root < right)\n- Not tracking bounds for subtrees\n- Using wrong comparison operators (<= vs <)\n- Not handling edge cases (null nodes, single node)",
+      "example": "Example 1: Valid BST\n    2\n   / \\\n  1   3\nAnswer: true\n\nExample 2: Invalid BST\n    5\n   / \\\n  1   4\n     / \\\n    3   6\nAnswer: false (4 < 5)\n\nExample 3: Invalid BST (subtle)\n    10\n   /  \\\n  5    15\n      /  \\\n     6    20\nAnswer: false (6 < 10 but in right subtree)",
+      "action": "continue",
+      "next": "thinking-challenge"
+    },
+    {
+      "stepId": "thinking-challenge",
+      "mentorSays": "Now that you understand what the lesson wants, here's the real question:\n\nHow would YOU validate if a binary tree is a valid BST?\n\nThink about it for a moment. What approach feels natural to you?",
+      "choices": [
+        {
+          "label": "Use recursion with min/max bounds - track valid range for each node",
+          "next": "explore-bounds"
+        },
+        {
+          "label": "Check left < root < right at each node",
+          "next": "explore-simple"
+        },
+        {
+          "label": "Do inorder traversal and check if result is sorted",
+          "next": "explore-inorder"
+        }
+      ]
+    },
+    {
+      "stepId": "explore-simple",
+      "mentorSays": "That's a natural first thought! You're thinking: \"I'll check if left child < root < right child at each node.\"\n\nHowever, this approach has a critical flaw! Consider this tree:\n    10\n   /  \\\n  5    15\n      /  \\\n     6    20\n\nAt node 10: 5 < 10 < 15 ✓\nAt node 15: 6 < 15 < 20 ✓\nBut the tree is INVALID because 6 < 10, and 6 is in the right subtree of 10!\n\nThe lesson: We need to ensure ALL nodes in left subtree < root, and ALL nodes in right subtree > root, not just immediate children!\n\nThere's a better approach using min/max bounds. Would you like to learn that?",
+      "action": "continue",
+      "next": "explore-bounds"
+    },
+    {
+      "stepId": "explore-inorder",
+      "mentorSays": "That's a clever approach! You're thinking: \"I'll do an inorder traversal and check if the result is sorted.\"\n\nThis works! For a valid BST, inorder traversal gives a sorted array. However, it requires:\n- O(n) extra space to store the traversal\n- O(n) time for traversal + O(n) time to check if sorted\n\nThere's a more space-efficient O(1) extra space approach using recursion with bounds. Would you like to learn that?",
+      "action": "continue",
+      "next": "explore-bounds"
+    },
+    {
+      "stepId": "explore-bounds",
+      "mentorSays": "Excellent choice! Recursion with min/max bounds is the optimal solution. Here's the core idea:\n\n**The Algorithm:**\n1. **Helper function**: validate(node, min, max)\n   - Returns true if node's subtree is valid BST within [min, max] range\n2. **Base case**: If node is null, return true (empty tree is valid)\n3. **Bounds check**: If node.val <= min OR node.val >= max, return false\n4. **Recursive calls**:\n   - Left: validate(node.left, min, node.val) - left subtree must be < node.val\n   - Right: validate(node.right, node.val, max) - right subtree must be > node.val\n5. **Return**: left && right\n\n**Why it works**:\n- We track the valid range [min, max] for each node\n- When going left, we update max = node.val (all left descendants must be < node.val)\n- When going right, we update min = node.val (all right descendants must be > node.val)\n- This ensures ALL descendants satisfy BST property, not just immediate children!\n\n**Key insight**: We must check bounds, not just immediate children! The entire subtree must satisfy the range.\n\nLet's trace with tree:\n    2\n   / \\\n  1   3\n\n- **validate(2, -∞, +∞)**:\n  - Check: -∞ < 2 < +∞ ✓\n  - Left: validate(1, -∞, 2) = true\n  - Right: validate(3, 2, +∞) = true\n  - Return true && true = true ✓\n\n- **validate(1, -∞, 2)**:\n  - Check: -∞ < 1 < 2 ✓\n  - Left: validate(null, ...) = true\n  - Right: validate(null, ...) = true\n  - Return true\n\nThis is O(n) time (visit each node once) and O(h) space (recursion stack)! Now let's code it step by step.",
+      "action": "continue",
+      "next": "language-selection"
+    },
+    {
+      "stepId": "language-selection",
+      "mentorSays": "Great! Now let's code this solution. Which programming language would you like to use?",
+      "choices": [
+        {
+          "label": "JavaScript",
+          "next": "variable-check-js"
+        },
+        {
+          "label": "Python",
+          "next": "variable-check-python"
+        },
+        {
+          "label": "Java",
+          "next": "variable-check-java"
+        },
+        {
+          "label": "C++",
+          "next": "variable-check-cpp"
+        },
+        {
+          "label": "TypeScript",
+          "next": "variable-check-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-check-js",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-js"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-js",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'min' or 'max') and put data inside it.",
+      "example": "let min = -Infinity;  // Minimum bound\nlet max = Infinity;   // Maximum bound",
+      "action": "continue",
+      "next": "function-check-js"
+    },
+    {
+      "stepId": "function-check-js",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-js"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-js",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "function isValidBST(root) {\n  // Returns true if valid BST\n  return false;\n}",
+      "action": "continue",
+      "next": "parameter-check-js"
+    },
+    {
+      "stepId": "parameter-check-js",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "tree-check-js"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-js",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'function isValidBST(root)', the 'root' is a parameter.",
+      "example": "function isValidBST(root) {\n  // Parameter receives root node\n}\n\n// Call: isValidBST(rootNode)",
+      "action": "continue",
+      "next": "tree-check-js"
+    },
+    {
+      "stepId": "tree-check-js",
+      "mentorSays": "To solve this lesson, we'll need to work with binary trees. Do you know what a binary tree is?",
+      "choices": [
+        {
+          "label": "Yes, I know binary trees",
+          "next": "recursion-check-js"
+        },
+        {
+          "label": "No, explain binary trees",
+          "next": "tree-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "tree-explanation-js",
+      "mentorSays": "A binary tree is a data structure where each node has at most two children (left and right). Each node contains a value and references to its children.",
+      "example": "// Node structure:\nclass TreeNode {\n  constructor(val, left, right) {\n    this.val = val;\n    this.left = left;\n    this.right = right;\n  }\n}",
+      "action": "continue",
+      "next": "recursion-check-js"
+    },
+    {
+      "stepId": "recursion-check-js",
+      "mentorSays": "To solve this lesson, we'll use recursion. Do you know what recursion is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know recursion",
+          "next": "coding-start-js"
+        },
+        {
+          "label": "No, explain recursion",
+          "next": "recursion-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "recursion-explanation-js",
+      "mentorSays": "Recursion is when a function calls itself. For tree lessons, we use recursion because a tree is naturally recursive - each subtree is also a tree.",
+      "example": "function validate(node, min, max) {\n  if (!node) return true;\n  \n  // Recursive calls\n  return validate(node.left, min, node.val) &&  // Recursive!\n         validate(node.right, node.val, max);    // Recursive!\n}",
+      "action": "continue",
+      "next": "coding-start-js"
+    },
+    {
+      "stepId": "coding-start-js",
+      "mentorSays": "Perfect! Let's implement the validate BST solution in JavaScript. We'll create a main function and a helper function.",
+      "example": "function isValidBST(root) {\n  \n}",
+      "action": "continue",
+      "next": "coding-init-helper-js"
+    },
+    {
+      "stepId": "coding-init-helper-js",
+      "mentorSays": "Create a helper function that takes a node and min/max bounds. This helper will do the recursive validation.",
+      "example": "function isValidBST(root) {\n  function validate(node, min, max) {\n    // Validation logic will go here\n  }\n  \n}",
+      "action": "continue",
+      "next": "coding-base-case-js"
+    },
+    {
+      "stepId": "coding-base-case-js",
+      "mentorSays": "Handle the base case: if node is null, return true (empty tree is valid).",
+      "example": "function isValidBST(root) {\n  function validate(node, min, max) {\n    // Base case: empty tree is valid\n    if (node === null) {\n      return true;\n    }\n    \n  }\n  \n}",
+      "action": "continue",
+      "next": "coding-check-bounds-js"
+    },
+    {
+      "stepId": "coding-check-bounds-js",
+      "mentorSays": "Check if the node's value is within the valid range [min, max]. If not, return false.",
+      "example": "function isValidBST(root) {\n  function validate(node, min, max) {\n    if (node === null) {\n      return true;\n    }\n    \n    // Check bounds: node.val must be in (min, max)\n    if (node.val <= min || node.val >= max) {\n      return false;\n    }\n    \n  }\n  \n}",
+      "action": "continue",
+      "next": "coding-recursive-left-js"
+    },
+    {
+      "stepId": "coding-recursive-left-js",
+      "mentorSays": "Recursively validate the left subtree. When going left, update max = node.val (all left descendants must be < node.val).",
+      "example": "function isValidBST(root) {\n  function validate(node, min, max) {\n    if (node === null) {\n      return true;\n    }\n    \n    if (node.val <= min || node.val >= max) {\n      return false;\n    }\n    \n    // Validate left subtree: must be < node.val\n    let leftValid = validate(node.left, min, node.val);\n    \n  }\n  \n}",
+      "action": "continue",
+      "next": "coding-recursive-right-js"
+    },
+    {
+      "stepId": "coding-recursive-right-js",
+      "mentorSays": "Recursively validate the right subtree. When going right, update min = node.val (all right descendants must be > node.val).",
+      "example": "function isValidBST(root) {\n  function validate(node, min, max) {\n    if (node === null) {\n      return true;\n    }\n    \n    if (node.val <= min || node.val >= max) {\n      return false;\n    }\n    \n    let leftValid = validate(node.left, min, node.val);\n    \n    // Validate right subtree: must be > node.val\n    let rightValid = validate(node.right, node.val, max);\n    \n  }\n  \n}",
+      "action": "continue",
+      "next": "coding-return-js"
+    },
+    {
+      "stepId": "coding-return-js",
+      "mentorSays": "Return the result: both left and right subtrees must be valid. Then call the helper from the main function with initial bounds.",
+      "example": "function isValidBST(root) {\n  function validate(node, min, max) {\n    if (node === null) {\n      return true;\n    }\n    \n    if (node.val <= min || node.val >= max) {\n      return false;\n    }\n    \n    let leftValid = validate(node.left, min, node.val);\n    let rightValid = validate(node.right, node.val, max);\n    \n    // Both subtrees must be valid\n    return leftValid && rightValid;\n  }\n  \n  // Call helper with initial bounds: (-Infinity, Infinity)\n  return validate(root, -Infinity, Infinity);\n}",
+      "action": "continue",
+      "next": "test-code-js"
+    },
+    {
+      "stepId": "test-code-js",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** root = [2,1,3]\nExpected: true (valid BST)\n\n**Test 2:** root = [5,1,4,null,null,3,6]\nExpected: false (4 < 5, invalid)\n\n**Test 3:** root = [10,5,15,null,null,6,20]\nExpected: false (6 < 10 but in right subtree)\n\n**Test 4:** root = [1]\nExpected: true (single node is valid)\n\n**Test 5:** root = [5,4,6,null,null,3,7]\nExpected: false (3 < 5 but in right subtree)\n\n**Test 6:** root = [2,2,2]\nExpected: false (duplicate values violate BST property)\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: [2,1,3] → true\nTest 2: [5,1,4,null,null,3,6] → false\nTest 3: [10,5,15,null,null,6,20] → false\nTest 4: [1] → true\nTest 5: [5,4,6,null,null,3,7] → false\nTest 6: [2,2,2] → false",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-python",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-python"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-python",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'min' or 'max') and put data inside it.",
+      "example": " min_val = -Infinity;  // Minimum bound\n max_val = Infinity;   // Maximum bound",
+      "action": "continue",
+      "next": "function-check-python"
+    },
+    {
+      "stepId": "function-check-python",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-python"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-python",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "def isValidBST(root) {\n  // Returns true if valid BST\n  return false;\n}",
+      "action": "continue",
+      "next": "parameter-check-python"
+    },
+    {
+      "stepId": "parameter-check-python",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "tree-check-python"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-python",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'def isValidBST(root)', the 'root' is a parameter.",
+      "example": "def isValidBST(root) {\n  // Parameter receives root node\n}\n\n// Call: isValidBST(rootNode)",
+      "action": "continue",
+      "next": "tree-check-python"
+    },
+    {
+      "stepId": "tree-check-python",
+      "mentorSays": "To solve this lesson, we'll need to work with binary trees. Do you know what a binary tree is?",
+      "choices": [
+        {
+          "label": "Yes, I know binary trees",
+          "next": "recursion-check-python"
+        },
+        {
+          "label": "No, explain binary trees",
+          "next": "tree-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "tree-explanation-python",
+      "mentorSays": "A binary tree is a data structure where each node has at most two children (left and right). Each node contains a value and references to its children.",
+      "example": "// Node structure:\nclass TreeNode {\n  constructor(val, left, right) {\n    this.val = val;\n    this.left = left;\n    this.right = right;\n  }\n}",
+      "action": "continue",
+      "next": "recursion-check-python"
+    },
+    {
+      "stepId": "recursion-check-python",
+      "mentorSays": "To solve this lesson, we'll use recursion. Do you know what recursion is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know recursion",
+          "next": "coding-start-python"
+        },
+        {
+          "label": "No, explain recursion",
+          "next": "recursion-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "recursion-explanation-python",
+      "mentorSays": "Recursion is when a function calls itself. For tree lessons, we use recursion because a tree is naturally recursive - each subtree is also a tree.",
+      "example": "function validate(node, min, max) {\n  if (!node) return true;\n  \n  // Recursive calls\n  return validate(node.left, min, node.val) &&  // Recursive!\n         validate(node.right, node.val, max);    // Recursive!\n}",
+      "action": "continue",
+      "next": "coding-start-python"
+    },
+    {
+      "stepId": "coding-start-python",
+      "mentorSays": "Perfect! Let's implement the solution in Python.",
+      "example": "// Python implementation",
+      "action": "continue",
+      "next": "coding-init-helper-python"
+    },
+    {
+      "stepId": "coding-init-helper-python",
+      "mentorSays": "Create helper function with node, min, max parameters.",
+      "example": "// Python implementation",
+      "action": "continue",
+      "next": "coding-base-case-python"
+    },
+    {
+      "stepId": "coding-base-case-python",
+      "mentorSays": "Handle base case (null node).",
+      "example": "// Python implementation",
+      "action": "continue",
+      "next": "coding-check-bounds-python"
+    },
+    {
+      "stepId": "coding-check-bounds-python",
+      "mentorSays": "Check if node.val is within [min, max].",
+      "example": "// Python implementation",
+      "action": "continue",
+      "next": "coding-recursive-left-python"
+    },
+    {
+      "stepId": "coding-recursive-left-python",
+      "mentorSays": "Recursively validate left subtree with updated max.",
+      "example": "// Python implementation",
+      "action": "continue",
+      "next": "coding-recursive-right-python"
+    },
+    {
+      "stepId": "coding-recursive-right-python",
+      "mentorSays": "Recursively validate right subtree with updated min.",
+      "example": "// Python implementation",
+      "action": "continue",
+      "next": "coding-return-python"
+    },
+    {
+      "stepId": "coding-return-python",
+      "mentorSays": "Return result and call helper with initial bounds.",
+      "example": "// Python implementation",
+      "action": "continue",
+      "next": "test-code-python"
+    },
+    {
+      "stepId": "test-code-python",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** root = [2,1,3]\nExpected: true (valid BST)\n\n**Test 2:** root = [5,1,4,null,null,3,6]\nExpected: false (4 < 5, invalid)\n\n**Test 3:** root = [10,5,15,null,null,6,20]\nExpected: false (6 < 10 but in right subtree)\n\n**Test 4:** root = [1]\nExpected: true (single node is valid)\n\n**Test 5:** root = [5,4,6,null,null,3,7]\nExpected: false (3 < 5 but in right subtree)\n\n**Test 6:** root = [2,2,2]\nExpected: false (duplicate values violate BST property)\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: [2,1,3] → true\nTest 2: [5,1,4,null,null,3,6] → false\nTest 3: [10,5,15,null,null,6,20] → false\nTest 4: [1] → true\nTest 5: [5,4,6,null,null,3,7] → false\nTest 6: [2,2,2] → false",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-java",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-java"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-java",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'min' or 'max') and put data inside it.",
+      "example": "boolean min = -Infinity;  // Minimum bound\nboolean max = Infinity;   // Maximum bound",
+      "action": "continue",
+      "next": "function-check-java"
+    },
+    {
+      "stepId": "function-check-java",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-java"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-java",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "public boolean isValidBST(root) {\n  // Returns true if valid BST\n  return false;\n}",
+      "action": "continue",
+      "next": "parameter-check-java"
+    },
+    {
+      "stepId": "parameter-check-java",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "tree-check-java"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-java",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'public boolean isValidBST(root)', the 'root' is a parameter.",
+      "example": "public boolean isValidBST(root) {\n  // Parameter receives root node\n}\n\n// Call: isValidBST(rootNode)",
+      "action": "continue",
+      "next": "tree-check-java"
+    },
+    {
+      "stepId": "tree-check-java",
+      "mentorSays": "To solve this lesson, we'll need to work with binary trees. Do you know what a binary tree is?",
+      "choices": [
+        {
+          "label": "Yes, I know binary trees",
+          "next": "recursion-check-java"
+        },
+        {
+          "label": "No, explain binary trees",
+          "next": "tree-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "tree-explanation-java",
+      "mentorSays": "A binary tree is a data structure where each node has at most two children (left and right). Each node contains a value and references to its children.",
+      "example": "// Node structure:\nclass TreeNode {\n  constructor(val, left, right) {\n    this.val = val;\n    this.left = left;\n    this.right = right;\n  }\n}",
+      "action": "continue",
+      "next": "recursion-check-java"
+    },
+    {
+      "stepId": "recursion-check-java",
+      "mentorSays": "To solve this lesson, we'll use recursion. Do you know what recursion is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know recursion",
+          "next": "coding-start-java"
+        },
+        {
+          "label": "No, explain recursion",
+          "next": "recursion-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "recursion-explanation-java",
+      "mentorSays": "Recursion is when a function calls itself. For tree lessons, we use recursion because a tree is naturally recursive - each subtree is also a tree.",
+      "example": "function validate(node, min, max) {\n  if (!node) return true;\n  \n  // Recursive calls\n  return validate(node.left, min, node.val) &&  // Recursive!\n         validate(node.right, node.val, max);    // Recursive!\n}",
+      "action": "continue",
+      "next": "coding-start-java"
+    },
+    {
+      "stepId": "coding-start-java",
+      "mentorSays": "Perfect! Let's implement the solution in Java.",
+      "example": "// Java implementation",
+      "action": "continue",
+      "next": "coding-init-helper-java"
+    },
+    {
+      "stepId": "coding-init-helper-java",
+      "mentorSays": "Create helper function with node, min, max parameters.",
+      "example": "// Java implementation",
+      "action": "continue",
+      "next": "coding-base-case-java"
+    },
+    {
+      "stepId": "coding-base-case-java",
+      "mentorSays": "Handle base case (null node).",
+      "example": "// Java implementation",
+      "action": "continue",
+      "next": "coding-check-bounds-java"
+    },
+    {
+      "stepId": "coding-check-bounds-java",
+      "mentorSays": "Check if node.val is within [min, max].",
+      "example": "// Java implementation",
+      "action": "continue",
+      "next": "coding-recursive-left-java"
+    },
+    {
+      "stepId": "coding-recursive-left-java",
+      "mentorSays": "Recursively validate left subtree with updated max.",
+      "example": "// Java implementation",
+      "action": "continue",
+      "next": "coding-recursive-right-java"
+    },
+    {
+      "stepId": "coding-recursive-right-java",
+      "mentorSays": "Recursively validate right subtree with updated min.",
+      "example": "// Java implementation",
+      "action": "continue",
+      "next": "coding-return-java"
+    },
+    {
+      "stepId": "coding-return-java",
+      "mentorSays": "Return result and call helper with initial bounds.",
+      "example": "// Java implementation",
+      "action": "continue",
+      "next": "test-code-java"
+    },
+    {
+      "stepId": "test-code-java",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** root = [2,1,3]\nExpected: true (valid BST)\n\n**Test 2:** root = [5,1,4,null,null,3,6]\nExpected: false (4 < 5, invalid)\n\n**Test 3:** root = [10,5,15,null,null,6,20]\nExpected: false (6 < 10 but in right subtree)\n\n**Test 4:** root = [1]\nExpected: true (single node is valid)\n\n**Test 5:** root = [5,4,6,null,null,3,7]\nExpected: false (3 < 5 but in right subtree)\n\n**Test 6:** root = [2,2,2]\nExpected: false (duplicate values violate BST property)\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: [2,1,3] → true\nTest 2: [5,1,4,null,null,3,6] → false\nTest 3: [10,5,15,null,null,6,20] → false\nTest 4: [1] → true\nTest 5: [5,4,6,null,null,3,7] → false\nTest 6: [2,2,2] → false",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-cpp",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-cpp"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-cpp",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'min' or 'max') and put data inside it.",
+      "example": "bool min = -Infinity;  // Minimum bound\nbool max = Infinity;   // Maximum bound",
+      "action": "continue",
+      "next": "function-check-cpp"
+    },
+    {
+      "stepId": "function-check-cpp",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-cpp"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-cpp",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "bool isValidBST(root) {\n  // Returns true if valid BST\n  return false;\n}",
+      "action": "continue",
+      "next": "parameter-check-cpp"
+    },
+    {
+      "stepId": "parameter-check-cpp",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "tree-check-cpp"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-cpp",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'bool isValidBST(root)', the 'root' is a parameter.",
+      "example": "bool isValidBST(root) {\n  // Parameter receives root node\n}\n\n// Call: isValidBST(rootNode)",
+      "action": "continue",
+      "next": "tree-check-cpp"
+    },
+    {
+      "stepId": "tree-check-cpp",
+      "mentorSays": "To solve this lesson, we'll need to work with binary trees. Do you know what a binary tree is?",
+      "choices": [
+        {
+          "label": "Yes, I know binary trees",
+          "next": "recursion-check-cpp"
+        },
+        {
+          "label": "No, explain binary trees",
+          "next": "tree-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "tree-explanation-cpp",
+      "mentorSays": "A binary tree is a data structure where each node has at most two children (left and right). Each node contains a value and references to its children.",
+      "example": "// Node structure:\nclass TreeNode {\n  constructor(val, left, right) {\n    this.val = val;\n    this.left = left;\n    this.right = right;\n  }\n}",
+      "action": "continue",
+      "next": "recursion-check-cpp"
+    },
+    {
+      "stepId": "recursion-check-cpp",
+      "mentorSays": "To solve this lesson, we'll use recursion. Do you know what recursion is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know recursion",
+          "next": "coding-start-cpp"
+        },
+        {
+          "label": "No, explain recursion",
+          "next": "recursion-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "recursion-explanation-cpp",
+      "mentorSays": "Recursion is when a function calls itself. For tree lessons, we use recursion because a tree is naturally recursive - each subtree is also a tree.",
+      "example": "function validate(node, min, max) {\n  if (!node) return true;\n  \n  // Recursive calls\n  return validate(node.left, min, node.val) &&  // Recursive!\n         validate(node.right, node.val, max);    // Recursive!\n}",
+      "action": "continue",
+      "next": "coding-start-cpp"
+    },
+    {
+      "stepId": "coding-start-cpp",
+      "mentorSays": "Perfect! Let's implement the solution in C++.",
+      "example": "// C++ implementation",
+      "action": "continue",
+      "next": "coding-init-helper-cpp"
+    },
+    {
+      "stepId": "coding-init-helper-cpp",
+      "mentorSays": "Create helper function with node, min, max parameters.",
+      "example": "// C++ implementation",
+      "action": "continue",
+      "next": "coding-base-case-cpp"
+    },
+    {
+      "stepId": "coding-base-case-cpp",
+      "mentorSays": "Handle base case (null node).",
+      "example": "// C++ implementation",
+      "action": "continue",
+      "next": "coding-check-bounds-cpp"
+    },
+    {
+      "stepId": "coding-check-bounds-cpp",
+      "mentorSays": "Check if node.val is within [min, max].",
+      "example": "// C++ implementation",
+      "action": "continue",
+      "next": "coding-recursive-left-cpp"
+    },
+    {
+      "stepId": "coding-recursive-left-cpp",
+      "mentorSays": "Recursively validate left subtree with updated max.",
+      "example": "// C++ implementation",
+      "action": "continue",
+      "next": "coding-recursive-right-cpp"
+    },
+    {
+      "stepId": "coding-recursive-right-cpp",
+      "mentorSays": "Recursively validate right subtree with updated min.",
+      "example": "// C++ implementation",
+      "action": "continue",
+      "next": "coding-return-cpp"
+    },
+    {
+      "stepId": "coding-return-cpp",
+      "mentorSays": "Return result and call helper with initial bounds.",
+      "example": "// C++ implementation",
+      "action": "continue",
+      "next": "test-code-cpp"
+    },
+    {
+      "stepId": "test-code-cpp",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** root = [2,1,3]\nExpected: true (valid BST)\n\n**Test 2:** root = [5,1,4,null,null,3,6]\nExpected: false (4 < 5, invalid)\n\n**Test 3:** root = [10,5,15,null,null,6,20]\nExpected: false (6 < 10 but in right subtree)\n\n**Test 4:** root = [1]\nExpected: true (single node is valid)\n\n**Test 5:** root = [5,4,6,null,null,3,7]\nExpected: false (3 < 5 but in right subtree)\n\n**Test 6:** root = [2,2,2]\nExpected: false (duplicate values violate BST property)\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: [2,1,3] → true\nTest 2: [5,1,4,null,null,3,6] → false\nTest 3: [10,5,15,null,null,6,20] → false\nTest 4: [1] → true\nTest 5: [5,4,6,null,null,3,7] → false\nTest 6: [2,2,2] → false",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-ts",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-ts"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-ts",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'min' or 'max') and put data inside it.",
+      "example": "let min = -Infinity;  // Minimum bound\nlet max = Infinity;   // Maximum bound",
+      "action": "continue",
+      "next": "function-check-ts"
+    },
+    {
+      "stepId": "function-check-ts",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-ts"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-ts",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "function isValidBST(root) {\n  // Returns true if valid BST\n  return false;\n}",
+      "action": "continue",
+      "next": "parameter-check-ts"
+    },
+    {
+      "stepId": "parameter-check-ts",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "tree-check-ts"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-ts",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'function isValidBST(root)', the 'root' is a parameter.",
+      "example": "function isValidBST(root) {\n  // Parameter receives root node\n}\n\n// Call: isValidBST(rootNode)",
+      "action": "continue",
+      "next": "tree-check-ts"
+    },
+    {
+      "stepId": "tree-check-ts",
+      "mentorSays": "To solve this lesson, we'll need to work with binary trees. Do you know what a binary tree is?",
+      "choices": [
+        {
+          "label": "Yes, I know binary trees",
+          "next": "recursion-check-ts"
+        },
+        {
+          "label": "No, explain binary trees",
+          "next": "tree-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "tree-explanation-ts",
+      "mentorSays": "A binary tree is a data structure where each node has at most two children (left and right). Each node contains a value and references to its children.",
+      "example": "// Node structure:\nclass TreeNode {\n  constructor(val, left, right) {\n    this.val = val;\n    this.left = left;\n    this.right = right;\n  }\n}",
+      "action": "continue",
+      "next": "recursion-check-ts"
+    },
+    {
+      "stepId": "recursion-check-ts",
+      "mentorSays": "To solve this lesson, we'll use recursion. Do you know what recursion is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know recursion",
+          "next": "coding-start-ts"
+        },
+        {
+          "label": "No, explain recursion",
+          "next": "recursion-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "recursion-explanation-ts",
+      "mentorSays": "Recursion is when a function calls itself. For tree lessons, we use recursion because a tree is naturally recursive - each subtree is also a tree.",
+      "example": "function validate(node, min, max) {\n  if (!node) return true;\n  \n  // Recursive calls\n  return validate(node.left, min, node.val) &&  // Recursive!\n         validate(node.right, node.val, max);    // Recursive!\n}",
+      "action": "continue",
+      "next": "coding-start-ts"
+    },
+    {
+      "stepId": "coding-start-ts",
+      "mentorSays": "Perfect! Let's implement the solution in TypeScript.",
+      "example": "// TypeScript implementation",
+      "action": "continue",
+      "next": "coding-init-helper-ts"
+    },
+    {
+      "stepId": "coding-init-helper-ts",
+      "mentorSays": "Create helper function with node, min, max parameters.",
+      "example": "// TypeScript implementation",
+      "action": "continue",
+      "next": "coding-base-case-ts"
+    },
+    {
+      "stepId": "coding-base-case-ts",
+      "mentorSays": "Handle base case (null node).",
+      "example": "// TypeScript implementation",
+      "action": "continue",
+      "next": "coding-check-bounds-ts"
+    },
+    {
+      "stepId": "coding-check-bounds-ts",
+      "mentorSays": "Check if node.val is within [min, max].",
+      "example": "// TypeScript implementation",
+      "action": "continue",
+      "next": "coding-recursive-left-ts"
+    },
+    {
+      "stepId": "coding-recursive-left-ts",
+      "mentorSays": "Recursively validate left subtree with updated max.",
+      "example": "// TypeScript implementation",
+      "action": "continue",
+      "next": "coding-recursive-right-ts"
+    },
+    {
+      "stepId": "coding-recursive-right-ts",
+      "mentorSays": "Recursively validate right subtree with updated min.",
+      "example": "// TypeScript implementation",
+      "action": "continue",
+      "next": "coding-return-ts"
+    },
+    {
+      "stepId": "coding-return-ts",
+      "mentorSays": "Return result and call helper with initial bounds.",
+      "example": "// TypeScript implementation",
+      "action": "continue",
+      "next": "test-code-ts"
+    },
+    {
+      "stepId": "test-code-ts",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** root = [2,1,3]\nExpected: true (valid BST)\n\n**Test 2:** root = [5,1,4,null,null,3,6]\nExpected: false (4 < 5, invalid)\n\n**Test 3:** root = [10,5,15,null,null,6,20]\nExpected: false (6 < 10 but in right subtree)\n\n**Test 4:** root = [1]\nExpected: true (single node is valid)\n\n**Test 5:** root = [5,4,6,null,null,3,7]\nExpected: false (3 < 5 but in right subtree)\n\n**Test 6:** root = [2,2,2]\nExpected: false (duplicate values violate BST property)\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: [2,1,3] → true\nTest 2: [5,1,4,null,null,3,6] → false\nTest 3: [10,5,15,null,null,6,20] → false\nTest 4: [1] → true\nTest 5: [5,4,6,null,null,3,7] → false\nTest 6: [2,2,2] → false",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "final",
+      "mentorSays": "🎉 Well done! You've successfully implemented the Validate Binary Search Tree solution!\n\n**Time Complexity:** O(n)\n- We visit each node exactly once\n- Each node does constant work (bounds check, recursive calls)\n\n**Space Complexity:** O(h)\n- The recursion stack uses O(h) space where h is the height\n- For balanced tree: O(log n)\n- For skewed tree: O(n)\n\n**Key Takeaways:**\n1. **Bounds checking**: Must check min/max bounds, not just immediate children\n2. **Entire subtree**: All left descendants < root, all right descendants > root\n3. **Recursion**: Use helper function with min/max parameters\n4. **Initial bounds**: Start with (-∞, +∞) for root\n5. **Comparison**: Use < and > (not <= and >=) to handle duplicates correctly\n\n**Common Mistakes to Avoid:**\n- Only checking left < root < right (insufficient!)\n- Not tracking bounds for subtrees\n- Using wrong comparison operators\n- Not handling edge cases (null, single node)\n\n**Related Practice Lessons:**\n- Kth Smallest Element in BST (LeetCode #230) - uses BST properties\n- Convert Sorted Array to BST (LeetCode #108) - builds valid BST\n- Recover Binary Search Tree (LeetCode #99) - fixes invalid BST\n\nKeep practicing tree lessons - they're common in interviews!",
+      "action": "continue"
+    }
+  ]
+}

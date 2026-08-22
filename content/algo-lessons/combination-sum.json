@@ -1,0 +1,930 @@
+{
+  "id": "combination-sum",
+  "title": "Combination Sum",
+  "pattern": "backtracking",
+  "difficulty": "medium",
+  "language": "javascript",
+  "status": "draft",
+  "flow": [
+    {
+      "stepId": "title",
+      "mentorSays": "At the end of this lesson, you will be able to:\n\n1. Understand what the Combination Sum lesson asks for\n2. Use backtracking to find all unique combinations\n3. Handle element reuse (same number can be used multiple times)\n4. Build combinations incrementally with proper constraints\n5. Implement the solution step by step in your chosen language",
+      "action": "continue",
+      "next": "lesson-illustration"
+    },
+    {
+      "stepId": "lesson-illustration",
+      "mentorSays": "Perfect! Now let's understand what the Combination Sum lesson is asking.\n\n**Lesson Definition:**\nGiven an array of distinct integers `candidates` and a target integer `target`, return a list of all unique combinations of candidates where the chosen numbers sum to `target`. You may return the combinations in any order.\n\n**Key Observations:**\n- The same number may be chosen from candidates an unlimited number of times\n- All combinations must sum to exactly `target`\n- We need to find ALL unique combinations (not just one)\n- We'll use backtracking to explore all possibilities\n\n**Example 1:** candidates = [2,3,6,7], target = 7\n\nValid combinations:\n- [7] (7 = 7)\n- [2,2,3] (2+2+3 = 7)\n\nAnswer: [[2,2,3], [7]]\n\n**Example 2:** candidates = [2,3,5], target = 8\n\nValid combinations:\n- [2,2,2,2] (2+2+2+2 = 8)\n- [2,3,3] (2+3+3 = 8)\n- [3,5] (3+5 = 8)\n\nAnswer: [[2,2,2,2], [2,3,3], [3,5]]\n\n**Example 3:** candidates = [2], target = 1\n\nNo valid combinations (smallest candidate is 2, can't reach 1).\nAnswer: []\n\n**Step-by-step trace for Example 1 (Backtracking approach):**\n\ncandidates = [2,3,6,7], target = 7\n\nWe'll use backtracking with current combination and remaining sum:\n- Start: current = [], remaining = 7\n\n**Decision tree:**\n\n1. **Try 2**: current = [2], remaining = 5\n   - Try 2 again: current = [2,2], remaining = 3\n     - Try 2 again: current = [2,2,2], remaining = 1 (too small, can't use 2)\n     - Try 3: current = [2,2,3], remaining = 0 ✓ (found! add to result)\n     - Try 6: current = [2,2,6], remaining = -1 (exceeded, backtrack)\n     - Try 7: current = [2,2,7], remaining = -2 (exceeded, backtrack)\n   - Try 3: current = [2,3], remaining = 2\n     - Try 2: current = [2,3,2], remaining = 0 ✓ (found! but [2,3,2] = [2,2,3] - duplicate)\n     - Try 3: current = [2,3,3], remaining = -1 (exceeded, backtrack)\n   - Try 6: current = [2,6], remaining = -1 (exceeded, backtrack)\n   - Try 7: current = [2,7], remaining = -2 (exceeded, backtrack)\n\n2. **Try 3**: current = [3], remaining = 4\n   - Try 3 again: current = [3,3], remaining = 1 (too small)\n   - Try 6: current = [3,6], remaining = -2 (exceeded, backtrack)\n   - Try 7: current = [3,7], remaining = -3 (exceeded, backtrack)\n\n3. **Try 6**: current = [6], remaining = 1 (too small, backtrack)\n\n4. **Try 7**: current = [7], remaining = 0 ✓ (found! add to result)\n\nResult: [[2,2,3], [7]] ✓\n\n**Key Insight:**\n- We can reuse the same number multiple times\n- We only add numbers that don't exceed the remaining sum\n- To avoid duplicates, we only consider candidates from current index onwards\n- When remaining == 0, we found a valid combination!\n\n**What makes this tricky:**\n1. Understanding that we can reuse elements\n2. Avoiding duplicate combinations (use index to track position)\n3. Knowing when to stop (remaining < 0 or remaining == 0)\n4. Backtracking properly to explore all possibilities\n\n**Common pitfalls:**\n- Generating duplicate combinations (not using index properly)\n- Not handling the case where no combination exists\n- Forgetting to backtrack after adding a number\n- Not checking if remaining sum is valid before recursing",
+      "example": "Example 1: candidates=[2,3,6,7], target=7 → [[2,2,3], [7]]\n\nExample 2: candidates=[2,3,5], target=8 → [[2,2,2,2], [2,3,3], [3,5]]\n\nExample 3: candidates=[2], target=1 → []",
+      "action": "continue",
+      "next": "thinking-challenge"
+    },
+    {
+      "stepId": "thinking-challenge",
+      "mentorSays": "Now that you understand what the lesson wants, here's the real question:\n\nHow would YOU find all combinations that sum to the target?\n\nThink about it for a moment. What approach feels natural to you?",
+      "choices": [
+        {
+          "label": "Use backtracking - try each candidate, recurse, backtrack",
+          "next": "explore-backtracking"
+        },
+        {
+          "label": "Generate all possible combinations and filter by sum",
+          "next": "explore-generate-all"
+        },
+        {
+          "label": "Use dynamic programming to build combinations",
+          "next": "explore-dp"
+        }
+      ]
+    },
+    {
+      "stepId": "explore-generate-all",
+      "mentorSays": "That's a straightforward approach! You're thinking: \"I'll generate all possible combinations, then filter to keep only those that sum to target.\"\n\nThis works! However, it's inefficient:\n- For candidates=[2,3,5], target=8, we'd generate many combinations\n- Most won't sum to target, so we waste computation\n- Time complexity: O(2^n) which is exponential\n\nThere's a more efficient backtracking approach that only explores valid paths. Would you like to learn that?",
+      "action": "continue",
+      "next": "explore-backtracking"
+    },
+    {
+      "stepId": "explore-dp",
+      "mentorSays": "That's a good approach! You're thinking: \"I'll use dynamic programming to build combinations.\"\n\nDP works for counting combinations, but for listing ALL combinations, backtracking is more natural and efficient. Backtracking allows us to:\n- Build combinations incrementally\n- Prune invalid paths early (when remaining < 0)\n- Avoid generating duplicates\n\nLet's learn the backtracking approach!",
+      "action": "continue",
+      "next": "explore-backtracking"
+    },
+    {
+      "stepId": "explore-backtracking",
+      "mentorSays": "Excellent choice! Backtracking is the optimal solution. Here's the core idea:\n\n**The Algorithm:**\n1. **Initialize**: result = [], current = []\n2. **Backtrack function**: backtrack(index, current, remaining)\n3. **Base case**: If remaining == 0, add current to result and return\n4. **Base case**: If remaining < 0, return (invalid path)\n5. **Try each candidate**: From index to end, add candidate and recurse\n6. **Backtrack**: Remove candidate and try next\n\n**Why it works**:\n- We start from index to avoid duplicates (only consider candidates from current position onwards)\n- We check remaining < 0 to prune invalid paths early\n- When remaining == 0, we found a valid combination\n- We can reuse elements (don't increment index when recursing)\n\n**Key insight**: Using index ensures we don't generate duplicates like [2,3] and [3,2]!\n\nLet's trace with candidates=[2,3,6,7], target=7:\n\n- **backtrack(0, [], 7)**:\n  - remaining = 7 > 0, continue\n  - Try 2: backtrack(0, [2], 5)\n  - Try 3: backtrack(1, [3], 4)\n  - Try 6: backtrack(2, [6], 1)\n  - Try 7: backtrack(3, [7], 0) → remaining == 0, add [7] to result!\n\n- **backtrack(0, [2], 5)**:\n  - remaining = 5 > 0, continue\n  - Try 2: backtrack(0, [2,2], 3)\n  - Try 3: backtrack(1, [2,3], 2)\n  - Try 6: backtrack(2, [2,6], -1) → remaining < 0, backtrack\n  - Try 7: backtrack(3, [2,7], -2) → remaining < 0, backtrack\n\n- **backtrack(0, [2,2], 3)**:\n  - remaining = 3 > 0, continue\n  - Try 2: backtrack(0, [2,2,2], 1)\n  - Try 3: backtrack(1, [2,2,3], 0) → remaining == 0, add [2,2,3] to result!\n  - Try 6: backtrack(2, [2,2,6], -3) → remaining < 0, backtrack\n\nResult: [[2,2,3], [7]] ✓\n\nThis is O(2^target) time in worst case and O(target) space! Now let's code it step by step.",
+      "action": "continue",
+      "next": "language-selection"
+    },
+    {
+      "stepId": "language-selection",
+      "mentorSays": "Great! Now let's code this solution. Which programming language would you like to use?",
+      "choices": [
+        {
+          "label": "JavaScript",
+          "next": "variable-check-js"
+        },
+        {
+          "label": "Python",
+          "next": "variable-check-python"
+        },
+        {
+          "label": "Java",
+          "next": "variable-check-java"
+        },
+        {
+          "label": "C++",
+          "next": "variable-check-cpp"
+        },
+        {
+          "label": "TypeScript",
+          "next": "variable-check-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-check-js",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in JS?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-js"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-js",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'result' or 'current') and put data inside it.",
+      "example": "let result = [];  // Store results\nlet current = [];  // Current combination",
+      "action": "continue",
+      "next": "function-check-js"
+    },
+    {
+      "stepId": "function-check-js",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in JS?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-js"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-js",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "function combinationSum(candidates, target) {\n  // Returns all combinations that sum to target\n  return [];\n}",
+      "action": "continue",
+      "next": "parameter-check-js"
+    },
+    {
+      "stepId": "parameter-check-js",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "backtracking-check-js"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-js",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'function combinationSum(candidates, target)', 'candidates' and 'target' are parameters.",
+      "example": "function combinationSum(candidates, target) {\n  // Parameters receive candidates and target\n}\n\n// Call: combinationSum([2,3,6,7], 7)",
+      "action": "continue",
+      "next": "backtracking-check-js"
+    },
+    {
+      "stepId": "backtracking-check-js",
+      "mentorSays": "To solve this lesson, we'll use backtracking. Do you know what backtracking is?",
+      "choices": [
+        {
+          "label": "Yes, I know backtracking",
+          "next": "array-check-js"
+        },
+        {
+          "label": "No, explain backtracking",
+          "next": "backtracking-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "backtracking-explanation-js",
+      "mentorSays": "Backtracking is a technique where we:\n1. Make a choice (e.g., add a number to combination)\n2. Recursively explore that choice\n3. Undo the choice (backtrack) and try the next option\n\nFor combination sum: we try adding each candidate, explore recursively, then backtrack to try the next candidate.",
+      "example": "function backtrack(index, current, remaining) {\n  // Make choice: add candidates[index]\n  current.push(candidates[index]);\n  backtrack(index, current, remaining - candidates[index]);\n  \n  // Backtrack: remove and try next\n  current.pop();\n  backtrack(index + 1, current, remaining);\n}",
+      "action": "continue",
+      "next": "array-check-js"
+    },
+    {
+      "stepId": "array-check-js",
+      "mentorSays": "To solve this lesson, we'll work with arrays. Do you know what arrays are in JS?",
+      "choices": [
+        {
+          "label": "Yes, I know arrays",
+          "next": "coding-start-js"
+        },
+        {
+          "label": "No, explain arrays",
+          "next": "array-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "array-explanation-js",
+      "mentorSays": "An array is a collection of items stored in order. You can add items, remove items, and access items by their position.",
+      "example": "let candidates = [2, 3, 6, 7];  // Array of numbers\nlet current = [];  // Empty array for current combination",
+      "action": "continue",
+      "next": "coding-start-js"
+    },
+    {
+      "stepId": "coding-start-js",
+      "mentorSays": "Perfect! Let's implement the combination sum solution in JS. We'll create a function that takes candidates and target, and returns all valid combinations.",
+      "example": "function combinationSum(candidates, target) {\n  \n}",
+      "action": "continue",
+      "next": "coding-init-result-js"
+    },
+    {
+      "stepId": "coding-init-result-js",
+      "mentorSays": "Initialize a result array to store all valid combinations.",
+      "example": "function combinationSum(candidates, target) {\n  const result = [];\n  \n}",
+      "action": "continue",
+      "next": "coding-backtrack-helper-js"
+    },
+    {
+      "stepId": "coding-backtrack-helper-js",
+      "mentorSays": "Create a backtrack helper function that takes index (current position in candidates), current combination, and remaining sum.",
+      "example": "function combinationSum(candidates, target) {\n  const result = [];\n  \n  function backtrack(index, current, remaining) {\n    // Backtracking logic will go here\n  }\n  \n}",
+      "action": "continue",
+      "next": "coding-base-case-valid-js"
+    },
+    {
+      "stepId": "coding-base-case-valid-js",
+      "mentorSays": "Add the base case: when remaining sum equals 0, we found a valid combination. Add a copy of current to result and return.",
+      "example": "function combinationSum(candidates, target) {\n  const result = [];\n  \n  function backtrack(index, current, remaining) {\n    // Base case: found valid combination\n    if (remaining === 0) {\n      result.push([...current]);  // Add copy of current\n      return;\n    }\n    \n  }\n  \n}",
+      "action": "continue",
+      "next": "coding-base-case-invalid-js"
+    },
+    {
+      "stepId": "coding-base-case-invalid-js",
+      "mentorSays": "Add another base case: when remaining sum is less than 0, this path is invalid. Return early.",
+      "example": "function combinationSum(candidates, target) {\n  const result = [];\n  \n  function backtrack(index, current, remaining) {\n    if (remaining === 0) {\n      result.push([...current]);\n      return;\n    }\n    \n    // Base case: invalid path\n    if (remaining < 0) {\n      return;\n    }\n    \n  }\n  \n}",
+      "action": "continue",
+      "next": "coding-loop-candidates-js"
+    },
+    {
+      "stepId": "coding-loop-candidates-js",
+      "mentorSays": "Add a loop to try each candidate from index to the end. This ensures we don't generate duplicates.",
+      "example": "function combinationSum(candidates, target) {\n  const result = [];\n  \n  function backtrack(index, current, remaining) {\n    if (remaining === 0) {\n      result.push([...current]);\n      return;\n    }\n    \n    if (remaining < 0) {\n      return;\n    }\n    \n    // Try each candidate from index onwards\n    for (let i = index; i < candidates.length; i++) {\n      // Add candidate and recurse\n    }\n  }\n  \n}",
+      "action": "continue",
+      "next": "coding-add-recurse-js"
+    },
+    {
+      "stepId": "coding-add-recurse-js",
+      "mentorSays": "Inside the loop, add the candidate to current combination, recursively call backtrack (can reuse same candidate, so pass i not i+1), then remove the candidate to backtrack.",
+      "example": "function combinationSum(candidates, target) {\n  const result = [];\n  \n  function backtrack(index, current, remaining) {\n    if (remaining === 0) {\n      result.push([...current]);\n      return;\n    }\n    \n    if (remaining < 0) {\n      return;\n    }\n    \n    for (let i = index; i < candidates.length; i++) {\n      current.push(candidates[i]);  // Add candidate\n      backtrack(i, current, remaining - candidates[i]);  // Recurse (can reuse, so i not i+1)\n      current.pop();  // Backtrack: remove candidate\n    }\n  }\n  \n}",
+      "action": "continue",
+      "next": "coding-return-js"
+    },
+    {
+      "stepId": "coding-return-js",
+      "mentorSays": "Call the backtrack function with initial values (index=0, current=[], remaining=target), then return the result array.",
+      "example": "function combinationSum(candidates, target) {\n  const result = [];\n  \n  function backtrack(index, current, remaining) {\n    if (remaining === 0) {\n      result.push([...current]);\n      return;\n    }\n    \n    if (remaining < 0) {\n      return;\n    }\n    \n    for (let i = index; i < candidates.length; i++) {\n      current.push(candidates[i]);\n      backtrack(i, current, remaining - candidates[i]);\n      current.pop();\n    }\n  }\n  \n  // Start backtracking\n  backtrack(0, [], target);\n  \n  return result;\n}",
+      "action": "continue",
+      "next": "test-code-js"
+    },
+    {
+      "stepId": "test-code-js",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** candidates=[2,3,6,7], target=7\nExpected: [[2,2,3], [7]]\n\n**Test 2:** candidates=[2,3,5], target=8\nExpected: [[2,2,2,2], [2,3,3], [3,5]]\n\n**Test 3:** candidates=[2], target=1\nExpected: []\n\n**Test 4:** candidates=[2,3,5], target=1\nExpected: []\n\n**Test 5:** candidates=[2,3,5], target=0\nExpected: [[]]\n\n**Test 6:** candidates=[1], target=3\nExpected: [[1,1,1]]\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: candidates=[2,3,6,7], target=7 → [[2,2,3], [7]]\nTest 2: candidates=[2,3,5], target=8 → [[2,2,2,2], [2,3,3], [3,5]]\nTest 3: candidates=[2], target=1 → []",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-python",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in PYTHON?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-python"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-python",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'result' or 'current') and put data inside it.",
+      "example": "let result = [];  // Store results\nlet current = [];  // Current combination",
+      "action": "continue",
+      "next": "function-check-python"
+    },
+    {
+      "stepId": "function-check-python",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in PYTHON?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-python"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-python",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "function combinationSum(candidates, target) {\n  // Returns all combinations that sum to target\n  return [];\n}",
+      "action": "continue",
+      "next": "parameter-check-python"
+    },
+    {
+      "stepId": "parameter-check-python",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "backtracking-check-python"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-python",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'function combinationSum(candidates, target)', 'candidates' and 'target' are parameters.",
+      "example": "function combinationSum(candidates, target) {\n  // Parameters receive candidates and target\n}\n\n// Call: combinationSum([2,3,6,7], 7)",
+      "action": "continue",
+      "next": "backtracking-check-python"
+    },
+    {
+      "stepId": "backtracking-check-python",
+      "mentorSays": "To solve this lesson, we'll use backtracking. Do you know what backtracking is?",
+      "choices": [
+        {
+          "label": "Yes, I know backtracking",
+          "next": "array-check-python"
+        },
+        {
+          "label": "No, explain backtracking",
+          "next": "backtracking-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "backtracking-explanation-python",
+      "mentorSays": "Backtracking is a technique where we:\n1. Make a choice (e.g., add a number to combination)\n2. Recursively explore that choice\n3. Undo the choice (backtrack) and try the next option\n\nFor combination sum: we try adding each candidate, explore recursively, then backtrack to try the next candidate.",
+      "example": "function backtrack(index, current, remaining) {\n  // Make choice: add candidates[index]\n  current.push(candidates[index]);\n  backtrack(index, current, remaining - candidates[index]);\n  \n  // Backtrack: remove and try next\n  current.pop();\n  backtrack(index + 1, current, remaining);\n}",
+      "action": "continue",
+      "next": "array-check-python"
+    },
+    {
+      "stepId": "array-check-python",
+      "mentorSays": "To solve this lesson, we'll work with arrays. Do you know what arrays are in PYTHON?",
+      "choices": [
+        {
+          "label": "Yes, I know arrays",
+          "next": "coding-start-python"
+        },
+        {
+          "label": "No, explain arrays",
+          "next": "array-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "array-explanation-python",
+      "mentorSays": "An array is a collection of items stored in order. You can add items, remove items, and access items by their position.",
+      "example": "let candidates = [2, 3, 6, 7];  // Array of numbers\nlet current = [];  // Empty array for current combination",
+      "action": "continue",
+      "next": "coding-start-python"
+    },
+    {
+      "stepId": "coding-start-python",
+      "mentorSays": "Perfect! Let's implement the combination sum solution in PYTHON. We'll create a function that takes candidates and target, and returns all valid combinations.",
+      "example": "function combinationSum(candidates, target) {\n  \n}",
+      "action": "continue",
+      "next": "coding-init-result-python"
+    },
+    {
+      "stepId": "coding-init-result-python",
+      "mentorSays": "Initialize a result array to store all valid combinations.",
+      "example": "function combinationSum(candidates, target) {\n  const result = [];\n  \n}",
+      "action": "continue",
+      "next": "coding-backtrack-helper-python"
+    },
+    {
+      "stepId": "coding-backtrack-helper-python",
+      "mentorSays": "Create a backtrack helper function that takes index (current position in candidates), current combination, and remaining sum.",
+      "example": "function combinationSum(candidates, target) {\n  const result = [];\n  \n  function backtrack(index, current, remaining) {\n    // Backtracking logic will go here\n  }\n  \n}",
+      "action": "continue",
+      "next": "coding-base-case-valid-python"
+    },
+    {
+      "stepId": "coding-base-case-valid-python",
+      "mentorSays": "Add the base case: when remaining sum equals 0, we found a valid combination. Add a copy of current to result and return.",
+      "example": "function combinationSum(candidates, target) {\n  const result = [];\n  \n  function backtrack(index, current, remaining) {\n    // Base case: found valid combination\n    if (remaining === 0) {\n      result.push([...current]);  // Add copy of current\n      return;\n    }\n    \n  }\n  \n}",
+      "action": "continue",
+      "next": "coding-base-case-invalid-python"
+    },
+    {
+      "stepId": "coding-base-case-invalid-python",
+      "mentorSays": "Add another base case: when remaining sum is less than 0, this path is invalid. Return early.",
+      "example": "function combinationSum(candidates, target) {\n  const result = [];\n  \n  function backtrack(index, current, remaining) {\n    if (remaining === 0) {\n      result.push([...current]);\n      return;\n    }\n    \n    // Base case: invalid path\n    if (remaining < 0) {\n      return;\n    }\n    \n  }\n  \n}",
+      "action": "continue",
+      "next": "coding-loop-candidates-python"
+    },
+    {
+      "stepId": "coding-loop-candidates-python",
+      "mentorSays": "Add a loop to try each candidate from index to the end. This ensures we don't generate duplicates.",
+      "example": "function combinationSum(candidates, target) {\n  const result = [];\n  \n  function backtrack(index, current, remaining) {\n    if (remaining === 0) {\n      result.push([...current]);\n      return;\n    }\n    \n    if (remaining < 0) {\n      return;\n    }\n    \n    // Try each candidate from index onwards\n    for (let i = index; i < candidates.length; i++) {\n      // Add candidate and recurse\n    }\n  }\n  \n}",
+      "action": "continue",
+      "next": "coding-add-recurse-python"
+    },
+    {
+      "stepId": "coding-add-recurse-python",
+      "mentorSays": "Inside the loop, add the candidate to current combination, recursively call backtrack (can reuse same candidate, so pass i not i+1), then remove the candidate to backtrack.",
+      "example": "function combinationSum(candidates, target) {\n  const result = [];\n  \n  function backtrack(index, current, remaining) {\n    if (remaining === 0) {\n      result.push([...current]);\n      return;\n    }\n    \n    if (remaining < 0) {\n      return;\n    }\n    \n    for (let i = index; i < candidates.length; i++) {\n      current.push(candidates[i]);  // Add candidate\n      backtrack(i, current, remaining - candidates[i]);  // Recurse (can reuse, so i not i+1)\n      current.pop();  // Backtrack: remove candidate\n    }\n  }\n  \n}",
+      "action": "continue",
+      "next": "coding-return-python"
+    },
+    {
+      "stepId": "coding-return-python",
+      "mentorSays": "Call the backtrack function with initial values (index=0, current=[], remaining=target), then return the result array.",
+      "example": "function combinationSum(candidates, target) {\n  const result = [];\n  \n  function backtrack(index, current, remaining) {\n    if (remaining === 0) {\n      result.push([...current]);\n      return;\n    }\n    \n    if (remaining < 0) {\n      return;\n    }\n    \n    for (let i = index; i < candidates.length; i++) {\n      current.push(candidates[i]);\n      backtrack(i, current, remaining - candidates[i]);\n      current.pop();\n    }\n  }\n  \n  // Start backtracking\n  backtrack(0, [], target);\n  \n  return result;\n}",
+      "action": "continue",
+      "next": "test-code-python"
+    },
+    {
+      "stepId": "test-code-python",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** candidates=[2,3,6,7], target=7\nExpected: [[2,2,3], [7]]\n\n**Test 2:** candidates=[2,3,5], target=8\nExpected: [[2,2,2,2], [2,3,3], [3,5]]\n\n**Test 3:** candidates=[2], target=1\nExpected: []\n\n**Test 4:** candidates=[2,3,5], target=1\nExpected: []\n\n**Test 5:** candidates=[2,3,5], target=0\nExpected: [[]]\n\n**Test 6:** candidates=[1], target=3\nExpected: [[1,1,1]]\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: candidates=[2,3,6,7], target=7 → [[2,2,3], [7]]\nTest 2: candidates=[2,3,5], target=8 → [[2,2,2,2], [2,3,3], [3,5]]\nTest 3: candidates=[2], target=1 → []",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-java",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in JAVA?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-java"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-java",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'result' or 'current') and put data inside it.",
+      "example": "let result = [];  // Store results\nlet current = [];  // Current combination",
+      "action": "continue",
+      "next": "function-check-java"
+    },
+    {
+      "stepId": "function-check-java",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in JAVA?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-java"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-java",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "function combinationSum(candidates, target) {\n  // Returns all combinations that sum to target\n  return [];\n}",
+      "action": "continue",
+      "next": "parameter-check-java"
+    },
+    {
+      "stepId": "parameter-check-java",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "backtracking-check-java"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-java",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'function combinationSum(candidates, target)', 'candidates' and 'target' are parameters.",
+      "example": "function combinationSum(candidates, target) {\n  // Parameters receive candidates and target\n}\n\n// Call: combinationSum([2,3,6,7], 7)",
+      "action": "continue",
+      "next": "backtracking-check-java"
+    },
+    {
+      "stepId": "backtracking-check-java",
+      "mentorSays": "To solve this lesson, we'll use backtracking. Do you know what backtracking is?",
+      "choices": [
+        {
+          "label": "Yes, I know backtracking",
+          "next": "array-check-java"
+        },
+        {
+          "label": "No, explain backtracking",
+          "next": "backtracking-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "backtracking-explanation-java",
+      "mentorSays": "Backtracking is a technique where we:\n1. Make a choice (e.g., add a number to combination)\n2. Recursively explore that choice\n3. Undo the choice (backtrack) and try the next option\n\nFor combination sum: we try adding each candidate, explore recursively, then backtrack to try the next candidate.",
+      "example": "function backtrack(index, current, remaining) {\n  // Make choice: add candidates[index]\n  current.push(candidates[index]);\n  backtrack(index, current, remaining - candidates[index]);\n  \n  // Backtrack: remove and try next\n  current.pop();\n  backtrack(index + 1, current, remaining);\n}",
+      "action": "continue",
+      "next": "array-check-java"
+    },
+    {
+      "stepId": "array-check-java",
+      "mentorSays": "To solve this lesson, we'll work with arrays. Do you know what arrays are in JAVA?",
+      "choices": [
+        {
+          "label": "Yes, I know arrays",
+          "next": "coding-start-java"
+        },
+        {
+          "label": "No, explain arrays",
+          "next": "array-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "array-explanation-java",
+      "mentorSays": "An array is a collection of items stored in order. You can add items, remove items, and access items by their position.",
+      "example": "let candidates = [2, 3, 6, 7];  // Array of numbers\nlet current = [];  // Empty array for current combination",
+      "action": "continue",
+      "next": "coding-start-java"
+    },
+    {
+      "stepId": "coding-start-java",
+      "mentorSays": "Perfect! Let's implement the combination sum solution in JAVA. We'll create a function that takes candidates and target, and returns all valid combinations.",
+      "example": "function combinationSum(candidates, target) {\n  \n}",
+      "action": "continue",
+      "next": "coding-init-result-java"
+    },
+    {
+      "stepId": "coding-init-result-java",
+      "mentorSays": "Initialize a result array to store all valid combinations.",
+      "example": "function combinationSum(candidates, target) {\n  const result = [];\n  \n}",
+      "action": "continue",
+      "next": "coding-backtrack-helper-java"
+    },
+    {
+      "stepId": "coding-backtrack-helper-java",
+      "mentorSays": "Create a backtrack helper function that takes index (current position in candidates), current combination, and remaining sum.",
+      "example": "function combinationSum(candidates, target) {\n  const result = [];\n  \n  function backtrack(index, current, remaining) {\n    // Backtracking logic will go here\n  }\n  \n}",
+      "action": "continue",
+      "next": "coding-base-case-valid-java"
+    },
+    {
+      "stepId": "coding-base-case-valid-java",
+      "mentorSays": "Add the base case: when remaining sum equals 0, we found a valid combination. Add a copy of current to result and return.",
+      "example": "function combinationSum(candidates, target) {\n  const result = [];\n  \n  function backtrack(index, current, remaining) {\n    // Base case: found valid combination\n    if (remaining === 0) {\n      result.push([...current]);  // Add copy of current\n      return;\n    }\n    \n  }\n  \n}",
+      "action": "continue",
+      "next": "coding-base-case-invalid-java"
+    },
+    {
+      "stepId": "coding-base-case-invalid-java",
+      "mentorSays": "Add another base case: when remaining sum is less than 0, this path is invalid. Return early.",
+      "example": "function combinationSum(candidates, target) {\n  const result = [];\n  \n  function backtrack(index, current, remaining) {\n    if (remaining === 0) {\n      result.push([...current]);\n      return;\n    }\n    \n    // Base case: invalid path\n    if (remaining < 0) {\n      return;\n    }\n    \n  }\n  \n}",
+      "action": "continue",
+      "next": "coding-loop-candidates-java"
+    },
+    {
+      "stepId": "coding-loop-candidates-java",
+      "mentorSays": "Add a loop to try each candidate from index to the end. This ensures we don't generate duplicates.",
+      "example": "function combinationSum(candidates, target) {\n  const result = [];\n  \n  function backtrack(index, current, remaining) {\n    if (remaining === 0) {\n      result.push([...current]);\n      return;\n    }\n    \n    if (remaining < 0) {\n      return;\n    }\n    \n    // Try each candidate from index onwards\n    for (let i = index; i < candidates.length; i++) {\n      // Add candidate and recurse\n    }\n  }\n  \n}",
+      "action": "continue",
+      "next": "coding-add-recurse-java"
+    },
+    {
+      "stepId": "coding-add-recurse-java",
+      "mentorSays": "Inside the loop, add the candidate to current combination, recursively call backtrack (can reuse same candidate, so pass i not i+1), then remove the candidate to backtrack.",
+      "example": "function combinationSum(candidates, target) {\n  const result = [];\n  \n  function backtrack(index, current, remaining) {\n    if (remaining === 0) {\n      result.push([...current]);\n      return;\n    }\n    \n    if (remaining < 0) {\n      return;\n    }\n    \n    for (let i = index; i < candidates.length; i++) {\n      current.push(candidates[i]);  // Add candidate\n      backtrack(i, current, remaining - candidates[i]);  // Recurse (can reuse, so i not i+1)\n      current.pop();  // Backtrack: remove candidate\n    }\n  }\n  \n}",
+      "action": "continue",
+      "next": "coding-return-java"
+    },
+    {
+      "stepId": "coding-return-java",
+      "mentorSays": "Call the backtrack function with initial values (index=0, current=[], remaining=target), then return the result array.",
+      "example": "function combinationSum(candidates, target) {\n  const result = [];\n  \n  function backtrack(index, current, remaining) {\n    if (remaining === 0) {\n      result.push([...current]);\n      return;\n    }\n    \n    if (remaining < 0) {\n      return;\n    }\n    \n    for (let i = index; i < candidates.length; i++) {\n      current.push(candidates[i]);\n      backtrack(i, current, remaining - candidates[i]);\n      current.pop();\n    }\n  }\n  \n  // Start backtracking\n  backtrack(0, [], target);\n  \n  return result;\n}",
+      "action": "continue",
+      "next": "test-code-java"
+    },
+    {
+      "stepId": "test-code-java",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** candidates=[2,3,6,7], target=7\nExpected: [[2,2,3], [7]]\n\n**Test 2:** candidates=[2,3,5], target=8\nExpected: [[2,2,2,2], [2,3,3], [3,5]]\n\n**Test 3:** candidates=[2], target=1\nExpected: []\n\n**Test 4:** candidates=[2,3,5], target=1\nExpected: []\n\n**Test 5:** candidates=[2,3,5], target=0\nExpected: [[]]\n\n**Test 6:** candidates=[1], target=3\nExpected: [[1,1,1]]\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: candidates=[2,3,6,7], target=7 → [[2,2,3], [7]]\nTest 2: candidates=[2,3,5], target=8 → [[2,2,2,2], [2,3,3], [3,5]]\nTest 3: candidates=[2], target=1 → []",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-cpp",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in CPP?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-cpp"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-cpp",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'result' or 'current') and put data inside it.",
+      "example": "let result = [];  // Store results\nlet current = [];  // Current combination",
+      "action": "continue",
+      "next": "function-check-cpp"
+    },
+    {
+      "stepId": "function-check-cpp",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in CPP?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-cpp"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-cpp",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "function combinationSum(candidates, target) {\n  // Returns all combinations that sum to target\n  return [];\n}",
+      "action": "continue",
+      "next": "parameter-check-cpp"
+    },
+    {
+      "stepId": "parameter-check-cpp",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "backtracking-check-cpp"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-cpp",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'function combinationSum(candidates, target)', 'candidates' and 'target' are parameters.",
+      "example": "function combinationSum(candidates, target) {\n  // Parameters receive candidates and target\n}\n\n// Call: combinationSum([2,3,6,7], 7)",
+      "action": "continue",
+      "next": "backtracking-check-cpp"
+    },
+    {
+      "stepId": "backtracking-check-cpp",
+      "mentorSays": "To solve this lesson, we'll use backtracking. Do you know what backtracking is?",
+      "choices": [
+        {
+          "label": "Yes, I know backtracking",
+          "next": "array-check-cpp"
+        },
+        {
+          "label": "No, explain backtracking",
+          "next": "backtracking-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "backtracking-explanation-cpp",
+      "mentorSays": "Backtracking is a technique where we:\n1. Make a choice (e.g., add a number to combination)\n2. Recursively explore that choice\n3. Undo the choice (backtrack) and try the next option\n\nFor combination sum: we try adding each candidate, explore recursively, then backtrack to try the next candidate.",
+      "example": "function backtrack(index, current, remaining) {\n  // Make choice: add candidates[index]\n  current.push(candidates[index]);\n  backtrack(index, current, remaining - candidates[index]);\n  \n  // Backtrack: remove and try next\n  current.pop();\n  backtrack(index + 1, current, remaining);\n}",
+      "action": "continue",
+      "next": "array-check-cpp"
+    },
+    {
+      "stepId": "array-check-cpp",
+      "mentorSays": "To solve this lesson, we'll work with arrays. Do you know what arrays are in CPP?",
+      "choices": [
+        {
+          "label": "Yes, I know arrays",
+          "next": "coding-start-cpp"
+        },
+        {
+          "label": "No, explain arrays",
+          "next": "array-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "array-explanation-cpp",
+      "mentorSays": "An array is a collection of items stored in order. You can add items, remove items, and access items by their position.",
+      "example": "let candidates = [2, 3, 6, 7];  // Array of numbers\nlet current = [];  // Empty array for current combination",
+      "action": "continue",
+      "next": "coding-start-cpp"
+    },
+    {
+      "stepId": "coding-start-cpp",
+      "mentorSays": "Perfect! Let's implement the combination sum solution in CPP. We'll create a function that takes candidates and target, and returns all valid combinations.",
+      "example": "function combinationSum(candidates, target) {\n  \n}",
+      "action": "continue",
+      "next": "coding-init-result-cpp"
+    },
+    {
+      "stepId": "coding-init-result-cpp",
+      "mentorSays": "Initialize a result array to store all valid combinations.",
+      "example": "function combinationSum(candidates, target) {\n  const result = [];\n  \n}",
+      "action": "continue",
+      "next": "coding-backtrack-helper-cpp"
+    },
+    {
+      "stepId": "coding-backtrack-helper-cpp",
+      "mentorSays": "Create a backtrack helper function that takes index (current position in candidates), current combination, and remaining sum.",
+      "example": "function combinationSum(candidates, target) {\n  const result = [];\n  \n  function backtrack(index, current, remaining) {\n    // Backtracking logic will go here\n  }\n  \n}",
+      "action": "continue",
+      "next": "coding-base-case-valid-cpp"
+    },
+    {
+      "stepId": "coding-base-case-valid-cpp",
+      "mentorSays": "Add the base case: when remaining sum equals 0, we found a valid combination. Add a copy of current to result and return.",
+      "example": "function combinationSum(candidates, target) {\n  const result = [];\n  \n  function backtrack(index, current, remaining) {\n    // Base case: found valid combination\n    if (remaining === 0) {\n      result.push([...current]);  // Add copy of current\n      return;\n    }\n    \n  }\n  \n}",
+      "action": "continue",
+      "next": "coding-base-case-invalid-cpp"
+    },
+    {
+      "stepId": "coding-base-case-invalid-cpp",
+      "mentorSays": "Add another base case: when remaining sum is less than 0, this path is invalid. Return early.",
+      "example": "function combinationSum(candidates, target) {\n  const result = [];\n  \n  function backtrack(index, current, remaining) {\n    if (remaining === 0) {\n      result.push([...current]);\n      return;\n    }\n    \n    // Base case: invalid path\n    if (remaining < 0) {\n      return;\n    }\n    \n  }\n  \n}",
+      "action": "continue",
+      "next": "coding-loop-candidates-cpp"
+    },
+    {
+      "stepId": "coding-loop-candidates-cpp",
+      "mentorSays": "Add a loop to try each candidate from index to the end. This ensures we don't generate duplicates.",
+      "example": "function combinationSum(candidates, target) {\n  const result = [];\n  \n  function backtrack(index, current, remaining) {\n    if (remaining === 0) {\n      result.push([...current]);\n      return;\n    }\n    \n    if (remaining < 0) {\n      return;\n    }\n    \n    // Try each candidate from index onwards\n    for (let i = index; i < candidates.length; i++) {\n      // Add candidate and recurse\n    }\n  }\n  \n}",
+      "action": "continue",
+      "next": "coding-add-recurse-cpp"
+    },
+    {
+      "stepId": "coding-add-recurse-cpp",
+      "mentorSays": "Inside the loop, add the candidate to current combination, recursively call backtrack (can reuse same candidate, so pass i not i+1), then remove the candidate to backtrack.",
+      "example": "function combinationSum(candidates, target) {\n  const result = [];\n  \n  function backtrack(index, current, remaining) {\n    if (remaining === 0) {\n      result.push([...current]);\n      return;\n    }\n    \n    if (remaining < 0) {\n      return;\n    }\n    \n    for (let i = index; i < candidates.length; i++) {\n      current.push(candidates[i]);  // Add candidate\n      backtrack(i, current, remaining - candidates[i]);  // Recurse (can reuse, so i not i+1)\n      current.pop();  // Backtrack: remove candidate\n    }\n  }\n  \n}",
+      "action": "continue",
+      "next": "coding-return-cpp"
+    },
+    {
+      "stepId": "coding-return-cpp",
+      "mentorSays": "Call the backtrack function with initial values (index=0, current=[], remaining=target), then return the result array.",
+      "example": "function combinationSum(candidates, target) {\n  const result = [];\n  \n  function backtrack(index, current, remaining) {\n    if (remaining === 0) {\n      result.push([...current]);\n      return;\n    }\n    \n    if (remaining < 0) {\n      return;\n    }\n    \n    for (let i = index; i < candidates.length; i++) {\n      current.push(candidates[i]);\n      backtrack(i, current, remaining - candidates[i]);\n      current.pop();\n    }\n  }\n  \n  // Start backtracking\n  backtrack(0, [], target);\n  \n  return result;\n}",
+      "action": "continue",
+      "next": "test-code-cpp"
+    },
+    {
+      "stepId": "test-code-cpp",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** candidates=[2,3,6,7], target=7\nExpected: [[2,2,3], [7]]\n\n**Test 2:** candidates=[2,3,5], target=8\nExpected: [[2,2,2,2], [2,3,3], [3,5]]\n\n**Test 3:** candidates=[2], target=1\nExpected: []\n\n**Test 4:** candidates=[2,3,5], target=1\nExpected: []\n\n**Test 5:** candidates=[2,3,5], target=0\nExpected: [[]]\n\n**Test 6:** candidates=[1], target=3\nExpected: [[1,1,1]]\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: candidates=[2,3,6,7], target=7 → [[2,2,3], [7]]\nTest 2: candidates=[2,3,5], target=8 → [[2,2,2,2], [2,3,3], [3,5]]\nTest 3: candidates=[2], target=1 → []",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-ts",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in TS?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-ts"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-ts",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'result' or 'current') and put data inside it.",
+      "example": "let result = [];  // Store results\nlet current = [];  // Current combination",
+      "action": "continue",
+      "next": "function-check-ts"
+    },
+    {
+      "stepId": "function-check-ts",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in TS?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-ts"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-ts",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "function combinationSum(candidates, target) {\n  // Returns all combinations that sum to target\n  return [];\n}",
+      "action": "continue",
+      "next": "parameter-check-ts"
+    },
+    {
+      "stepId": "parameter-check-ts",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "backtracking-check-ts"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-ts",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'function combinationSum(candidates, target)', 'candidates' and 'target' are parameters.",
+      "example": "function combinationSum(candidates, target) {\n  // Parameters receive candidates and target\n}\n\n// Call: combinationSum([2,3,6,7], 7)",
+      "action": "continue",
+      "next": "backtracking-check-ts"
+    },
+    {
+      "stepId": "backtracking-check-ts",
+      "mentorSays": "To solve this lesson, we'll use backtracking. Do you know what backtracking is?",
+      "choices": [
+        {
+          "label": "Yes, I know backtracking",
+          "next": "array-check-ts"
+        },
+        {
+          "label": "No, explain backtracking",
+          "next": "backtracking-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "backtracking-explanation-ts",
+      "mentorSays": "Backtracking is a technique where we:\n1. Make a choice (e.g., add a number to combination)\n2. Recursively explore that choice\n3. Undo the choice (backtrack) and try the next option\n\nFor combination sum: we try adding each candidate, explore recursively, then backtrack to try the next candidate.",
+      "example": "function backtrack(index, current, remaining) {\n  // Make choice: add candidates[index]\n  current.push(candidates[index]);\n  backtrack(index, current, remaining - candidates[index]);\n  \n  // Backtrack: remove and try next\n  current.pop();\n  backtrack(index + 1, current, remaining);\n}",
+      "action": "continue",
+      "next": "array-check-ts"
+    },
+    {
+      "stepId": "array-check-ts",
+      "mentorSays": "To solve this lesson, we'll work with arrays. Do you know what arrays are in TS?",
+      "choices": [
+        {
+          "label": "Yes, I know arrays",
+          "next": "coding-start-ts"
+        },
+        {
+          "label": "No, explain arrays",
+          "next": "array-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "array-explanation-ts",
+      "mentorSays": "An array is a collection of items stored in order. You can add items, remove items, and access items by their position.",
+      "example": "let candidates = [2, 3, 6, 7];  // Array of numbers\nlet current = [];  // Empty array for current combination",
+      "action": "continue",
+      "next": "coding-start-ts"
+    },
+    {
+      "stepId": "coding-start-ts",
+      "mentorSays": "Perfect! Let's implement the combination sum solution in TS. We'll create a function that takes candidates and target, and returns all valid combinations.",
+      "example": "function combinationSum(candidates, target) {\n  \n}",
+      "action": "continue",
+      "next": "coding-init-result-ts"
+    },
+    {
+      "stepId": "coding-init-result-ts",
+      "mentorSays": "Initialize a result array to store all valid combinations.",
+      "example": "function combinationSum(candidates, target) {\n  const result = [];\n  \n}",
+      "action": "continue",
+      "next": "coding-backtrack-helper-ts"
+    },
+    {
+      "stepId": "coding-backtrack-helper-ts",
+      "mentorSays": "Create a backtrack helper function that takes index (current position in candidates), current combination, and remaining sum.",
+      "example": "function combinationSum(candidates, target) {\n  const result = [];\n  \n  function backtrack(index, current, remaining) {\n    // Backtracking logic will go here\n  }\n  \n}",
+      "action": "continue",
+      "next": "coding-base-case-valid-ts"
+    },
+    {
+      "stepId": "coding-base-case-valid-ts",
+      "mentorSays": "Add the base case: when remaining sum equals 0, we found a valid combination. Add a copy of current to result and return.",
+      "example": "function combinationSum(candidates, target) {\n  const result = [];\n  \n  function backtrack(index, current, remaining) {\n    // Base case: found valid combination\n    if (remaining === 0) {\n      result.push([...current]);  // Add copy of current\n      return;\n    }\n    \n  }\n  \n}",
+      "action": "continue",
+      "next": "coding-base-case-invalid-ts"
+    },
+    {
+      "stepId": "coding-base-case-invalid-ts",
+      "mentorSays": "Add another base case: when remaining sum is less than 0, this path is invalid. Return early.",
+      "example": "function combinationSum(candidates, target) {\n  const result = [];\n  \n  function backtrack(index, current, remaining) {\n    if (remaining === 0) {\n      result.push([...current]);\n      return;\n    }\n    \n    // Base case: invalid path\n    if (remaining < 0) {\n      return;\n    }\n    \n  }\n  \n}",
+      "action": "continue",
+      "next": "coding-loop-candidates-ts"
+    },
+    {
+      "stepId": "coding-loop-candidates-ts",
+      "mentorSays": "Add a loop to try each candidate from index to the end. This ensures we don't generate duplicates.",
+      "example": "function combinationSum(candidates, target) {\n  const result = [];\n  \n  function backtrack(index, current, remaining) {\n    if (remaining === 0) {\n      result.push([...current]);\n      return;\n    }\n    \n    if (remaining < 0) {\n      return;\n    }\n    \n    // Try each candidate from index onwards\n    for (let i = index; i < candidates.length; i++) {\n      // Add candidate and recurse\n    }\n  }\n  \n}",
+      "action": "continue",
+      "next": "coding-add-recurse-ts"
+    },
+    {
+      "stepId": "coding-add-recurse-ts",
+      "mentorSays": "Inside the loop, add the candidate to current combination, recursively call backtrack (can reuse same candidate, so pass i not i+1), then remove the candidate to backtrack.",
+      "example": "function combinationSum(candidates, target) {\n  const result = [];\n  \n  function backtrack(index, current, remaining) {\n    if (remaining === 0) {\n      result.push([...current]);\n      return;\n    }\n    \n    if (remaining < 0) {\n      return;\n    }\n    \n    for (let i = index; i < candidates.length; i++) {\n      current.push(candidates[i]);  // Add candidate\n      backtrack(i, current, remaining - candidates[i]);  // Recurse (can reuse, so i not i+1)\n      current.pop();  // Backtrack: remove candidate\n    }\n  }\n  \n}",
+      "action": "continue",
+      "next": "coding-return-ts"
+    },
+    {
+      "stepId": "coding-return-ts",
+      "mentorSays": "Call the backtrack function with initial values (index=0, current=[], remaining=target), then return the result array.",
+      "example": "function combinationSum(candidates, target) {\n  const result = [];\n  \n  function backtrack(index, current, remaining) {\n    if (remaining === 0) {\n      result.push([...current]);\n      return;\n    }\n    \n    if (remaining < 0) {\n      return;\n    }\n    \n    for (let i = index; i < candidates.length; i++) {\n      current.push(candidates[i]);\n      backtrack(i, current, remaining - candidates[i]);\n      current.pop();\n    }\n  }\n  \n  // Start backtracking\n  backtrack(0, [], target);\n  \n  return result;\n}",
+      "action": "continue",
+      "next": "test-code-ts"
+    },
+    {
+      "stepId": "test-code-ts",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** candidates=[2,3,6,7], target=7\nExpected: [[2,2,3], [7]]\n\n**Test 2:** candidates=[2,3,5], target=8\nExpected: [[2,2,2,2], [2,3,3], [3,5]]\n\n**Test 3:** candidates=[2], target=1\nExpected: []\n\n**Test 4:** candidates=[2,3,5], target=1\nExpected: []\n\n**Test 5:** candidates=[2,3,5], target=0\nExpected: [[]]\n\n**Test 6:** candidates=[1], target=3\nExpected: [[1,1,1]]\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: candidates=[2,3,6,7], target=7 → [[2,2,3], [7]]\nTest 2: candidates=[2,3,5], target=8 → [[2,2,2,2], [2,3,3], [3,5]]\nTest 3: candidates=[2], target=1 → []",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "final",
+      "mentorSays": "Well done! You've successfully implemented the Combination Sum solution!\n\n**Time Complexity:** O(2^target)\n- In the worst case, we explore all possible combinations\n- For each candidate, we can either include it or not (exponential)\n- However, pruning (remaining < 0) helps reduce the search space\n- Actual complexity depends on the candidates array\n\n**Space Complexity:** O(target)\n- The recursion stack uses O(target) space (depth of recursion)\n- The result array stores all valid combinations\n- Each combination can have at most target/min(candidates) elements\n- Total: O(target) for recursion + O(2^target) for output (worst case)\n\n**Key Takeaways:**\n1. **Backtracking**: Try choices, explore, backtrack, try next\n2. **Index parameter**: Use index to avoid duplicates (only consider candidates from current position onwards)\n3. **Base cases**: remaining == 0 (valid), remaining < 0 (invalid)\n4. **Element reuse**: Pass same index (i) to allow reusing candidates\n5. **Pruning**: Early return when remaining < 0 saves computation\n\n**Common Mistakes to Avoid:**\n- Generating duplicates (not using index properly)\n- Not handling the case where no combination exists\n- Forgetting to backtrack (not removing element after recursion)\n- Not making a copy of current before adding to result\n- Passing i+1 instead of i (prevents element reuse)\n\n**Related Practice Lessons:**\n- Combination Sum II (LeetCode #40) - no duplicates allowed\n- Combination Sum III (LeetCode #216) - use only k numbers\n- Combination Sum IV (LeetCode #377) - count combinations (DP)\n\nKeep practicing backtracking lessons - they're common in interviews!",
+      "action": "continue"
+    }
+  ]
+}

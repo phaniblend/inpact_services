@@ -1,0 +1,224 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-node-69",
+    "track": "node",
+    "lessonNum": 69,
+    "title": "Build delayed job execution API",
+    "shortName": "P69",
+    "intro": {
+      "tag": "LESSON #69",
+      "title": "Build delayed job execution API",
+      "body": "In this lesson, you will build a delayed job execution API using Node.js. This API will allow you to schedule tasks to run after a specified delay, simulating a basic job queue system. You'll learn how to use JavaScript's setTimeout function to handle asynchronous delays and manage job state. The lesson will involve creating HTTP endpoints to submit jobs, track their status, and execute them at the right time. By the end, you'll have a working API that demonstrates core concepts of asynchronous programming and job scheduling in a backend environment.",
+      "usecase": "Delayed job execution is essential for handling time-sensitive operations in production applications. For example, e-commerce platforms use delayed jobs to send order confirmation emails 30 minutes after purchase, or to automatically cancel unpaid orders after 24 hours. Social media platforms schedule content publishing for optimal engagement times, while subscription services process billing renewals at specific intervals. Developers implement these patterns to create responsive user experiences where long-running tasks don't block immediate interactions, ensuring systems remain performant under load."
+    },
+    "objectives": [
+      "Construct a Node.js server with Express to handle HTTP requests",
+      "Implement a job queue using an in-memory array for storing delayed tasks",
+      "Configure route handlers to accept job creation requests with delay parameters",
+      "Initialize a background worker process to check and execute pending jobs",
+      "Manipulate job statuses (pending, processing, completed) throughout their lifecycle",
+      "Integrate job cancellation functionality with proper error handling",
+      "Apply setTimeout for delayed execution based on user-specified intervals"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 6",
+        "title": "Import required Node.js modules",
+        "instruction": "Import the 'http', 'url', and 'querystring' modules from Node.js core.",
+        "hint": "Use the require() function to import each module. These are built-in Node.js modules, so you don't need to install them separately.",
+        "analogousExample": "// Example: importing Node.js modules\nconst fs = require('fs');\nconst path = require('path');",
+        "seedCode": "// Import the required Node.js modules here",
+        "expectedOutcome": "The three modules are imported and ready to be used for creating a server and parsing URLs/query parameters.",
+        "successCriteria": [
+          "The 'http', 'url', and 'querystring' modules are imported using require()."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've imported some modules, but make sure to import all three: 'http', 'url', and 'querystring'.",
+        "feedbackWrong": "The imports are incorrect or missing. You need to import 'http', 'url', and 'querystring' modules using require().",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "require('http')",
+            "require('url')",
+            "require('querystring')"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 6",
+        "title": "Create the main server function",
+        "instruction": "Create a function named 'startServer' that initializes an HTTP server and sets up basic request handling.",
+        "hint": "Define a function that creates an HTTP server using the 'http' module and handles incoming requests.",
+        "analogousExample": "// Example: creating a basic server function\nfunction startServer() {\n  const server = http.createServer((req, res) => {\n    res.writeHead(200, { 'Content-Type': 'text/plain' });\n    res.end('Hello World');\n  });\n  \n  server.listen(3000, () => {\n    console.log('Server running on port 3000');\n  });\n}",
+        "seedCode": "const http = require('http');\n\n// Create the startServer function here",
+        "expectedOutcome": "A function named 'startServer' is defined that creates an HTTP server and handles requests.",
+        "successCriteria": [
+          "The 'startServer' function is defined and includes server creation and request handling logic."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've created a function, but make sure it's named 'startServer' and includes server creation logic.",
+        "feedbackWrong": "The function wasn't created correctly. Check that you defined 'startServer' with proper server setup.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "startServer",
+            "createServer",
+            "listen"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 6",
+        "title": "Initialize job storage and state",
+        "instruction": "Inside the startServer function, create an empty array variable named 'jobs' to store job objects.",
+        "hint": "You can declare a variable using 'const' or 'let' and initialize it as an empty array [].",
+        "analogousExample": "// Example: creating an array to store data\nconst items = [];",
+        "seedCode": "const http = require('http');\n\n// Create the startServer function here\nfunction startServer() {\n  // Initialize job storage array here\n}",
+        "expectedOutcome": "The startServer function now contains a 'jobs' array variable that will store pending job objects.",
+        "successCriteria": [
+          "The startServer function includes a 'jobs' variable initialized as an empty array."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you've created an empty array variable named 'jobs' inside the startServer function.",
+        "feedbackWrong": "The jobs array wasn't properly initialized. Check that you've created an empty array variable named 'jobs' inside the startServer function.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "jobs",
+            "[]",
+            "startServer"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 6",
+        "title": "Set up the job execution interval",
+        "instruction": "Inside the startServer function, set up a setInterval to call the executeJobs function every 5 seconds.",
+        "hint": "Use setInterval with the function name and interval duration in milliseconds.",
+        "analogousExample": "// Example: periodic function call\nsetInterval(checkForUpdates, 3000);",
+        "seedCode": "const http = require('http');\n\n// Create the startServer function here\nfunction startServer() {\n  // Initialize job storage array here\n  \n  // Define the job execution handler here\n  function executeJobs() {\n    // Check for jobs whose execution time has passed\n    // Process them\n  }\n  \n  // Set up the job execution interval here\n}",
+        "expectedOutcome": "The server will periodically check for jobs that are ready to execute.",
+        "successCriteria": [
+          "setInterval is called with executeJobs and 5000 as arguments inside startServer."
+        ],
+        "feedbackCorrect": "Great! You've set up the periodic job checking interval.",
+        "feedbackPartial": "You're close. Make sure to call setInterval with the executeJobs function and specify 5000 milliseconds.",
+        "feedbackWrong": "The interval isn't set up correctly. Use setInterval to call executeJobs every 5 seconds.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "setInterval",
+            "executeJobs",
+            "5000"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 6",
+        "title": "Create the job listing endpoint",
+        "instruction": "Inside the startServer function, add a GET endpoint that handles requests to '/jobs' and returns the list of pending jobs as JSON.",
+        "hint": "Add another request listener condition that checks for the '/jobs' path and GET method, then responds with the jobs array in JSON format.",
+        "analogousExample": "// Similar: another GET endpoint\nfunction handleGetRequest(req, res) {\n  if (req.url === '/items' && req.method === 'GET') {\n    res.writeHead(200, { 'Content-Type': 'application/json' });\n    res.end(JSON.stringify(items));\n  }\n}",
+        "seedCode": "const http = require('http');\n\n// Create the startServer function here\nfunction startServer() {\n  // Initialize job storage array here\n  \n  // Define the job execution handler here\n  function executeJobs() {\n    // Check for jobs whose execution time has passed\n    // Process them\n  }\n  \n  // Set up the job execution interval here\n  \n  // Create the job submission endpoint here\n  \n  // Create the job listing endpoint here\n}",
+        "expectedOutcome": "The server will have a GET endpoint at '/jobs' that returns the pending jobs list as JSON.",
+        "successCriteria": [
+          "A GET request handler for '/jobs' is added inside startServer, responding with the jobs array as JSON."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure the endpoint handles GET requests to '/jobs' and returns the jobs array as JSON.",
+        "feedbackWrong": "The job listing endpoint isn't quite right. Check that you're handling GET requests to '/jobs' and responding with JSON.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "'/jobs'",
+            "GET",
+            "JSON.stringify",
+            "jobs"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 6",
+        "title": "Start the server and test endpoints",
+        "instruction": "Call the startServer function to launch the HTTP server on port 3000.",
+        "hint": "Invoke the function you created earlier with the appropriate port number.",
+        "analogousExample": "// Starting a server function\nstartServer(3000);",
+        "seedCode": "const http = require('http');\n\n// Create the startServer function here\nfunction startServer() {\n  // Initialize job storage array here\n  \n  // Define the job execution handler here\n  function executeJobs() {\n    // Check for jobs whose execution time has passed\n    // Process them\n  }\n  \n  // Set up the job execution interval here\n  \n  // Create the job submission endpoint here\n  \n  // Create the job listing endpoint here\n  \n  // Create request routing logic here\n  \n  // Create response helper function here\n  \n}\n\n// Call startServer here",
+        "expectedOutcome": "The server will start listening on port 3000, ready to accept job submissions and list requests.",
+        "successCriteria": [
+          "startServer is called with port 3000 to launch the HTTP server"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the server, but make sure you're using port 3000 as specified.",
+        "feedbackWrong": "The server isn't starting correctly. Check that you're calling startServer with the right port.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "startServer",
+            "3000"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import required Node.js modules",
+        "id": "step1"
+      },
+      {
+        "label": "Create the main server function",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize job storage and state",
+        "id": "step3"
+      },
+      {
+        "label": "Set up the job execution interval",
+        "id": "step4"
+      },
+      {
+        "label": "Create the job listing endpoint",
+        "id": "step5"
+      },
+      {
+        "label": "Start the server and test endpoints",
+        "id": "step6"
+      }
+    ]
+  },
+  "source": "content"
+}

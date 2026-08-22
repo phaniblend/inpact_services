@@ -1,0 +1,327 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-node-82",
+    "track": "node",
+    "lessonNum": 82,
+    "title": "Build data retention cleanup task",
+    "shortName": "P82",
+    "intro": {
+      "tag": "LESSON #82",
+      "title": "Build data retention cleanup task",
+      "body": "In this lesson, you will build a data retention cleanup task using Node.js. You will create a script that automatically deletes old data from a simulated database to comply with data retention policies. The core programming concept is using timers and scheduling with setInterval to run periodic cleanup operations. You will work with JavaScript Date objects to compare record ages and implement a simple filtering logic to remove outdated entries. This exercise introduces you to backend automation and managing data lifecycle in Node.js applications.",
+      "usecase": "Data retention cleanup tasks are essential in applications that handle user-generated content, logs, or temporary files to comply with privacy regulations and optimize storage. For example, social media platforms automatically delete old direct messages after a set period, while e-commerce systems purge expired shopping cart data to free up database space. In healthcare applications, patient records might be anonymized after legal retention periods expire. Developers implement these scheduled cleanup jobs using cron jobs or task schedulers to maintain system performance and ensure regulatory compliance without manual intervention."
+    },
+    "objectives": [
+      "Construct a scheduled cleanup task using Node.js cron jobs",
+      "Implement file system operations to identify and remove outdated data files",
+      "Configure retention policies based on file age and naming patterns",
+      "Initialize logging mechanisms to track cleanup task execution and errors",
+      "Integrate environment variables to customize retention periods and file paths",
+      "Manipulate directory structures to safely archive or delete expired data",
+      "Apply error handling to manage file permission issues and missing directories"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 9",
+        "title": "Import required Node.js modules",
+        "instruction": "Import the fs/promises module for file operations and node-cron for scheduling tasks. Use the 'import' statement to import these modules.",
+        "hint": "You'll need to import fs/promises for file system operations and node-cron for scheduling. Use the ES module syntax: import moduleName from 'module-name'.",
+        "analogousExample": "// Example: importing modules\nimport fs from 'fs/promises';\nimport cron from 'node-cron';",
+        "seedCode": "// Import fs/promises and node-cron modules here",
+        "expectedOutcome": "The fs/promises and node-cron modules are imported and ready to use in your data retention cleanup task.",
+        "successCriteria": [
+          "fs/promises and node-cron modules are imported using ES module syntax"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've imported some modules, but make sure to import both fs/promises and node-cron.",
+        "feedbackWrong": "The required modules aren't imported correctly. You need to import fs/promises for file operations and node-cron for scheduling tasks.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "fs/promises",
+            "node-cron"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 9",
+        "title": "Define the data retention period constant",
+        "instruction": "Below the imports, create a constant named RETENTION_DAYS to define how many days old files should be kept before cleanup. Set its value to 30.",
+        "hint": "Use the const keyword to declare a constant variable. Assign it a numeric value representing days.",
+        "analogousExample": "// Example: defining a configuration constant\nconst MAX_FILE_SIZE = 1024;",
+        "seedCode": "// Import fs/promises and node-cron modules here\n\n// Define RETENTION_DAYS constant here",
+        "expectedOutcome": "A constant RETENTION_DAYS with value 30 is defined for the cleanup task configuration.",
+        "successCriteria": [
+          "The constant RETENTION_DAYS is declared with const and set to 30."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure the constant is named exactly RETENTION_DAYS and has the value 30.",
+        "feedbackWrong": "The constant definition is missing or incorrect. Create a constant named RETENTION_DAYS with the value 30.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "const",
+            "RETENTION_DAYS",
+            "=",
+            "30"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 9",
+        "title": "Create the directory path constant",
+        "instruction": "Define a constant named DATA_DIR_PATH that contains the path to the directory where your data files are stored. Use a string with the path './data'.",
+        "hint": "You can create a constant using the 'const' keyword followed by the name and assignment.",
+        "analogousExample": "// Example: defining a directory path constant\nconst UPLOADS_DIR = './uploads';",
+        "seedCode": "// Import fs/promises and node-cron modules here\n\n// Define RETENTION_DAYS constant here\n\n// Define DATA_DIR_PATH constant here",
+        "expectedOutcome": "You will have a constant DATA_DIR_PATH set to './data' that will be used later to locate files for cleanup.",
+        "successCriteria": [
+          "DATA_DIR_PATH constant is defined with the value './data'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've defined a constant, but make sure it's named exactly DATA_DIR_PATH and has the value './data'.",
+        "feedbackWrong": "The constant is not defined correctly. Please define a constant named DATA_DIR_PATH with the value './data'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "DATA_DIR_PATH",
+            "'./data'",
+            "const"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 9",
+        "title": "Define the calculateCutoffDate function",
+        "instruction": "Create a function named calculateCutoffDate that calculates the cutoff date by subtracting RETENTION_DAYS from the current date and returns that date.",
+        "hint": "You can create a new Date object for the current date, then use setDate() to subtract the retention days. Return the resulting Date object.",
+        "analogousExample": "// Example: function that calculates a past date\nfunction getPastDate(daysAgo) {\n  const date = new Date();\n  date.setDate(date.getDate() - daysAgo);\n  return date;\n}",
+        "seedCode": "// Import fs/promises and node-cron modules here\n\n// Define RETENTION_DAYS constant here\n\n// Define DATA_DIR_PATH constant here\n\n// Create calculateCutoffDate function here",
+        "expectedOutcome": "The calculateCutoffDate function should be defined and return a Date object representing the cutoff date.",
+        "successCriteria": [
+          "A function named calculateCutoffDate is created that uses RETENTION_DAYS and returns a Date object."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure your function subtracts RETENTION_DAYS from the current date and returns the resulting Date object.",
+        "feedbackWrong": "The calculateCutoffDate function is missing or doesn't correctly calculate the cutoff date. Review how to subtract days from a Date object.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "calculateCutoffDate",
+            "RETENTION_DAYS",
+            "Date",
+            "setDate",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 9",
+        "title": "Create the cleanupOldFiles function",
+        "instruction": "Define an async function named cleanupOldFiles that will handle the core file cleanup logic. This function should be empty for now - we'll implement the logic in later steps.",
+        "hint": "Use either a function declaration or arrow function syntax. Remember to mark it as async since it will eventually work with file operations.",
+        "analogousExample": "// Example async function structure\nasync function processData() {\n  // Implementation will go here\n}",
+        "seedCode": "// Import fs/promises and node-cron modules here\n\n// Define RETENTION_DAYS constant here\n\n// Define DATA_DIR_PATH constant here\n\n// Create calculateCutoffDate function here\n\n// Create cleanupOldFiles function here",
+        "expectedOutcome": "You'll have an empty async function named cleanupOldFiles defined in your code.",
+        "successCriteria": [
+          "An async function named cleanupOldFiles is defined in the code."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure you've defined an async function named cleanupOldFiles.",
+        "feedbackWrong": "The cleanupOldFiles function isn't defined yet. Create an async function with that name.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "async",
+            "cleanupOldFiles",
+            "function"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 9",
+        "title": "Add file age checking logic",
+        "instruction": "Inside the cleanupOldFiles function, add logic to check if each file's last modified date is older than the cutoff date.",
+        "hint": "You'll need to compare the file's mtime (modification time) with the cutoff date. Use the Date object for comparison.",
+        "analogousExample": "// Example: checking if a date is older than a cutoff\nfunction isFileOld(fileDate, cutoffDate) {\n  return fileDate < cutoffDate;\n}",
+        "seedCode": "const fs = require('fs/promises');\nconst cron = require('node-cron');\n\nconst RETENTION_DAYS = 30;\nconst DATA_DIR_PATH = './data';\n\nfunction calculateCutoffDate() {\n  const cutoff = new Date();\n  cutoff.setDate(cutoff.getDate() - RETENTION_DAYS);\n  return cutoff;\n}\n\nasync function cleanupOldFiles() {\n  try {\n    const files = await fs.readdir(DATA_DIR_PATH);\n    const cutoffDate = calculateCutoffDate();\n    \n    // Add file age checking logic here\n    \n  } catch (error) {\n    console.error('Cleanup error:', error);\n  }\n}",
+        "expectedOutcome": "The cleanupOldFiles function will have logic to compare each file's modification time with the cutoff date.",
+        "successCriteria": [
+          "The function contains code that checks if a file's last modified date is older than the cutoff date."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're comparing the file's modification time with the cutoff date.",
+        "feedbackWrong": "The file age checking logic is missing or incorrect. You need to compare each file's mtime with the cutoff date.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "file",
+            "mtime",
+            "cutoffDate",
+            "Date",
+            "older",
+            "comparison"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 9",
+        "title": "Add file deletion logic",
+        "instruction": "Inside the cleanupOldFiles function, after the file age checking logic comment, add code to delete files that are older than the retention period.",
+        "hint": "You'll need to iterate through the files array, check each file's stats to get its modification time, compare it with the cutoffDate, and use fs.unlink to delete old files.",
+        "analogousExample": "// Example: deleting files based on age\nasync function deleteOldLogs() {\n  const files = await fs.readdir('./logs');\n  const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);\n  \n  for (const file of files) {\n    const stats = await fs.stat(`./logs/${file}`);\n    if (stats.mtime < cutoff) {\n      await fs.unlink(`./logs/${file}`);\n      console.log(`Deleted: ${file}`);\n    }\n  }\n}",
+        "seedCode": "const fs = require('fs/promises');\nconst cron = require('node-cron');\n\nconst RETENTION_DAYS = 30;\nconst DATA_DIR_PATH = './data';\n\nfunction calculateCutoffDate() {\n  const cutoff = new Date();\n  cutoff.setDate(cutoff.getDate() - RETENTION_DAYS);\n  return cutoff;\n}\n\nasync function cleanupOldFiles() {\n  try {\n    const files = await fs.readdir(DATA_DIR_PATH);\n    const cutoffDate = calculateCutoffDate();\n    \n    // Add file age checking logic here\n    \n    // Add file deletion logic here\n    \n  } catch (error) {\n    console.error('Cleanup error:', error);\n  }\n}",
+        "expectedOutcome": "The cleanupOldFiles function will now include logic to identify and delete files older than the retention period.",
+        "successCriteria": [
+          "The function contains a loop that checks file modification times and deletes files older than cutoffDate using fs.unlink."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but the deletion logic needs more work. Make sure you're comparing file modification times with cutoffDate and using fs.unlink to delete old files.",
+        "feedbackWrong": "The file deletion logic is missing or incorrect. Review the example and try again - you need to check file ages and delete those older than the retention period.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "for",
+            "const file of files",
+            "fs.stat",
+            "mtime",
+            "cutoffDate",
+            "fs.unlink"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 9",
+        "title": "Set up the scheduled task",
+        "instruction": "Use node-cron's schedule method to run the cleanupOldFiles function daily at midnight (cron pattern '0 0 * * *').",
+        "hint": "Call cron.schedule() with the cron pattern as the first argument and your cleanup function as the second argument.",
+        "analogousExample": "// Scheduling a daily task\ncron.schedule('0 0 * * *', () => {\n  console.log('Running daily task');\n});",
+        "seedCode": "const fs = require('fs/promises');\nconst cron = require('node-cron');\n\nconst RETENTION_DAYS = 30;\nconst DATA_DIR_PATH = './data';\n\nfunction calculateCutoffDate() {\n  const cutoff = new Date();\n  cutoff.setDate(cutoff.getDate() - RETENTION_DAYS);\n  return cutoff;\n}\n\nasync function cleanupOldFiles() {\n  try {\n    const files = await fs.readdir(DATA_DIR_PATH);\n    const cutoffDate = calculateCutoffDate();\n    \n    // Add file age checking logic here\n    \n    // Add file deletion logic here\n    \n  } catch (error) {\n    console.error('Cleanup error:', error);\n  }\n}\n\n// Schedule the cleanup task here",
+        "expectedOutcome": "The cleanup function will be scheduled to run automatically every day at midnight.",
+        "successCriteria": [
+          "cron.schedule is called with pattern '0 0 * * *' and cleanupOldFiles as the callback."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're calling cron.schedule with the correct cron pattern and passing cleanupOldFiles as the callback.",
+        "feedbackWrong": "The scheduled task isn't set up correctly. Use cron.schedule() to run cleanupOldFiles daily at midnight.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "cron.schedule",
+            "'0 0 * * *'",
+            "cleanupOldFiles"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 9",
+        "title": "Add startup logging",
+        "instruction": "Add a console.log statement right after the cron.schedule call to indicate the cleanup task has started successfully.",
+        "hint": "Use console.log with a descriptive message like 'Cleanup task scheduled to run daily at midnight'.",
+        "analogousExample": "// Similar: logging after setting up a scheduled task\ncron.schedule('* * * * *', () => {\n  console.log('Task scheduled to run every minute');\n});",
+        "seedCode": "const fs = require('fs/promises');\nconst cron = require('node-cron');\n\nconst RETENTION_DAYS = 30;\nconst DATA_DIR_PATH = './data';\n\nfunction calculateCutoffDate() {\n  const cutoff = new Date();\n  cutoff.setDate(cutoff.getDate() - RETENTION_DAYS);\n  return cutoff;\n}\n\nasync function cleanupOldFiles() {\n  try {\n    const files = await fs.readdir(DATA_DIR_PATH);\n    const cutoffDate = calculateCutoffDate();\n    \n    // Add file age checking logic here\n    \n    // Add file deletion logic here\n    \n  } catch (error) {\n    console.error('Cleanup error:', error);\n  }\n}\n\n// Schedule the cleanup task here\ncron.schedule('0 0 * * *', cleanupOldFiles);\n\n// Add startup logging here",
+        "expectedOutcome": "The console will display a startup message confirming the cleanup task is scheduled when the script runs.",
+        "successCriteria": [
+          "A console.log statement is added after the cron.schedule call with a message about the cleanup task starting."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You added logging, but make sure it's placed right after the cron.schedule call and has a descriptive message about the task starting.",
+        "feedbackWrong": "The startup logging is missing. Add a console.log statement after the cron.schedule call to indicate the task has started.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "console.log",
+            "cleanup",
+            "task",
+            "scheduled"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import required Node.js modules",
+        "id": "step1"
+      },
+      {
+        "label": "Define the data retention period constant",
+        "id": "step2"
+      },
+      {
+        "label": "Create the directory path constant",
+        "id": "step3"
+      },
+      {
+        "label": "Define the calculateCutoffDate function",
+        "id": "step4"
+      },
+      {
+        "label": "Create the cleanupOldFiles function",
+        "id": "step5"
+      },
+      {
+        "label": "Add file age checking logic",
+        "id": "step6"
+      },
+      {
+        "label": "Add file deletion logic",
+        "id": "step7"
+      },
+      {
+        "label": "Set up the scheduled task",
+        "id": "step8"
+      },
+      {
+        "label": "Add startup logging",
+        "id": "step9"
+      }
+    ]
+  },
+  "source": "content"
+}

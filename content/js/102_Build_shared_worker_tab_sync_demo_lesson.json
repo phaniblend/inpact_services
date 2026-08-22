@@ -1,0 +1,422 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-js-102",
+    "track": "js",
+    "lessonNum": 102,
+    "title": "Build shared worker tab sync demo",
+    "shortName": "P102",
+    "intro": {
+      "tag": "LESSON #102",
+      "title": "Build shared worker tab sync demo",
+      "body": "In this lesson, you will build a simple demo that synchronizes a counter across multiple browser tabs using a Shared Worker. You will learn how Shared Workers enable communication between different tabs or windows of the same origin. The main technologies involved are JavaScript, the Shared Worker API, and basic DOM manipulation. By the end, you'll have a working app where updating the counter in one tab instantly reflects the change in all other open tabs.",
+      "usecase": "Shared workers enable real-time synchronization across multiple browser tabs, a pattern essential for collaborative applications. You'll see this in multi-tab dashboards like Google Analytics or financial trading platforms where data updates must appear simultaneously across all open views. This technique also powers synchronized form experiences like shared document editors or multi-user configuration panels where changes in one tab immediately reflect in others. As a developer, implementing tab synchronization improves user experience by maintaining consistent application state regardless of how many windows users have open."
+    },
+    "objectives": [
+      "Initialize a Shared Worker instance and establish communication channels between browser tabs",
+      "Configure message event listeners to handle data synchronization across connected tabs",
+      "Implement a state management system within the Shared Worker to track connected clients",
+      "Construct a message broadcasting mechanism that propagates updates to all active tabs",
+      "Apply error handling to manage connection drops and worker lifecycle events",
+      "Manipulate DOM elements to reflect synchronized state changes in real-time",
+      "Integrate the Shared Worker with a simple UI to demonstrate tab synchronization"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 12",
+        "title": "Import required APIs for Shared Worker and DOM manipulation",
+        "instruction": "Add a comment at the top of your JavaScript file listing the global APIs we'll use: SharedWorker, console, document, and window.",
+        "hint": "In vanilla JavaScript, these APIs are globally available, so we don't need import statements. Just write a comment to document what we'll use.",
+        "analogousExample": "// We'll use these global APIs: localStorage, fetch, Math",
+        "seedCode": "// We'll use these global APIs: SharedWorker, console, document, window",
+        "expectedOutcome": "A comment at the top of the file listing the required global APIs.",
+        "successCriteria": [
+          "The comment lists SharedWorker, console, document, and window."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your comment includes all four APIs: SharedWorker, console, document, and window.",
+        "feedbackWrong": "Add a comment at the top listing the global APIs: SharedWorker, console, document, and window.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "SharedWorker",
+            "console",
+            "document",
+            "window"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 12",
+        "title": "Create the main application entry point",
+        "instruction": "Create a function named initializeApp that will serve as the main entry point for your application. This function should be empty for now.",
+        "hint": "Define a function using either function declaration or arrow function syntax. The function name should be initializeApp.",
+        "analogousExample": "// Example of a simple function definition\nfunction initializeApp() {\n  // Function body will be added later\n}",
+        "seedCode": "// We'll use these global APIs: SharedWorker, console, document, window\n\n// Create the main application entry point here",
+        "expectedOutcome": "You will have a function named initializeApp defined in your code.",
+        "successCriteria": [
+          "The initializeApp function is defined and available for later use."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you've defined a function named initializeApp. Check that the function name matches exactly.",
+        "feedbackWrong": "It looks like the initializeApp function isn't defined yet. Create a function with that name to serve as your application's entry point.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "initializeApp",
+            "function",
+            "{"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 12",
+        "title": "Initialize Shared Worker connection",
+        "instruction": "Inside your main application entry point, create a SharedWorker instance and store it in a variable named 'worker'.",
+        "hint": "Use the SharedWorker constructor with a script URL. For now, use a placeholder URL like 'worker.js'.",
+        "analogousExample": "// Creating a worker instance\nconst myWorker = new SharedWorker('worker.js');",
+        "seedCode": "// We'll use these global APIs: SharedWorker, console, document, window\n\n// Create the main application entry point here\n\n// Initialize Shared Worker connection here",
+        "expectedOutcome": "A SharedWorker instance is created and stored in a variable named 'worker'.",
+        "successCriteria": [
+          "The code contains a variable named 'worker' that holds a new SharedWorker instance with a script URL."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're creating a SharedWorker instance and storing it in a variable named 'worker'.",
+        "feedbackWrong": "create a SharedWorker instance using the SharedWorker constructor and store it in a variable named 'worker'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "worker",
+            "SharedWorker",
+            "new"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 12",
+        "title": "Set up message handling from the worker",
+        "instruction": "Add an event listener to the worker's port to handle incoming messages from the Shared Worker. Use the 'message' event type and log the received data to the console.",
+        "hint": "You can attach an event listener to worker.port using addEventListener('message', callback). The callback receives an event object with a data property containing the message.",
+        "analogousExample": "// Example: listening for messages from a WebSocket\nsocket.addEventListener('message', (event) => {\n  console.log('Message received:', event.data);\n});",
+        "seedCode": "// We'll use these global APIs: SharedWorker, console, document, window\n\n// Create the main application entry point here\nconst app = () => {\n  // Initialize Shared Worker connection here\n  const worker = new SharedWorker('worker.js');\n  worker.port.start();\n  \n  // Add message listener here\n};",
+        "expectedOutcome": "The app will be able to receive and log messages sent from the Shared Worker to the main thread.",
+        "successCriteria": [
+          "An event listener for 'message' events is attached to worker.port, with a callback that logs event.data to the console."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added an event listener, but make sure it's attached to worker.port (not worker directly) and logs the message data. Check the callback function structure.",
+        "feedbackWrong": "The message handling isn't set up correctly. You need to add an event listener to worker.port for 'message' events that logs the received data.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "addEventListener",
+            "'message'",
+            "worker.port",
+            "console.log",
+            "event.data"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 12",
+        "title": "Define function to send messages to the worker",
+        "instruction": "Inside the app function, create a function named sendMessage that takes a data parameter and sends it to the worker using worker.port.postMessage(data).",
+        "hint": "Define a function that calls postMessage on the worker's port with the provided data.",
+        "analogousExample": "// Similar: a function that sends data\nfunction sendData(data) {\n  channel.postMessage(data);\n}",
+        "seedCode": "// We'll use these global APIs: SharedWorker, console, document, window\n\n// Create the main application entry point here\nconst app = () => {\n  // Initialize Shared Worker connection here\n  const worker = new SharedWorker('worker.js');\n  worker.port.start();\n  \n  // Add message listener here\n  \n  // Define sendMessage function here\n};",
+        "expectedOutcome": "You will have a sendMessage function that can be used to communicate with the Shared Worker.",
+        "successCriteria": [
+          "The sendMessage function is defined inside app, takes a data parameter, and calls worker.port.postMessage(data)."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure the function is inside app, takes a data parameter, and calls worker.port.postMessage(data).",
+        "feedbackWrong": "The function isn't defined correctly. It should be inside app, accept a data parameter, and send it via worker.port.postMessage(data).",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "sendMessage",
+            "data",
+            "worker.port.postMessage"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 12",
+        "title": "Create Shared Worker script file",
+        "instruction": "Create a new file named 'worker.js' in the same directory as your main script. In this file, create a Shared Worker that listens for connections from tabs.",
+        "hint": "Shared Workers are created with the SharedWorker constructor in the main script, but the worker logic itself lives in a separate file. Start by adding an onconnect handler to manage incoming connections.",
+        "analogousExample": "// Example: basic Shared Worker structure\nself.onconnect = function(e) {\n  const port = e.ports[0];\n  port.start();\n  port.postMessage('Worker connected!');\n};",
+        "seedCode": "// worker.js - Shared Worker implementation\n\n// Add your Shared Worker logic here\n",
+        "expectedOutcome": "A new worker.js file is created with a basic Shared Worker structure that can handle connections from multiple tabs.",
+        "successCriteria": [
+          "The worker.js file exists and contains a Shared Worker implementation with an onconnect handler that starts the port."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've created the file, but make sure it contains a Shared Worker implementation with an onconnect handler to handle incoming connections from tabs.",
+        "feedbackWrong": "The worker.js file is missing or doesn't contain a valid Shared Worker structure. Create the file and add a basic Shared Worker implementation.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "onconnect",
+            "port",
+            "start"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 12",
+        "title": "Initialize worker-side connections array",
+        "instruction": "Inside the worker.js file, create an empty array variable named 'connections' to store connected ports from different browser tabs.",
+        "hint": "You need to declare a variable that will hold all active connections. Use 'let' or 'const' with an empty array [].",
+        "analogousExample": "// Similar: array to store active users\nlet activeUsers = [];",
+        "seedCode": "// worker.js - Shared Worker implementation\n\n// Add your Shared Worker logic here\n\n// Create connections array here",
+        "expectedOutcome": "The worker script now has a connections array ready to track multiple tab connections.",
+        "successCriteria": [
+          "A variable named 'connections' is declared and initialized as an empty array in worker.js."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you've declared a variable named 'connections' and set it to an empty array [].",
+        "feedbackWrong": "The connections array wasn't created correctly. You need to declare a variable named 'connections' and initialize it as an empty array.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "connections",
+            "[]",
+            "let",
+            "const"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 12",
+        "title": "Set up worker message broadcasting",
+        "instruction": "Inside the Shared Worker script, create a function named broadcastMessage that takes a message parameter and sends it to all connected ports.",
+        "hint": "You'll need to iterate through the connections array and call postMessage on each port.",
+        "analogousExample": "// Similar: broadcasting to multiple listeners\nfunction broadcastMessage(msg) {\n  connections.forEach(port => {\n    port.postMessage(msg);\n  });\n}",
+        "seedCode": "// worker.js - Shared Worker implementation\n\n// Add your Shared Worker logic here\n\n// Create connections array here\nlet connections = [];\n\n// Create broadcastMessage function here",
+        "expectedOutcome": "The worker script will have a broadcastMessage function that can send messages to all connected tabs.",
+        "successCriteria": [
+          "A broadcastMessage function is defined that iterates through connections and calls postMessage on each port."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your function iterates through all connections and calls postMessage with the message parameter.",
+        "feedbackWrong": "The broadcastMessage function isn't quite right. Remember it should take a message parameter and send it to every port in the connections array.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "broadcastMessage",
+            "function",
+            "connections",
+            "forEach",
+            "postMessage"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 12",
+        "title": "Add worker connection handling",
+        "instruction": "Add an onconnect event handler to the global scope in worker.js to manage new tab connections and store their ports in the connections array.",
+        "hint": "The onconnect handler receives an event with a ports property. Access the first port from event.ports[0], store it in the connections array, and set up message handling for that port.",
+        "analogousExample": "// Example: Handling connections in a shared worker\nself.onconnect = function(event) {\n  const port = event.ports[0];\n  connections.push(port);\n  port.onmessage = function(e) {\n    console.log('Message from tab:', e.data);\n  };\n};",
+        "seedCode": "// worker.js - Shared Worker implementation\n\n// Add your Shared Worker logic here\n\n// Create connections array here\nlet connections = [];\n\n// Create broadcastMessage function here\n\n// Add onconnect handler here",
+        "expectedOutcome": "The worker will now automatically handle new tab connections by storing their communication ports and setting up message listeners.",
+        "successCriteria": [
+          "An onconnect handler is added to the global scope that stores new ports in the connections array and sets up message handling for each port."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added some connection handling logic, but make sure you're storing the port in the connections array and setting up message handling.",
+        "feedbackWrong": "The onconnect handler is missing or incomplete. Check the analogous example for reference.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "onconnect",
+            "event.ports[0]",
+            "connections.push",
+            "port.onmessage"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 12",
+        "title": "Create UI structure for the demo",
+        "instruction": "In your main application file, create the HTML structure for the demo interface. Add a container div, an input field for typing messages, a button to send messages, and a div to display received messages.",
+        "hint": "Use document.createElement() to create elements and appendChild() to add them to the DOM. Remember to set appropriate attributes like id, placeholder, and textContent.",
+        "analogousExample": "// Creating basic UI elements\nconst container = document.createElement('div');\nconst input = document.createElement('input');\ninput.placeholder = 'Type a message';\nconst button = document.createElement('button');\nbutton.textContent = 'Send';\nconst display = document.createElement('div');\ncontainer.appendChild(input);\ncontainer.appendChild(button);\ncontainer.appendChild(display);\ndocument.body.appendChild(container);",
+        "seedCode": "// worker.js - Shared Worker implementation\n\n// Add your Shared Worker logic here\n\n// Create connections array here\nlet connections = [];\n\n// Create broadcastMessage function here\n\n// Add onconnect handler here",
+        "expectedOutcome": "The demo interface will have visible input, button, and message display elements when you run the application.",
+        "successCriteria": [
+          "The main application file contains code that creates and appends input, button, and message display elements to the DOM."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've created some UI elements, but make sure you have all required components: input field, send button, and message display area. Check that they're properly appended to the DOM.",
+        "feedbackWrong": "The UI structure isn't complete. You need to create HTML elements (input, button, and message display) and add them to the page using DOM manipulation methods.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "createElement",
+            "input",
+            "button",
+            "appendChild",
+            "document.body"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 12",
+        "title": "Wire UI events to send messages",
+        "instruction": "Add an event listener to the send button that calls your sendMessageToWorker function with the input's current value.",
+        "hint": "Use addEventListener on the button element, get the input value, and pass it to your message sending function.",
+        "analogousExample": "// Adding click handler to send data\nsendButton.addEventListener('click', () => {\n  const message = inputField.value;\n  sendMessage(message);\n});",
+        "seedCode": "// worker.js - Shared Worker implementation\n\n// Add your Shared Worker logic here\n\n// Create connections array here\nlet connections = [];\n\n// Create broadcastMessage function here\n\n// Add onconnect handler here\n\n// Add event listener for send button here",
+        "expectedOutcome": "The send button will trigger message sending to the worker when clicked.",
+        "successCriteria": [
+          "The send button has an event listener that calls sendMessageToWorker with the input value."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure the event listener properly gets the input value and calls sendMessageToWorker.",
+        "feedbackWrong": "The button isn't wired correctly yet. Add an event listener that calls sendMessageToWorker with the input value.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "addEventListener",
+            "sendMessageToWorker",
+            "value"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step12",
+        "type": "question",
+        "phase": "Step 12 of 12",
+        "title": "Display received messages in the UI",
+        "instruction": "Update the message handler in your main application to display received messages in the UI element.",
+        "hint": "In the message handler function, find the element where messages should appear and update its content with the received message data.",
+        "analogousExample": "// Example: updating UI with received data\nfunction handleMessage(event) {\n  const message = event.data;\n  const messageDisplay = document.getElementById('message-display');\n  messageDisplay.textContent = message;\n}",
+        "seedCode": "// worker.js - Shared Worker implementation\n\n// Add your Shared Worker logic here\n\n// Create connections array here\nlet connections = [];\n\n// Create broadcastMessage function here\n\n// Add onconnect handler here\n\n// Add event listener for send button here",
+        "expectedOutcome": "The UI will now show messages received from other tabs through the Shared Worker.",
+        "successCriteria": [
+          "The message handler updates a UI element with the received message content."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've made progress, but the message handler doesn't fully update the UI element with received messages. Check that you're accessing the correct DOM element and setting its content properly.",
+        "feedbackWrong": "The message handler doesn't update the UI with received messages. Make sure you're capturing the message data and updating a visible UI element.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "event.data",
+            "textContent",
+            "innerHTML",
+            "append",
+            "message",
+            "display"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import required APIs for Shared Worker and DOM manipulation",
+        "id": "step1"
+      },
+      {
+        "label": "Create the main application entry point",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize Shared Worker connection",
+        "id": "step3"
+      },
+      {
+        "label": "Set up message handling from the worker",
+        "id": "step4"
+      },
+      {
+        "label": "Define function to send messages to the worker",
+        "id": "step5"
+      },
+      {
+        "label": "Create Shared Worker script file",
+        "id": "step6"
+      },
+      {
+        "label": "Initialize worker-side connections array",
+        "id": "step7"
+      },
+      {
+        "label": "Set up worker message broadcasting",
+        "id": "step8"
+      },
+      {
+        "label": "Add worker connection handling",
+        "id": "step9"
+      },
+      {
+        "label": "Create UI structure for the demo",
+        "id": "step10"
+      },
+      {
+        "label": "Wire UI events to send messages",
+        "id": "step11"
+      },
+      {
+        "label": "Display received messages in the UI",
+        "id": "step12"
+      }
+    ]
+  },
+  "source": "content"
+}

@@ -1,0 +1,261 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-node-28",
+    "track": "node",
+    "lessonNum": 28,
+    "title": "Build request logging middleware",
+    "shortName": "P28",
+    "intro": {
+      "tag": "LESSON #28",
+      "title": "Build request logging middleware",
+      "body": "In this lesson, you will build a request logging middleware for a Node.js server. You will learn how to intercept incoming HTTP requests, log details like the request method and URL, and pass control to the next handler. The core concept is middleware—a function that processes requests in a pipeline. You'll use Node.js's built-in HTTP module and basic JavaScript functions. By the end, you'll have a working logger that outputs request information to the console.",
+      "usecase": "Request logging middleware is essential for monitoring and debugging production Node.js applications. In e-commerce platforms like Shopify or payment systems like Stripe, every API request is logged to track user activity, detect suspicious patterns, and troubleshoot errors. This pattern appears in admin dashboards where developers view request metrics, in security audit logs that record access attempts, and in error reporting panels that help teams identify and fix issues quickly. Implementing this middleware gives you visibility into how your application behaves in real-world scenarios."
+    },
+    "objectives": [
+      "Construct a basic middleware function that logs incoming HTTP requests",
+      "Integrate the logging middleware into an Express application",
+      "Manipulate request and response objects to extract relevant logging data",
+      "Configure middleware to execute at specific points in the request-response cycle",
+      "Apply formatting to log output for improved readability",
+      "Initialize a custom logging function with configurable options",
+      "Control the flow of execution by calling the next middleware in the chain"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 7",
+        "title": "Import required Node.js modules",
+        "instruction": "Import the required Node.js modules: 'fs' for file system operations and 'path' for path manipulation.",
+        "hint": "Use the require() function to import Node.js core modules. Place these imports at the top of your file.",
+        "analogousExample": "// Example: importing core modules\nconst fs = require('fs');\nconst os = require('os');",
+        "seedCode": "// Import the required Node.js modules here\n",
+        "expectedOutcome": "The fs and path modules are imported and ready to use in your middleware.",
+        "successCriteria": [
+          "fs and path modules are imported using require()"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've imported some modules, but make sure to import both 'fs' and 'path' using require().",
+        "feedbackWrong": "The imports are missing or incorrect. You need to import both 'fs' and 'path' modules using require().",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "require('fs')",
+            "require('path')"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 7",
+        "title": "Create the middleware function structure",
+        "instruction": "Create a function named 'requestLogger' that takes three parameters: req, res, and next. The function body can be empty for now.",
+        "hint": "Remember that middleware functions in Express/Node.js typically follow this signature: function(req, res, next) { ... }",
+        "analogousExample": "// Similar: middleware function structure\nfunction exampleMiddleware(req, res, next) {\n  // Function body goes here\n}",
+        "seedCode": "// Import the required Node.js modules here\n\n// Create your requestLogger middleware function here",
+        "expectedOutcome": "You should have a function named requestLogger with three parameters (req, res, next) and an empty function body.",
+        "successCriteria": [
+          "A function named 'requestLogger' exists with three parameters: req, res, and next"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure your function is named 'requestLogger' and accepts three parameters: req, res, and next.",
+        "feedbackWrong": "The function structure doesn't match what's needed. Remember to create a function named 'requestLogger' with three parameters: req, res, and next.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "requestLogger",
+            "req",
+            "res",
+            "next"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 7",
+        "title": "Define log file path",
+        "instruction": "Inside your requestLogger middleware function, create a variable named 'logFilePath' that points to 'logs/requests.log' using path.join() with __dirname.",
+        "hint": "Use path.join(__dirname, 'logs', 'requests.log') to create the full file path.",
+        "analogousExample": "// Example: creating a file path variable\nconst filePath = path.join(__dirname, 'data', 'output.txt');",
+        "seedCode": "// Import the required Node.js modules here\n\n// Create your requestLogger middleware function here\nfunction requestLogger(req, res, next) {\n  // Define log file path here\n}",
+        "expectedOutcome": "The middleware function now contains a 'logFilePath' variable that stores the full path to the log file.",
+        "successCriteria": [
+          "A 'logFilePath' variable is defined inside the requestLogger function using path.join(__dirname, 'logs', 'requests.log')."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're using path.join() with __dirname and the correct folder structure ('logs/requests.log').",
+        "feedbackWrong": "The log file path wasn't defined correctly. Remember to use path.join(__dirname, 'logs', 'requests.log') inside your middleware function.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "logFilePath",
+            "path.join",
+            "__dirname",
+            "'logs'",
+            "'requests.log'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 7",
+        "title": "Create logs directory if it doesn't exist",
+        "instruction": "Inside your requestLogger function, use fs.existsSync() to check if the logs directory exists, and create it with fs.mkdirSync() if it doesn't.",
+        "hint": "First check if the directory exists, then create it only if it doesn't exist. You'll need to use the path you defined earlier.",
+        "analogousExample": "// Similar: checking and creating a directory\nif (!fs.existsSync('./data')) {\n  fs.mkdirSync('./data');\n}",
+        "seedCode": "// Import the required Node.js modules here\n\n// Create your requestLogger middleware function here\nfunction requestLogger(req, res, next) {\n  // Define log file path here\n  \n  // Create logs directory if it doesn't exist\n}",
+        "expectedOutcome": "The middleware function will now ensure the logs directory exists before attempting to write log files.",
+        "successCriteria": [
+          "The requestLogger function contains code that checks for the logs directory existence and creates it if missing."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're checking if the directory exists and creating it only when it doesn't. Check your logic carefully.",
+        "feedbackWrong": "The directory check and creation logic is missing or incorrect. Remember to use fs.existsSync() to check and fs.mkdirSync() to create the directory if it doesn't exist.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "fs.existsSync",
+            "fs.mkdirSync",
+            "logs",
+            "directory"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 7",
+        "title": "Format the log message",
+        "instruction": "Inside your requestLogger function, create a formatted log message string that includes the current timestamp, request method, and request URL.",
+        "hint": "Use a template literal to combine the timestamp, method, and URL into a single string with clear formatting.",
+        "analogousExample": "// Example: formatting a message with variables\nconst message = `${timestamp} - ${method} ${url}`;",
+        "seedCode": "// Import the required Node.js modules here\n\n// Create your requestLogger middleware function here\nfunction requestLogger(req, res, next) {\n  // Define log file path here\n  \n  // Create logs directory if it doesn't exist\n  \n  // Extract request information here\n  \n  // Format the log message here\n}",
+        "expectedOutcome": "A formatted log message string is created inside the middleware function.",
+        "successCriteria": [
+          "A log message string is created that includes timestamp, method, and URL with proper formatting."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your log message includes the timestamp, method, and URL in a single formatted string.",
+        "feedbackWrong": "The log message formatting isn't quite right. You need to create a string that combines the timestamp, method, and URL values.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "log",
+            "message",
+            "timestamp",
+            "method",
+            "url"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 7",
+        "title": "Handle file write errors",
+        "instruction": "Add error handling to the fs.appendFile() call inside your requestLogger function. Use a callback function to check for errors and log them to the console if they occur.",
+        "hint": "The fs.appendFile() method accepts a callback function as its last parameter. This callback receives an error argument that you can check.",
+        "analogousExample": "// Similar: handling errors in file operations\nfs.writeFile('file.txt', 'data', (err) => {\n  if (err) {\n    console.error('Error writing file:', err);\n  }\n});",
+        "seedCode": "// Import the required Node.js modules here\n\n// Create your requestLogger middleware function here\nfunction requestLogger(req, res, next) {\n  // Define log file path here\n  \n  // Create logs directory if it doesn't exist\n  \n  // Extract request information here\n  \n  // Format the log message here\n  \n  // Write log to file here\n  fs.appendFile(logFilePath, logMessage, (err) => {\n    // Add error handling here\n  });\n}",
+        "expectedOutcome": "The fs.appendFile() call now includes error handling that logs any file write errors to the console.",
+        "successCriteria": [
+          "The fs.appendFile() callback checks for errors and logs them to console when they occur"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're checking the error parameter in the callback and logging it to the console when an error occurs.",
+        "feedbackWrong": "The error handling isn't quite right. Remember that fs.appendFile() takes a callback function that receives an error parameter. Check if that error exists and log it.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "if",
+            "err",
+            "console.error",
+            "appendFile",
+            "callback"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 7",
+        "title": "Export the middleware function",
+        "instruction": "Export the requestLogger middleware function using module.exports so it can be imported in other files.",
+        "hint": "Add an export statement at the end of your file using module.exports.",
+        "analogousExample": "// Exporting a function for use in other files\nfunction greet() {\n  console.log('Hello!');\n}\nmodule.exports = greet;",
+        "seedCode": "// Import the required Node.js modules here\n\n// Create your requestLogger middleware function here\nfunction requestLogger(req, res, next) {\n  // Define log file path here\n  \n  // Create logs directory if it doesn't exist\n  \n  // Extract request information here\n  \n  // Format the log message here\n  \n  // Write log to file here\n  fs.appendFile(logFilePath, logMessage, (err) => {\n    // Add error handling here\n  });\n  \n  // Call next() here\n}\n\n// Export the middleware function here",
+        "expectedOutcome": "The requestLogger function will be exported and ready to be imported in other files.",
+        "successCriteria": [
+          "The requestLogger function is exported using module.exports."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure you're exporting the requestLogger function using module.exports.",
+        "feedbackWrong": "The export statement is missing or incorrect. Use module.exports to export the requestLogger function.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "module.exports",
+            "requestLogger"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import required Node.js modules",
+        "id": "step1"
+      },
+      {
+        "label": "Create the middleware function structure",
+        "id": "step2"
+      },
+      {
+        "label": "Define log file path",
+        "id": "step3"
+      },
+      {
+        "label": "Create logs directory if it doesn't exist",
+        "id": "step4"
+      },
+      {
+        "label": "Format the log message",
+        "id": "step5"
+      },
+      {
+        "label": "Handle file write errors",
+        "id": "step6"
+      },
+      {
+        "label": "Export the middleware function",
+        "id": "step7"
+      }
+    ]
+  },
+  "source": "content"
+}

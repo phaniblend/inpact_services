@@ -1,0 +1,402 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-react-js-83",
+    "track": "react-js",
+    "lessonNum": 83,
+    "title": "Race Condition Fix",
+    "shortName": "P83",
+    "intro": {
+      "tag": "LESSON #83",
+      "title": "Race Condition Fix",
+      "body": "In this lesson, you will build a simple React component that fetches and displays user data from an API, learning how to fix a common race condition bug. You will understand how race conditions occur when multiple asynchronous requests can complete out of order, leading to incorrect data being displayed. The core programming concepts involved are managing state with the useState hook, performing side effects with the useEffect hook, and using cleanup functions to cancel outdated requests. You'll work with JavaScript's fetch API and React's built-in hooks to implement a solution that ensures only the latest request's data is shown, making your app more reliable and user-friendly.",
+      "usecase": "Race conditions frequently occur in React applications when multiple asynchronous operations compete to update the same state. This is common in search interfaces where rapid typing triggers multiple API calls, and later responses can overwrite earlier ones, displaying incorrect results. It also affects dashboard components that fetch real-time data from multiple sources, where stale data can replace fresh updates. Understanding race condition fixes ensures users see accurate, predictable information in critical interfaces like financial dashboards, e-commerce filters, and collaborative editing tools."
+    },
+    "objectives": [
+      "Implement a controlled component to manage user input and prevent conflicting state updates",
+      "Apply a loading state to disable interactions during asynchronous operations",
+      "Construct a cleanup function to abort pending requests when components unmount",
+      "Configure a unique request identifier to track and ignore outdated responses",
+      "Update component state conditionally based on the most recent request",
+      "Integrate error boundaries to handle failed requests without disrupting the UI",
+      "Manipulate the order of asynchronous operations to ensure predictable outcomes"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 11",
+        "title": "Import React, useState, and useEffect",
+        "instruction": "Import React, useState, and useEffect from the 'react' package.",
+        "hint": "Use the import statement to bring in the necessary hooks from the 'react' library.",
+        "analogousExample": "// Example: importing multiple hooks\nimport React, { useState, useEffect } from 'react';",
+        "seedCode": "// Import React, useState, and useEffect from 'react' here",
+        "expectedOutcome": "The React library and the useState and useEffect hooks are imported and ready to use.",
+        "successCriteria": [
+          "React, useState, and useEffect are imported from 'react'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're importing all three: React, useState, and useEffect from 'react'.",
+        "feedbackWrong": "That doesn't look right. You need to import React, useState, and useEffect from the 'react' package.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "React",
+            "useState",
+            "useEffect",
+            "'react'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 11",
+        "title": "Create the main component",
+        "instruction": "Create a functional component named RaceConditionFix that returns an empty fragment (<></>) for now.",
+        "hint": "Define a function or arrow function with the name RaceConditionFix and return an empty fragment.",
+        "analogousExample": "// Similar: a component returning empty fragment\nfunction ExampleComponent() {\n  return <> </>;\n}",
+        "seedCode": "import React, { useState, useEffect } from 'react';\n\n// Create the RaceConditionFix component here",
+        "expectedOutcome": "A functional component named RaceConditionFix is defined and returns an empty fragment.",
+        "successCriteria": [
+          "The component RaceConditionFix is defined and returns an empty fragment."
+        ],
+        "feedbackCorrect": "Great! You've created the main component structure.",
+        "feedbackPartial": "You're close. Make sure the component is named exactly RaceConditionFix and returns an empty fragment.",
+        "feedbackWrong": "Check that you've defined a component named RaceConditionFix that returns an empty fragment.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "RaceConditionFix",
+            "return",
+            "<>",
+            "</>"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 11",
+        "title": "Initialize state for data and loading status",
+        "instruction": "Inside the RaceConditionFix component, use useState to create two state variables: one named 'data' initialized to null, and another named 'loading' initialized to false.",
+        "hint": "Call useState twice: once for 'data' with initial value null, and once for 'loading' with initial value false.",
+        "analogousExample": "// Example: initializing multiple state variables\nfunction ExampleComponent() {\n  const [count, setCount] = useState(0);\n  const [name, setName] = useState('');\n  return null;\n}",
+        "seedCode": "import React, { useState, useEffect } from 'react';\n\n// Create the RaceConditionFix component here\nconst RaceConditionFix = () => {\n  // Initialize state variables here\n\n  return (\n    <div>\n      <h1>Race Condition Fix</h1>\n    </div>\n  );\n};\n\nexport default RaceConditionFix;",
+        "expectedOutcome": "The component will have two state variables: 'data' (starting as null) and 'loading' (starting as false).",
+        "successCriteria": [
+          "Two useState calls are present: one for 'data' with initial value null, and one for 'loading' with initial value false."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure you have both state variables: 'data' initialized to null and 'loading' initialized to false.",
+        "feedbackWrong": "Inside the component, use useState to create 'data' and 'loading' state variables with the specified initial values.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "useState",
+            "data",
+            "null",
+            "loading",
+            "false"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 11",
+        "title": "Create a mock fetch function",
+        "instruction": "Inside the RaceConditionFix component, create an async function named fetchData that takes an id parameter. The function should simulate an API call by waiting for a random delay between 1-3 seconds,",
+        "hint": "Use async/await with Math.random() to generate a random delay. Remember to multiply by 2000 and add 1000 to get a range of 1000-3000 milliseconds.",
+        "analogousExample": "// Example async function with random delay\nasync function fetchUser(userId) {\n  const delay = Math.random() * 2000 + 1000;\n  await new Promise(resolve => setTimeout(resolve, delay));\n  return `User ${userId} data`;\n}",
+        "seedCode": "import React, { useState, useEffect } from 'react';\n\n// Create the RaceConditionFix component here\nconst RaceConditionFix = () => {\n  // Initialize state variables here\n  const [data, setData] = useState(null);\n  const [loading, setLoading] = useState(false);\n\n  // Create the fetchData function here\n\n  return (\n    <div>\n      <h1>Race Condition Fix</h1>\n    </div>\n  );\n};\n\nexport default RaceConditionFix;",
+        "expectedOutcome": "You'll have a fetchData function that can be called later to simulate API requests with varying delays.",
+        "successCriteria": [
+          "The component contains an async fetchData function that takes an id parameter, uses setTimeout with a random delay, and returns a string containing the id."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your function is async, takes an id parameter, waits for a random delay between 1-3 seconds, and returns a string with the id.",
+        "feedbackWrong": "The fetchData function isn't quite right. It should be async, accept an id parameter, use setTimeout with Math.random() for delay, and return a string like `Data for ID: ${id}`.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "async",
+            "fetchData",
+            "id",
+            "Math.random()",
+            "setTimeout",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 11",
+        "title": "return a string like `Data for ID: ${id}`",
+        "instruction": "return a string like `Data for ID: ${id}`.",
+        "hint": "Use async/await with Math.random() to generate a random delay. Remember to multiply by 2000 and add 1000 to get a range of 1000-3000 milliseconds.",
+        "analogousExample": "// Example async function with random delay\nasync function fetchUser(userId) {\n  const delay = Math.random() * 2000 + 1000;\n  await new Promise(resolve => setTimeout(resolve, delay));\n  return `User ${userId} data`;\n}",
+        "seedCode": "import React, { useState, useEffect } from 'react';\n\n// Create the RaceConditionFix component here\nconst RaceConditionFix = () => {\n  // Initialize state variables here\n  const [data, setData] = useState(null);\n  const [loading, setLoading] = useState(false);\n\n  // Create the fetchData function here\n\n  return (\n    <div>\n      <h1>Race Condition Fix</h1>\n    </div>\n  );\n};\n\nexport default RaceConditionFix;",
+        "expectedOutcome": "",
+        "successCriteria": [
+          "Complete the step as instructed."
+        ],
+        "feedbackCorrect": "Great! Step completed.",
+        "feedbackPartial": "Review the instruction and try again.",
+        "feedbackWrong": "Check the instruction and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "async",
+            "fetchData",
+            "id",
+            "Math.random()",
+            "setTimeout",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 11",
+        "title": "Create a handler function for fetching data",
+        "instruction": "Inside your RaceConditionFix component, create an async function named handleFetch that sets loading to true, calls fetchData with an ID (like 1), and updates the data state with the result.",
+        "hint": "Define an async function that first sets loading to true, then uses await with fetchData, and finally sets data with the result and loading back to false.",
+        "analogousExample": "// Example of an async handler function\nasync function handleClick() {\n  setLoading(true);\n  const result = await fetchData(1);\n  setData(result);\n  setLoading(false);\n}",
+        "seedCode": "import React, { useState, useEffect } from 'react';\n\n// Create the RaceConditionFix component here\nconst RaceConditionFix = () => {\n  // Initialize state variables here\n  const [data, setData] = useState(null);\n  const [loading, setLoading] = useState(false);\n\n  // Create the fetchData function here\n  const fetchData = async (id) => {\n    // Simulate network delay\n    await new Promise(resolve => setTimeout(resolve, 1000));\n    return `Data for ID ${id}`;\n  };\n\n  // Create the handleFetch function here\n\n  return (\n    <div>\n      <h1>Race Condition Fix</h1>\n    </div>\n  );\n};\n\nexport default RaceConditionFix;",
+        "expectedOutcome": "An async handleFetch function is added to the component, which manages loading state and calls fetchData.",
+        "successCriteria": [
+          "The handleFetch function is defined, sets loading to true, calls fetchData with an ID, and updates data with the result."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure your function is async, sets loading to true, calls fetchData with an ID, and updates data with the result.",
+        "feedbackWrong": "Try again. Create an async function named handleFetch that sets loading to true, calls fetchData with an ID, and updates data with the result.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "async",
+            "handleFetch",
+            "setLoading(true)",
+            "fetchData",
+            "setData"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 11",
+        "title": "Add a button to trigger data fetching",
+        "instruction": "Add a button element inside the div with the text 'Fetch Data' and wire its onClick to call the handleFetch function with the argument 1.",
+        "hint": "Place the button after the h1 element. Use onClick={handleFetch} and pass 1 as an argument.",
+        "analogousExample": "// Example: button that triggers a function\n<button onClick={() => handleClick('user123')}>\n  Load User\n</button>",
+        "seedCode": "import React, { useState, useEffect } from 'react';\n\n// Create the RaceConditionFix component here\nconst RaceConditionFix = () => {\n  // Initialize state variables here\n  const [data, setData] = useState(null);\n  const [loading, setLoading] = useState(false);\n\n  // Create the fetchData function here\n  const fetchData = async (id) => {\n    // Simulate network delay\n    await new Promise(resolve => setTimeout(resolve, 1000));\n    return `Data for ID ${id}`;\n  };\n\n  // Create the handleFetch function here\n\n  return (\n    <div>\n      <h1>Race Condition Fix</h1>\n      {/* Add button here */}\n    </div>\n  );\n};\n\nexport default RaceConditionFix;",
+        "expectedOutcome": "A button labeled 'Fetch Data' appears below the heading. Clicking it will eventually trigger the handleFetch function with ID 1.",
+        "successCriteria": [
+          "Button element with text 'Fetch Data' is present and its onClick handler calls handleFetch(1)."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added a button, but check that it calls handleFetch with the argument 1 and has the correct text 'Fetch Data'.",
+        "feedbackWrong": "The button is missing or incorrectly configured. Make sure to add a button element with onClick={handleFetch} and pass 1 as an argument.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<button",
+            "onClick={",
+            "handleFetch",
+            "Fetch Data"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 11",
+        "title": "Display loading state and fetched data",
+        "instruction": "Inside your component's return statement, add conditional rendering to show 'Loading...' when loading is true, and display the data value when it exists.",
+        "hint": "You can use a ternary operator or logical && operator to conditionally render content based on the loading state and data value.",
+        "analogousExample": "// Conditional rendering example\nfunction StatusDisplay({ isLoading, result }) {\n  return (\n    <div>\n      {isLoading ? <p>Loading...</p> : <p>Result: {result}</p>}\n    </div>\n  );\n}",
+        "seedCode": "import React, { useState, useEffect } from 'react';\n\n// Create the RaceConditionFix component here\nconst RaceConditionFix = () => {\n  // Initialize state variables here\n  const [data, setData] = useState(null);\n  const [loading, setLoading] = useState(false);\n\n  // Create the fetchData function here\n  const fetchData = async (id) => {\n    // Simulate network delay\n    await new Promise(resolve => setTimeout(resolve, 1000));\n    return `Data for ID ${id}`;\n  };\n\n  // Create the handleFetch function here\n\n  return (\n    <div>\n      <h1>Race Condition Fix</h1>\n      {/* Add button here */}\n      {/* Add conditional rendering for loading and data here */}\n    </div>\n  );\n};\n\nexport default RaceConditionFix;",
+        "expectedOutcome": "The UI will show 'Loading...' when loading is true, and display the data value when it exists.",
+        "successCriteria": [
+          "Conditional rendering is implemented to show loading state and display fetched data."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're conditionally rendering both the loading state and the data value.",
+        "feedbackWrong": "Try again. You need to add conditional rendering that shows 'Loading...' when loading is true, and displays the data value when it exists.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "loading",
+            "data",
+            "?",
+            ":",
+            "&&",
+            "Loading",
+            "{",
+            "}"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 11",
+        "title": "Add a second fetch button to demonstrate race condition",
+        "instruction": "Add a second button next to the existing one that calls handleFetch with the argument 2. This will create a scenario where clicking both buttons quickly can cause outdated data.",
+        "hint": "Create another button element with onClick={() => handleFetch(2)} and place it after the first button.",
+        "analogousExample": "// Adding another button with different behavior\n<button onClick={() => handleAction('option2')}>Option 2</button>",
+        "seedCode": "import React, { useState, useEffect } from 'react';\n\n// Create the RaceConditionFix component here\nconst RaceConditionFix = () => {\n  // Initialize state variables here\n  const [data, setData] = useState(null);\n  const [loading, setLoading] = useState(false);\n\n  // Create the fetchData function here\n  const fetchData = async (id) => {\n    // Simulate network delay\n    await new Promise(resolve => setTimeout(resolve, 1000));\n    return `Data for ID ${id}`;\n  };\n\n  // Create the handleFetch function here\n\n  return (\n    <div>\n      <h1>Race Condition Fix</h1>\n      {/* Add button here */}\n      {/* Add conditional rendering for loading and data here */}\n    </div>\n  );\n};\n\nexport default RaceConditionFix;",
+        "expectedOutcome": "The UI will have two buttons: one that fetches data for ID 1 and another for ID 2, setting up the race condition scenario.",
+        "successCriteria": [
+          "A second button element is added that calls handleFetch with the argument 2 when clicked."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You added a button, but make sure it calls handleFetch with the argument 2 when clicked.",
+        "feedbackWrong": "The second button wasn't added correctly. Add a button element with onClick={() => handleFetch(2)}.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "button",
+            "onClick",
+            "handleFetch",
+            "2"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 11",
+        "title": "Implement useEffect with cleanup to fix race condition",
+        "instruction": "Add a useEffect hook inside your component that tracks the current request and includes a cleanup function using a boolean flag to prevent state updates from stale requests.",
+        "hint": "Create a useEffect with an empty dependency array. Inside it, define a boolean variable (like 'ignore') and set it to false. In the cleanup function (returned from useEffect), set that variable to true. Use this flag to conditionally update state only when the request is still relevant.",
+        "analogousExample": "// Example: useEffect with cleanup flag\nuseEffect(() => {\n  let ignore = false;\n  \n  fetchData().then(result => {\n    if (!ignore) {\n      setData(result);\n    }\n  });\n  \n  return () => {\n    ignore = true;\n  };\n}, []);",
+        "seedCode": "import React, { useState, useEffect } from 'react';\n\n// Create the RaceConditionFix component here\nconst RaceConditionFix = () => {\n  // Initialize state variables here\n  const [data, setData] = useState(null);\n  const [loading, setLoading] = useState(false);\n\n  // Create the fetchData function here\n  const fetchData = async (id) => {\n    // Simulate network delay\n    await new Promise(resolve => setTimeout(resolve, 1000));\n    return `Data for ID ${id}`;\n  };\n\n  // Create the handleFetch function here\n\n  // Add useEffect with cleanup here\n\n  return (\n    <div>\n      <h1>Race Condition Fix</h1>\n      {/* Add button here */}\n      {/* Add conditional rendering for loading and data here */}\n    </div>\n  );\n};\n\nexport default RaceConditionFix;",
+        "expectedOutcome": "The useEffect hook is implemented with a cleanup function that prevents race conditions by ignoring stale request results.",
+        "successCriteria": [
+          "A useEffect hook is added with an empty dependency array, includes a boolean flag variable, and returns a cleanup function that sets the flag to true."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your useEffect includes both the boolean flag variable and a cleanup function that sets it to true when the component unmounts or before the next effect runs.",
+        "feedbackWrong": "The useEffect implementation is missing key elements. Review the example: you need a boolean flag variable and a cleanup function that sets it to true to ignore stale requests.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "useEffect",
+            "ignore",
+            "return",
+            "cleanup",
+            "true"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 11",
+        "title": "Update the fetch handler to use the cleanup flag",
+        "instruction": "In your component, update the handleFetch function to check if the component is still mounted before updating state by using a cleanup flag.",
+        "hint": "Inside handleFetch, create a local variable like 'isMounted' set to true. In the useEffect cleanup function, set it to false. Then in handleFetch, only update state if isMounted is true.",
+        "analogousExample": "// Example: Checking mount status before state update\nconst handleAction = async () => {\n  let isMounted = true;\n  \n  // Cleanup function\n  const cleanup = () => {\n    isMounted = false;\n  };\n  \n  const result = await fetchData();\n  if (isMounted) {\n    setData(result);\n  }\n};",
+        "seedCode": "import React, { useState, useEffect } from 'react';\n\n// Create the RaceConditionFix component here\nconst RaceConditionFix = () => {\n  // Initialize state variables here\n  const [data, setData] = useState(null);\n  const [loading, setLoading] = useState(false);\n\n  // Create the fetchData function here\n  const fetchData = async (id) => {\n    // Simulate network delay\n    await new Promise(resolve => setTimeout(resolve, 1000));\n    return `Data for ID ${id}`;\n  };\n\n  // Create the handleFetch function here\n  const handleFetch = async (id) => {\n    setLoading(true);\n    const result = await fetchData(id);\n    setData(result);\n    setLoading(false);\n  };\n\n  // Add useEffect with cleanup here\n  useEffect(() => {\n    let isMounted = true;\n    \n    return () => {\n      isMounted = false;\n    };\n  }, []);\n\n  return (\n    <div>\n      <h1>Race Condition Fix</h1>\n      {/* Add button here */}\n      {/* Add conditional rendering for loading and data here */}\n    </div>\n  );\n};\n\nexport default RaceConditionFix;",
+        "expectedOutcome": "The handleFetch function will now check the isMounted flag before updating state, preventing race conditions when components unmount during async operations.",
+        "successCriteria": [
+          "handleFetch function includes a check for the isMounted flag before calling setData and setLoading"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure to check the isMounted flag in both places where you update state (setData and setLoading). The cleanup flag should prevent all state updates when the component is unmounted.",
+        "feedbackWrong": "The handleFetch function doesn't properly check the cleanup flag. Remember to use the isMounted variable from the useEffect cleanup to conditionally update state only when the component is still mounted.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "isMounted",
+            "setData",
+            "setLoading",
+            "if"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import React, useState, and useEffect",
+        "id": "step1"
+      },
+      {
+        "label": "Create the main component",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize state for data and loading status",
+        "id": "step3"
+      },
+      {
+        "label": "Create a mock fetch function",
+        "id": "step4"
+      },
+      {
+        "label": "return a string like `Data for ID: ${id}`",
+        "id": "step5"
+      },
+      {
+        "label": "Create a handler function for fetching data",
+        "id": "step6"
+      },
+      {
+        "label": "Add a button to trigger data fetching",
+        "id": "step7"
+      },
+      {
+        "label": "Display loading state and fetched data",
+        "id": "step8"
+      },
+      {
+        "label": "Add a second fetch button to demonstrate race condition",
+        "id": "step9"
+      },
+      {
+        "label": "Implement useEffect with cleanup to fix race condition",
+        "id": "step10"
+      },
+      {
+        "label": "Update the fetch handler to use the cleanup flag",
+        "id": "step11"
+      }
+    ]
+  },
+  "source": "content"
+}

@@ -1,0 +1,427 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-react-ts-109",
+    "track": "react-ts",
+    "lessonNum": 109,
+    "title": "Token Refresh with Axios Interceptor",
+    "shortName": "P109",
+    "intro": {
+      "tag": "LESSON #109",
+      "title": "Token Refresh with Axios Interceptor",
+      "body": "In this lesson, you will build a React application that automatically refreshes an expired authentication token using Axios interceptors. You'll learn how to intercept HTTP requests and responses to check for token expiration and handle a refresh request seamlessly. The core concepts involve using Axios interceptors, managing asynchronous API calls, and updating application state with the new token. You'll work with React hooks, TypeScript interfaces for type safety, and a mock authentication service to simulate the token refresh flow.",
+      "usecase": "In modern web applications like dashboards, admin panels, or e-commerce sites, user sessions must remain active without requiring manual re-login. This pattern is essential when making API calls that require authentication tokens, which often expire. For example, in a financial dashboard, an expired token during a data refresh would disrupt the user's workflow. Implementing an Axios interceptor to automatically refresh tokens ensures seamless, uninterrupted user experiences by handling token expiration silently in the background."
+    },
+    "objectives": [
+      "Initialize an Axios instance with a base configuration for API requests",
+      "Configure an Axios request interceptor to attach authentication tokens to outgoing requests",
+      "Implement an Axios response interceptor to detect expired token responses",
+      "Construct a token refresh mechanism that makes a new authentication request",
+      "Integrate the token refresh logic with the response interceptor to retry failed requests",
+      "Apply error handling to manage failed token refresh attempts",
+      "Update the Axios instance configuration to use the new token for subsequent requests"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 12",
+        "title": "Import React, useState, useEffect, and axios",
+        "instruction": "Import React, useState, and useEffect from 'react', and axios from 'axios'.",
+        "hint": "Use import statements at the top of the file. Remember to import named exports from 'react' and the default export from 'axios'.",
+        "analogousExample": "// Example: importing dependencies\nimport React, { useState, useEffect } from 'react';\nimport axios from 'axios';",
+        "seedCode": "// Import React, useState, useEffect, and axios here",
+        "expectedOutcome": "The file will have all necessary imports for building the token refresh functionality.",
+        "successCriteria": [
+          "React, useState, and useEffect are imported from 'react', and axios is imported from 'axios'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but some imports are missing. Make sure to import React, useState, and useEffect from 'react', and axios from 'axios'.",
+        "feedbackWrong": "The imports are incorrect or incomplete. Check that you're importing React, useState, and useEffect from 'react', and axios from 'axios'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import React",
+            "useState",
+            "useEffect",
+            "'react'",
+            "import axios",
+            "'axios'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 12",
+        "title": "Create main App component with TypeScript",
+        "instruction": "Create a functional component named App with an explicit return type annotation of React.ReactElement.",
+        "hint": "Use either a function declaration or arrow function syntax. Remember to include the return type after the parameter list.",
+        "analogousExample": "// Example of a typed functional component\nfunction App(): React.ReactElement {\n  return null;\n}",
+        "seedCode": "import React, { useState, useEffect } from 'react';\nimport axios from 'axios';\n\n// Create the App component here",
+        "expectedOutcome": "The App component is defined with proper TypeScript typing, ready to be filled with content in later steps.",
+        "successCriteria": [
+          "App component exists as a function with explicit React.ReactElement return type annotation"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've created a component, but it's missing the explicit return type annotation. Add ': React.ReactElement' after the parameter list.",
+        "feedbackWrong": "The App component isn't properly defined. Create a functional component named App with explicit React.ReactElement return type.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "App",
+            "React.ReactElement",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 12",
+        "title": "Initialize state for authentication tokens",
+        "instruction": "Inside your App component, use useState to create state variables for accessToken and refreshToken with proper TypeScript types.",
+        "hint": "Define an interface or type for the token state, then call useState with initial values (empty strings).",
+        "analogousExample": "// Example: typed state with useState\ninterface UserState {\n  name: string;\n  age: number;\n}\n\nconst MyComponent = () => {\n  const [user, setUser] = useState<UserState>({ name: '', age: 0 });\n  return null;\n};",
+        "seedCode": "import React, { useState, useEffect } from 'react';\nimport axios from 'axios';\n\n// Create the App component here\nconst App = () => {\n  // Initialize token state here\n  \n  return null;\n};",
+        "expectedOutcome": "The App component will have typed state variables ready to store authentication tokens.",
+        "successCriteria": [
+          "State variables accessToken and refreshToken are declared with useState, using TypeScript types (interface or type)."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure both accessToken and refreshToken are defined with useState and have TypeScript types.",
+        "feedbackWrong": "Check that you've used useState with two state variables and provided proper TypeScript type annotations.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "useState",
+            "accessToken",
+            "refreshToken",
+            "string",
+            "interface",
+            "type"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 12",
+        "title": "Create axios instance with base configuration",
+        "instruction": "Create an axios instance with a baseURL and Content-Type header. Place this above the App component.",
+        "hint": "Use axios.create() to make a configured instance. Set baseURL to a placeholder like 'https://api.example.com' and headers to include 'Content-Type': 'application/json'.",
+        "analogousExample": "// Example: creating a configured axios instance\nconst api = axios.create({\n  baseURL: 'https://api.example.com',\n  headers: { 'Content-Type': 'application/json' }\n});",
+        "seedCode": "import React, { useState, useEffect } from 'react';\nimport axios from 'axios';\n\n// Create the App component here\nconst App = () => {\n  // Initialize token state here\n  \n  return null;\n};",
+        "expectedOutcome": "An axios instance is created with baseURL and headers configured, ready for use in the App component.",
+        "successCriteria": [
+          "The axios instance is created using axios.create() with baseURL and headers properties set."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're using axios.create() with both baseURL and headers properties configured.",
+        "feedbackWrong": "The axios instance wasn't created correctly. Remember to use axios.create() with a configuration object containing baseURL and headers.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "axios.create",
+            "baseURL",
+            "headers"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 12",
+        "title": "Add request interceptor for token injection",
+        "instruction": "Inside your App component, add a request interceptor to your axios instance that injects the access token into the Authorization header of outgoing requests.",
+        "hint": "Use the axios instance's interceptors.request.use() method. The interceptor function should modify the config object to add headers.Authorization with the token value.",
+        "analogousExample": "// Adding a request interceptor to attach a token\naxiosInstance.interceptors.request.use((config) => {\n  config.headers.Authorization = `Bearer ${token}`;\n  return config;\n});",
+        "seedCode": "import React, { useState, useEffect } from 'react';\nimport axios from 'axios';\n\n// Create the App component here\nconst App = () => {\n  // Initialize token state here\n  \n  // Create axios instance with base configuration\n  const axiosInstance = axios.create({\n    baseURL: 'https://api.example.com'\n  });\n  \n  // Add request interceptor here\n  \n  return null;\n};",
+        "expectedOutcome": "The axios instance will automatically attach the authorization header to all requests made through it.",
+        "successCriteria": [
+          "A request interceptor is added using interceptors.request.use() that sets the Authorization header with a token value."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added an interceptor, but make sure it correctly sets the Authorization header on the config object.",
+        "feedbackWrong": "The request interceptor is missing or incorrectly implemented. Use interceptors.request.use() to modify the config headers.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "interceptors.request.use",
+            "config.headers.Authorization",
+            "return config"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 12",
+        "title": "Add response interceptor for error handling",
+        "instruction": "Add a response interceptor to your axiosInstance that logs errors and specifically checks for 401 Unauthorized responses.",
+        "hint": "Use axiosInstance.interceptors.response.use() to add the interceptor. The first argument should handle successful responses, the second should handle errors.",
+        "analogousExample": "// Adding a response interceptor\naxiosInstance.interceptors.response.use(\n  (response) => response,\n  (error) => {\n    console.error('Response error:', error);\n    return Promise.reject(error);\n  }\n);",
+        "seedCode": "import React, { useState, useEffect } from 'react';\nimport axios from 'axios';\n\n// Create the App component here\nconst App = () => {\n  // Initialize token state here\n  \n  // Create axios instance with base configuration\n  const axiosInstance = axios.create({\n    baseURL: 'https://api.example.com'\n  });\n  \n  // Add request interceptor here\n  \n  // Add response interceptor here\n  \n  return null;\n};",
+        "expectedOutcome": "The axiosInstance will have a response interceptor that logs errors and can detect 401 responses.",
+        "successCriteria": [
+          "A response interceptor is added to axiosInstance that includes error handling and checks for 401 status."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added a response interceptor, but make sure it includes error handling and checks for 401 status.",
+        "feedbackWrong": "The response interceptor is missing or incomplete. Please add axiosInstance.interceptors.response.use() with proper error handling.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "axiosInstance",
+            "interceptors",
+            "response",
+            "use",
+            "error",
+            "401"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 12",
+        "title": "Create token refresh function",
+        "instruction": "Inside your App component, create an async function named refreshToken that will handle refreshing the access token. The function should take no parameters and return a Promise.",
+        "hint": "Define the function using either 'async function refreshToken()' or 'const refreshToken = async () =>'. The function body can be empty for now.",
+        "analogousExample": "// Similar: an async function that fetches data\nasync function fetchData() {\n  // Implementation goes here\n}",
+        "seedCode": "import React, { useState, useEffect } from 'react';\nimport axios from 'axios';\n\n// Create the App component here\nconst App = () => {\n  // Initialize token state here\n  \n  // Create axios instance with base configuration\n  const axiosInstance = axios.create({\n    baseURL: 'https://api.example.com'\n  });\n  \n  // Add request interceptor here\n  \n  // Add response interceptor here\n  \n  // Create token refresh function here\n  \n  return null;\n};",
+        "expectedOutcome": "You should have an async function named refreshToken defined inside your App component.",
+        "successCriteria": [
+          "The refreshToken async function is created inside the App component."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you've created an async function named refreshToken inside the App component.",
+        "feedbackWrong": "The refreshToken function isn't properly defined. Remember to create an async function named refreshToken inside your App component.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "refreshToken",
+            "async",
+            "function"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 12",
+        "title": "Integrate token refresh in response interceptor",
+        "instruction": "Inside the response interceptor, modify the error handling to call the token refresh function when a 401 error occurs.",
+        "hint": "Check if the error response status is 401, then call your refresh function and retry the original request.",
+        "analogousExample": "// Example: handling 401 error in interceptor\naxiosInstance.interceptors.response.use(\n  (response) => response,\n  async (error) => {\n    if (error.response?.status === 401) {\n      await refreshToken();\n      return axiosInstance(error.config);\n    }\n    return Promise.reject(error);\n  }\n);",
+        "seedCode": "import React, { useState, useEffect } from 'react';\nimport axios from 'axios';\n\n// Create the App component here\nconst App = () => {\n  // Initialize token state here\n  \n  // Create axios instance with base configuration\n  const axiosInstance = axios.create({\n    baseURL: 'https://api.example.com'\n  });\n  \n  // Add request interceptor here\n  \n  // Add response interceptor here\n  axiosInstance.interceptors.response.use(\n    (response) => response,\n    (error) => {\n      // Handle errors here\n      return Promise.reject(error);\n    }\n  );\n  \n  // Create token refresh function here\n  const refreshToken = async () => {\n    // Token refresh logic\n  };\n  \n  return null;\n};",
+        "expectedOutcome": "The response interceptor now detects 401 errors and triggers the token refresh function.",
+        "successCriteria": [
+          "The response interceptor includes a condition to check for status 401 and calls refreshToken before retrying the request."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added some error handling, but make sure to specifically check for 401 status and call refreshToken.",
+        "feedbackWrong": "The response interceptor doesn't yet handle 401 errors with token refresh. Review the example.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "401",
+            "refreshToken",
+            "axiosInstance"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 12",
+        "title": "Add retry logic for failed requests",
+        "instruction": "Inside the error handling block of your response interceptor, add logic to retry the original failed request after a successful token refresh.",
+        "hint": "After refreshing the token, you can retry the original request using the axios instance with the updated token. Store the original request configuration from the error object.",
+        "analogousExample": "// Example retry logic after an async operation\nasync function handleError(error) {\n  const originalRequest = error.config;\n  await refreshData();\n  return axiosInstance(originalRequest);\n}",
+        "seedCode": "import React, { useState, useEffect } from 'react';\nimport axios from 'axios';\n\n// Create the App component here\nconst App = () => {\n  // Initialize token state here\n  \n  // Create axios instance with base configuration\n  const axiosInstance = axios.create({\n    baseURL: 'https://api.example.com'\n  });\n  \n  // Add request interceptor here\n  \n  // Add response interceptor here\n  axiosInstance.interceptors.response.use(\n    (response) => response,\n    (error) => {\n      // Handle errors here\n      return Promise.reject(error);\n    }\n  );\n  \n  // Create token refresh function here\n  const refreshToken = async () => {\n    // Token refresh logic\n  };\n  \n  return null;\n};",
+        "expectedOutcome": "The response interceptor will now include logic to retry failed requests after token refresh.",
+        "successCriteria": [
+          "The error handler in the response interceptor contains code to retry the original request after token refresh."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure to store the original request configuration and retry it after refresh.",
+        "feedbackWrong": "The retry logic is missing or incomplete. Check that you're capturing the original request and retrying it after token refresh.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "originalRequest",
+            "config",
+            "refreshToken",
+            "axiosInstance"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 12",
+        "title": "Create login simulation function",
+        "instruction": "Create a function named 'simulateLogin' that simulates a login API call and sets the initial authentication tokens in state.",
+        "hint": "The function should be async, make a mock API request, and update the token state with the response.",
+        "analogousExample": "// Example: a function that simulates fetching data\nasync function fetchData() {\n  const response = await axios.get('/data');\n  setData(response.data);\n}",
+        "seedCode": "import React, { useState, useEffect } from 'react';\nimport axios from 'axios';\n\n// Create the App component here\nconst App = () => {\n  // Initialize token state here\n  \n  // Create axios instance with base configuration\n  const axiosInstance = axios.create({\n    baseURL: 'https://api.example.com'\n  });\n  \n  // Add request interceptor here\n  \n  // Add response interceptor here\n  axiosInstance.interceptors.response.use(\n    (response) => response,\n    (error) => {\n      // Handle errors here\n      return Promise.reject(error);\n    }\n  );\n  \n  // Create token refresh function here\n  const refreshToken = async () => {\n    // Token refresh logic\n  };\n  \n  // Create login simulation function here\n  \n  return null;\n};",
+        "expectedOutcome": "A function named 'simulateLogin' is added to the component that simulates authentication and updates token state.",
+        "successCriteria": [
+          "The 'simulateLogin' function is defined, uses async/await, and updates the token state variables."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've created a function, but make sure it's named 'simulateLogin', uses async/await, and updates the token state.",
+        "feedbackWrong": "The login simulation function is missing or doesn't match the requirements. Try creating an async function named 'simulateLogin' that updates the token state.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "simulateLogin",
+            "async",
+            "await",
+            "setTokens",
+            "accessToken",
+            "refreshToken"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 12",
+        "title": "Add UI structure with buttons",
+        "instruction": "Return JSX from your App component that includes a container div with a heading, a login button, and a button to simulate making an API call.",
+        "hint": "The JSX should be returned from the component function. Use semantic button elements with descriptive text.",
+        "analogousExample": "// Returning JSX structure with buttons\nreturn (\n  <div>\n    <h1>Dashboard</h1>\n    <button>Login</button>\n    <button>Fetch Data</button>\n  </div>\n);",
+        "seedCode": "import React, { useState, useEffect } from 'react';\nimport axios from 'axios';\n\n// Create the App component here\nconst App = () => {\n  // Initialize token state here\n  \n  // Create axios instance with base configuration\n  const axiosInstance = axios.create({\n    baseURL: 'https://api.example.com'\n  });\n  \n  // Add request interceptor here\n  \n  // Add response interceptor here\n  axiosInstance.interceptors.response.use(\n    (response) => response,\n    (error) => {\n      // Handle errors here\n      return Promise.reject(error);\n    }\n  );\n  \n  // Create token refresh function here\n  const refreshToken = async () => {\n    // Token refresh logic\n  };\n  \n  // Create login simulation function here\n  \n  return null;\n};",
+        "expectedOutcome": "The App component will now render a basic UI with two buttons for user interaction.",
+        "successCriteria": [
+          "The component returns JSX containing a div wrapper, a heading, and at least two button elements."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're returning JSX with a container div, heading, and both buttons.",
+        "feedbackWrong": "The component should return JSX with a container div, heading, and buttons. Check that you're replacing 'return null' with the JSX structure.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "return",
+            "<div>",
+            "<h1>",
+            "<button>",
+            "<button>"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step12",
+        "type": "question",
+        "phase": "Step 12 of 12",
+        "title": "Wire buttons to handlers and display tokens",
+        "instruction": "Add onClick handlers to the login and refresh buttons to call their respective functions, and display the current access token value in the UI.",
+        "hint": "Use the onClick attribute on the buttons to call the login and refreshToken functions. Add a paragraph element to show the current access token value from state.",
+        "analogousExample": "// Example: wiring a button to a handler\n<button onClick={() => handleClick()}>Click me</button>\n<p>Current value: {someState}</p>",
+        "seedCode": "import React, { useState, useEffect } from 'react';\nimport axios from 'axios';\n\n// Create the App component here\nconst App = () => {\n  // Initialize token state here\n  const [tokens, setTokens] = useState({ accessToken: '', refreshToken: '' });\n  \n  // Create axios instance with base configuration\n  const axiosInstance = axios.create({\n    baseURL: 'https://api.example.com'\n  });\n  \n  // Add request interceptor here\n  axiosInstance.interceptors.request.use(\n    (config) => {\n      if (tokens.accessToken) {\n        config.headers.Authorization = `Bearer ${tokens.accessToken}`;\n      }\n      return config;\n    },\n    (error) => Promise.reject(error)\n  );\n  \n  // Add response interceptor here\n  axiosInstance.interceptors.response.use(\n    (response) => response,\n    async (error) => {\n      const originalRequest = error.config;\n      if (error.response?.status === 401 && !originalRequest._retry) {\n        originalRequest._retry = true;\n        try {\n          const newAccessToken = await refreshToken();\n          setTokens(prev => ({ ...prev, accessToken: newAccessToken }));\n          originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;\n          return axiosInstance(originalRequest);\n        } catch (refreshError) {\n          return Promise.reject(refreshError);\n        }\n      }\n      return Promise.reject(error);\n    }\n  );\n  \n  // Create token refresh function here\n  const refreshToken = async () => {\n    // Simulate token refresh\n    const newToken = `refreshed_${Date.now()}`;\n    setTokens(prev => ({ ...prev, accessToken: newToken }));\n    return newToken;\n  };\n  \n  // Create login simulation function here\n  const login = async () => {\n    // Simulate login\n    const mockTokens = {\n      accessToken: `access_${Date.now()}`,\n      refreshToken: `refresh_${Date.now()}`\n    };\n    setTokens(mockTokens);\n  };\n  \n  return (\n    <div>\n      <h1>Token Refresh Demo</h1>\n      <button>Login</button>\n      <button>Refresh Token</button>\n    </div>\n  );\n};",
+        "expectedOutcome": "The buttons will trigger the login and token refresh functions when clicked, and the current access token will be displayed below.",
+        "successCriteria": [
+          "Login button has onClick handler calling login function",
+          "Refresh button has onClick handler calling refreshToken function",
+          "Paragraph displays current access token from tokens.accessToken"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure both buttons have onClick handlers and the paragraph shows the access token value from state.",
+        "feedbackWrong": "The buttons aren't properly wired or the token display is missing. Check that you've added onClick handlers to both buttons and a paragraph showing tokens.accessToken.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "onClick={login}",
+            "onClick={refreshToken}",
+            "{tokens.accessToken}"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import React, useState, useEffect, and axios",
+        "id": "step1"
+      },
+      {
+        "label": "Create main App component with TypeScript",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize state for authentication tokens",
+        "id": "step3"
+      },
+      {
+        "label": "Create axios instance with base configuration",
+        "id": "step4"
+      },
+      {
+        "label": "Add request interceptor for token injection",
+        "id": "step5"
+      },
+      {
+        "label": "Add response interceptor for error handling",
+        "id": "step6"
+      },
+      {
+        "label": "Create token refresh function",
+        "id": "step7"
+      },
+      {
+        "label": "Integrate token refresh in response interceptor",
+        "id": "step8"
+      },
+      {
+        "label": "Add retry logic for failed requests",
+        "id": "step9"
+      },
+      {
+        "label": "Create login simulation function",
+        "id": "step10"
+      },
+      {
+        "label": "Add UI structure with buttons",
+        "id": "step11"
+      },
+      {
+        "label": "Wire buttons to handlers and display tokens",
+        "id": "step12"
+      }
+    ]
+  },
+  "source": "content"
+}

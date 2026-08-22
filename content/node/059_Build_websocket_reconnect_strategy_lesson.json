@@ -1,0 +1,335 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-node-59",
+    "track": "node",
+    "lessonNum": 59,
+    "title": "Build websocket reconnect strategy",
+    "shortName": "P59",
+    "intro": {
+      "tag": "LESSON #59",
+      "title": "Build websocket reconnect strategy",
+      "body": "In this lesson, you will build a WebSocket reconnect strategy to handle dropped connections in a Node.js application. You will learn to implement automatic reconnection logic that retries failed connections with delays, preventing your app from staying offline. The core programming concept involves using state management, event listeners, and timers to control reconnection attempts. You will work with the WebSocket API, JavaScript's setTimeout function, and error handling to create a resilient client. By the end, you will have a reusable reconnect module that keeps your WebSocket connection alive despite network issues.",
+      "usecase": "WebSocket reconnect strategies are essential in real-time applications where persistent connections are critical. In financial trading dashboards, reconnection logic ensures price updates and order execution continue seamlessly after network interruptions. Live collaboration tools like Google Docs use similar patterns to maintain document synchronization when users switch networks. Gaming platforms implement exponential backoff reconnection to handle server maintenance without overwhelming the system. Even chat applications like Slack or Discord rely on robust reconnect strategies to maintain message delivery during unstable connections."
+    },
+    "objectives": [
+      "Initialize a WebSocket connection with a configurable URL and event listeners",
+      "Implement a reconnect handler that attempts to re-establish a connection after a failure",
+      "Configure an exponential backoff strategy to control the timing between reconnection attempts",
+      "Integrate a maximum retry limit to prevent infinite reconnection loops",
+      "Manipulate connection state variables to track and display the current WebSocket status",
+      "Apply event listeners to handle WebSocket close events and trigger the reconnect logic",
+      "Construct a complete WebSocket client with automatic reconnection capabilities"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 9",
+        "title": "Import required Node.js modules",
+        "instruction": "Import the WebSocket module from 'ws' and the EventEmitter module from 'events'.",
+        "hint": "Use the 'require' function to import both modules. You'll need them for WebSocket connections and event handling.",
+        "analogousExample": "// Importing core modules\nconst fs = require('fs');\nconst path = require('path');",
+        "seedCode": "// Import WebSocket and EventEmitter modules here",
+        "expectedOutcome": "The WebSocket and EventEmitter modules are imported and ready to use.",
+        "successCriteria": [
+          "WebSocket is imported from 'ws' and EventEmitter is imported from 'events'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've imported one module, but you need both WebSocket from 'ws' and EventEmitter from 'events'.",
+        "feedbackWrong": "The imports are missing or incorrect. Make sure to import both WebSocket from 'ws' and EventEmitter from 'events'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "require",
+            "'ws'",
+            "'events'",
+            "WebSocket",
+            "EventEmitter"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 9",
+        "title": "Create WebSocket client class",
+        "instruction": "Create a class named ReconnectingWebSocket that extends EventEmitter. Add an empty constructor that takes a url parameter.",
+        "hint": "Use the class keyword followed by the class name, then extends EventEmitter. Inside, define a constructor method that accepts a url parameter.",
+        "analogousExample": "// Similar: a basic class extending another class\nclass CustomEmitter extends EventEmitter {\n  constructor(options) {\n    super();\n    this.options = options;\n  }\n}",
+        "seedCode": "// Import WebSocket and EventEmitter modules here\n\n// Create the ReconnectingWebSocket class here\n",
+        "expectedOutcome": "A class definition for ReconnectingWebSocket that extends EventEmitter and has a constructor with a url parameter.",
+        "successCriteria": [
+          "The ReconnectingWebSocket class is defined, extends EventEmitter, and has a constructor that accepts a url parameter."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure the class extends EventEmitter and has a constructor with a url parameter.",
+        "feedbackWrong": "The class definition is missing or incorrect. Remember to extend EventEmitter and include a constructor with a url parameter.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "class",
+            "ReconnectingWebSocket",
+            "extends",
+            "EventEmitter",
+            "constructor",
+            "url"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 9",
+        "title": "Initialize class properties",
+        "instruction": "Add a constructor to the ReconnectingWebSocket class that initializes the following properties: url, reconnectInterval, maxReconnectAttempts, currentAttempt, and ws.",
+        "hint": "The constructor should take url as a parameter and set default values for the other properties. Initialize ws to null and currentAttempt to 0.",
+        "analogousExample": "// Example: constructor for a class with properties\nclass Timer {\n  constructor(duration) {\n    this.duration = duration;\n    this.isRunning = false;\n    this.currentTime = 0;\n  }\n}",
+        "seedCode": "// Import WebSocket and EventEmitter modules here\n\n// Create the ReconnectingWebSocket class here\nclass ReconnectingWebSocket {\n  // Add constructor here\n}",
+        "expectedOutcome": "The ReconnectingWebSocket class will have a constructor that sets up all necessary instance variables for tracking connection state and configuration.",
+        "successCriteria": [
+          "Constructor is defined with url parameter and initializes url, reconnectInterval (default 3000), maxReconnectAttempts (default 5), currentAttempt (default 0), and ws (default null)."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added a constructor, but some properties are missing or not properly initialized. Check that all five required properties are set.",
+        "feedbackWrong": "The constructor is missing or doesn't properly initialize the required properties. Make sure to set url, reconnectInterval, maxReconnectAttempts, currentAttempt, and ws.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "constructor",
+            "url",
+            "reconnectInterval",
+            "maxReconnectAttempts",
+            "currentAttempt",
+            "ws"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 9",
+        "title": "Implement connect method",
+        "instruction": "Inside the ReconnectingWebSocket class, add a connect method that creates a new WebSocket instance and sets up basic event listeners for 'open', 'message', 'error', and 'close' events.",
+        "hint": "The method should instantiate a new WebSocket with the URL stored in the class, then assign event handlers using this.ws.addEventListener.",
+        "analogousExample": "// Example: adding a method to a class\nclass ConnectionManager {\n  connect() {\n    this.socket = new WebSocket('ws://example.com');\n    this.socket.addEventListener('open', () => console.log('Connected'));\n    this.socket.addEventListener('message', (event) => console.log(event.data));\n  }\n}",
+        "seedCode": "// Import WebSocket and EventEmitter modules here\n\n// Create the ReconnectingWebSocket class here\nclass ReconnectingWebSocket {\n  // Add constructor here\n  \n  // Add connect method here\n}",
+        "expectedOutcome": "The ReconnectingWebSocket class now has a connect method that creates a WebSocket connection and attaches event listeners.",
+        "successCriteria": [
+          "The connect method is defined inside the class, creates a new WebSocket instance, and sets up event listeners for 'open', 'message', 'error', and 'close' events."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added the connect method, but it's missing some event listeners. Make sure to add handlers for 'open', 'message', 'error', and 'close' events.",
+        "feedbackWrong": "The connect method is not properly implemented. Check that it creates a WebSocket instance and sets up event listeners.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "connect",
+            "new WebSocket",
+            "addEventListener",
+            "open",
+            "message",
+            "error",
+            "close"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 9",
+        "title": "Add WebSocket open event handler",
+        "instruction": "In the connect method of your ReconnectingWebSocket class, add an 'open' event listener to the WebSocket instance. Inside the listener, reset the reconnection attempts counter to 0 and emit a 'connected' event using the EventEmitter.",
+        "hint": "Use ws.on('open', () => { ... }) to listen for the open event. Inside the callback, set this.reconnectAttempts = 0 and call this.emit('connected').",
+        "analogousExample": "// Example: adding an event listener to a WebSocket\nws.on('open', () => {\n  console.log('Connection established');\n  this.isConnected = true;\n});",
+        "seedCode": "// Import WebSocket and EventEmitter modules here\nconst WebSocket = require('ws');\nconst EventEmitter = require('events');\n\n// Create the ReconnectingWebSocket class here\nclass ReconnectingWebSocket extends EventEmitter {\n  constructor(url) {\n    super();\n    this.url = url;\n    this.reconnectAttempts = 0;\n    this.maxReconnectAttempts = 5;\n    this.reconnectDelay = 1000;\n    this.ws = null;\n  }\n\n  connect() {\n    this.ws = new WebSocket(this.url);\n    // Add open event listener here\n  }\n}",
+        "expectedOutcome": "The connect method now includes an 'open' event listener that resets reconnection attempts and emits a 'connected' event when the WebSocket connection is successfully established.",
+        "successCriteria": [
+          "The connect method contains ws.on('open', () => { ... }) with this.reconnectAttempts = 0 and this.emit('connected') inside the callback."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added an open event listener, but it's missing either resetting the reconnection attempts or emitting the 'connected' event. Make sure to include both actions inside the callback.",
+        "feedbackWrong": "The connect method doesn't contain the required open event listener. Add ws.on('open', () => { ... }) with the specified actions inside.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "ws.on('open'",
+            "reconnectAttempts = 0",
+            "emit('connected')"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 9",
+        "title": "Add WebSocket message event handler",
+        "instruction": "In the connect method, add a 'message' event listener to the WebSocket instance that emits a 'message' event with the received data.",
+        "hint": "Use this.ws.on('message', ...) to listen for messages. Inside the callback, emit a 'message' event using this.emit('message', data).",
+        "analogousExample": "// Similar: event listener that processes data\nsocket.on('message', (data) => {\n  console.log('Received:', data);\n});",
+        "seedCode": "// Import WebSocket and EventEmitter modules here\nconst WebSocket = require('ws');\nconst EventEmitter = require('events');\n\n// Create the ReconnectingWebSocket class here\nclass ReconnectingWebSocket extends EventEmitter {\n  constructor(url) {\n    super();\n    this.url = url;\n    this.reconnectAttempts = 0;\n    this.maxReconnectAttempts = 5;\n    this.reconnectDelay = 1000;\n    this.ws = null;\n  }\n\n  connect() {\n    this.ws = new WebSocket(this.url);\n    // Add open event listener here\n    // Add message event listener here\n  }\n}",
+        "expectedOutcome": "The WebSocket client will now process incoming messages and emit them as events that other parts of your application can listen to.",
+        "successCriteria": [
+          "A 'message' event listener is added to this.ws that emits a 'message' event with the received data."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're emitting the 'message' event with the received data using this.emit().",
+        "feedbackWrong": "The message event handler isn't correctly implemented. Check that you're using this.ws.on('message', ...) and emitting the event properly.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "this.ws.on",
+            "'message'",
+            "this.emit",
+            "'message'",
+            "data"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 9",
+        "title": "Add WebSocket close event handler",
+        "instruction": "Inside the connect method, add a 'close' event listener to the WebSocket instance (this.ws) that logs 'Connection closed' and calls a method named scheduleReconnect.",
+        "hint": "Use this.ws.on('close', () => { ... }) to handle the close event. Inside the callback, log the message and call this.scheduleReconnect().",
+        "analogousExample": "// Similar: adding an event listener for a close event\nsocket.on('close', () => {\n  console.log('Socket closed');\n  this.reconnect();\n});",
+        "seedCode": "const WebSocket = require('ws');\nconst EventEmitter = require('events');\n\nclass ReconnectingWebSocket extends EventEmitter {\n  constructor(url) {\n    super();\n    this.url = url;\n    this.reconnectAttempts = 0;\n    this.maxReconnectAttempts = 5;\n    this.reconnectDelay = 1000;\n    this.ws = null;\n  }\n\n  connect() {\n    this.ws = new WebSocket(this.url);\n    // Add open event listener here\n    // Add message event listener here\n    // Add close event listener here\n  }\n}",
+        "expectedOutcome": "The connect method now includes a close event handler that logs a message and triggers reconnection logic.",
+        "successCriteria": [
+          "A 'close' event listener is added to this.ws inside the connect method, logging 'Connection closed' and calling this.scheduleReconnect."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You added a close event listener, but make sure it logs 'Connection closed' and calls this.scheduleReconnect.",
+        "feedbackWrong": "The close event handler is missing or incorrect. Add this.ws.on('close', () => { ... }) inside the connect method.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "this.ws.on",
+            "'close'",
+            "console.log",
+            "'Connection closed'",
+            "this.scheduleReconnect"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 9",
+        "title": "Add WebSocket error event handler",
+        "instruction": "Inside the connect method, add an 'error' event listener to the WebSocket instance that emits an 'error' event and cleans up the WebSocket instance.",
+        "hint": "Use this.ws.on('error', ...) to handle errors. Inside the handler, emit an 'error' event with the error object, then close the WebSocket connection.",
+        "analogousExample": "// Similar: error handling for a network connection\nsocket.on('error', (error) => {\n  console.error('Connection error:', error);\n  socket.close();\n});",
+        "seedCode": "const WebSocket = require('ws');\nconst EventEmitter = require('events');\n\nclass ReconnectingWebSocket extends EventEmitter {\n  constructor(url) {\n    super();\n    this.url = url;\n    this.reconnectAttempts = 0;\n    this.maxReconnectAttempts = 5;\n    this.reconnectDelay = 1000;\n    this.ws = null;\n  }\n\n  connect() {\n    this.ws = new WebSocket(this.url);\n    // Add open event listener here\n    // Add message event listener here\n    // Add close event listener here\n    // Add error event listener here\n  }\n\n  // Add reconnect method here\n}",
+        "expectedOutcome": "The WebSocket client will properly handle error events, emit them for external listeners, and clean up the connection to prevent memory leaks.",
+        "successCriteria": [
+          "An 'error' event listener is added to this.ws that emits an 'error' event and closes the WebSocket connection."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added an error handler, but make sure it both emits the error event and closes the WebSocket connection to prevent memory leaks.",
+        "feedbackWrong": "The error handler is missing or incomplete. Remember to add an 'error' event listener that emits an 'error' event and closes the WebSocket.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "on('error'",
+            "emit('error'",
+            "close()"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 9",
+        "title": "Create usage example",
+        "instruction": "Create an instance of ReconnectingWebSocket, connect to a WebSocket server URL, and add event listeners for 'connected', 'message', and 'error' events.",
+        "hint": "Instantiate the class with a WebSocket server URL (like 'ws://localhost:8080'), call connect(), and use the .on() method to listen for events.",
+        "analogousExample": "// Example: creating and using an event emitter instance\nconst EventEmitter = require('events');\nconst emitter = new EventEmitter();\nemitter.on('data', (data) => console.log(data));\nemitter.emit('data', 'test');",
+        "seedCode": "const WebSocket = require('ws');\nconst EventEmitter = require('events');\n\nclass ReconnectingWebSocket extends EventEmitter {\n  constructor(url) {\n    super();\n    this.url = url;\n    this.reconnectAttempts = 0;\n    this.maxReconnectAttempts = 5;\n    this.reconnectDelay = 1000;\n    this.ws = null;\n  }\n\n  connect() {\n    this.ws = new WebSocket(this.url);\n    // Add open event listener here\n    // Add message event listener here\n    // Add close event listener here\n    // Add error event listener here\n  }\n\n  // Add reconnect method here\n}\n\n// Create usage example here",
+        "expectedOutcome": "A practical example that demonstrates how to use the ReconnectingWebSocket class with event listeners.",
+        "successCriteria": [
+          "An instance of ReconnectingWebSocket is created with a WebSocket URL, connect() is called, and event listeners for 'connected', 'message', and 'error' are added using .on()."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you've created an instance, called connect(), and added all three event listeners.",
+        "feedbackWrong": "The usage example is missing key elements. Review the instruction and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "new ReconnectingWebSocket",
+            "connect()",
+            ".on('connected'",
+            ".on('message'",
+            ".on('error'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import required Node.js modules",
+        "id": "step1"
+      },
+      {
+        "label": "Create WebSocket client class",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize class properties",
+        "id": "step3"
+      },
+      {
+        "label": "Implement connect method",
+        "id": "step4"
+      },
+      {
+        "label": "Add WebSocket open event handler",
+        "id": "step5"
+      },
+      {
+        "label": "Add WebSocket message event handler",
+        "id": "step6"
+      },
+      {
+        "label": "Add WebSocket close event handler",
+        "id": "step7"
+      },
+      {
+        "label": "Add WebSocket error event handler",
+        "id": "step8"
+      },
+      {
+        "label": "Create usage example",
+        "id": "step9"
+      }
+    ]
+  },
+  "source": "content"
+}

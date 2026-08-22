@@ -1,0 +1,481 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-mobile-angular-05",
+    "track": "mobile-angular",
+    "lessonNum": 5,
+    "title": "Pull-to-Refresh Feed",
+    "shortName": "P05",
+    "intro": {
+      "tag": "LESSON #5",
+      "title": "Pull-to-Refresh Feed",
+      "body": "In this lesson, you will build a mobile feed page that users can pull down to refresh, loading new content. You will learn how to use the Ionic Refresher component to detect the pull gesture and trigger a data reload. The core programming concept involves handling asynchronous events to update your app's state and UI. You'll implement this using Angular's data binding and TypeScript within an Ionic + Capacitor project.",
+      "usecase": "Pull-to-refresh is a fundamental mobile interaction pattern that appears in countless real-world apps where users need fresh content. You'll find it in social media feeds like Instagram or Twitter, messaging apps like WhatsApp, email clients like Gmail, and news readers like Flipboard. This pattern allows users to manually trigger content updates with a natural pulling gesture, providing immediate feedback that data is being refreshed. As a mobile developer, implementing pull-to-refresh correctly ensures your app feels responsive and follows platform conventions that users already understand."
+    },
+    "objectives": [
+      "Apply Ionic's IonRefresher component to implement pull-to-refresh functionality in an Angular template.",
+      "Define a TypeScript method to handle the refresh event and trigger data reloading.",
+      "Use Angular's HttpClient to fetch updated data from a mock API endpoint.",
+      "Implement a loading state to control the visibility of the refresher component during data fetching.",
+      "Execute the refreshComplete() method to signal the end of the refresh operation.",
+      "Store fetched data in a component property to update the displayed feed items.",
+      "Utilize Angular's lifecycle hooks (ngOnInit) to load initial data when the component initializes.",
+      "Construct a mock API service with a simulated delay to demonstrate asynchronous data loading.",
+      "Control the refresher's visual feedback by managing its state through Ionic's RefresherEvent interface.",
+      "Access and display dynamic data in the template using Angular's *ngFor directive for list rendering."
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 13",
+        "title": "Import Ionic Angular core components",
+        "instruction": "Import the Ionic UI components needed for the feed interface: IonContent, IonList, IonItem, IonLabel, IonRefresher, and IonRefresherContent from '@ionic/angular/standalone'.",
+        "hint": "Use the import statement with curly braces to import multiple named exports from the Ionic standalone module.",
+        "analogousExample": "// Example of importing Ionic components\nimport { IonContent, IonList, IonItem } from '@ionic/angular/standalone';",
+        "seedCode": "// Import Ionic Angular core components here\n",
+        "expectedOutcome": "The import statement for the Ionic components is added, making them available for use in the component.",
+        "successCriteria": [
+          "The code includes a valid import statement from '@ionic/angular/standalone' with IonContent, IonList, IonItem, IonLabel, IonRefresher, and IonRefresherContent."
+        ],
+        "feedbackCorrect": "Great! You've successfully imported the Ionic UI components needed for the feed interface.",
+        "feedbackPartial": "You're on the right track, but the import statement is incomplete or incorrect. Make sure to import all six components: IonContent, IonList, IonItem, IonLabel, IonRefresher, and IonRefresherContent from '@ionic/angular/standalone'.",
+        "feedbackWrong": "The import statement is missing or incorrect. You need to import IonContent, IonList, IonItem, IonLabel, IonRefresher, and IonRefresherContent from '@ionic/angular/standalone'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "{",
+            "IonContent",
+            "IonList",
+            "IonItem",
+            "IonLabel",
+            "IonRefresher",
+            "IonRefresherContent",
+            "}",
+            "from",
+            "'@ionic/angular/standalone'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 13",
+        "title": "Import Angular core modules",
+        "instruction": "Import CommonModule from '@angular/common' and HttpClientModule from '@angular/common/http' in your component's imports array.",
+        "hint": "Add the imports to the @Component decorator's imports array. This gives your component access to Angular's common directives and HTTP client functionality.",
+        "analogousExample": "// Example of importing Angular modules\nimport { Component } from '@angular/core';\nimport { CommonModule } from '@angular/common';\nimport { HttpClientModule } from '@angular/common/http';\n\n@Component({\n  selector: 'app-example',\n  standalone: true,\n  imports: [CommonModule, HttpClientModule],\n  templateUrl: './example.component.html',\n  styleUrls: ['./example.component.css']\n})\nexport class ExampleComponent {}",
+        "seedCode": "// Import Ionic Angular core components here\nimport { Component } from '@angular/core';\n\n@Component({\n  selector: 'app-feed',\n  standalone: true,\n  imports: [],\n  templateUrl: './feed.component.html',\n  styleUrls: ['./feed.component.css']\n})\nexport class FeedComponent {\n  \n}",
+        "expectedOutcome": "Your component will have access to Angular's CommonModule (for *ngIf, *ngFor, etc.) and HttpClientModule for making HTTP requests.",
+        "successCriteria": [
+          "The component imports CommonModule and HttpClientModule in the imports array."
+        ],
+        "feedbackCorrect": "Great! You've successfully imported the Angular core modules needed for this component.",
+        "feedbackPartial": "You're close! Make sure you've imported both CommonModule and HttpClientModule in the imports array.",
+        "feedbackWrong": "Check that you've imported both CommonModule from '@angular/common' and HttpClientModule from '@angular/common/http' in the imports array.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "CommonModule",
+            "HttpClientModule",
+            "imports"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 13",
+        "title": "Create the main component",
+        "instruction": "Create a standalone component named FeedPage with the @Component decorator, selector 'app-feed', and standalone: true.",
+        "hint": "Use the @Component decorator from '@angular/core' to define your component. Make sure to set standalone: true.",
+        "analogousExample": "// Example of creating a standalone component\n@Component({\n  selector: 'app-example',\n  standalone: true,\n  templateUrl: './example.component.html',\n  styleUrls: ['./example.component.css']\n})\nexport class ExampleComponent {\n  // Component logic goes here\n}",
+        "seedCode": "// Import Ionic Angular core components here\nimport { Component } from '@angular/core';\n\n// Create your FeedPage component here\n\n",
+        "expectedOutcome": "You should have a FeedPage component defined with the proper Angular component structure.",
+        "successCriteria": [
+          "The component must be named FeedPage, use the @Component decorator, have selector 'app-feed', and set standalone: true."
+        ],
+        "feedbackCorrect": "Great! You've successfully created the FeedPage component with the correct Angular structure.",
+        "feedbackPartial": "You're close! Check that you've included all required parts: component name FeedPage, @Component decorator, selector 'app-feed', and standalone: true.",
+        "feedbackWrong": "The component structure isn't quite right. Make sure you're using the @Component decorator with the correct configuration.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "FeedPage",
+            "@Component",
+            "selector",
+            "'app-feed'",
+            "standalone",
+            "true"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 13",
+        "title": "Set up component imports",
+        "instruction": "Add an imports array to the @Component decorator with the following modules: IonContent, IonList, IonItem, IonLabel, IonRefresher, IonRefresherContent, CommonModule, and HttpClientModule.",
+        "hint": "The imports array goes inside the @Component decorator. You need to import these from the appropriate packages (Ionic components from '@ionic/angular', CommonModule from '@angular/common', HttpClientModule from '@angular/common/http').",
+        "analogousExample": "// Example of a component with imports array\n@Component({\n  selector: 'app-example',\n  templateUrl: './example.component.html',\n  styleUrls: ['./example.component.scss'],\n  imports: [IonContent, IonList, IonItem, IonLabel, CommonModule]\n})",
+        "seedCode": "// Import Ionic Angular core components here\nimport { Component } from '@angular/core';\n\n// Create your FeedPage component here\n@Component({\n  selector: 'app-feed',\n  templateUrl: './feed.component.html',\n  styleUrls: ['./feed.component.scss']\n})\nexport class FeedPage {\n\n}",
+        "expectedOutcome": "The component's @Component decorator now includes an imports array with the specified Ionic components and Angular modules.",
+        "successCriteria": [
+          "The @Component decorator should have an imports property containing an array with IonContent, IonList, IonItem, IonLabel, IonRefresher, IonRefresherContent, CommonModule, and HttpClientModule."
+        ],
+        "feedbackCorrect": "Great! You've successfully added the imports array to the component decorator. This makes the Ionic components and Angular modules available for use in your template.",
+        "feedbackPartial": "You've added an imports array, but it's missing some required items. Make sure to include all of these: IonContent, IonList, IonItem, IonLabel, IonRefresher, IonRefresherContent, CommonModule, and HttpClientModule.",
+        "feedbackWrong": "The imports array wasn't added correctly. Remember to add an imports property to the @Component decorator with an array containing the specified Ionic components and Angular modules.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "imports:",
+            "[",
+            "IonContent",
+            "IonList",
+            "IonItem",
+            "IonLabel",
+            "IonRefresher",
+            "IonRefresherContent",
+            "CommonModule",
+            "HttpClientModule",
+            "]"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 13",
+        "title": "Define the feed data interface",
+        "instruction": "Inside the FeedPage class, define a TypeScript interface named FeedItem with three properties: id of type number, title of type string, and content of type string.",
+        "hint": "Add an interface declaration above the FeedPage class. Use the 'interface' keyword followed by the interface name and property definitions.",
+        "analogousExample": "// Define a TypeScript interface for data\ninterface User {\n  id: number;\n  name: string;\n  email: string;\n}",
+        "seedCode": "// Import Ionic Angular core components here\nimport { Component } from '@angular/core';\n\n// Define your FeedItem interface here\n\n// Create your FeedPage component here\n@Component({\n  selector: 'app-feed',\n  templateUrl: './feed.component.html',\n  styleUrls: ['./feed.component.scss']\n})\nexport class FeedPage {\n\n}",
+        "expectedOutcome": "You will have a FeedItem interface that defines the structure of feed data items with proper TypeScript typing.",
+        "successCriteria": [
+          "The interface should be named FeedItem and include exactly three typed properties: id: number, title: string, and content: string."
+        ],
+        "feedbackCorrect": "Great! You've successfully defined the FeedItem interface with proper TypeScript types. This will ensure type safety when working with feed data.",
+        "feedbackPartial": "You're on the right track, but check that your interface has all three required properties with the correct TypeScript types: id (number), title (string), and content (string).",
+        "feedbackWrong": "The interface definition doesn't match the requirements. Make sure you're defining an interface named FeedItem with id: number, title: string, and content: string properties.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "interface",
+            "FeedItem",
+            "id:",
+            "number",
+            "title:",
+            "string",
+            "content:",
+            "string"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 13",
+        "title": "Initialize feed data state",
+        "instruction": "Inside the FeedPage component class, add a property named feedItems with the type FeedItem[] and initialize it with an array containing at least two sample feed items.",
+        "hint": "Declare a property in the class body using TypeScript syntax: feedItems: FeedItem[] = []; then populate the array with objects matching your FeedItem interface structure.",
+        "analogousExample": "// Example of initializing component data\ninterface Post {\n  id: number;\n  title: string;\n}\n\n@Component({...})\nexport class PostList {\n  posts: Post[] = [\n    { id: 1, title: 'First Post' },\n    { id: 2, title: 'Second Post' }\n  ];\n}",
+        "seedCode": "// Import Ionic Angular core components here\nimport { Component } from '@angular/core';\n\n// Define your FeedItem interface here\ninterface FeedItem {\n  id: number;\n  title: string;\n  content: string;\n  timestamp: Date;\n}\n\n// Create your FeedPage component here\n@Component({\n  selector: 'app-feed',\n  templateUrl: './feed.component.html',\n  styleUrls: ['./feed.component.scss']\n})\nexport class FeedPage {\n  // Add feedItems property here\n}",
+        "expectedOutcome": "The component now has a feedItems property initialized with sample data that can be displayed in the template.",
+        "successCriteria": [
+          "The FeedPage class contains a feedItems property of type FeedItem[] that is initialized with an array of at least two objects matching the FeedItem interface."
+        ],
+        "feedbackCorrect": "Great! You've successfully initialized the feed data state with sample items. This gives us data to work with in the UI.",
+        "feedbackPartial": "You're on the right track. Make sure feedItems is declared as a property in the FeedPage class with the correct type FeedItem[], and it's initialized with at least two sample objects that match your FeedItem interface structure.",
+        "feedbackWrong": "The feedItems property isn't properly initialized. Check that you've added it to the FeedPage class with the correct type annotation and populated it with sample data objects.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "feedItems:",
+            "FeedItem[]",
+            "=",
+            "["
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 13",
+        "title": "Define the refresh handler method",
+        "instruction": "Inside the FeedPage component class, add a method named handleRefresh that takes an event parameter and returns a Promise<void>. The method should be async and for now just log 'Refreshing...' to the console.",
+        "hint": "Create an async method with the signature handleRefresh(event: any): Promise<void> { ... } inside the FeedPage class.",
+        "analogousExample": "// Example of an async refresh handler method\nasync handleRefresh(event: any): Promise<void> {\n  console.log('Refreshing...');\n  // Refresh logic will go here later\n}",
+        "seedCode": "// Import Ionic Angular core components here\nimport { Component } from '@angular/core';\n\n// Define your FeedItem interface here\ninterface FeedItem {\n  id: number;\n  title: string;\n  content: string;\n  timestamp: Date;\n}\n\n// Create your FeedPage component here\n@Component({\n  selector: 'app-feed',\n  templateUrl: './feed.component.html',\n  styleUrls: ['./feed.component.scss']\n})\nexport class FeedPage {\n  // Add feedItems property here\n  \n  // Define your handleRefresh method here\n}",
+        "expectedOutcome": "The FeedPage component now has a handleRefresh method that can be called when the user performs a pull-to-refresh action.",
+        "successCriteria": [
+          "The method should be named handleRefresh, be async, accept an event parameter, return Promise<void>, and log 'Refreshing...' to the console."
+        ],
+        "feedbackCorrect": "Great! You've successfully created the refresh handler method. This method will be triggered when the user pulls down to refresh the feed.",
+        "feedbackPartial": "You're close! Make sure your method is async, accepts an event parameter, returns Promise<void>, and logs 'Refreshing...' to the console.",
+        "feedbackWrong": "The method isn't quite right. Check that you've created an async method named handleRefresh with the correct signature and console log.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "async",
+            "handleRefresh",
+            "event",
+            "Promise<void>",
+            "console.log",
+            "Refreshing"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 13",
+        "title": "Implement refresh logic",
+        "instruction": "Inside the handleRefresh method, implement the refresh logic: use setTimeout to simulate a 2-second API delay,",
+        "hint": "Use setTimeout with an arrow function. Inside, create new feed items with unique IDs and add them to the beginning of the array using unshift(). Don't forget to call event.target.complete() after updating the array.",
+        "analogousExample": "// Example of a refresh handler with simulated delay\nhandleRefresh(event: any) {\n  setTimeout(() => {\n    // Add new items to the beginning of the array\n    this.items.unshift({\n      id: Date.now(),\n      title: 'New Item',\n      content: 'Fresh content',\n      timestamp: new Date()\n    });\n    \n    // Complete the refresh indicator\n    event.target.complete();\n  }, 2000);\n}",
+        "seedCode": "// Import Ionic Angular core components here\nimport { Component } from '@angular/core';\n\n// Define your FeedItem interface here\ninterface FeedItem {\n  id: number;\n  title: string;\n  content: string;\n  timestamp: Date;\n}\n\n// Create your FeedPage component here\n@Component({\n  selector: 'app-feed',\n  templateUrl: './feed.component.html',\n  styleUrls: ['./feed.component.scss']\n})\nexport class FeedPage {\n  // Add feedItems property here\n  feedItems: FeedItem[] = [\n    { id: 1, title: 'First Post', content: 'Welcome to the feed!', timestamp: new Date('2023-10-01') },\n    { id: 2, title: 'Second Post', content: 'Another update here.', timestamp: new Date('2023-10-02') }\n  ];\n  \n  // Define your handleRefresh method here\n  handleRefresh(event: any) {\n    // Implement refresh logic here\n  }\n}",
+        "expectedOutcome": "The handleRefresh method will now properly simulate an API call with a delay, add new feed items to the beginning of the array, and complete the refresh event.",
+        "successCriteria": [
+          "The handleRefresh method should contain: 1) setTimeout with 2000ms delay, 2) Creation of new FeedItem objects added to feedItems array using unshift(), 3) event.target.complete() call inside the setTimeout callback."
+        ],
+        "feedbackCorrect": "Great! You've successfully implemented the refresh logic with proper delay simulation and array update.",
+        "feedbackPartial": "You're on the right track, but check if you have all required elements: setTimeout with 2000ms, adding new items to feedItems array, and calling event.target.complete().",
+        "feedbackWrong": "The refresh logic implementation is incomplete or incorrect. Make sure to use setTimeout, add new items to the feedItems array, and complete the refresh event.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "setTimeout",
+            "2000",
+            "feedItems",
+            "unshift",
+            "event.target.complete()"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 13",
+        "title": "add new feed items to the beginning of the fe",
+        "instruction": "add new feed items to the beginning of the feedItems array, and finally complete the refresh event by calling event.target.complete().",
+        "hint": "Use setTimeout with an arrow function. Inside, create new feed items with unique IDs and add them to the beginning of the array using unshift(). Don't forget to call event.target.complete() after updating the array.",
+        "analogousExample": "// Example of a refresh handler with simulated delay\nhandleRefresh(event: any) {\n  setTimeout(() => {\n    // Add new items to the beginning of the array\n    this.items.unshift({\n      id: Date.now(),\n      title: 'New Item',\n      content: 'Fresh content',\n      timestamp: new Date()\n    });\n    \n    // Complete the refresh indicator\n    event.target.complete();\n  }, 2000);\n}",
+        "seedCode": "// Import Ionic Angular core components here\nimport { Component } from '@angular/core';\n\n// Define your FeedItem interface here\ninterface FeedItem {\n  id: number;\n  title: string;\n  content: string;\n  timestamp: Date;\n}\n\n// Create your FeedPage component here\n@Component({\n  selector: 'app-feed',\n  templateUrl: './feed.component.html',\n  styleUrls: ['./feed.component.scss']\n})\nexport class FeedPage {\n  // Add feedItems property here\n  feedItems: FeedItem[] = [\n    { id: 1, title: 'First Post', content: 'Welcome to the feed!', timestamp: new Date('2023-10-01') },\n    { id: 2, title: 'Second Post', content: 'Another update here.', timestamp: new Date('2023-10-02') }\n  ];\n  \n  // Define your handleRefresh method here\n  handleRefresh(event: any) {\n    // Implement refresh logic here\n  }\n}",
+        "expectedOutcome": "",
+        "successCriteria": [
+          "Complete the step as instructed."
+        ],
+        "feedbackCorrect": "Great! Step completed.",
+        "feedbackPartial": "Review the instruction and try again.",
+        "feedbackWrong": "Check the instruction and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "setTimeout",
+            "2000",
+            "feedItems",
+            "unshift",
+            "event.target.complete()"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 13",
+        "title": "Set up the component template structure",
+        "instruction": "In the component's template file (feed.component.html), create an IonContent component as the root container.",
+        "hint": "Use the <ion-content> element as the main wrapper for your feed content.",
+        "analogousExample": "<!-- In your component template -->\n<ion-content>\n  <!-- Your content will go here -->\n</ion-content>",
+        "seedCode": "<!-- feed.component.html -->\n<!-- Add IonContent as the root container here -->",
+        "expectedOutcome": "The template now has an IonContent component ready to hold the feed items and pull-to-refresh functionality.",
+        "successCriteria": [
+          "ion-content",
+          "root container",
+          "template"
+        ],
+        "feedbackCorrect": "Great! You've set up the basic Ionic content container. The IonContent component provides the scrollable area needed for the pull-to-refresh feature.",
+        "feedbackPartial": "You're on the right track, but make sure you're using the correct Ionic component. Look for 'ion-content' as the main wrapper element.",
+        "feedbackWrong": "The template should start with an IonContent component. Check that you're using the correct Ionic component name and structure.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "ion-content"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 13",
+        "title": "Add the pull-to-refresh component",
+        "instruction": "Inside the IonContent in your template, add an IonRefresher component with its (ionRefresh) event bound to the handleRefresh method and include an IonRefresherContent component inside it.",
+        "hint": "Use the IonRefresher component as a child of IonContent, bind the ionRefresh event to handleRefresh($event), and place IonRefresherContent inside IonRefresher.",
+        "analogousExample": "<!-- Inside IonContent -->\n<ion-content>\n  <ion-refresher (ionRefresh)=\"handleRefresh($event)\">\n    <ion-refresher-content></ion-refresher-content>\n  </ion-refresher>\n  <!-- Other content here -->\n</ion-content>",
+        "seedCode": "<!-- feed.component.html -->\n<ion-content>\n  <!-- Add IonRefresher with (ionRefresh) event bound to handleRefresh($event) and IonRefresherContent here -->\n</ion-content>",
+        "expectedOutcome": "The template will have a pull-to-refresh component ready to trigger the refresh handler when pulled.",
+        "successCriteria": [
+          "The IonRefresher component is added inside IonContent with (ionRefresh)=\"handleRefresh($event)\" and contains an IonRefresherContent component."
+        ],
+        "feedbackCorrect": "Great! You've successfully added the Ionic pull-to-refresh component with the correct event binding.",
+        "feedbackPartial": "You've added the IonRefresher, but check that it has the (ionRefresh) event bound to handleRefresh($event) and contains IonRefresherContent.",
+        "feedbackWrong": "The pull-to-refresh component isn't set up correctly. Make sure to add IonRefresher inside IonContent with the event binding and include IonRefresherContent.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "ion-refresher",
+            "(ionRefresh)=\"handleRefresh($event)\"",
+            "ion-refresher-content"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step12",
+        "type": "question",
+        "phase": "Step 12 of 13",
+        "title": "Create the feed list",
+        "instruction": "After the IonRefresher component in your template, add an IonList that uses *ngFor to iterate through the feedItems array and display each item in an IonItem with an IonLabel.",
+        "hint": "Use the Ionic list components: IonList, IonItem, and IonLabel. Bind *ngFor to feedItems and display the item's title property in the IonLabel.",
+        "analogousExample": "<!-- Example of Ionic list with *ngFor -->\n<ion-list>\n  <ion-item *ngFor=\"let item of items\">\n    <ion-label>{{ item.name }}</ion-label>\n  </ion-item>\n</ion-list>",
+        "seedCode": "<!-- feed.component.html -->\n<ion-content>\n  <!-- Add IonRefresher with (ionRefresh) event bound to handleRefresh($event) and IonRefresherContent here -->\n  \n  <!-- Add IonList with *ngFor to display feedItems here -->\n</ion-content>",
+        "expectedOutcome": "The template now includes a list that will display all feed items when the component renders.",
+        "successCriteria": [
+          "The code must include: 1) An IonList element, 2) *ngFor directive iterating through feedItems, 3) IonItem for each iteration, 4) IonLabel displaying item.title."
+        ],
+        "feedbackCorrect": "Great! You've successfully added the feed list structure. The IonList will display all feed items using Angular's *ngFor directive.",
+        "feedbackPartial": "You're on the right track, but some elements are missing. Make sure you have: IonList, *ngFor=\"let item of feedItems\", IonItem, and IonLabel with {{ item.title }}.",
+        "feedbackWrong": "The list structure isn't correct. You need to add IonList with *ngFor to iterate through feedItems, then display each item in IonItem with IonLabel showing the title.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "ion-list",
+            "*ngFor",
+            "feedItems",
+            "ion-item",
+            "ion-label",
+            "item.title"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step13",
+        "type": "question",
+        "phase": "Step 13 of 13",
+        "title": "Test the pull-to-refresh functionality",
+        "instruction": "Run the app in your development environment and test the pull-to-refresh feature by pulling down on the feed list.",
+        "hint": "Use 'ionic serve' or your preferred development server to run the app. Scroll to the top of the feed list, then pull down to trigger the refresh.",
+        "analogousExample": "// After implementing all previous steps, run the app and test the pull-to-refresh functionality\n// 1. Start the development server: ionic serve\n// 2. Open the app in your browser\n// 3. Scroll to the top of the feed list\n// 4. Pull down to see the refresh spinner appear\n// 5. Release to trigger the refresh handler\n// 6. Verify new items are added to the feed",
+        "seedCode": "<!-- feed.component.html -->\n<ion-content>\n  <!-- Add IonRefresher with (ionRefresh) event bound to handleRefresh($event) and IonRefresherContent here -->\n  \n  <!-- Add IonList with *ngFor to display feedItems here -->\n</ion-content>",
+        "expectedOutcome": "The app should run successfully, and pulling down on the feed list should trigger the refresh animation, call the refresh handler, and add new items to the feed.",
+        "successCriteria": [
+          "The pull-to-refresh feature works correctly: pulling down shows the loading spinner, triggers the refresh handler, and adds new items to the feed list."
+        ],
+        "feedbackCorrect": "Perfect! The pull-to-refresh functionality is working correctly. You've successfully implemented a complete pull-to-refresh feed in Ionic Angular.",
+        "feedbackPartial": "The app runs but the pull-to-refresh might not be working as expected. Check that the IonRefresher component is properly configured and the handleRefresh method is correctly implemented.",
+        "feedbackWrong": "The app doesn't run or the pull-to-refresh feature isn't working. Review all previous steps to ensure the component, template, and refresh logic are correctly implemented.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "ionic serve",
+            "pull down",
+            "refresh",
+            "spinner",
+            "new items"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import Ionic Angular core components",
+        "id": "step1"
+      },
+      {
+        "label": "Import Angular core modules",
+        "id": "step2"
+      },
+      {
+        "label": "Create the main component",
+        "id": "step3"
+      },
+      {
+        "label": "Set up component imports",
+        "id": "step4"
+      },
+      {
+        "label": "Define the feed data interface",
+        "id": "step5"
+      },
+      {
+        "label": "Initialize feed data state",
+        "id": "step6"
+      },
+      {
+        "label": "Define the refresh handler method",
+        "id": "step7"
+      },
+      {
+        "label": "Implement refresh logic",
+        "id": "step8"
+      },
+      {
+        "label": "add new feed items to the beginning of the fe",
+        "id": "step9"
+      },
+      {
+        "label": "Set up the component template structure",
+        "id": "step10"
+      },
+      {
+        "label": "Add the pull-to-refresh component",
+        "id": "step11"
+      },
+      {
+        "label": "Create the feed list",
+        "id": "step12"
+      },
+      {
+        "label": "Test the pull-to-refresh functionality",
+        "id": "step13"
+      }
+    ]
+  },
+  "source": "content"
+}

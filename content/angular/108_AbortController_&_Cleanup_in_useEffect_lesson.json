@@ -1,0 +1,422 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-angular-108",
+    "track": "angular",
+    "lessonNum": 108,
+    "title": "AbortController & Cleanup in useEffect",
+    "shortName": "P108",
+    "intro": {
+      "tag": "LESSON #108",
+      "title": "AbortController & Cleanup in useEffect",
+      "body": "In this lesson, you will build a simple Angular component that fetches and displays user data from a mock API. You'll learn how to use the AbortController to cancel ongoing HTTP requests when a component is destroyed, preventing memory leaks and errors. The core concept is implementing cleanup logic within Angular's lifecycle hooks, specifically using ngOnDestroy to abort fetch operations. This involves working with TypeScript, Angular's HttpClient, and the AbortController API to manage asynchronous data fetching safely.",
+      "usecase": "In real-world Angular applications, the pattern of aborting requests with AbortController is critical for managing side effects in components. This is commonly used in dashboards with live-updating charts, where a user quickly changes filters or time ranges, and you must cancel the previous data fetch to avoid outdated or conflicting data. It also applies to search inputs with debounced API calls, where typing rapidly should cancel pending requests to ensure the UI displays only the latest results. Proper cleanup prevents memory leaks and race conditions, ensuring a responsive and reliable user experience in interactive features like data tables, autocomplete fields, or multi-step wizards."
+    },
+    "objectives": [
+      "Initialize an AbortController instance within an Angular component",
+      "Integrate the AbortController signal into an HTTP request using HttpClient",
+      "Configure the cleanup function in ngOnDestroy to abort pending requests",
+      "Apply the AbortController pattern to prevent memory leaks in component subscriptions",
+      "Construct a service method that automatically cancels requests when components are destroyed",
+      "Manipulate component state only when HTTP requests complete successfully",
+      "Implement error handling for aborted requests to maintain application stability"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 12",
+        "title": "Import required Angular modules and RxJS utilities",
+        "instruction": "Import HttpClientModule, HttpClient, Component, OnInit, and OnDestroy from '@angular/core', and Subject and takeUntil from 'rxjs'.",
+        "hint": "Use import statements at the top of your TypeScript file. Remember to import from the correct packages: '@angular/core' and 'rxjs'.",
+        "analogousExample": "// Example: importing Angular modules\nimport { Component, OnInit } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\nimport { Subject } from 'rxjs';",
+        "seedCode": "// Import required Angular modules and RxJS utilities here",
+        "expectedOutcome": "The necessary imports for HTTP requests and reactive programming are added to the file.",
+        "successCriteria": [
+          "HttpClientModule, HttpClient, Component, OnInit, OnDestroy are imported from '@angular/core', and Subject, takeUntil are imported from 'rxjs'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've imported some of the required items, but not all. Check that you have HttpClientModule, HttpClient, Component, OnInit, OnDestroy from '@angular/core', and Subject, takeUntil from 'rxjs'.",
+        "feedbackWrong": "The imports are missing or incorrect. You need to import HttpClientModule, HttpClient, Component, OnInit, OnDestroy from '@angular/core', and Subject, takeUntil from 'rxjs'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "HttpClientModule",
+            "HttpClient",
+            "Component",
+            "OnInit",
+            "OnDestroy",
+            "Subject",
+            "takeUntil",
+            "@angular/core",
+            "rxjs"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 12",
+        "title": "Create the main component class",
+        "instruction": "Create a component class named DataComponent that implements OnInit and OnDestroy interfaces.",
+        "hint": "Use the @Component decorator with an empty selector and template for now. Define the class with proper TypeScript syntax.",
+        "analogousExample": "// Example component class\n@Component({\n  selector: '',\n  template: ''\n})\nexport class ExampleComponent implements OnInit, OnDestroy {\n  ngOnInit() {}\n  ngOnDestroy() {}\n}",
+        "seedCode": "import { Component, OnInit, OnDestroy } from '@angular/core';\n\n// Create DataComponent class here\n",
+        "expectedOutcome": "A DataComponent class is created with empty ngOnInit and ngOnDestroy methods.",
+        "successCriteria": [
+          "DataComponent class exists, implements OnInit and OnDestroy, and has empty ngOnInit and ngOnDestroy methods."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure the class implements both OnInit and OnDestroy interfaces and has empty methods for both.",
+        "feedbackWrong": "Check that you've created a class named DataComponent with @Component decorator and implements both interfaces.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "DataComponent",
+            "implements",
+            "OnInit",
+            "OnDestroy",
+            "ngOnInit",
+            "ngOnDestroy"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 12",
+        "title": "Initialize component properties and state",
+        "instruction": "Inside the DataComponent class, declare properties for data (any[]), loading (boolean), error (string), and a Subject for cleanup (Subject<void>).",
+        "hint": "Use TypeScript property declarations with appropriate types and initial values. The Subject will help manage cleanup later.",
+        "analogousExample": "// Example: declaring component properties\nclass ExampleComponent {\n  data: any[] = [];\n  isLoading: boolean = false;\n  errorMessage: string = '';\n  private destroy$ = new Subject<void>();\n}",
+        "seedCode": "import { Component, OnInit, OnDestroy } from '@angular/core';\n\n// Create DataComponent class here\nexport class DataComponent implements OnInit, OnDestroy {\n  // Declare properties here\n  \n  ngOnInit() {}\n  \n  ngOnDestroy() {}\n}",
+        "expectedOutcome": "The component now has typed properties for data, loading state, error handling, and a cleanup Subject.",
+        "successCriteria": [
+          "Properties data (any[]), loading (boolean), error (string), and destroy$ (Subject<void>) are declared with initial values."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've declared some properties, but check if all required ones (data, loading, error, destroy$) are present with correct types.",
+        "feedbackWrong": "The component properties aren't properly declared. Make sure to declare data, loading, error, and a Subject for cleanup with appropriate types.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "data:",
+            "loading:",
+            "error:",
+            "destroy$",
+            "Subject"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 12",
+        "title": "Inject HttpClient service",
+        "instruction": "In the DataComponent constructor, inject the HttpClient service to make it available for HTTP calls.",
+        "hint": "Add a constructor parameter with the HttpClient type and use Angular's dependency injection.",
+        "analogousExample": "// Example: injecting a service\nconstructor(private http: HttpClient) {}",
+        "seedCode": "import { Component, OnInit, OnDestroy } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\n\n// Create DataComponent class here\nexport class DataComponent implements OnInit, OnDestroy {\n  // Declare properties here\n  \n  // Add constructor with HttpClient injection here\n  \n  ngOnInit() {}\n  \n  ngOnDestroy() {}\n}",
+        "expectedOutcome": "The DataComponent constructor now has HttpClient injected, enabling HTTP requests.",
+        "successCriteria": [
+          "HttpClient is injected as a private parameter in the DataComponent constructor."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure HttpClient is injected as a constructor parameter.",
+        "feedbackWrong": "Check the constructor syntax. You need to inject HttpClient as a parameter.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "constructor",
+            "HttpClient",
+            "private"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 12",
+        "title": "Create the fetchData method",
+        "instruction": "Inside the DataComponent class, create a method named fetchData that uses HttpClient.get() to fetch data from an API endpoint.",
+        "hint": "The method should be public and use the injected HttpClient instance to make a GET request. You can use a placeholder URL like 'https://jsonplaceholder.typicode.com/posts' for now.",
+        "analogousExample": "// Example: A method that fetches data\nfetchData() {\n  return this.http.get('https://api.example.com/data');\n}",
+        "seedCode": "import { Component, OnInit, OnDestroy } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\n\n// Create DataComponent class here\nexport class DataComponent implements OnInit, OnDestroy {\n  // Declare properties here\n  \n  // Add constructor with HttpClient injection here\n  constructor(private http: HttpClient) {}\n  \n  // Create fetchData method here\n  \n  ngOnInit() {}\n  \n  ngOnDestroy() {}\n}",
+        "expectedOutcome": "The component now has a fetchData method that can be called to retrieve data from an API.",
+        "successCriteria": [
+          "The fetchData method is defined in the DataComponent class and uses this.http.get() with a URL string."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure the method is named fetchData and uses this.http.get() with a URL string.",
+        "feedbackWrong": "The fetchData method is missing or doesn't use HttpClient.get(). Remember to create a method that makes an HTTP GET request.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "fetchData",
+            "this.http.get",
+            "("
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 12",
+        "title": "Add RxJS pipe with takeUntil operator",
+        "instruction": "In your fetchData method, add a .pipe(takeUntil(this.destroy$)) to the HTTP observable chain to enable cleanup.",
+        "hint": "Chain .pipe(takeUntil(this.destroy$)) after this.http.get() but before .subscribe().",
+        "analogousExample": "// Similar: Adding takeUntil to an observable\nthis.http.get('api/data')\n  .pipe(takeUntil(this.destroy$))\n  .subscribe(data => console.log(data));",
+        "seedCode": "import { Component, OnInit, OnDestroy } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\n\n// Create DataComponent class here\nexport class DataComponent implements OnInit, OnDestroy {\n  // Declare properties here\n  \n  // Add constructor with HttpClient injection here\n  constructor(private http: HttpClient) {}\n  \n  // Create fetchData method here\n  fetchData() {\n    this.http.get('https://jsonplaceholder.typicode.com/posts/1')\n      .pipe(takeUntil(this.destroy$))\n      .subscribe(data => {\n        console.log(data);\n      });\n  }\n  \n  ngOnInit() {}\n  \n  ngOnDestroy() {}\n}",
+        "expectedOutcome": "The fetchData method now includes takeUntil(this.destroy$) in the observable pipe chain.",
+        "successCriteria": [
+          "The HTTP observable chain includes .pipe(takeUntil(this.destroy$)) before .subscribe()."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure takeUntil(this.destroy$) is inside .pipe() and placed before .subscribe().",
+        "feedbackWrong": "The takeUntil operator wasn't added correctly. Check that it's chained with .pipe() before .subscribe().",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "pipe",
+            "takeUntil",
+            "this.destroy$"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 12",
+        "title": "Handle successful data response",
+        "instruction": "Inside the fetchData method's subscribe callback, update the component's data property with the received response.",
+        "hint": "Assign the data parameter from the subscribe callback to this.data.",
+        "analogousExample": "// Example: handling HTTP response\nthis.http.get('api/data')\n  .subscribe(response => {\n    this.data = response;\n  });",
+        "seedCode": "import { Component, OnInit, OnDestroy } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\n\n// Create DataComponent class here\nexport class DataComponent implements OnInit, OnDestroy {\n  // Declare properties here\n  \n  // Add constructor with HttpClient injection here\n  constructor(private http: HttpClient) {}\n  \n  // Create fetchData method here\n  fetchData() {\n    this.http.get('https://jsonplaceholder.typicode.com/posts/1')\n      .pipe(takeUntil(this.destroy$))\n      .subscribe(data => {\n        console.log(data);\n        // Update component data property here\n      });\n  }\n  \n  ngOnInit() {}\n  \n  ngOnDestroy() {}\n}",
+        "expectedOutcome": "The fetchData method will now store the HTTP response data in the component's data property for use in the template.",
+        "successCriteria": [
+          "The subscribe callback assigns the data parameter to this.data"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're assigning the data parameter from the subscribe callback to this.data.",
+        "feedbackWrong": "The subscribe callback should update the component's data property with the received response.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "this.data",
+            "=",
+            "data"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 12",
+        "title": "Handle error responses",
+        "instruction": "In the fetchData method's subscribe call, add an error callback to handle HTTP errors and update the component's error property.",
+        "hint": "The subscribe method can take a second callback function for errors. Inside it, set this.error to an appropriate error message.",
+        "analogousExample": "// Example: Handling errors in an HTTP request\n.subscribe(\n  data => console.log(data),\n  error => this.error = 'Failed to fetch data'\n);",
+        "seedCode": "import { Component, OnInit, OnDestroy } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\n\n// Create DataComponent class here\nexport class DataComponent implements OnInit, OnDestroy {\n  // Declare properties here\n  \n  // Add constructor with HttpClient injection here\n  constructor(private http: HttpClient) {}\n  \n  // Create fetchData method here\n  fetchData() {\n    this.http.get('https://jsonplaceholder.typicode.com/posts/1')\n      .pipe(takeUntil(this.destroy$))\n      .subscribe(data => {\n        console.log(data);\n        // Update component data property here\n      });\n  }\n  \n  ngOnInit() {}\n  \n  ngOnDestroy() {}\n}",
+        "expectedOutcome": "The fetchData method now includes error handling that will update an error property when the HTTP request fails.",
+        "successCriteria": [
+          "The subscribe call has a second callback function for errors that sets this.error to an error message."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you've added the error callback as the second parameter to subscribe and are updating this.error with an appropriate message.",
+        "feedbackWrong": "The error handling isn't quite right. Remember that subscribe can take two callbacks - one for success and one for errors. Add the error callback to handle failed requests.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "subscribe",
+            "error",
+            "=>",
+            "this.error"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 12",
+        "title": "Implement ngOnInit lifecycle hook",
+        "instruction": "Inside the DataComponent class, implement the ngOnInit method to call the fetchData method when the component initializes.",
+        "hint": "The ngOnInit method is called automatically by Angular after the component is created. You can call this.fetchData() inside it.",
+        "analogousExample": "// Example: ngOnInit implementation\nngOnInit() {\n  this.loadInitialData();\n}",
+        "seedCode": "import { Component, OnInit, OnDestroy } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\n\n// Create DataComponent class here\nexport class DataComponent implements OnInit, OnDestroy {\n  // Declare properties here\n  \n  // Add constructor with HttpClient injection here\n  constructor(private http: HttpClient) {}\n  \n  // Create fetchData method here\n  fetchData() {\n    this.http.get('https://jsonplaceholder.typicode.com/posts/1')\n      .pipe(takeUntil(this.destroy$))\n      .subscribe(data => {\n        console.log(data);\n        // Update component data property here\n      });\n  }\n  \n  ngOnInit() {\n    // Call fetchData here\n  }\n  \n  ngOnDestroy() {}\n}",
+        "expectedOutcome": "The ngOnInit method will be implemented to trigger data fetching when the component initializes.",
+        "successCriteria": [
+          "The ngOnInit method contains a call to this.fetchData()"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started implementing ngOnInit, but make sure to call this.fetchData() inside the method.",
+        "feedbackWrong": "The ngOnInit method should call this.fetchData() to trigger data fetching on component initialization.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "ngOnInit",
+            "fetchData"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 12",
+        "title": "Implement ngOnDestroy cleanup",
+        "instruction": "In the ngOnDestroy method, call the next() and complete() methods on the destroy$ Subject to properly clean up subscriptions.",
+        "hint": "Use this.destroy$.next() followed by this.destroy$.complete() inside the ngOnDestroy method.",
+        "analogousExample": "// Example of proper cleanup in ngOnDestroy\nngOnDestroy() {\n  this.destroy$.next();\n  this.destroy$.complete();\n}",
+        "seedCode": "import { Component, OnInit, OnDestroy } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\n\n// Create DataComponent class here\nexport class DataComponent implements OnInit, OnDestroy {\n  // Declare properties here\n  \n  // Add constructor with HttpClient injection here\n  constructor(private http: HttpClient) {}\n  \n  // Create fetchData method here\n  fetchData() {\n    this.http.get('https://jsonplaceholder.typicode.com/posts/1')\n      .pipe(takeUntil(this.destroy$))\n      .subscribe(data => {\n        console.log(data);\n        // Update component data property here\n      });\n  }\n  \n  ngOnInit() {\n    // Call fetchData here\n  }\n  \n  ngOnDestroy() {\n    // Implement cleanup here\n  }\n}",
+        "expectedOutcome": "The ngOnDestroy method will properly clean up the destroy$ Subject, preventing memory leaks when the component is destroyed.",
+        "successCriteria": [
+          "ngOnDestroy method contains this.destroy$.next() and this.destroy$.complete() calls."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure to call both next() and complete() on the destroy$ Subject. Both are needed for proper cleanup.",
+        "feedbackWrong": "The ngOnDestroy method should contain cleanup logic. You need to call this.destroy$.next() to emit a value and this.destroy$.complete() to mark the Subject as completed.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "ngOnDestroy",
+            "destroy$.next()",
+            "destroy$.complete()"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 12",
+        "title": "Create the component template",
+        "instruction": "Add the component's template with sections to display loading, error, and data states. Use the existing component properties to conditionally show each section.",
+        "hint": "Create a template with *ngIf directives to show different UI sections based on the component's state properties.",
+        "analogousExample": "// Component template with conditional sections\n@Component({\n  selector: 'app-example',\n  template: `\n    <div *ngIf=\"isLoading\">Loading...</div>\n    <div *ngIf=\"error\">{{ error }}</div>\n    <div *ngIf=\"data\">{{ data | json }}</div>\n  `\n})",
+        "seedCode": "import { Component, OnInit, OnDestroy } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\n\n// Create DataComponent class here\nexport class DataComponent implements OnInit, OnDestroy {\n  // Declare properties here\n  \n  // Add constructor with HttpClient injection here\n  constructor(private http: HttpClient) {}\n  \n  // Create fetchData method here\n  fetchData() {\n    this.http.get('https://jsonplaceholder.typicode.com/posts/1')\n      .pipe(takeUntil(this.destroy$))\n      .subscribe(data => {\n        console.log(data);\n        // Update component data property here\n      });\n  }\n  \n  ngOnInit() {\n    // Call fetchData here\n  }\n  \n  ngOnDestroy() {\n    // Implement cleanup here\n  }\n}\n\n// Add component template here",
+        "expectedOutcome": "The component will have a complete template that displays different UI sections based on the component's state properties.",
+        "successCriteria": [
+          "Template includes sections for loading, error, and data display using *ngIf directives"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added some template content, but make sure to include all three sections (loading, error, data) with proper *ngIf directives.",
+        "feedbackWrong": "The template doesn't properly handle the three different states. Review how to use *ngIf to conditionally show content based on component properties.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "template:",
+            "*ngIf",
+            "loading",
+            "error",
+            "data"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step12",
+        "type": "question",
+        "phase": "Step 12 of 12",
+        "title": "Add module configuration",
+        "instruction": "In the AppModule, add HttpClientModule to the imports array to enable HTTP functionality throughout your application.",
+        "hint": "Look for the @NgModule decorator in your app.module.ts file and add HttpClientModule to the imports array.",
+        "analogousExample": "// Example: Adding a module to imports\n@NgModule({\n  imports: [\n    BrowserModule,\n    HttpClientModule\n  ]\n})\nexport class AppModule {}",
+        "seedCode": "import { NgModule } from '@angular/core';\nimport { BrowserModule } from '@angular/platform-browser';\nimport { HttpClientModule } from '@angular/common/http';\nimport { DataComponent } from './data.component';\n\n@NgModule({\n  declarations: [\n    DataComponent\n  ],\n  imports: [\n    BrowserModule,\n    // Add HttpClientModule here\n  ],\n  providers: [],\n  bootstrap: [DataComponent]\n})\nexport class AppModule {}",
+        "expectedOutcome": "The AppModule will be configured to use Angular's HTTP client, allowing your DataComponent to make HTTP requests.",
+        "successCriteria": [
+          "HttpClientModule is added to the imports array in the AppModule decorator."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure HttpClientModule is properly added to the imports array in the @NgModule decorator.",
+        "feedbackWrong": "The module configuration isn't complete. Remember to add HttpClientModule to the imports array in AppModule.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "HttpClientModule",
+            "imports"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import required Angular modules and RxJS utilities",
+        "id": "step1"
+      },
+      {
+        "label": "Create the main component class",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize component properties and state",
+        "id": "step3"
+      },
+      {
+        "label": "Inject HttpClient service",
+        "id": "step4"
+      },
+      {
+        "label": "Create the fetchData method",
+        "id": "step5"
+      },
+      {
+        "label": "Add RxJS pipe with takeUntil operator",
+        "id": "step6"
+      },
+      {
+        "label": "Handle successful data response",
+        "id": "step7"
+      },
+      {
+        "label": "Handle error responses",
+        "id": "step8"
+      },
+      {
+        "label": "Implement ngOnInit lifecycle hook",
+        "id": "step9"
+      },
+      {
+        "label": "Implement ngOnDestroy cleanup",
+        "id": "step10"
+      },
+      {
+        "label": "Create the component template",
+        "id": "step11"
+      },
+      {
+        "label": "Add module configuration",
+        "id": "step12"
+      }
+    ]
+  },
+  "source": "content"
+}

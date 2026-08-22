@@ -1,0 +1,300 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-node-90",
+    "track": "node",
+    "lessonNum": 90,
+    "title": "Build circuit breaker wrapper for external APIs",
+    "shortName": "P90",
+    "intro": {
+      "tag": "LESSON #90",
+      "title": "Build circuit breaker wrapper for external APIs",
+      "body": "In this lesson, you will build a circuit breaker wrapper for external APIs in Node.js to make your applications more resilient. You'll learn how to wrap an external API call with a mechanism that prevents repeated failures from overwhelming your system. The core programming concept involves using a state machine to manage the circuit's status (closed, open, half-open) and handling errors gracefully. You'll work with JavaScript constructs like async/await, error handling, and simple state management. By the end, you'll have a reusable wrapper that helps protect your app from unreliable external services.",
+      "usecase": "Circuit breakers are essential in production systems that depend on external APIs, such as e-commerce platforms handling payment gateways or travel booking sites aggregating flight data. In a dashboard monitoring multiple third-party services, the circuit breaker prevents cascading failures when one API becomes unresponsive, ensuring the UI remains functional for other components. This pattern allows developers to gracefully degrade features—like showing cached hotel prices instead of live rates—while maintaining overall system stability during external service outages."
+    },
+    "objectives": [
+      "Implement a circuit breaker class with states (CLOSED, OPEN, HALF_OPEN)",
+      "Configure failure thresholds and timeout durations for circuit breaker logic",
+      "Initialize a wrapper function that intercepts external API calls",
+      "Manipulate state transitions based on success and failure conditions",
+      "Integrate the circuit breaker with a sample external API endpoint",
+      "Construct error handling for open circuit states with fallback responses",
+      "Apply the circuit breaker to protect against cascading failures in API calls"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 8",
+        "title": "Import required Node.js modules",
+        "instruction": "Import the 'http' module for making HTTP requests and the 'events' module for implementing the circuit breaker pattern. Use the Node.js built-in module syntax.",
+        "hint": "Use the require() function to import both modules in separate statements.",
+        "analogousExample": "// Example: importing built-in Node.js modules\nconst fs = require('fs');\nconst path = require('path');",
+        "seedCode": "// Import the required modules here\n",
+        "expectedOutcome": "The 'http' and 'events' modules are imported and ready to use in your circuit breaker implementation.",
+        "successCriteria": [
+          "Both 'http' and 'events' modules are imported using require() statements."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but you need to import both modules. Make sure you have both 'http' and 'events' imported using require().",
+        "feedbackWrong": "The imports are incorrect or missing. You need to import both 'http' and 'events' modules using require() statements.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "require('http')",
+            "require('events')"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 8",
+        "title": "Define the CircuitBreaker class constructor",
+        "instruction": "Create a CircuitBreaker class with a constructor that accepts a request function and configuration options (failureThreshold, resetTimeout).",
+        "hint": "Define a class using the 'class' keyword, then add a constructor method that takes parameters for the request function and configuration object.",
+        "analogousExample": "// Example: class with constructor\nclass RetryHandler {\n  constructor(request, options) {\n    this.request = request;\n    this.maxRetries = options.maxRetries || 3;\n  }\n}",
+        "seedCode": "// Import the required modules here\n\n// Create the CircuitBreaker class with constructor here",
+        "expectedOutcome": "A CircuitBreaker class is defined with a constructor that initializes the request function and configuration options.",
+        "successCriteria": [
+          "The CircuitBreaker class has a constructor that accepts request and config parameters, and initializes properties for failureThreshold and resetTimeout."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started defining the class, but make sure the constructor accepts both the request function and configuration options with failureThreshold and resetTimeout.",
+        "feedbackWrong": "The CircuitBreaker class constructor is not properly defined. Remember to create a class with a constructor that takes request and config parameters.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "class",
+            "CircuitBreaker",
+            "constructor",
+            "request",
+            "failureThreshold",
+            "resetTimeout"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 8",
+        "title": "Initialize circuit breaker state variables",
+        "instruction": "Inside the CircuitBreaker class constructor, initialize the state variables: failureCount, successCount, state, and nextAttempt.",
+        "hint": "Set failureCount and successCount to 0, state to 'CLOSED', and nextAttempt to 0. These will track the circuit breaker's status.",
+        "analogousExample": "// Example: initializing state in a class constructor\nclass TrafficLight {\n  constructor() {\n    this.color = 'red';\n    this.timer = 0;\n  }\n}",
+        "seedCode": "// Import the required modules here\n\n// Create the CircuitBreaker class with constructor here\nclass CircuitBreaker {\n  constructor() {\n    // Initialize state variables here\n  }\n}",
+        "expectedOutcome": "The CircuitBreaker class constructor now has initialized state variables ready to track failures, successes, and circuit state.",
+        "successCriteria": [
+          "The constructor initializes failureCount to 0, successCount to 0, state to 'CLOSED', and nextAttempt to 0."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added some state variables, but check that all four are initialized: failureCount, successCount, state, and nextAttempt.",
+        "feedbackWrong": "The state variables aren't initialized correctly. Ensure you set failureCount and successCount to 0, state to 'CLOSED', and nextAttempt to 0 inside the constructor.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "failureCount",
+            "successCount",
+            "state",
+            "'CLOSED'",
+            "nextAttempt",
+            "0"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 8",
+        "title": "Implement the success method",
+        "instruction": "Inside the CircuitBreaker class, create a method named 'success' that resets the failureCount to 0 and sets the state to 'CLOSED'.",
+        "hint": "Add a method inside the class using the syntax: success() { ... }",
+        "analogousExample": "// Example: a method that resets a counter\nclass Counter {\n  reset() {\n    this.count = 0;\n  }\n}",
+        "seedCode": "// Import the required modules here\n\n// Create the CircuitBreaker class with constructor here\nclass CircuitBreaker {\n  constructor() {\n    // Initialize state variables here\n  }\n  \n  // Add success method here\n}",
+        "expectedOutcome": "The CircuitBreaker class will have a success method that handles resetting after a successful request.",
+        "successCriteria": [
+          "The success method is defined inside the CircuitBreaker class, sets failureCount to 0, and sets state to 'CLOSED'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added a success method, but make sure it sets failureCount to 0 and state to 'CLOSED'.",
+        "feedbackWrong": "The success method is missing or incorrect. It should be inside the CircuitBreaker class and reset the failure count and state.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "success",
+            "failureCount",
+            "0",
+            "state",
+            "'CLOSED'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 8",
+        "title": "Implement the failure method",
+        "instruction": "Add a failure method to the CircuitBreaker class that increments the failureCount and changes the state to 'OPEN' when the failure threshold is reached.",
+        "hint": "Inside the class, create a method called failure. Increment this.failureCount, then check if it's greater than or equal to this.failureThreshold. If it is, set this.state to 'OPEN'.",
+        "analogousExample": "// Similar: a method that tracks errors and changes status\nclass ErrorTracker {\n  constructor() {\n    this.errorCount = 0;\n    this.maxErrors = 3;\n    this.status = 'OK';\n  }\n  \n  recordError() {\n    this.errorCount++;\n    if (this.errorCount >= this.maxErrors) {\n      this.status = 'FAILED';\n    }\n  }\n}",
+        "seedCode": "// Import the required modules here\n\n// Create the CircuitBreaker class with constructor here\nclass CircuitBreaker {\n  constructor() {\n    // Initialize state variables here\n  }\n  \n  // Add success method here\n  \n  // Add failure method here\n}",
+        "expectedOutcome": "The CircuitBreaker class now has a failure method that properly tracks failures and transitions the circuit to OPEN state when the threshold is exceeded.",
+        "successCriteria": [
+          "The failure method increments failureCount and changes state to 'OPEN' when failureCount reaches or exceeds failureThreshold."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but the failure method needs to both increment the failure count AND check if it has reached the threshold to change the state to 'OPEN'.",
+        "feedbackWrong": "The failure method should increment the failureCount and check if it has reached the failureThreshold to change the state to 'OPEN'. Review the analogous example for guidance.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "failure",
+            "failureCount++",
+            "failureThreshold",
+            "state",
+            "'OPEN'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 8",
+        "title": "Create a mock external API function",
+        "instruction": "Create a mockRequest function that simulates external API calls with random failures. Place it after the CircuitBreaker class definition.",
+        "hint": "Define a function named mockRequest that returns a Promise. Inside, use Math.random() to simulate random failures.",
+        "analogousExample": "// Example: A mock function that randomly succeeds or fails\nfunction mockRequest() {\n  return new Promise((resolve, reject) => {\n    const random = Math.random();\n    if (random > 0.3) {\n      resolve('Success!');\n    } else {\n      reject(new Error('Request failed'));\n    }\n  });\n}",
+        "seedCode": "// Import the required modules here\n\n// Create the CircuitBreaker class with constructor here\nclass CircuitBreaker {\n  constructor() {\n    // Initialize state variables here\n  }\n  \n  // Add success method here\n  \n  // Add failure method here\n  \n  // Add canAttempt method here\n  \n  // Create the fire method here\n}\n\n// Create the mockRequest function here",
+        "expectedOutcome": "A mockRequest function that returns a Promise and randomly resolves or rejects to simulate API failures.",
+        "successCriteria": [
+          "The mockRequest function is defined, returns a Promise, and uses Math.random() to simulate random failures."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the mockRequest function, but make sure it returns a Promise and uses Math.random() to randomly succeed or fail.",
+        "feedbackWrong": "The mockRequest function should return a Promise and simulate random failures. Check the analogous example for guidance.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "mockRequest",
+            "Promise",
+            "Math.random",
+            "resolve",
+            "reject"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 8",
+        "title": "Instantiate and test the circuit breaker",
+        "instruction": "Create an instance of the CircuitBreaker class, passing your mockRequest function as the action, and call its fire method multiple times to test the circuit breaker's behavior.",
+        "hint": "Instantiate the class using the 'new' keyword, then call the fire method in a loop or multiple times to simulate requests.",
+        "analogousExample": "// Similar: creating and testing a class instance\nconst breaker = new CircuitBreaker(mockRequest);\nbreaker.fire();\nbreaker.fire();",
+        "seedCode": "// Import the required modules here\n\n// Create the CircuitBreaker class with constructor here\nclass CircuitBreaker {\n  constructor() {\n    // Initialize state variables here\n  }\n  \n  // Add success method here\n  \n  // Add failure method here\n  \n  // Add canAttempt method here\n  \n  // Create the fire method here\n}\n\n// Create the mockRequest function here\n\n// Create a CircuitBreaker instance and test it here",
+        "expectedOutcome": "You will have a working circuit breaker instance that can be tested with multiple calls to see how it handles successes and failures.",
+        "successCriteria": [
+          "A CircuitBreaker instance is created with mockRequest as the action, and the fire method is called multiple times in the code."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've created the instance but haven't called fire multiple times yet, or vice versa. Make sure to both instantiate and test.",
+        "feedbackWrong": "The circuit breaker instance wasn't created or tested properly. Check that you're using the 'new' keyword and calling fire().",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "new CircuitBreaker",
+            "mockRequest",
+            "fire()",
+            "fire()"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 8",
+        "title": "Add logging to observe circuit breaker state changes",
+        "instruction": "Add console.log statements inside the CircuitBreaker class methods to track state transitions and request outcomes.",
+        "hint": "Add console.log messages in the success, failure, canAttempt, and fire methods to log when they are called and what state changes occur.",
+        "analogousExample": "// Example: logging in a method\nclass Example {\n  doSomething() {\n    console.log('Method called with data:', data);\n    // method logic\n  }\n}",
+        "seedCode": "// Import the required modules here\n\n// Create the CircuitBreaker class with constructor here\nclass CircuitBreaker {\n  constructor() {\n    // Initialize state variables here\n  }\n  \n  // Add success method here\n  \n  // Add failure method here\n  \n  // Add canAttempt method here\n  \n  // Create the fire method here\n}\n\n// Create the mockRequest function here\n\n// Create a CircuitBreaker instance and test it here",
+        "expectedOutcome": "The circuit breaker will output logs showing when it opens, closes, allows attempts, and handles successes/failures.",
+        "successCriteria": [
+          "Console.log statements are added to at least three CircuitBreaker methods to track state changes."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You added some logging, but make sure to include logs in multiple methods like success, failure, and canAttempt.",
+        "feedbackWrong": "No console.log statements were added to track circuit breaker state changes.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "console.log",
+            "success",
+            "failure",
+            "canAttempt",
+            "fire"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import required Node.js modules",
+        "id": "step1"
+      },
+      {
+        "label": "Define the CircuitBreaker class constructor",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize circuit breaker state variables",
+        "id": "step3"
+      },
+      {
+        "label": "Implement the success method",
+        "id": "step4"
+      },
+      {
+        "label": "Implement the failure method",
+        "id": "step5"
+      },
+      {
+        "label": "Create a mock external API function",
+        "id": "step6"
+      },
+      {
+        "label": "Instantiate and test the circuit breaker",
+        "id": "step7"
+      },
+      {
+        "label": "Add logging to observe circuit breaker state changes",
+        "id": "step8"
+      }
+    ]
+  },
+  "source": "content"
+}

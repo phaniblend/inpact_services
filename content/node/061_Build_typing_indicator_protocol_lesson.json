@@ -1,0 +1,326 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-node-61",
+    "track": "node",
+    "lessonNum": 61,
+    "title": "Build typing indicator protocol",
+    "shortName": "P61",
+    "intro": {
+      "tag": "LESSON #61",
+      "title": "Build typing indicator protocol",
+      "body": "In this lesson, you will build a typing indicator protocol that simulates real-time communication between users in a chat application. You will learn how to use Node.js timers and event emitters to manage and broadcast typing status updates. The core programming concept involves handling asynchronous events and state management to track when a user starts or stops typing. You will work with JavaScript objects, setTimeout, clearTimeout, and custom events to create a responsive indicator system. By the end, you will have a functional protocol that can be integrated into a larger chat system to enhance user experience.",
+      "usecase": "Typing indicators are a crucial UX feature in modern messaging applications like Slack, WhatsApp, and Discord, providing real-time feedback when other users are composing messages. This protocol pattern appears in collaborative tools like Google Docs' presence indicators and live comment threads, where users need to know when others are actively engaged. As a Node.js developer, implementing this involves managing WebSocket connections, broadcast events, and state synchronization between server and multiple clients. Mastering this protocol enables you to build responsive, real-time communication features that users expect in today's interactive applications."
+    },
+    "objectives": [
+      "Initialize a WebSocket server to handle real-time connections for typing indicators.",
+      "Construct a client-side event handler to emit typing status changes.",
+      "Configure the server to broadcast typing events to all connected clients.",
+      "Implement a state variable to track and display the typing status of other users.",
+      "Apply conditional rendering to show or hide the typing indicator UI based on received events.",
+      "Integrate a debounce mechanism to optimize the frequency of typing event emissions.",
+      "Manipulate the DOM to dynamically update the indicator text with the name of the typing user."
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 9",
+        "title": "Import required Node.js modules",
+        "instruction": "At the top of your file, import the http, EventEmitter, and WebSocket modules from Node.js.",
+        "hint": "Use the require() function to import each module. The http module is built into Node.js, EventEmitter is from the 'events' module, and WebSocket is from the 'ws' package.",
+        "analogousExample": "// Example: importing Node.js modules\nconst fs = require('fs');\nconst path = require('path');",
+        "seedCode": "// Import the required Node.js modules here",
+        "expectedOutcome": "Your file will have the three imports needed to build the typing indicator protocol.",
+        "successCriteria": [
+          "The http, EventEmitter, and WebSocket modules are imported using require()."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure to import all three modules: http, EventEmitter, and WebSocket.",
+        "feedbackWrong": "The imports are not correct. You need to import http, EventEmitter from 'events', and WebSocket from 'ws'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "require('http')",
+            "require('events')",
+            "require('ws')"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 9",
+        "title": "Create a TypingIndicator class",
+        "instruction": "Define a TypingIndicator class that extends EventEmitter to handle typing events.",
+        "hint": "Use the class keyword to define the class, and make it extend EventEmitter.",
+        "analogousExample": "// Example: a class extending EventEmitter\nclass User extends EventEmitter {\n  constructor(name) {\n    super();\n    this.name = name;\n  }\n}",
+        "seedCode": "// Import the required Node.js modules here\n\n// Define the TypingIndicator class here",
+        "expectedOutcome": "A TypingIndicator class is defined, extending EventEmitter.",
+        "successCriteria": [
+          "The TypingIndicator class is defined and extends EventEmitter."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've defined a class, but make sure it extends EventEmitter.",
+        "feedbackWrong": "The TypingIndicator class is not defined or does not extend EventEmitter.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "class",
+            "TypingIndicator",
+            "extends",
+            "EventEmitter"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 9",
+        "title": "Initialize typing state in the class constructor",
+        "instruction": "Inside the TypingIndicator class, add a constructor method that initializes a property called 'typingStates' as an empty object.",
+        "hint": "The constructor should set this.typingStates = {} to create an empty object for storing user typing statuses.",
+        "analogousExample": "// Similar: class constructor initializing state\nclass Counter {\n  constructor() {\n    this.count = 0;\n  }\n}",
+        "seedCode": "// Import the required Node.js modules here\n\n// Define the TypingIndicator class here\nclass TypingIndicator {\n  // Add constructor here\n}",
+        "expectedOutcome": "The TypingIndicator class will have a constructor that initializes an empty object to track typing states for different users.",
+        "successCriteria": [
+          "The TypingIndicator class has a constructor method that sets this.typingStates to an empty object."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure the constructor sets this.typingStates to an empty object {}.",
+        "feedbackWrong": "Add a constructor method inside the TypingIndicator class that initializes this.typingStates as an empty object.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "constructor",
+            "typingStates",
+            "this",
+            "{}"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 9",
+        "title": "Add startTyping method to the class",
+        "instruction": "Inside the TypingIndicator class, create a method named startTyping that takes a userId parameter, sets that user's typing state to true, and emits a 'typing_start' event with the userId.",
+        "hint": "Define a method inside the class using the syntax startTyping(userId) { ... }. Inside the method, update the typingStates Map and emit an event.",
+        "analogousExample": "// Similar: a method that updates state and emits an event\nclass UserManager {\n  constructor() {\n    this.users = new Map();\n  }\n  \n  activateUser(userId) {\n    this.users.set(userId, true);\n    this.emit('user_activated', userId);\n  }\n}",
+        "seedCode": "// Import the required Node.js modules here\n\n// Define the TypingIndicator class here\nclass TypingIndicator {\n  // Add constructor here\n  \n  // Add startTyping method here\n}",
+        "expectedOutcome": "The TypingIndicator class now has a startTyping method that updates the typing state and emits an event.",
+        "successCriteria": [
+          "The startTyping method is defined inside the TypingIndicator class, takes a userId parameter, sets typingStates[userId] to true, and emits a 'typing_start' event with the userId."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added a method, but check if it properly updates the typing state and emits the event. Make sure it takes a userId parameter.",
+        "feedbackWrong": "The startTyping method is missing or doesn't match the requirements. Review the method syntax and ensure it updates state and emits an event.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "startTyping",
+            "userId",
+            "set",
+            "true",
+            "emit",
+            "'typing_start'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 9",
+        "title": "Create HTTP server for initial connection",
+        "instruction": "Create an HTTP server using the imported 'http' module that listens on port 3000 and logs a message when it starts.",
+        "hint": "Use http.createServer() to create a server, then call .listen() on it with port 3000 and a callback function that logs a message.",
+        "analogousExample": "// Example: basic HTTP server\nconst http = require('http');\nconst server = http.createServer((req, res) => {\n  res.end('Hello');\n});\nserver.listen(3000, () => {\n  console.log('Server listening on port 3000');\n});",
+        "seedCode": "const http = require('http');\nconst WebSocket = require('ws');\n\nclass TypingIndicator {\n  constructor() {\n    this.typingUsers = new Map();\n  }\n\n  startTyping(userId) {\n    this.typingUsers.set(userId, true);\n    this.emit('typing_start', userId);\n  }\n\n  // Add stopTyping method here\n}\n\n// Create HTTP server here",
+        "expectedOutcome": "An HTTP server is created and configured to listen on port 3000 with a startup log message.",
+        "successCriteria": [
+          "The code includes http.createServer() and server.listen(3000, callback) with a console.log message."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're using http.createServer() and calling .listen(3000) with a callback that logs a message.",
+        "feedbackWrong": "The HTTP server setup is incomplete. Review how to create and start an HTTP server with the 'http' module.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "createServer",
+            "listen",
+            "3000",
+            "console.log"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 9",
+        "title": "Initialize WebSocket server",
+        "instruction": "Create a WebSocket server instance and attach it to the HTTP server you already created.",
+        "hint": "Use the WebSocket module you imported earlier to create a new server instance, passing the HTTP server as an argument.",
+        "analogousExample": "// Creating a WebSocket server attached to an HTTP server\nconst wss = new WebSocket.Server({ server: httpServer });",
+        "seedCode": "const http = require('http');\nconst WebSocket = require('ws');\n\nclass TypingIndicator {\n  constructor() {\n    this.typingUsers = new Map();\n  }\n\n  startTyping(userId) {\n    this.typingUsers.set(userId, true);\n    this.emit('typing_start', userId);\n  }\n\n  // Add stopTyping method here\n}\n\n// Create HTTP server here\n\n// Create WebSocket server here",
+        "expectedOutcome": "A WebSocket server instance is created and attached to the existing HTTP server, enabling real-time WebSocket connections.",
+        "successCriteria": [
+          "A WebSocket server instance is created using the WebSocket module and attached to the HTTP server."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're creating a WebSocket server instance using the WebSocket module and attaching it to the HTTP server. Check the syntax for creating a WebSocket server.",
+        "feedbackWrong": "The WebSocket server wasn't properly initialized. Remember to create a new WebSocket.Server instance and pass the HTTP server as an argument in the options object.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "new",
+            "WebSocket.Server",
+            "server"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 9",
+        "title": "Handle WebSocket connections",
+        "instruction": "Add a 'connection' event handler to your WebSocket server that logs when a client connects.",
+        "hint": "Use the 'on' method on your WebSocket server instance to listen for 'connection' events. The handler function should receive a 'ws' parameter representing the connected client.",
+        "analogousExample": "// Example: basic WebSocket connection handler\nwss.on('connection', function connection(ws) {\n  console.log('Client connected');\n});",
+        "seedCode": "const http = require('http');\nconst WebSocket = require('ws');\n\nclass TypingIndicator {\n  constructor() {\n    this.typingUsers = new Map();\n  }\n\n  startTyping(userId) {\n    this.typingUsers.set(userId, true);\n    this.emit('typing_start', userId);\n  }\n\n  // Add stopTyping method here\n}\n\n// Create HTTP server here\n\n// Create WebSocket server here\n\n// Add WebSocket connection handler here",
+        "expectedOutcome": "The WebSocket server will now detect when clients connect and log a message to the console.",
+        "successCriteria": [
+          "A 'connection' event handler is added to the WebSocket server that logs a connection message."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure you're using the 'on' method with 'connection' as the event name and logging a message inside the handler.",
+        "feedbackWrong": "The connection handler isn't set up correctly. Check that you're listening for the 'connection' event on your WebSocket server instance.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "on",
+            "'connection'",
+            "ws",
+            "console.log"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 9",
+        "title": "Wire typing indicator events to WebSocket",
+        "instruction": "Inside the WebSocket connection handler, listen for 'typing_start' and 'typing_stop' events from the TypingIndicator instance and broadcast them to all connected clients.",
+        "hint": "Use the 'on' method on the TypingIndicator instance to listen for events, then use wsServer.clients.forEach to send messages to all connected WebSocket clients.",
+        "analogousExample": "// Similar: listening to events and broadcasting\nclass EventEmitter {\n  on(event, callback) {}\n}\nconst emitter = new EventEmitter();\nemitter.on('data', (data) => {\n  clients.forEach(client => client.send(data));\n});",
+        "seedCode": "const http = require('http');\nconst WebSocket = require('ws');\n\nclass TypingIndicator {\n  constructor() {\n    this.typingUsers = new Map();\n  }\n\n  startTyping(userId) {\n    this.typingUsers.set(userId, true);\n    this.emit('typing_start', userId);\n  }\n\n  stopTyping(userId) {\n    this.typingUsers.delete(userId);\n    this.emit('typing_stop', userId);\n  }\n\n  emit(event, data) {\n    // Event emitter logic will be added\n  }\n\n  on(event, callback) {\n    // Event listener logic will be added\n  }\n}\n\nconst server = http.createServer();\nconst wsServer = new WebSocket.Server({ server });\nconst typingIndicator = new TypingIndicator();\n\nwsServer.on('connection', (ws) => {\n  ws.on('message', (message) => {\n    const data = JSON.parse(message);\n    if (data.type === 'typing_start') {\n      typingIndicator.startTyping(data.userId);\n    } else if (data.type === 'typing_stop') {\n      typingIndicator.stopTyping(data.userId);\n    }\n  });\n\n  // Add event listeners for typing indicator events here\n});\n\nserver.listen(8080, () => {\n  console.log('Server listening on port 8080');\n});",
+        "expectedOutcome": "The WebSocket server will now broadcast typing status updates to all connected clients when typing events occur.",
+        "successCriteria": [
+          "The WebSocket connection handler includes listeners for 'typing_start' and 'typing_stop' events that broadcast messages to all connected clients."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added some event listeners, but make sure you're listening for both 'typing_start' and 'typing_stop' events and broadcasting to all clients.",
+        "feedbackWrong": "The WebSocket connection handler doesn't yet listen to typing indicator events. Add listeners for 'typing_start' and 'typing_stop' events that broadcast to all clients.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "typingIndicator.on",
+            "'typing_start'",
+            "'typing_stop'",
+            "wsServer.clients.forEach",
+            "client.send"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 9",
+        "title": "Start the server and test the protocol",
+        "instruction": "Start the HTTP server on port 8080 and add a console log to confirm it's running.",
+        "hint": "Call the server.listen method with the port number and a callback function that logs a message.",
+        "analogousExample": "// Starting a server with a callback\nconst server = http.createServer();\nserver.listen(3000, () => {\n  console.log('Server running on port 3000');\n});",
+        "seedCode": "const http = require('http');\nconst WebSocket = require('ws');\n\nclass TypingIndicator {\n  constructor() {\n    this.typingUsers = new Map();\n  }\n\n  startTyping(userId) {\n    this.typingUsers.set(userId, true);\n    this.emit('typing_start', userId);\n  }\n\n  stopTyping(userId) {\n    this.typingUsers.delete(userId);\n    this.emit('typing_stop', userId);\n  }\n\n  emit(event, data) {\n    // Event emitter logic will be added\n  }\n\n  on(event, callback) {\n    // Event listener logic will be added\n  }\n}\n\nconst server = http.createServer();\nconst wsServer = new WebSocket.Server({ server });\nconst typingIndicator = new TypingIndicator();\n\nwsServer.on('connection', (ws) => {\n  ws.on('message', (message) => {\n    const data = JSON.parse(message);\n    if (data.type === 'typing_start') {\n      typingIndicator.startTyping(data.userId);\n    } else if (data.type === 'typing_stop') {\n      typingIndicator.stopTyping(data.userId);\n    }\n  });\n\n  // Add event listeners for typing indicator events here\n});\n\nserver.listen(8080, () => {\n  console.log('Server listening on port 8080');\n});",
+        "expectedOutcome": "The server will start and log a confirmation message to the console when you run the file.",
+        "successCriteria": [
+          "The server is started on port 8080 with a callback that logs a message."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the server, but make sure to include a callback function that logs a confirmation message.",
+        "feedbackWrong": "The server isn't started correctly. Check that you're calling server.listen with the correct port and a callback.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "server.listen",
+            "8080",
+            "console.log"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import required Node.js modules",
+        "id": "step1"
+      },
+      {
+        "label": "Create a TypingIndicator class",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize typing state in the class constructor",
+        "id": "step3"
+      },
+      {
+        "label": "Add startTyping method to the class",
+        "id": "step4"
+      },
+      {
+        "label": "Create HTTP server for initial connection",
+        "id": "step5"
+      },
+      {
+        "label": "Initialize WebSocket server",
+        "id": "step6"
+      },
+      {
+        "label": "Handle WebSocket connections",
+        "id": "step7"
+      },
+      {
+        "label": "Wire typing indicator events to WebSocket",
+        "id": "step8"
+      },
+      {
+        "label": "Start the server and test the protocol",
+        "id": "step9"
+      }
+    ]
+  },
+  "source": "content"
+}

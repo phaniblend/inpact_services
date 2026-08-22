@@ -1,0 +1,352 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-vue-75",
+    "track": "vue",
+    "lessonNum": 75,
+    "title": "Request Deduplication",
+    "shortName": "P75",
+    "intro": {
+      "tag": "LESSON #75",
+      "title": "Request Deduplication",
+      "body": "In this lesson, you will build a simple Vue application that demonstrates request deduplication, a technique to prevent sending the same network request multiple times. You will learn how to use a JavaScript Map to track ongoing requests and ensure duplicate calls are avoided. The core concept involves checking if a request is already in progress before initiating a new one, improving performance and reducing server load. You will implement this using Vue's reactive state and computed properties to manage request statuses. By the end, you'll have a functional app that fetches data efficiently without redundant API calls.",
+      "usecase": "Request deduplication is essential in modern web applications where multiple components might trigger the same API call simultaneously. In a Vue dashboard displaying real-time analytics, multiple widgets could request the same user data, causing unnecessary network traffic. This pattern prevents duplicate requests when users rapidly click search buttons or apply filters in data tables. It's also crucial in e-commerce product listings where sorting and filtering actions shouldn't trigger redundant API calls for the same product data."
+    },
+    "objectives": [
+      "Implement a Vue composable function to track in-flight requests",
+      "Apply request deduplication logic to prevent duplicate API calls",
+      "Construct a reactive state object to manage pending request status",
+      "Configure computed properties to determine if a request is already in progress",
+      "Integrate the deduplication mechanism with existing API service calls",
+      "Manipulate the request tracking state when requests start and complete",
+      "Render UI feedback based on the deduplication status"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 10",
+        "title": "Import Vue and ref from vue",
+        "instruction": "Import Vue and ref from the 'vue' package to use reactive references in your component.",
+        "hint": "Use the import statement to bring in the necessary Vue APIs. This is the foundation for reactive state management.",
+        "analogousExample": "// Importing core Vue APIs\nimport { ref, reactive } from 'vue'",
+        "seedCode": "// Import Vue and ref from 'vue'",
+        "expectedOutcome": "The Vue and ref APIs are imported and ready to use for reactive state management.",
+        "successCriteria": [
+          "Vue and ref are imported from the 'vue' package."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're importing both Vue and ref from the 'vue' package.",
+        "feedbackWrong": "Check your import statement. You need to import both Vue and ref from the 'vue' package.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "vue",
+            "ref"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 10",
+        "title": "Create the main Vue component",
+        "instruction": "Create a Vue component named 'RequestDeduplication' with a template and script section. The template should contain a root <div> element.",
+        "hint": "In Vue, you can create a component by defining a template and script section. The template should have a single root element, typically a <div>.",
+        "analogousExample": "// Example: a basic Vue component\nconst MyComponent = {\n  template: `<div>My Component</div>`,\n  setup() {\n    return {};\n  }\n};",
+        "seedCode": "// Import Vue and ref from 'vue'\nimport { createApp } from 'vue';\nimport { ref } from 'vue';\n\n// Create the RequestDeduplication component here",
+        "expectedOutcome": "A Vue component named 'RequestDeduplication' is created with a template containing a root <div> element and a script section.",
+        "successCriteria": [
+          "The component is named 'RequestDeduplication', has a template with a root <div> element, and includes a script section."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure the component is named 'RequestDeduplication' and has both template and script sections.",
+        "feedbackWrong": "The component structure is incomplete. Ensure you've named it 'RequestDeduplication' and included a template with a root <div> element.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "RequestDeduplication",
+            "template",
+            "<div>",
+            "setup"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 10",
+        "title": "Initialize reactive state for request data",
+        "instruction": "Inside your component, create a reactive ref called 'responseData' to store API response data and initialize it with an empty string.",
+        "hint": "Use the ref function you imported earlier to create reactive state. Initialize it with an empty string value.",
+        "analogousExample": "// Creating reactive state for user input\nconst inputValue = ref('');",
+        "seedCode": "// Import Vue and ref from 'vue'\nimport { createApp } from 'vue';\nimport { ref } from 'vue';\n\n// Create the RequestDeduplication component here\nconst RequestDeduplication = {\n  setup() {\n    // Initialize responseData ref here\n    \n    return {};\n  }\n};\n\ncreateApp(RequestDeduplication).mount('#app');",
+        "expectedOutcome": "You will have a reactive state variable called 'responseData' initialized with an empty string, ready to store API responses.",
+        "successCriteria": [
+          "The component contains a ref called 'responseData' initialized with an empty string value."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure you're using the ref function and initializing it with an empty string.",
+        "feedbackWrong": "create a reactive ref called 'responseData' inside the setup function.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "responseData",
+            "ref",
+            "''",
+            "setup"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 10",
+        "title": "Initialize reactive state for loading status",
+        "instruction": "Inside the setup function, create a ref named isLoading to track whether a request is currently loading. Initialize it with false.",
+        "hint": "Use the ref function you imported earlier to create a reactive reference for the loading state.",
+        "analogousExample": "// Example: creating a reactive loading state\nconst isLoading = ref(false);",
+        "seedCode": "// Import Vue and ref from 'vue'\nimport { createApp } from 'vue';\nimport { ref } from 'vue';\n\n// Create the RequestDeduplication component here\nconst RequestDeduplication = {\n  setup() {\n    // Initialize responseData ref here\n    \n    // Initialize isLoading ref here\n    \n    return {};\n  }\n};\n\ncreateApp(RequestDeduplication).mount('#app');",
+        "expectedOutcome": "The component will have a reactive isLoading state initialized to false, ready to track loading status.",
+        "successCriteria": [
+          "A ref named isLoading is created inside setup() and initialized with false."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure you're creating a ref named 'isLoading' and initializing it with false inside the setup function.",
+        "feedbackWrong": "The loading state wasn't properly initialized. Remember to use ref() to create a reactive reference named 'isLoading' with an initial value of false.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "isLoading",
+            "ref",
+            "false"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 10",
+        "title": "Create a map to track pending requests",
+        "instruction": "Inside the setup function, create a JavaScript Map object to store pending request promises. Name it 'pendingRequests'.",
+        "hint": "Initialize a new Map using 'const pendingRequests = new Map();' within the setup function.",
+        "analogousExample": "// Similar: creating a Map to track items\nconst itemMap = new Map();",
+        "seedCode": "// Import Vue and ref from 'vue'\nimport { createApp } from 'vue';\nimport { ref } from 'vue';\n\n// Create the RequestDeduplication component here\nconst RequestDeduplication = {\n  setup() {\n    // Initialize responseData ref here\n    \n    // Initialize isLoading ref here\n    \n    // Create a map to track pending requests here\n    \n    return {};\n  }\n};\n\ncreateApp(RequestDeduplication).mount('#app');",
+        "expectedOutcome": "A Map object named 'pendingRequests' is created inside the setup function to track pending request promises.",
+        "successCriteria": [
+          "The 'pendingRequests' Map is declared within the setup function."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you've created a Map named 'pendingRequests' inside the setup function.",
+        "feedbackWrong": "The Map for tracking pending requests is missing or incorrectly placed. Create a Map named 'pendingRequests' inside the setup function.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "pendingRequests",
+            "new Map()"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 10",
+        "title": "Define the fetchData function",
+        "instruction": "Inside the setup function, define an async function named fetchData that takes a url parameter and makes a fetch request to that URL.",
+        "hint": "Use the async keyword before function and await with fetch. The function should return the fetch promise.",
+        "analogousExample": "// Similar: an async function that fetches data\nasync function getData(url) {\n  const response = await fetch(url);\n  return response.json();\n}",
+        "seedCode": "// Import Vue and ref from 'vue'\nimport { createApp } from 'vue';\nimport { ref } from 'vue';\n\n// Create the RequestDeduplication component here\nconst RequestDeduplication = {\n  setup() {\n    // Initialize responseData ref here\n    \n    // Initialize isLoading ref here\n    \n    // Create a map to track pending requests here\n    \n    // Define the fetchData function here\n    \n    return {};\n  }\n};\n\ncreateApp(RequestDeduplication).mount('#app');",
+        "expectedOutcome": "The fetchData function is defined and ready to be used for making API requests.",
+        "successCriteria": [
+          "An async function named fetchData is defined inside setup, takes a url parameter, and uses fetch to make a request."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure fetchData is an async function that takes a url parameter and uses fetch.",
+        "feedbackWrong": "The fetchData function is not properly defined. It should be async, take a url parameter, and use fetch.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "async",
+            "fetchData",
+            "url",
+            "fetch"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 10",
+        "title": "Implement request deduplication logic",
+        "instruction": "Inside the fetchData function, add logic to check if a request for the same URL is already pending in the pendingRequests map before making a new fetch call.",
+        "hint": "Use the pendingRequests map to store and retrieve fetch promises. If a promise for the given URL already exists, return that promise instead of creating a new one.",
+        "analogousExample": "// Similar: checking a cache before making a new request\nfunction getData(url) {\n  if (cache.has(url)) {\n    return cache.get(url);\n  }\n  const promise = fetch(url);\n  cache.set(url, promise);\n  return promise;\n}",
+        "seedCode": "// Import Vue and ref from 'vue'\nimport { createApp } from 'vue';\nimport { ref } from 'vue';\n\n// Create the RequestDeduplication component here\nconst RequestDeduplication = {\n  setup() {\n    // Initialize responseData ref here\n    const responseData = ref(null);\n    \n    // Initialize isLoading ref here\n    const isLoading = ref(false);\n    \n    // Create a map to track pending requests here\n    const pendingRequests = new Map();\n    \n    // Define the fetchData function here\n    const fetchData = (url) => {\n      // Add deduplication logic here\n    };\n    \n    return {};\n  }\n};\n\ncreateApp(RequestDeduplication).mount('#app');",
+        "expectedOutcome": "The fetchData function will now check the pendingRequests map before making a new fetch, preventing duplicate requests for the same URL.",
+        "successCriteria": [
+          "The fetchData function includes a check for existing promises in pendingRequests and returns the existing promise if found."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure to check the pendingRequests map and return the existing promise when a request for the same URL is already in progress.",
+        "feedbackWrong": "The deduplication logic is missing. Remember to check if the URL already exists in pendingRequests before making a new fetch call.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "pendingRequests",
+            "has",
+            "get",
+            "set",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 10",
+        "title": "Create a button to trigger the request",
+        "instruction": "In the template section of your component, add a button element with the text 'Fetch Data' that calls the fetchData function when clicked.",
+        "hint": "Use the @click directive to attach the fetchData function to the button's click event.",
+        "analogousExample": "// Adding a button with click handler in Vue\n<button @click=\"handleClick\">Click me</button>",
+        "seedCode": "// Import Vue and ref from 'vue'\nimport { createApp } from 'vue';\nimport { ref } from 'vue';\n\n// Create the RequestDeduplication component here\nconst RequestDeduplication = {\n  setup() {\n    // Initialize responseData ref here\n    const responseData = ref(null);\n    \n    // Initialize isLoading ref here\n    const isLoading = ref(false);\n    \n    // Create a map to track pending requests here\n    const pendingRequests = new Map();\n    \n    // Define the fetchData function here\n    const fetchData = (url) => {\n      // Add deduplication logic here\n    };\n    \n    return {\n      responseData,\n      isLoading,\n      pendingRequests,\n      fetchData\n    };\n  },\n  template: `\n    <div>\n      <!-- Add your button here -->\n    </div>\n  `\n};\n\ncreateApp(RequestDeduplication).mount('#app');",
+        "expectedOutcome": "A button labeled 'Fetch Data' appears in the component's template, wired to call the fetchData function when clicked.",
+        "successCriteria": [
+          "The template contains a <button> element with @click=\"fetchData\" and the text 'Fetch Data'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added a button, but it might be missing the click handler or the correct text. Make sure to use @click=\"fetchData\" and set the button text to 'Fetch Data'.",
+        "feedbackWrong": "The button element is missing or incorrectly implemented. Add a <button> with @click=\"fetchData\" and the text 'Fetch Data' inside the template section.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<button",
+            "@click=\"fetchData\"",
+            "Fetch Data"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 10",
+        "title": "Display the response data",
+        "instruction": "Inside your template, add a paragraph element that displays the responseData value when it exists.",
+        "hint": "Use Vue's template interpolation with double curly braces to display reactive data. You can conditionally render the paragraph only when responseData has a value.",
+        "analogousExample": "// Displaying reactive data in Vue template\n<p>{{ message }}</p>\n// With conditional rendering\n<p v-if=\"message\">{{ message }}</p>",
+        "seedCode": "// Import Vue and ref from 'vue'\nimport { createApp } from 'vue';\nimport { ref } from 'vue';\n\n// Create the RequestDeduplication component here\nconst RequestDeduplication = {\n  setup() {\n    // Initialize responseData ref here\n    const responseData = ref(null);\n    \n    // Initialize isLoading ref here\n    const isLoading = ref(false);\n    \n    // Create a map to track pending requests here\n    const pendingRequests = new Map();\n    \n    // Define the fetchData function here\n    const fetchData = (url) => {\n      // Add deduplication logic here\n    };\n    \n    return {\n      responseData,\n      isLoading,\n      pendingRequests,\n      fetchData\n    };\n  },\n  template: `\n    <div>\n      <!-- Add your button here -->\n      <p v-if=\"responseData\">{{ responseData }}</p>\n    </div>\n  `\n};\n\ncreateApp(RequestDeduplication).mount('#app');",
+        "expectedOutcome": "The template now includes a paragraph that displays the responseData value when it's not null/undefined.",
+        "successCriteria": [
+          "A paragraph element exists in the template that conditionally displays the responseData value using Vue's template syntax."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added a paragraph, but make sure it correctly displays the responseData value using Vue's template syntax.",
+        "feedbackWrong": "The paragraph element is missing or doesn't properly display the responseData value. Check that you're using the correct Vue template syntax.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<p",
+            "responseData",
+            "{{",
+            "}}"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 10",
+        "title": "Display loading status",
+        "instruction": "In the template, add conditional rendering to show a loading message when isLoading is true.",
+        "hint": "Use Vue's v-if directive with the isLoading reactive state to conditionally display text.",
+        "analogousExample": "// Conditional rendering example\n<div>\n  <p v-if=\"isLoading\">Loading...</p>\n</div>",
+        "seedCode": "// Import Vue and ref from 'vue'\nimport { createApp } from 'vue';\nimport { ref } from 'vue';\n\n// Create the RequestDeduplication component here\nconst RequestDeduplication = {\n  setup() {\n    // Initialize responseData ref here\n    const responseData = ref(null);\n    \n    // Initialize isLoading ref here\n    const isLoading = ref(false);\n    \n    // Create a map to track pending requests here\n    const pendingRequests = new Map();\n    \n    // Define the fetchData function here\n    const fetchData = (url) => {\n      // Add deduplication logic here\n    };\n    \n    return {\n      responseData,\n      isLoading,\n      pendingRequests,\n      fetchData\n    };\n  },\n  template: `\n    <div>\n      <!-- Add your button here -->\n      <p v-if=\"responseData\">{{ responseData }}</p>\n      <!-- Add loading status display here -->\n    </div>\n  `\n};\n\ncreateApp(RequestDeduplication).mount('#app');",
+        "expectedOutcome": "The template will show a loading indicator when a request is in progress, providing user feedback.",
+        "successCriteria": [
+          "The template includes a v-if directive that conditionally renders content based on the isLoading state."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're using v-if with the isLoading state to conditionally show loading content.",
+        "feedbackWrong": "The loading status isn't properly displayed. Remember to use v-if with the isLoading reactive state to conditionally render loading text.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "v-if",
+            "isLoading"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import Vue and ref from vue",
+        "id": "step1"
+      },
+      {
+        "label": "Create the main Vue component",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize reactive state for request data",
+        "id": "step3"
+      },
+      {
+        "label": "Initialize reactive state for loading status",
+        "id": "step4"
+      },
+      {
+        "label": "Create a map to track pending requests",
+        "id": "step5"
+      },
+      {
+        "label": "Define the fetchData function",
+        "id": "step6"
+      },
+      {
+        "label": "Implement request deduplication logic",
+        "id": "step7"
+      },
+      {
+        "label": "Create a button to trigger the request",
+        "id": "step8"
+      },
+      {
+        "label": "Display the response data",
+        "id": "step9"
+      },
+      {
+        "label": "Display loading status",
+        "id": "step10"
+      }
+    ]
+  },
+  "source": "content"
+}

@@ -1,0 +1,333 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-vue-116",
+    "track": "vue",
+    "lessonNum": 116,
+    "title": "Secure Token Rotation",
+    "shortName": "P116",
+    "intro": {
+      "tag": "LESSON #116",
+      "title": "Secure Token Rotation",
+      "body": "In this lesson, you will build a Vue component that securely rotates an authentication token. You'll learn how to use Vue's reactive state and lifecycle hooks to manage and refresh tokens at set intervals. The core concept involves implementing a timer that automatically fetches a new token from a mock API before the old one expires. You'll work with Vue's ref, onMounted, and onUnmounted to handle state changes and cleanup, ensuring your application stays secure and responsive.",
+      "usecase": "Secure token rotation is essential in any application that maintains user sessions, such as banking dashboards, e-commerce platforms, or collaborative tools like project management software. When users stay logged in for extended periods, their authentication tokens need periodic refreshing to prevent unauthorized access while maintaining seamless interaction. Developers implement this pattern behind the scenes in user profile panels, admin interfaces, and data visualization dashboards to ensure continuous security without interrupting the user experience. This prevents session hijacking while allowing users to work uninterrupted in long-running applications."
+    },
+    "objectives": [
+      "Implement a reactive token state using Vue's ref() API",
+      "Configure a timer-based token rotation mechanism with setInterval",
+      "Construct a secure token generation function using cryptographic methods",
+      "Bind token expiration warnings to conditional UI rendering",
+      "Integrate token validation checks before performing API requests",
+      "Manipulate token rotation intervals based on application security requirements",
+      "Initialize a token management system with automatic refresh capabilities",
+      "Render token status indicators with appropriate visual feedback"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 9",
+        "title": "Import Vue and required APIs (ref, onMounted)",
+        "instruction": "Import Vue, ref, and onMounted from 'vue' in your script setup.",
+        "hint": "Use the import statement to bring in Vue's composition API functions for reactive state and lifecycle hooks.",
+        "analogousExample": "// Importing Vue composition API functions\nimport { ref, onMounted } from 'vue'",
+        "seedCode": "// Import Vue, ref, and onMounted from 'vue'",
+        "expectedOutcome": "The Vue framework and its composition API functions (ref for reactive state, onMounted for lifecycle hooks) are imported and ready to use.",
+        "successCriteria": [
+          "Vue, ref, and onMounted are imported from 'vue'"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close, but make sure you're importing all three: Vue, ref, and onMounted from 'vue'. Check your import statement syntax.",
+        "feedbackWrong": "The import statement is incorrect or incomplete. You need to import Vue, ref, and onMounted from 'vue' to proceed with the lesson.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "vue",
+            "ref",
+            "onMounted",
+            "from",
+            "'vue'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 9",
+        "title": "Create the main Vue component",
+        "instruction": "Create and export a default Vue component named 'SecureTokenRotation' with a setup function that returns an empty object.",
+        "hint": "Use the Vue component syntax with a setup function. The component should be exported as default.",
+        "analogousExample": "// Similar: a Vue component with setup function\nexport default {\n  setup() {\n    return {};\n  }\n};",
+        "seedCode": "// Import Vue, ref, and onMounted from 'vue'\nimport { ref, onMounted } from 'vue';\n\n// Create and export the SecureTokenRotation component here",
+        "expectedOutcome": "A Vue component named 'SecureTokenRotation' is created and exported as default with a setup function that returns an empty object.",
+        "successCriteria": [
+          "The component is named 'SecureTokenRotation', exported as default, has a setup function, and returns an empty object."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure the component is named 'SecureTokenRotation', exported as default, has a setup function, and returns an empty object.",
+        "feedbackWrong": "The component structure is incorrect. Check that you've named it 'SecureTokenRotation', exported it as default, included a setup function, and returned an empty object.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "SecureTokenRotation",
+            "export default",
+            "setup()",
+            "return {}"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 9",
+        "title": "Initialize token state with ref",
+        "instruction": "Inside your SecureTokenRotation component, initialize a reactive token state variable using ref with an empty string as the initial value.",
+        "hint": "Use the ref function you imported earlier to create a reactive reference. Name the variable something like 'token' or 'currentToken'.",
+        "analogousExample": "// Example: creating reactive state in Vue\nconst count = ref(0);\nconst message = ref('');",
+        "seedCode": "// Import Vue, ref, and onMounted from 'vue'\nimport { ref, onMounted } from 'vue';\n\n// Create and export the SecureTokenRotation component here\nconst SecureTokenRotation = {\n  setup() {\n    // Initialize token state here\n    \n    return {};\n  }\n};\n\nexport default SecureTokenRotation;",
+        "expectedOutcome": "A reactive token state variable is created inside the component's setup function, ready to store authentication tokens.",
+        "successCriteria": [
+          "The component contains a token state variable initialized with ref('') inside the setup function."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're using ref() with an empty string as the initial value. The token state should be declared inside the setup function.",
+        "feedbackWrong": "Inside the setup function, use ref('') to create a reactive token state variable. This is essential for storing and updating authentication tokens.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "ref",
+            "''",
+            "setup"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 9",
+        "title": "Initialize refresh state with ref",
+        "instruction": "Inside the setup function, initialize a reactive refresh state using ref with an initial value of false.",
+        "hint": "Create a new ref variable to track whether a token refresh is currently in progress.",
+        "analogousExample": "// Similar: creating reactive state for loading status\nconst isLoading = ref(false);",
+        "seedCode": "import { ref, onMounted } from 'vue';\n\nconst SecureTokenRotation = {\n  setup() {\n    // Initialize token state here\n    \n    // Initialize refresh state here\n    \n    return {};\n  }\n};\n\nexport default SecureTokenRotation;",
+        "expectedOutcome": "A refresh state variable is created with an initial value of false to track token refresh status.",
+        "successCriteria": [
+          "A refresh state variable is initialized using ref with false as the initial value."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure you're using ref with an initial value of false.",
+        "feedbackWrong": "create a reactive refresh state using ref with false as the initial value.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "refresh",
+            "ref",
+            "false"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 9",
+        "title": "Define simulateTokenRefresh function",
+        "instruction": "Inside the setup function, define a function named simulateTokenRefresh that updates the token state with a new secure token and sets the refresh state to true.",
+        "hint": "Create a function that uses the token and refresh refs to simulate token rotation. The function should generate a new token and update the refresh state.",
+        "analogousExample": "// Example: a function that updates state\nfunction updateCounter() {\n  count.value = count.value + 1;\n}",
+        "seedCode": "import { ref, onMounted } from 'vue';\n\nconst SecureTokenRotation = {\n  setup() {\n    const token = ref('initial-token');\n    const refresh = ref(false);\n    \n    // Define simulateTokenRefresh function here\n    \n    return {};\n  }\n};\n\nexport default SecureTokenRotation;",
+        "expectedOutcome": "A simulateTokenRefresh function is defined inside the setup function that updates both token and refresh states.",
+        "successCriteria": [
+          "The simulateTokenRefresh function is defined, updates token.value with a new token string, and sets refresh.value to true."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've defined a function, but make sure it updates both token.value with a new secure token and sets refresh.value to true.",
+        "feedbackWrong": "The simulateTokenRefresh function is not correctly defined. It should update token.value with a new token and set refresh.value to true.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "simulateTokenRefresh",
+            "token.value",
+            "refresh.value",
+            "true"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 9",
+        "title": "Use onMounted lifecycle hook",
+        "instruction": "Inside the setup function, use the onMounted hook to call the simulateInitialToken function when the component mounts.",
+        "hint": "Call onMounted and pass your simulateInitialToken function as its argument.",
+        "analogousExample": "// Example of using onMounted\nonMounted(() => {\n  console.log('Component mounted!');\n});",
+        "seedCode": "import { ref, onMounted } from 'vue';\n\nconst SecureTokenRotation = {\n  setup() {\n    const token = ref('initial-token');\n    const refresh = ref(false);\n    \n    // Define simulateTokenRefresh function here\n    \n    // Define simulateInitialToken function here\n    \n    // Use onMounted here\n    \n    return {};\n  }\n};\n\nexport default SecureTokenRotation;",
+        "expectedOutcome": "The component will automatically call simulateInitialToken when it first loads.",
+        "successCriteria": [
+          "onMounted is called with simulateInitialToken as its argument."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure you're calling onMounted and passing simulateInitialToken as its argument.",
+        "feedbackWrong": "The onMounted hook isn't set up correctly. Remember to call onMounted and pass simulateInitialToken to it.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "onMounted",
+            "simulateInitialToken"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 9",
+        "title": "Return reactive state and functions from setup",
+        "instruction": "In the setup function's return statement, return an object containing token, refresh, and simulateTokenRefresh so they can be used in the template.",
+        "hint": "The return statement should expose the reactive variables and functions you've defined. In Vue's Composition API, you return an object from setup.",
+        "analogousExample": "// Returning state and functions from setup\nreturn {\n  count,\n  increment\n};",
+        "seedCode": "import { ref, onMounted } from 'vue';\n\nconst SecureTokenRotation = {\n  setup() {\n    const token = ref('initial-token');\n    const refresh = ref(false);\n    \n    const simulateTokenRefresh = () => {\n      token.value = 'refreshed-token-' + Date.now();\n      refresh.value = false;\n    };\n    \n    const simulateInitialToken = () => {\n      token.value = 'initial-token';\n      refresh.value = false;\n    };\n    \n    onMounted(() => {\n      // Initial setup if needed\n    });\n    \n    return {};\n  }\n};\n\nexport default SecureTokenRotation;",
+        "expectedOutcome": "The setup function now returns token, refresh, and simulateTokenRefresh, making them available to the component's template.",
+        "successCriteria": [
+          "The return statement includes an object with properties token, refresh, and simulateTokenRefresh."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close, but the return statement needs to include all three items: token, refresh, and simulateTokenRefresh.",
+        "feedbackWrong": "The return statement should expose the reactive state and functions. Make sure to return an object containing token, refresh, and simulateTokenRefresh.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "return",
+            "{",
+            "token",
+            "refresh",
+            "simulateTokenRefresh",
+            "}"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 9",
+        "title": "Add template structure with token display",
+        "instruction": "Add a template section to your component with a div containing an h2 heading and a paragraph to display the current token value.",
+        "hint": "In Vue, you can add a template section after the setup function. Use double curly braces {{ }} to display reactive values in the template.",
+        "analogousExample": "// Example: template with reactive value display\n<template>\n  <div>\n    <h2>Current Value</h2>\n    <p>{{ value }}</p>\n  </div>\n</template>",
+        "seedCode": "import { ref, onMounted } from 'vue';\n\nconst SecureTokenRotation = {\n  setup() {\n    const token = ref('initial-token');\n    const refresh = ref(false);\n    \n    const simulateTokenRefresh = () => {\n      token.value = 'refreshed-token-' + Date.now();\n      refresh.value = false;\n    };\n    \n    const simulateInitialToken = () => {\n      token.value = 'initial-token';\n      refresh.value = false;\n    };\n    \n    onMounted(() => {\n      // Initial setup if needed\n    });\n    \n    return {\n      token,\n      refresh,\n      simulateTokenRefresh,\n      simulateInitialToken\n    };\n  }\n};\n\n// Add template here\n\nexport default SecureTokenRotation;",
+        "expectedOutcome": "The component will have a template section that displays the current token value in the UI.",
+        "successCriteria": [
+          "Template section is added with a div containing an h2 heading and a paragraph that displays the token value using {{ token }}."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added some template structure, but make sure you have both the h2 heading and paragraph displaying {{ token }}.",
+        "feedbackWrong": "The template structure is missing or incomplete. Add a template section with a div containing an h2 heading and a paragraph that displays {{ token }}.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<template>",
+            "</template>",
+            "<div>",
+            "</div>",
+            "<h2>",
+            "</h2>",
+            "<p>",
+            "{{",
+            "token",
+            "}}",
+            "</p>"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 9",
+        "title": "Add refresh button and wire click event",
+        "instruction": "In the template, add a button element that calls simulateTokenRefresh when clicked and displays the current refresh status.",
+        "hint": "Use the @click directive to bind the simulateTokenRefresh function to the button's click event. You can display the refresh status by showing the refresh state value.",
+        "analogousExample": "// Adding an interactive button in Vue\n<button @click=\"handleClick\">Click me: {{ status }}</button>",
+        "seedCode": "import { ref, onMounted } from 'vue';\n\nconst SecureTokenRotation = {\n  setup() {\n    const token = ref('initial-token');\n    const refresh = ref(false);\n    \n    const simulateTokenRefresh = () => {\n      token.value = 'refreshed-token-' + Date.now();\n      refresh.value = false;\n    };\n    \n    const simulateInitialToken = () => {\n      token.value = 'initial-token';\n      refresh.value = false;\n    };\n    \n    onMounted(() => {\n      // Initial setup if needed\n    });\n    \n    return {\n      token,\n      refresh,\n      simulateTokenRefresh,\n      simulateInitialToken\n    };\n  },\n  template: `\n    <div>\n      <p>Current Token: {{ token }}</p>\n      <!-- Add refresh button here -->\n    </div>\n  `\n};\n\nexport default SecureTokenRotation;",
+        "expectedOutcome": "A button appears in the UI that triggers token refresh when clicked and shows the refresh status.",
+        "successCriteria": [
+          "The template contains a button with @click=\"simulateTokenRefresh\" and displays {{ refresh }} status."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You added a button, but make sure it calls simulateTokenRefresh on click and displays the refresh status.",
+        "feedbackWrong": "The button is missing or not properly wired. Check that you used @click=\"simulateTokenRefresh\" and included {{ refresh }} in the button text.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "button",
+            "@click=\"simulateTokenRefresh\"",
+            "{{ refresh }}"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import Vue and required APIs (ref, onMounted)",
+        "id": "step1"
+      },
+      {
+        "label": "Create the main Vue component",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize token state with ref",
+        "id": "step3"
+      },
+      {
+        "label": "Initialize refresh state with ref",
+        "id": "step4"
+      },
+      {
+        "label": "Define simulateTokenRefresh function",
+        "id": "step5"
+      },
+      {
+        "label": "Use onMounted lifecycle hook",
+        "id": "step6"
+      },
+      {
+        "label": "Return reactive state and functions from setup",
+        "id": "step7"
+      },
+      {
+        "label": "Add template structure with token display",
+        "id": "step8"
+      },
+      {
+        "label": "Add refresh button and wire click event",
+        "id": "step9"
+      }
+    ]
+  },
+  "source": "content"
+}

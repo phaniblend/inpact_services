@@ -1,0 +1,357 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-node-72",
+    "track": "node",
+    "lessonNum": 72,
+    "title": "Build graceful shutdown with in flight drain",
+    "shortName": "P72",
+    "intro": {
+      "tag": "LESSON #72",
+      "title": "Build graceful shutdown with in flight drain",
+      "body": "In this lesson, you will build a Node.js server that gracefully shuts down, ensuring it completes any ongoing requests before stopping. You will learn the core concept of handling in-flight requests, which are requests that have been received but not yet fully processed. The main technologies involved are the Node.js HTTP module for creating a server and the process object for listening to shutdown signals. You'll implement a mechanism to track active requests and drain them safely, preventing abrupt interruptions. This practice is essential for building reliable, production-ready applications that maintain data integrity and user experience.",
+      "usecase": "Graceful shutdown with in-flight request draining is a critical pattern for any production Node.js server handling user traffic, such as a web application dashboard or an API backend. When deploying updates or scaling down, this pattern ensures that users completing actions—like submitting a form, processing a payment, or loading data in a panel—do not experience errors or data loss. For example, an e-commerce checkout flow or a real-time analytics dashboard must finish processing ongoing requests before the server stops to maintain reliability and a positive user experience. Implementing this allows developers to perform zero-downtime deployments and maintain service integrity during maintenance."
+    },
+    "objectives": [
+      "Implement a signal handler to capture shutdown signals in a Node.js server",
+      "Configure server settings to reject new connections during graceful shutdown",
+      "Initialize a tracking mechanism to monitor in-flight requests",
+      "Construct a request drain function that waits for active requests to complete",
+      "Integrate the drain function with the server's close method",
+      "Manipulate server state to transition from active to draining to stopped",
+      "Apply timeout controls to prevent indefinite shutdown hangs"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 10",
+        "title": "Import required Node.js modules",
+        "instruction": "Import the http module for creating a server and the process object for handling shutdown signals.",
+        "hint": "Use the require() function to import Node.js core modules. The http module is built into Node.js, and process is a global object.",
+        "analogousExample": "// Example: importing core modules\nconst fs = require('fs');\nconst path = require('path');",
+        "seedCode": "// Import the http module and the process object here\n",
+        "expectedOutcome": "The http module and process object are imported and ready to use for server creation and signal handling.",
+        "successCriteria": [
+          "The http module is imported using require('http'), and the process object is accessible globally."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure you're importing the http module using require('http'). The process object is global, so no explicit import is needed.",
+        "feedbackWrong": "Check the import syntax. Use require('http') to import the http module. Remember that process is a global object in Node.js.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "require",
+            "'http'",
+            "http"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 10",
+        "title": "Create a basic HTTP server",
+        "instruction": "Create an HTTP server using http.createServer() that returns a simple 'Hello, world!' response with status code 200.",
+        "hint": "Use the http.createServer() method and pass it a callback function that handles requests and responses. Inside the callback, set the response status code to 200 and end the response with 'Hello, world!'.",
+        "analogousExample": "// Similar: creating a basic server\nconst server = http.createServer((req, res) => {\n  res.statusCode = 200;\n  res.end('Hello, world!');\n});",
+        "seedCode": "// Import the http module and the process object here\nconst http = require('http');\n\n// Create an HTTP server here\n",
+        "expectedOutcome": "A server variable is created that listens for HTTP requests and responds with 'Hello, world!'.",
+        "successCriteria": [
+          "The server is created using http.createServer() and responds with status 200 and 'Hello, world!'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your server responds with status 200 and 'Hello, world!'.",
+        "feedbackWrong": "Check that you're using http.createServer() correctly and ending the response with 'Hello, world!'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "createServer",
+            "200",
+            "Hello, world!"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 10",
+        "title": "Add server listening on a port",
+        "instruction": "Call the server's listen method on port 3000 and log a message when the server starts.",
+        "hint": "Use server.listen(3000, () => { console.log(...) }) to start the server and log a startup message.",
+        "analogousExample": "// Starting a server on a specific port\nconst server = http.createServer();\nserver.listen(8080, () => {\n  console.log('Server running on port 8080');\n});",
+        "seedCode": "const http = require('http');\n\nconst server = http.createServer((req, res) => {\n  res.writeHead(200, { 'Content-Type': 'text/plain' });\n  res.end('Hello World\\n');\n});\n\n// Start the server on port 3000 and log a message\n",
+        "expectedOutcome": "The server will start listening on port 3000 and log 'Server running on port 3000' to the console.",
+        "successCriteria": [
+          "server.listen is called with port 3000",
+          "A callback logs a startup message"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you call server.listen with port 3000 and include a callback that logs a message.",
+        "feedbackWrong": "Check the syntax: server.listen(port, callback) where the callback logs a startup message.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "server.listen",
+            "3000",
+            "console.log"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 10",
+        "title": "Initialize variables for tracking in-flight requests",
+        "instruction": "Right after creating the server, declare two variables: 1) A Set named 'activeConnections' to track ongoing requests, and 2) A boolean named 'isShuttingDown' initialized to false.",
+        "hint": "Use 'const' for the Set and 'let' for the boolean flag. Place them after the server creation but before the server.listen call.",
+        "analogousExample": "// Example: tracking system state\nconst activeUsers = new Set();\nlet isSystemOffline = false;",
+        "seedCode": "const http = require('http');\n\nconst server = http.createServer((req, res) => {\n  res.writeHead(200, { 'Content-Type': 'text/plain' });\n  res.end('Hello World\\n');\n});\n\n// Initialize tracking variables here\n\n// Start the server on port 3000 and log a message",
+        "expectedOutcome": "You'll have a Set to monitor active connections and a boolean flag to indicate shutdown state, ready for graceful shutdown logic.",
+        "successCriteria": [
+          "Variables 'activeConnections' (a Set) and 'isShuttingDown' (boolean false) are declared after server creation."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you declared both variables: a Set named 'activeConnections' and a boolean 'isShuttingDown' set to false.",
+        "feedbackWrong": "Check the instruction: you need to declare two variables after creating the server. One should be a Set, the other a boolean flag.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "activeConnections",
+            "new Set",
+            "isShuttingDown",
+            "false"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 10",
+        "title": "Modify server to track active connections",
+        "instruction": "Inside the server's request handler, add the current request's socket to the 'connections' Set when a request starts, and remove it when the response finishes.",
+        "hint": "Access the request's socket with req.socket. Add it to the Set with connections.add(). Remove it in the response's 'close' event listener.",
+        "analogousExample": "// Similar: tracking active items in a Set\nconst activeItems = new Set();\n\nfunction handleItem(item) {\n  activeItems.add(item);\n  item.on('done', () => {\n    activeItems.delete(item);\n  });\n}",
+        "seedCode": "const http = require('http');\n\nconst server = http.createServer((req, res) => {\n  // Add socket to connections Set here\n  \n  res.writeHead(200, { 'Content-Type': 'text/plain' });\n  res.end('Hello World\\n');\n  \n  // Remove socket from connections Set when response finishes\n});\n\n// Initialize tracking variables here\n\n// Start the server on port 3000 and log a message",
+        "expectedOutcome": "The server will now track each active connection in the 'connections' Set, adding when requests start and removing when responses complete.",
+        "successCriteria": [
+          "The request handler adds req.socket to connections and sets up removal in the response's 'close' event"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure you're adding req.socket to connections and removing it when the response finishes.",
+        "feedbackWrong": "The connection tracking isn't complete. Remember to add the socket when the request starts and remove it when the response ends.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "connections.add",
+            "req.socket",
+            "res.on",
+            "'close'",
+            "connections.delete"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 10",
+        "title": "Create graceful shutdown handler function",
+        "instruction": "Create a function named gracefulShutdown that sets a shutdown flag, stops the server from accepting new connections, and begins draining existing connections.",
+        "hint": "Define a function that logs a shutdown message, sets a boolean flag, calls server.close() to stop new connections, and then handles draining.",
+        "analogousExample": "// Example of a graceful shutdown function\nfunction gracefulShutdown() {\n  console.log('Shutting down gracefully...');\n  isShuttingDown = true;\n  server.close(() => {\n    console.log('Server closed, no new connections accepted.');\n    // Additional draining logic here\n  });\n}",
+        "seedCode": "const http = require('http');\n\nconst server = http.createServer((req, res) => {\n  // Add socket to connections Set here\n  \n  res.writeHead(200, { 'Content-Type': 'text/plain' });\n  res.end('Hello World\\n');\n  \n  // Remove socket from connections Set when response finishes\n});\n\n// Initialize tracking variables here\n\n// Start the server on port 3000 and log a message\n\n// Create graceful shutdown handler function here",
+        "expectedOutcome": "A function named gracefulShutdown is defined that logs a message, sets a shutdown flag, and calls server.close().",
+        "successCriteria": [
+          "The gracefulShutdown function is defined, logs a shutdown message, sets a boolean flag, and calls server.close()."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the shutdown function, but make sure it logs a message, sets a shutdown flag, and calls server.close() to stop new connections.",
+        "feedbackWrong": "The graceful shutdown function is not correctly defined. It should be named gracefulShutdown, log a message, set a flag, and call server.close().",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "gracefulShutdown",
+            "server.close",
+            "console.log",
+            "isShuttingDown"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 10",
+        "title": "Add signal handlers for shutdown triggers",
+        "instruction": "Add two event listeners using process.on() to handle SIGTERM and SIGINT signals, both calling the shutdown function.",
+        "hint": "Use process.on('SIGTERM', shutdown) and process.on('SIGINT', shutdown) to listen for shutdown signals.",
+        "analogousExample": "// Example: listening for system signals\nprocess.on('SIGTERM', handleShutdown);\nprocess.on('SIGINT', handleShutdown);",
+        "seedCode": "const http = require('http');\n\nconst server = http.createServer((req, res) => {\n  // Add socket to connections Set here\n  \n  res.writeHead(200, { 'Content-Type': 'text/plain' });\n  res.end('Hello World\\n');\n  \n  // Remove socket from connections Set when response finishes\n});\n\n// Initialize tracking variables here\n\n// Start the server on port 3000 and log a message\n\n// Create graceful shutdown handler function here\n\n// Add signal handlers here",
+        "expectedOutcome": "The server will now respond to termination signals by calling the shutdown function.",
+        "successCriteria": [
+          "process.on listeners for SIGTERM and SIGINT are added, both calling the shutdown function."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You added at least one signal handler, but make sure to handle both SIGTERM and SIGINT signals.",
+        "feedbackWrong": "The signal handlers are missing or not properly configured. Add process.on() listeners for both SIGTERM and SIGINT that call the shutdown function.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "process.on",
+            "SIGTERM",
+            "SIGINT",
+            "shutdown"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 10",
+        "title": "Implement in-flight request draining logic",
+        "instruction": "Inside your graceful shutdown handler function, add a setInterval that periodically checks if the active connections Set is empty, and when empty, clears the interval and calls process.exit(0).",
+        "hint": "Use setInterval to create a loop that checks connections.size. When it's 0, clear the interval with clearInterval and exit.",
+        "analogousExample": "// Similar: periodic check until condition met\nfunction waitForEmpty() {\n  const interval = setInterval(() => {\n    if (connections.size === 0) {\n      clearInterval(interval);\n      console.log('All connections closed');\n      process.exit(0);\n    }\n  }, 100);\n}",
+        "seedCode": "const http = require('http');\n\nconst server = http.createServer((req, res) => {\n  // Add socket to connections Set here\n  \n  res.writeHead(200, { 'Content-Type': 'text/plain' });\n  res.end('Hello World\\n');\n  \n  // Remove socket from connections Set when response finishes\n});\n\n// Initialize tracking variables here\n\n// Start the server on port 3000 and log a message\n\n// Create graceful shutdown handler function here\n\n// Add signal handlers here",
+        "expectedOutcome": "The shutdown handler will now actively monitor and wait for all in-flight requests to complete before exiting.",
+        "successCriteria": [
+          "The graceful shutdown handler contains a setInterval that checks connections.size and exits when empty."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure your setInterval checks connections.size and calls process.exit(0) when it's 0.",
+        "feedbackWrong": "The draining logic isn't quite right. The shutdown handler needs to periodically check if connections are empty before exiting.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "setInterval",
+            "connections.size",
+            "clearInterval",
+            "process.exit"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 10",
+        "title": "Test the graceful shutdown implementation",
+        "instruction": "Run the server using `node server.js` in your terminal, send multiple HTTP requests to http://localhost:3000,",
+        "hint": "Open multiple browser tabs or use curl commands to send requests while the server is running, then interrupt the process to see the graceful shutdown in action.",
+        "analogousExample": "// Testing a server shutdown flow\n// 1. Start server: node server.js\n// 2. Send requests: curl http://localhost:3000\n// 3. Trigger shutdown: Ctrl+C\n// 4. Observe logs for draining messages",
+        "seedCode": "const http = require('http');\n\nconst server = http.createServer((req, res) => {\n  // Add socket to connections Set here\n  \n  res.writeHead(200, { 'Content-Type': 'text/plain' });\n  res.end('Hello World\\n');\n  \n  // Remove socket from connections Set when response finishes\n});\n\n// Initialize tracking variables here\n\n// Start the server on port 3000 and log a message\n\n// Create graceful shutdown handler function here\n\n// Add signal handlers here\n\n// Add timeout for forced shutdown inside the shutdown handler",
+        "expectedOutcome": "You should see the server start, handle incoming requests, then when you press Ctrl+C, it should log shutdown messages, wait for in-flight requests to complete, and finally exit cleanly.",
+        "successCriteria": [
+          "Server runs successfully, handles requests, and performs graceful shutdown with visible draining behavior when interrupted."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "The server runs but the shutdown behavior might not be fully visible. Make sure you send multiple requests while the server is running before triggering shutdown.",
+        "feedbackWrong": "The server isn't running or the shutdown isn't working as expected. Check that all previous steps are correctly implemented and the server starts properly.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "node server.js",
+            "http://localhost:3000",
+            "Ctrl+C",
+            "draining"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 10",
+        "title": "trigger a shutdown signal with Ctrl+C to obse",
+        "instruction": "trigger a shutdown signal with Ctrl+C to observe the draining behavior.",
+        "hint": "Open multiple browser tabs or use curl commands to send requests while the server is running, then interrupt the process to see the graceful shutdown in action.",
+        "analogousExample": "// Testing a server shutdown flow\n// 1. Start server: node server.js\n// 2. Send requests: curl http://localhost:3000\n// 3. Trigger shutdown: Ctrl+C\n// 4. Observe logs for draining messages",
+        "seedCode": "const http = require('http');\n\nconst server = http.createServer((req, res) => {\n  // Add socket to connections Set here\n  \n  res.writeHead(200, { 'Content-Type': 'text/plain' });\n  res.end('Hello World\\n');\n  \n  // Remove socket from connections Set when response finishes\n});\n\n// Initialize tracking variables here\n\n// Start the server on port 3000 and log a message\n\n// Create graceful shutdown handler function here\n\n// Add signal handlers here\n\n// Add timeout for forced shutdown inside the shutdown handler",
+        "expectedOutcome": "",
+        "successCriteria": [
+          "Complete the step as instructed."
+        ],
+        "feedbackCorrect": "Great! Step completed.",
+        "feedbackPartial": "Review the instruction and try again.",
+        "feedbackWrong": "Check the instruction and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "node server.js",
+            "http://localhost:3000",
+            "Ctrl+C",
+            "draining"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import required Node.js modules",
+        "id": "step1"
+      },
+      {
+        "label": "Create a basic HTTP server",
+        "id": "step2"
+      },
+      {
+        "label": "Add server listening on a port",
+        "id": "step3"
+      },
+      {
+        "label": "Initialize variables for tracking in-flight requests",
+        "id": "step4"
+      },
+      {
+        "label": "Modify server to track active connections",
+        "id": "step5"
+      },
+      {
+        "label": "Create graceful shutdown handler function",
+        "id": "step6"
+      },
+      {
+        "label": "Add signal handlers for shutdown triggers",
+        "id": "step7"
+      },
+      {
+        "label": "Implement in-flight request draining logic",
+        "id": "step8"
+      },
+      {
+        "label": "Test the graceful shutdown implementation",
+        "id": "step9"
+      },
+      {
+        "label": "trigger a shutdown signal with Ctrl+C to obse",
+        "id": "step10"
+      }
+    ]
+  },
+  "source": "content"
+}

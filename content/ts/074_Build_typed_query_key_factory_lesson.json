@@ -1,0 +1,359 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-ts-74",
+    "track": "ts",
+    "lessonNum": 74,
+    "title": "Build typed query key factory",
+    "shortName": "P74",
+    "intro": {
+      "tag": "LESSON #74",
+      "title": "Build typed query key factory",
+      "body": "In this lesson, you will build a typed query key factory in TypeScript to generate consistent, type-safe keys for data fetching. You will learn how to use TypeScript's generic types and function signatures to create a reusable utility. The core concept involves structuring keys as arrays and ensuring their types are correctly inferred. This will help you manage cache keys in applications like React Query or TanStack Query with full type safety.",
+      "usecase": "Typed query key factories are essential in data-intensive applications like e-commerce dashboards where developers need to manage complex filtering systems. For example, when building a product filtering panel that combines category, price range, and customer ratings, typed keys ensure each filter combination is uniquely and safely tracked. This pattern prevents cache collisions in shopping carts or inventory management systems where multiple users might be viewing different filtered product sets simultaneously. By implementing type-safe query keys, developers can confidently build features like real-time analytics dashboards or multi-tab admin panels without worrying about stale or mixed-up data."
+    },
+    "objectives": [
+      "Implement a base function that returns a typed array of query key segments.",
+      "Construct a typed query key factory by extending the base function with a nested structure.",
+      "Apply the factory to generate specific, type-safe query keys for different data resources.",
+      "Integrate the typed query key factory with a mock query function to demonstrate type safety.",
+      "Manipulate the factory to produce keys for nested routes or IDs.",
+      "Configure the factory to accept and enforce parameters for dynamic query keys.",
+      "Update existing untyped key arrays to use the new typed factory for improved developer experience."
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 10",
+        "title": "Import TypeScript utilities for type safety",
+        "instruction": "Import the TypeScript utilities needed for building a typed query key factory. Import the 'QueryKey' type from '@tanstack/react-query'.",
+        "hint": "You'll need to import the QueryKey type from the react-query library to ensure type safety for your query keys.",
+        "analogousExample": "// Similar: importing a type from a library\nimport { ComponentProps } from 'react';",
+        "seedCode": "// Import the QueryKey type from '@tanstack/react-query'",
+        "expectedOutcome": "The QueryKey type is imported, providing the foundation for type-safe query keys.",
+        "successCriteria": [
+          "QueryKey is imported from '@tanstack/react-query'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're importing QueryKey from '@tanstack/react-query'.",
+        "feedbackWrong": "The import statement is missing or incorrect. You need to import QueryKey from '@tanstack/react-query'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "QueryKey",
+            "'@tanstack/react-query'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 10",
+        "title": "Define the base query key type structure",
+        "instruction": "Define a TypeScript type called QueryKeyStructure that represents the base structure of a query key. It should be an object type with a 'scope' property of type string and a 'params' property of type Record<string, unknown>.",
+        "hint": "Use the 'type' keyword to create a type alias. The 'Record<string, unknown>' type represents an object with string keys and any values.",
+        "analogousExample": "// Example: defining a type for a user object\ntype User = {\n  id: number;\n  name: string;\n  email: string;\n};",
+        "seedCode": "// Import the QueryKey type from '@tanstack/react-query'\n\n// Define your QueryKeyStructure type here",
+        "expectedOutcome": "You'll have a TypeScript type that serves as the foundation for your typed query key factory.",
+        "successCriteria": [
+          "A QueryKeyStructure type is defined with 'scope' (string) and 'params' (Record<string, unknown>) properties."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your type has both 'scope' and 'params' properties with the correct types.",
+        "feedbackWrong": "That doesn't match what we need. Remember to create a type with 'scope' as string and 'params' as Record<string, unknown>.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "type",
+            "QueryKeyStructure",
+            "scope",
+            "string",
+            "params",
+            "Record<string, unknown>"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 10",
+        "title": "Create the query key factory function signature",
+        "instruction": "Declare a function named createQueryKeyFactory with a generic type parameter T that extends QueryKeyStructure. The function should take a single argument 'base' of type T and return a typed query key factory.",
+        "hint": "Use a function declaration or arrow function with proper TypeScript generics: <T extends QueryKeyStructure>.",
+        "analogousExample": "// Similar: generic function with typed parameter\nfunction createFactory<T extends BaseType>(config: T) {\n  return config;\n}",
+        "seedCode": "// Import the QueryKey type from '@tanstack/react-query'\n\n// Define your QueryKeyStructure type here\n\n// Declare your createQueryKeyFactory function here",
+        "expectedOutcome": "A function signature for createQueryKeyFactory with proper generic typing is added to the code.",
+        "successCriteria": [
+          "The createQueryKeyFactory function is declared with a generic type parameter T extending QueryKeyStructure, takes a 'base' argument of type T, and returns a typed factory."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure your function has a generic type parameter <T extends QueryKeyStructure> and takes a 'base' argument of type T.",
+        "feedbackWrong": "The function signature is missing or incorrect. It should be a generic function that accepts a typed 'base' parameter.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "createQueryKeyFactory",
+            "<T extends QueryKeyStructure>",
+            "base:",
+            "T"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 10",
+        "title": "Implement the factory function body",
+        "instruction": "Inside the createQueryKeyFactory function, implement the function body to return a nested object structure that matches your QueryKeyStructure type.",
+        "hint": "The function should return an object where each key is a function that returns a query key array. For example, for a 'users' key, you might have users: () => ['users'].",
+        "analogousExample": "// Example: A simple factory function returning an object\nfunction createCounter() {\n  return {\n    increment: () => { /* logic */ },\n    decrement: () => { /* logic */ }\n  };\n}",
+        "seedCode": "// Import the QueryKey type from '@tanstack/react-query'\n\n// Define your QueryKeyStructure type here\n\n// Declare your createQueryKeyFactory function here\nfunction createQueryKeyFactory() {\n  // Implement the function body here\n}",
+        "expectedOutcome": "The createQueryKeyFactory function now has a complete implementation that returns an object matching the QueryKeyStructure type.",
+        "successCriteria": [
+          "The createQueryKeyFactory function returns an object with at least one key that is a function returning a query key array."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure the function returns an object with functions that return query key arrays. Check that your implementation matches the QueryKeyStructure type you defined earlier.",
+        "feedbackWrong": "The implementation doesn't match what's needed. Remember, createQueryKeyFactory should return an object where each property is a function that returns a query key array. Review the QueryKeyStructure type you defined.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "return",
+            "{",
+            "}",
+            ":",
+            "()",
+            "=>",
+            "["
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 10",
+        "title": "Add type parameters for flexibility",
+        "instruction": "Add a generic type parameter T to the createQueryKeyFactory function signature to make it accept different data types.",
+        "hint": "Add <T> after the function name, before the parentheses, to declare a generic type parameter.",
+        "analogousExample": "// Similar: generic function signature\nfunction createArray<T>(items: T[]): T[] {\n  return items;\n}",
+        "seedCode": "// Import the QueryKey type from '@tanstack/react-query'\n\n// Define your QueryKeyStructure type here\n\n// Declare your createQueryKeyFactory function here\nfunction createQueryKeyFactory<T>() {\n  // Implement the function body here\n}",
+        "expectedOutcome": "The createQueryKeyFactory function should now have a generic type parameter <T> in its signature.",
+        "successCriteria": [
+          "The function signature includes a generic type parameter <T>."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you added the generic type parameter <T> directly after the function name.",
+        "feedbackWrong": "The generic type parameter is missing. Add <T> after the function name to declare it.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "createQueryKeyFactory<T>"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 10",
+        "title": "Create helper types for query key composition",
+        "instruction": "Define a new type named QueryKeyHelper that extends the QueryKeyStructure type to include a 'compose' method signature.",
+        "hint": "Use the 'type' keyword to create QueryKeyHelper as an interface-like type that extends QueryKeyStructure and adds a compose method.",
+        "analogousExample": "// Example: extending a type with a method\ntype ExtendedArray<T> = Array<T> & {\n  customMethod(): T;\n};",
+        "seedCode": "// Import the QueryKey type from '@tanstack/react-query'\n\n// Define your QueryKeyStructure type here\n\n// Declare your createQueryKeyFactory function here\nfunction createQueryKeyFactory<T>() {\n  // Implement the function body here\n}\n\n// Define QueryKeyHelper type here",
+        "expectedOutcome": "A QueryKeyHelper type is defined that extends QueryKeyStructure and includes a compose method signature for building complex query keys.",
+        "successCriteria": [
+          "QueryKeyHelper type is defined with proper extension syntax and includes a compose method signature."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've defined a type, but check that it properly extends QueryKeyStructure and includes the compose method signature.",
+        "feedbackWrong": "The QueryKeyHelper type definition is missing or incorrect. Make sure it extends QueryKeyStructure and includes a compose method.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "type",
+            "QueryKeyHelper",
+            "extends",
+            "QueryKeyStructure",
+            "compose",
+            "method"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 10",
+        "title": "Add validation for query key arguments",
+        "instruction": "Inside your createQueryKeyFactory function, add a validation check at the beginning of the function body to ensure the base argument is a string.",
+        "hint": "You can add a simple runtime check using typeof and throw an error if the condition fails.",
+        "analogousExample": "// Example: validating function argument\nfunction processName(name: string) {\n  if (typeof name !== 'string') {\n    throw new Error('Name must be a string');\n  }\n  // rest of function\n}",
+        "seedCode": "// Import the QueryKey type from '@tanstack/react-query'\n\n// Define your QueryKeyStructure type here\n\n// Declare your createQueryKeyFactory function here\nfunction createQueryKeyFactory<T>() {\n  // Add validation check here\n  // Implement the function body here\n}\n\n// Define QueryKeyHelper type here",
+        "expectedOutcome": "The createQueryKeyFactory function now includes runtime validation for its base argument.",
+        "successCriteria": [
+          "The function contains a typeof check that throws an error when the base argument is not a string."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're checking that the base argument is a string and throwing an appropriate error.",
+        "feedbackWrong": "The validation logic is missing or incorrect. Add a check using typeof to validate the base argument type.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "typeof",
+            "string",
+            "throw",
+            "Error"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 10",
+        "title": "Export the factory and types",
+        "instruction": "Export the createQueryKeyFactory function and the QueryKeyStructure type using named exports.",
+        "hint": "Use the 'export' keyword before the function and type declarations to make them available for import in other files.",
+        "analogousExample": "// Exporting a function and type\nfunction calculateTotal() {}\ntype Order = {};\nexport { calculateTotal, Order };",
+        "seedCode": "// Import the QueryKey type from '@tanstack/react-query'\nimport { QueryKey } from '@tanstack/react-query';\n\n// Define your QueryKeyStructure type here\ntype QueryKeyStructure = {\n  root: string[];\n  nested: Record<string, QueryKey>;\n};\n\n// Declare your createQueryKeyFactory function here\nfunction createQueryKeyFactory<T>() {\n  // Add validation check here\n  if (typeof T !== 'function') {\n    throw new Error('Type parameter must be a function');\n  }\n  // Implement the function body here\n  return {\n    create: (key: string) => [key] as QueryKey,\n    extend: <U>(extension: U) => ({\n      ...extension,\n      root: [] as string[]\n    })\n  };\n}\n\n// Define QueryKeyHelper type here\ntype QueryKeyHelper<T> = {\n  create: (key: string) => QueryKey;\n  extend: <U>(extension: U) => QueryKeyHelper<T & U>;\n};\n\n// Export the factory function and types here",
+        "expectedOutcome": "The createQueryKeyFactory function and QueryKeyStructure type are exported and ready to be used in other modules.",
+        "successCriteria": [
+          "Both createQueryKeyFactory and QueryKeyStructure are exported as named exports."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've exported one item, but remember to export both the createQueryKeyFactory function and QueryKeyStructure type.",
+        "feedbackWrong": "The exports are missing or incorrect. Use named exports to make both the function and type available outside this module.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "export",
+            "createQueryKeyFactory",
+            "QueryKeyStructure"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 10",
+        "title": "Create example usage of the factory",
+        "instruction": "Create an example function named 'exampleUsage' that demonstrates how to use the typed query key factory.",
+        "hint": "Define a function that calls createQueryKeyFactory and uses its methods to create and extend query keys.",
+        "analogousExample": "// Example of a function that demonstrates usage\nfunction exampleUsage() {\n  const factory = createQueryKeyFactory();\n  const userKey = factory.create('users');\n  const extendedFactory = factory.extend({ posts: ['posts'] });\n  return { userKey, extendedFactory };\n}",
+        "seedCode": "// Import the QueryKey type from '@tanstack/react-query'\nimport { QueryKey } from '@tanstack/react-query';\n\n// Define your QueryKeyStructure type here\ntype QueryKeyStructure = {\n  root: string[];\n  nested: Record<string, QueryKey>;\n};\n\n// Declare your createQueryKeyFactory function here\nfunction createQueryKeyFactory<T>() {\n  // Add validation check here\n  if (typeof T !== 'function') {\n    throw new Error('Type parameter must be a function');\n  }\n  // Implement the function body here\n  return {\n    create: (key: string) => [key] as QueryKey,\n    extend: <U>(extension: U) => ({\n      ...extension,\n      root: [] as string[]\n    })\n  };\n}\n\n// Define QueryKeyHelper type here\ntype QueryKeyHelper<T> = {\n  create: (key: string) => QueryKey;\n  extend: <U>(extension: U) => QueryKeyHelper<T & U>;\n};\n\n// Export the factory function and types here\n\n// Create your example usage function here\n",
+        "expectedOutcome": "A function named 'exampleUsage' is created that demonstrates practical use of the query key factory.",
+        "successCriteria": [
+          "The 'exampleUsage' function is defined, calls createQueryKeyFactory, and uses its create and/or extend methods."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the example, but make sure to include calls to the factory methods like create or extend to fully demonstrate usage.",
+        "feedbackWrong": "The example function isn't quite right. Remember to create a function named 'exampleUsage' that uses the query key factory methods.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "exampleUsage",
+            "createQueryKeyFactory",
+            "create",
+            "extend"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 10",
+        "title": "Test the factory with different scenarios",
+        "instruction": "Create a test function named testQueryKeyFactory that validates the factory works with different input scenarios.",
+        "hint": "Define a function that calls createQueryKeyFactory with different arguments and logs or returns the results.",
+        "analogousExample": "// Example test function structure\nfunction testQueryKeyFactory() {\n  // Test different scenarios here\n  console.log('Testing query key factory...');\n}",
+        "seedCode": "// Import the QueryKey type from '@tanstack/react-query'\nimport { QueryKey } from '@tanstack/react-query';\n\n// Define your QueryKeyStructure type here\ntype QueryKeyStructure = {\n  root: string[];\n  nested: Record<string, QueryKey>;\n};\n\n// Declare your createQueryKeyFactory function here\nfunction createQueryKeyFactory<T>() {\n  // Add validation check here\n  if (typeof T !== 'function') {\n    throw new Error('Type parameter must be a function');\n  }\n  // Implement the function body here\n  return {\n    create: (key: string) => [key] as QueryKey,\n    extend: <U>(extension: U) => ({\n      ...extension,\n      root: [] as string[]\n    })\n  };\n}\n\n// Define QueryKeyHelper type here\ntype QueryKeyHelper<T> = {\n  create: (key: string) => QueryKey;\n  extend: <U>(extension: U) => QueryKeyHelper<T & U>;\n};\n\n// Export the factory function and types here\n\n// Create your example usage function here\n\n// Create test function here\nfunction testQueryKeyFactory() {\n  // Test different scenarios here\n}",
+        "expectedOutcome": "A test function is created that can validate the factory's type safety and functionality with various inputs.",
+        "successCriteria": [
+          "The testQueryKeyFactory function is defined and contains test scenarios for the query key factory."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the test function, but make sure it includes test scenarios for the factory.",
+        "feedbackWrong": "The test function isn't properly defined. Create a function named testQueryKeyFactory that tests the factory.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "testQueryKeyFactory",
+            "function",
+            "createQueryKeyFactory"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import TypeScript utilities for type safety",
+        "id": "step1"
+      },
+      {
+        "label": "Define the base query key type structure",
+        "id": "step2"
+      },
+      {
+        "label": "Create the query key factory function signature",
+        "id": "step3"
+      },
+      {
+        "label": "Implement the factory function body",
+        "id": "step4"
+      },
+      {
+        "label": "Add type parameters for flexibility",
+        "id": "step5"
+      },
+      {
+        "label": "Create helper types for query key composition",
+        "id": "step6"
+      },
+      {
+        "label": "Add validation for query key arguments",
+        "id": "step7"
+      },
+      {
+        "label": "Export the factory and types",
+        "id": "step8"
+      },
+      {
+        "label": "Create example usage of the factory",
+        "id": "step9"
+      },
+      {
+        "label": "Test the factory with different scenarios",
+        "id": "step10"
+      }
+    ]
+  },
+  "source": "content"
+}

@@ -1,0 +1,930 @@
+{
+  "id": "search-rotated-sorted-array",
+  "title": "Search in Rotated Sorted Array",
+  "pattern": "binary-search",
+  "difficulty": "medium",
+  "language": "javascript",
+  "status": "draft",
+  "flow": [
+    {
+      "stepId": "title",
+      "mentorSays": "At the end of this lesson, you will be able to:\n\n1. Understand what the Search in Rotated Sorted Array lesson asks for\n2. Identify which half of the rotated array is sorted\n3. Use modified binary search to find the target\n4. Handle the rotation by checking sorted halves\n5. Implement the solution step by step in your chosen language",
+      "action": "continue",
+      "next": "lesson-illustration"
+    },
+    {
+      "stepId": "lesson-illustration",
+      "mentorSays": "Perfect! Now let's understand what the Search in Rotated Sorted Array lesson is asking.\n\n**Lesson Definition:**\nThere is an integer array `nums` sorted in ascending order (with distinct values). The array is rotated at some pivot point. Given a target value, return its index if it exists in the array, or -1 if it doesn't.\n\n**Key Observations:**\n- The array was originally sorted in ascending order\n- It was rotated at some pivot (e.g., [0,1,2,4,5,6,7] rotated at index 3 becomes [4,5,6,7,0,1,2])\n- All values are distinct\n- We need to find the target in O(log n) time\n\n**Example 1:** nums = [4, 5, 6, 7, 0, 1, 2], target = 0\n\nThis array was rotated. Originally: [0, 1, 2, 4, 5, 6, 7], rotated at index 4.\n\nTarget 0 is at index 4.\nAnswer: 4\n\n**Example 2:** nums = [4, 5, 6, 7, 0, 1, 2], target = 3\n\nTarget 3 doesn't exist in the array.\nAnswer: -1\n\n**Example 3:** nums = [1], target = 0\n\nTarget 0 doesn't exist.\nAnswer: -1\n\n**Step-by-step trace for Example 1:**\n\nnums = [4, 5, 6, 7, 0, 1, 2], target = 0\n\nWe'll use modified binary search:\n- **Iteration 1**: left=0, right=6, mid=3, nums[3]=7\n  - Left half [4,5,6,7] is sorted (4 <= 7)\n  - Target 0 is not in [4,5,6,7] (0 < 4), so search right half\n  - left = 4\n- **Iteration 2**: left=4, right=6, mid=5, nums[5]=1\n  - Right half [0,1,2] is sorted (0 <= 2)\n  - Target 0 is in [0,1,2] (0 <= 0 <= 2), so search left half of this range\n  - right = 4\n- **Iteration 3**: left=4, right=4, mid=4, nums[4]=0\n  - 0 == 0, Found! Return 4 ✓\n\n**Key Insight:**\nEven though the array is rotated, at least one half (left or right of mid) is always sorted! We can:\n1. Check which half is sorted\n2. Determine if target is in the sorted half\n3. Search in the appropriate half\n\n**What makes this tricky:**\n1. Identifying which half is sorted\n2. Determining if target is in the sorted half\n3. Handling edge cases (single element, no rotation)\n4. The logic for deciding which half to search\n\n**Common pitfalls:**\n- Not checking which half is sorted\n- Incorrectly determining if target is in sorted half\n- Off-by-one errors in boundary conditions\n- Not handling the case where array is not rotated",
+      "example": "Example 1:\nnums = [4, 5, 6, 7, 0, 1, 2], target = 0\n\nArray rotated at index 4\nTarget 0 found at index 4\nAnswer: 4\n\nExample 2:\nnums = [4, 5, 6, 7, 0, 1, 2], target = 3\n\nTarget not found\nAnswer: -1\n\nExample 3:\nnums = [1], target = 0\n\nTarget not found\nAnswer: -1",
+      "action": "continue",
+      "next": "thinking-challenge"
+    },
+    {
+      "stepId": "thinking-challenge",
+      "mentorSays": "Now that you understand what the lesson wants, here's the real question:\n\nHow would YOU search for a target in a rotated sorted array?\n\nThink about it for a moment. What approach feels natural to you?",
+      "choices": [
+        {
+          "label": "Use modified binary search - identify sorted half and search appropriately",
+          "next": "explore-modified-binary"
+        },
+        {
+          "label": "Find the pivot point first, then search in the appropriate half",
+          "next": "explore-find-pivot"
+        },
+        {
+          "label": "Use linear search to find the target",
+          "next": "explore-linear"
+        }
+      ]
+    },
+    {
+      "stepId": "explore-linear",
+      "mentorSays": "That's a straightforward approach! You're thinking: \"I'll check each element until I find the target.\"\n\nFor nums = [4, 5, 6, 7, 0, 1, 2], target = 0:\n- Check nums[0] = 4, not 0\n- Check nums[1] = 5, not 0\n- ...\n- Check nums[4] = 0, found! ✓\n\nThis works! However, it takes O(n) time.\n\nThere's a more efficient O(log n) approach using modified binary search. Would you like to learn that?",
+      "action": "continue",
+      "next": "explore-modified-binary"
+    },
+    {
+      "stepId": "explore-find-pivot",
+      "mentorSays": "That's a good approach! You're thinking: \"I'll first find where the array was rotated (the pivot), then search in the appropriate half.\"\n\nThis works! However, it requires two binary searches (one for pivot, one for target).\n\nThere's a more elegant approach that does it in one pass using modified binary search. Would you like to learn that?",
+      "action": "continue",
+      "next": "explore-modified-binary"
+    },
+    {
+      "stepId": "explore-modified-binary",
+      "mentorSays": "Excellent choice! Modified binary search is both efficient and elegant. Here's the core idea:\n\n**The Algorithm:**\n1. **Key insight**: At least one half (left or right of mid) is always sorted!\n2. **Check which half is sorted**: Compare nums[left] with nums[mid]\n   - If nums[left] <= nums[mid]: Left half is sorted\n   - Otherwise: Right half is sorted\n3. **Determine search direction**:\n   - If left half is sorted AND target is in [nums[left], nums[mid]]: search left\n   - If right half is sorted AND target is in [nums[mid], nums[right]]: search right\n   - Otherwise: search the other half\n4. **Continue binary search** until found or exhausted\n\n**Why it works**:\n- Even in a rotated array, one half is always sorted\n- If target is in the sorted half, we can use normal binary search logic\n- If target is not in the sorted half, it must be in the other half\n\nLet's trace with nums = [4, 5, 6, 7, 0, 1, 2], target = 0:\n\n- **Iteration 1**: left=0, right=6, mid=3, nums[3]=7\n  - Left half [4,5,6,7] is sorted (4 <= 7)\n  - Target 0 is not in [4,7] (0 < 4), so search right: left = 4\n- **Iteration 2**: left=4, right=6, mid=5, nums[5]=1\n  - Right half [0,1,2] is sorted (0 <= 2)\n  - Target 0 is in [0,2] (0 <= 0 <= 2), so search left: right = 4\n- **Iteration 3**: left=4, right=4, mid=4, nums[4]=0\n  - 0 == 0, Found! Return 4 ✓\n\nThis is O(log n) time and O(1) space! Now let's code it step by step.",
+      "action": "continue",
+      "next": "language-selection"
+    },
+    {
+      "stepId": "language-selection",
+      "mentorSays": "Great! Now let's code this solution. Which programming language would you like to use?",
+      "choices": [
+        {
+          "label": "JavaScript",
+          "next": "variable-check-js"
+        },
+        {
+          "label": "Python",
+          "next": "variable-check-python"
+        },
+        {
+          "label": "Java",
+          "next": "variable-check-java"
+        },
+        {
+          "label": "C++",
+          "next": "variable-check-cpp"
+        },
+        {
+          "label": "TypeScript",
+          "next": "variable-check-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-check-js",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-js"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-js",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'left' or 'mid') and put data inside it.\n\nFor example, 'let left = 0;' creates a variable that stores the number 0.",
+      "example": "let left = 0;   // Left pointer\nlet right = 6;  // Right pointer\nlet mid = 3;    // Middle index",
+      "action": "continue",
+      "next": "function-check-js"
+    },
+    {
+      "stepId": "function-check-js",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-js"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-js",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "function search(nums, target) {\n  // Returns index of target\n  return -1;\n}",
+      "action": "continue",
+      "next": "parameter-check-js"
+    },
+    {
+      "stepId": "parameter-check-js",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "array-check-js"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-js",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'function search(nums, target)', the 'nums' and 'target' are parameters.",
+      "example": "function search(nums, target) {\n  // Parameters receive values\n}\n\n// Call: search([4,5,6,7,0,1,2], 0)",
+      "action": "continue",
+      "next": "array-check-js"
+    },
+    {
+      "stepId": "array-check-js",
+      "mentorSays": "To solve this lesson, we'll need to work with arrays. Do you know what an array is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know arrays",
+          "next": "loop-check-js"
+        },
+        {
+          "label": "No, explain arrays",
+          "next": "array-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "array-explanation-js",
+      "mentorSays": "An array is a list of values stored in order. Each value has a position number called an 'index'. Array indices start counting from 0.\n\nFor example, nums = [4, 5, 6, 7, 0, 1, 2] means:\n- nums[0] = 4 (first element)\n- nums[1] = 5 (second element)\n- etc.",
+      "example": "nums = [4, 5, 6, 7, 0, 1, 2];\n\nnums[0] = 4\nnums[3] = 7\nnums[4] = 0",
+      "action": "continue",
+      "next": "loop-check-js"
+    },
+    {
+      "stepId": "loop-check-js",
+      "mentorSays": "To solve this lesson, we'll need to use loops. Do you know what a loop is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know loops",
+          "next": "coding-start-js"
+        },
+        {
+          "label": "No, explain loops",
+          "next": "loop-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "loop-explanation-js",
+      "mentorSays": "A loop lets you repeat code multiple times. A 'while' loop in JavaScript runs code while a condition is true.",
+      "example": "while (left <= right) {\n  // This code runs while condition is true\n  // Process middle element\n}",
+      "action": "continue",
+      "next": "coding-start-js"
+    },
+    {
+      "stepId": "coding-start-js",
+      "mentorSays": "Perfect! Let's implement the search in rotated sorted array solution in JavaScript. We'll create a function that takes an array and target, and returns the index.",
+      "example": "function search(nums, target) {\n  \n}",
+      "action": "continue",
+      "next": "coding-init-js"
+    },
+    {
+      "stepId": "coding-init-js",
+      "mentorSays": "First, initialize the binary search pointers: left at 0, right at the end of the array.",
+      "example": "function search(nums, target) {\n  let left = 0;\n  let right = nums.length - 1;\n  \n}",
+      "action": "continue",
+      "next": "coding-loop-js"
+    },
+    {
+      "stepId": "coding-loop-js",
+      "mentorSays": "Create a while loop that continues while left <= right. This is our binary search loop.",
+      "example": "function search(nums, target) {\n  let left = 0;\n  let right = nums.length - 1;\n  \n  while (left <= right) {\n    // Binary search logic here\n  }\n}",
+      "action": "continue",
+      "next": "coding-calculate-mid-js"
+    },
+    {
+      "stepId": "coding-calculate-mid-js",
+      "mentorSays": "Inside the loop, calculate the middle index. Then check if we found the target.",
+      "example": "function search(nums, target) {\n  let left = 0;\n  let right = nums.length - 1;\n  \n  while (left <= right) {\n    let mid = Math.floor((left + right) / 2);\n    \n    // Check if found\n    if (nums[mid] === target) {\n      return mid;\n    }\n    \n  }\n}",
+      "action": "continue",
+      "next": "coding-check-left-sorted-js"
+    },
+    {
+      "stepId": "coding-check-left-sorted-js",
+      "mentorSays": "Check if the left half is sorted by comparing nums[left] with nums[mid]. If left half is sorted, we can check if target is in that range.",
+      "example": "function search(nums, target) {\n  let left = 0;\n  let right = nums.length - 1;\n  \n  while (left <= right) {\n    let mid = Math.floor((left + right) / 2);\n    \n    if (nums[mid] === target) {\n      return mid;\n    }\n    \n    // Check if left half is sorted\n    if (nums[left] <= nums[mid]) {\n      // Left half is sorted\n      // Check if target is in left half\n    } else {\n      // Right half is sorted\n    }\n  }\n}",
+      "action": "continue",
+      "next": "coding-search-left-half-js"
+    },
+    {
+      "stepId": "coding-search-left-half-js",
+      "mentorSays": "If left half is sorted AND target is in [nums[left], nums[mid]], search left. Otherwise, search right.",
+      "example": "function search(nums, target) {\n  let left = 0;\n  let right = nums.length - 1;\n  \n  while (left <= right) {\n    let mid = Math.floor((left + right) / 2);\n    \n    if (nums[mid] === target) {\n      return mid;\n    }\n    \n    if (nums[left] <= nums[mid]) {\n      // Left half is sorted\n      if (nums[left] <= target && target < nums[mid]) {\n        // Target is in left half\n        right = mid - 1;\n      } else {\n        // Target is in right half\n        left = mid + 1;\n      }\n    } else {\n      // Right half is sorted\n    }\n  }\n}",
+      "action": "continue",
+      "next": "coding-search-right-half-js"
+    },
+    {
+      "stepId": "coding-search-right-half-js",
+      "mentorSays": "If right half is sorted AND target is in [nums[mid], nums[right]], search right. Otherwise, search left.",
+      "example": "function search(nums, target) {\n  let left = 0;\n  let right = nums.length - 1;\n  \n  while (left <= right) {\n    let mid = Math.floor((left + right) / 2);\n    \n    if (nums[mid] === target) {\n      return mid;\n    }\n    \n    if (nums[left] <= nums[mid]) {\n      if (nums[left] <= target && target < nums[mid]) {\n        right = mid - 1;\n      } else {\n        left = mid + 1;\n      }\n    } else {\n      // Right half is sorted\n      if (nums[mid] < target && target <= nums[right]) {\n        // Target is in right half\n        left = mid + 1;\n      } else {\n        // Target is in left half\n        right = mid - 1;\n      }\n    }\n  }\n}",
+      "action": "continue",
+      "next": "coding-return-js"
+    },
+    {
+      "stepId": "coding-return-js",
+      "mentorSays": "After the loop, if we haven't returned, the target wasn't found. Return -1.",
+      "example": "function search(nums, target) {\n  let left = 0;\n  let right = nums.length - 1;\n  \n  while (left <= right) {\n    let mid = Math.floor((left + right) / 2);\n    \n    if (nums[mid] === target) {\n      return mid;\n    }\n    \n    if (nums[left] <= nums[mid]) {\n      if (nums[left] <= target && target < nums[mid]) {\n        right = mid - 1;\n      } else {\n        left = mid + 1;\n      }\n    } else {\n      if (nums[mid] < target && target <= nums[right]) {\n        left = mid + 1;\n      } else {\n        right = mid - 1;\n      }\n    }\n  }\n  \n  return -1;\n}",
+      "action": "continue",
+      "next": "test-code-js"
+    },
+    {
+      "stepId": "test-code-js",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** nums = [4, 5, 6, 7, 0, 1, 2], target = 0\nExpected: 4 (target found at index 4)\n\n**Test 2:** nums = [4, 5, 6, 7, 0, 1, 2], target = 3\nExpected: -1 (target not found)\n\n**Test 3:** nums = [1], target = 0\nExpected: -1 (target not found)\n\n**Test 4:** nums = [1], target = 1\nExpected: 0 (target found at index 0)\n\n**Test 5:** nums = [4, 5, 6, 7, 0, 1, 2], target = 5\nExpected: 1 (target found at index 1)\n\n**Test 6:** nums = [3, 1], target = 1\nExpected: 1 (target found at index 1)\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: [4,5,6,7,0,1,2], 0 → 4\nTest 2: [4,5,6,7,0,1,2], 3 → -1\nTest 3: [1], 0 → -1\nTest 4: [1], 1 → 0\nTest 5: [4,5,6,7,0,1,2], 5 → 1\nTest 6: [3,1], 1 → 1",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-python",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-python"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-python",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'left' or 'mid') and put data inside it.\n\nFor example, ' left = 0;' creates a variable that stores the number 0.",
+      "example": " left = 0;   // Left pointer\n right = 6;  // Right pointer\n mid = 3;    // Middle index",
+      "action": "continue",
+      "next": "function-check-python"
+    },
+    {
+      "stepId": "function-check-python",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-python"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-python",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "def search(nums, target) {\n  // Returns index of target\n  return -1;\n}",
+      "action": "continue",
+      "next": "parameter-check-python"
+    },
+    {
+      "stepId": "parameter-check-python",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "array-check-python"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-python",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'def search(nums, target)', the 'nums' and 'target' are parameters.",
+      "example": "def search(nums, target) {\n  // Parameters receive values\n}\n\n// Call: search([4,5,6,7,0,1,2], 0)",
+      "action": "continue",
+      "next": "array-check-python"
+    },
+    {
+      "stepId": "array-check-python",
+      "mentorSays": "To solve this lesson, we'll need to work with arrays. Do you know what an array is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know arrays",
+          "next": "loop-check-python"
+        },
+        {
+          "label": "No, explain arrays",
+          "next": "array-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "array-explanation-python",
+      "mentorSays": "An array is a list of values stored in order. Each value has a position number called an 'index'. Array indices start counting from 0.\n\nFor example, nums = [4, 5, 6, 7, 0, 1, 2] means:\n- nums[0] = 4 (first element)\n- nums[1] = 5 (second element)\n- etc.",
+      "example": "nums = [4, 5, 6, 7, 0, 1, 2];\n\nnums[0] = 4\nnums[3] = 7\nnums[4] = 0",
+      "action": "continue",
+      "next": "loop-check-python"
+    },
+    {
+      "stepId": "loop-check-python",
+      "mentorSays": "To solve this lesson, we'll need to use loops. Do you know what a loop is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know loops",
+          "next": "coding-start-python"
+        },
+        {
+          "label": "No, explain loops",
+          "next": "loop-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "loop-explanation-python",
+      "mentorSays": "A loop lets you repeat code multiple times. A 'while' loop in Python runs code while a condition is true.",
+      "example": "while (left <= right) {\n  // This code runs while condition is true\n  // Process middle element\n}",
+      "action": "continue",
+      "next": "coding-start-python"
+    },
+    {
+      "stepId": "coding-start-python",
+      "mentorSays": "Perfect! Let's implement the solution in Python.",
+      "example": "// Python implementation",
+      "action": "continue",
+      "next": "coding-init-python"
+    },
+    {
+      "stepId": "coding-init-python",
+      "mentorSays": "Initialize binary search pointers.",
+      "example": "// Python implementation",
+      "action": "continue",
+      "next": "coding-loop-python"
+    },
+    {
+      "stepId": "coding-loop-python",
+      "mentorSays": "Create while loop.",
+      "example": "// Python implementation",
+      "action": "continue",
+      "next": "coding-calculate-mid-python"
+    },
+    {
+      "stepId": "coding-calculate-mid-python",
+      "mentorSays": "Calculate mid and check if found.",
+      "example": "// Python implementation",
+      "action": "continue",
+      "next": "coding-check-left-sorted-python"
+    },
+    {
+      "stepId": "coding-check-left-sorted-python",
+      "mentorSays": "Check which half is sorted.",
+      "example": "// Python implementation",
+      "action": "continue",
+      "next": "coding-search-left-half-python"
+    },
+    {
+      "stepId": "coding-search-left-half-python",
+      "mentorSays": "Search left half if target is there.",
+      "example": "// Python implementation",
+      "action": "continue",
+      "next": "coding-search-right-half-python"
+    },
+    {
+      "stepId": "coding-search-right-half-python",
+      "mentorSays": "Search right half if target is there.",
+      "example": "// Python implementation",
+      "action": "continue",
+      "next": "coding-return-python"
+    },
+    {
+      "stepId": "coding-return-python",
+      "mentorSays": "Return -1 if not found.",
+      "example": "// Python implementation",
+      "action": "continue",
+      "next": "test-code-python"
+    },
+    {
+      "stepId": "test-code-python",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** nums = [4, 5, 6, 7, 0, 1, 2], target = 0\nExpected: 4 (target found at index 4)\n\n**Test 2:** nums = [4, 5, 6, 7, 0, 1, 2], target = 3\nExpected: -1 (target not found)\n\n**Test 3:** nums = [1], target = 0\nExpected: -1 (target not found)\n\n**Test 4:** nums = [1], target = 1\nExpected: 0 (target found at index 0)\n\n**Test 5:** nums = [4, 5, 6, 7, 0, 1, 2], target = 5\nExpected: 1 (target found at index 1)\n\n**Test 6:** nums = [3, 1], target = 1\nExpected: 1 (target found at index 1)\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: [4,5,6,7,0,1,2], 0 → 4\nTest 2: [4,5,6,7,0,1,2], 3 → -1\nTest 3: [1], 0 → -1\nTest 4: [1], 1 → 0\nTest 5: [4,5,6,7,0,1,2], 5 → 1\nTest 6: [3,1], 1 → 1",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-java",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-java"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-java",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'left' or 'mid') and put data inside it.\n\nFor example, 'int left = 0;' creates a variable that stores the number 0.",
+      "example": "int left = 0;   // Left pointer\nint right = 6;  // Right pointer\nint mid = 3;    // Middle index",
+      "action": "continue",
+      "next": "function-check-java"
+    },
+    {
+      "stepId": "function-check-java",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-java"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-java",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "public int search(nums, target) {\n  // Returns index of target\n  return -1;\n}",
+      "action": "continue",
+      "next": "parameter-check-java"
+    },
+    {
+      "stepId": "parameter-check-java",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "array-check-java"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-java",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'public int search(nums, target)', the 'nums' and 'target' are parameters.",
+      "example": "public int search(nums, target) {\n  // Parameters receive values\n}\n\n// Call: search([4,5,6,7,0,1,2], 0)",
+      "action": "continue",
+      "next": "array-check-java"
+    },
+    {
+      "stepId": "array-check-java",
+      "mentorSays": "To solve this lesson, we'll need to work with arrays. Do you know what an array is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know arrays",
+          "next": "loop-check-java"
+        },
+        {
+          "label": "No, explain arrays",
+          "next": "array-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "array-explanation-java",
+      "mentorSays": "An array is a list of values stored in order. Each value has a position number called an 'index'. Array indices start counting from 0.\n\nFor example, nums = [4, 5, 6, 7, 0, 1, 2] means:\n- nums[0] = 4 (first element)\n- nums[1] = 5 (second element)\n- etc.",
+      "example": "nums = [4, 5, 6, 7, 0, 1, 2];\n\nnums[0] = 4\nnums[3] = 7\nnums[4] = 0",
+      "action": "continue",
+      "next": "loop-check-java"
+    },
+    {
+      "stepId": "loop-check-java",
+      "mentorSays": "To solve this lesson, we'll need to use loops. Do you know what a loop is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know loops",
+          "next": "coding-start-java"
+        },
+        {
+          "label": "No, explain loops",
+          "next": "loop-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "loop-explanation-java",
+      "mentorSays": "A loop lets you repeat code multiple times. A 'while' loop in Java runs code while a condition is true.",
+      "example": "while (left <= right) {\n  // This code runs while condition is true\n  // Process middle element\n}",
+      "action": "continue",
+      "next": "coding-start-java"
+    },
+    {
+      "stepId": "coding-start-java",
+      "mentorSays": "Perfect! Let's implement the solution in Java.",
+      "example": "// Java implementation",
+      "action": "continue",
+      "next": "coding-init-java"
+    },
+    {
+      "stepId": "coding-init-java",
+      "mentorSays": "Initialize binary search pointers.",
+      "example": "// Java implementation",
+      "action": "continue",
+      "next": "coding-loop-java"
+    },
+    {
+      "stepId": "coding-loop-java",
+      "mentorSays": "Create while loop.",
+      "example": "// Java implementation",
+      "action": "continue",
+      "next": "coding-calculate-mid-java"
+    },
+    {
+      "stepId": "coding-calculate-mid-java",
+      "mentorSays": "Calculate mid and check if found.",
+      "example": "// Java implementation",
+      "action": "continue",
+      "next": "coding-check-left-sorted-java"
+    },
+    {
+      "stepId": "coding-check-left-sorted-java",
+      "mentorSays": "Check which half is sorted.",
+      "example": "// Java implementation",
+      "action": "continue",
+      "next": "coding-search-left-half-java"
+    },
+    {
+      "stepId": "coding-search-left-half-java",
+      "mentorSays": "Search left half if target is there.",
+      "example": "// Java implementation",
+      "action": "continue",
+      "next": "coding-search-right-half-java"
+    },
+    {
+      "stepId": "coding-search-right-half-java",
+      "mentorSays": "Search right half if target is there.",
+      "example": "// Java implementation",
+      "action": "continue",
+      "next": "coding-return-java"
+    },
+    {
+      "stepId": "coding-return-java",
+      "mentorSays": "Return -1 if not found.",
+      "example": "// Java implementation",
+      "action": "continue",
+      "next": "test-code-java"
+    },
+    {
+      "stepId": "test-code-java",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** nums = [4, 5, 6, 7, 0, 1, 2], target = 0\nExpected: 4 (target found at index 4)\n\n**Test 2:** nums = [4, 5, 6, 7, 0, 1, 2], target = 3\nExpected: -1 (target not found)\n\n**Test 3:** nums = [1], target = 0\nExpected: -1 (target not found)\n\n**Test 4:** nums = [1], target = 1\nExpected: 0 (target found at index 0)\n\n**Test 5:** nums = [4, 5, 6, 7, 0, 1, 2], target = 5\nExpected: 1 (target found at index 1)\n\n**Test 6:** nums = [3, 1], target = 1\nExpected: 1 (target found at index 1)\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: [4,5,6,7,0,1,2], 0 → 4\nTest 2: [4,5,6,7,0,1,2], 3 → -1\nTest 3: [1], 0 → -1\nTest 4: [1], 1 → 0\nTest 5: [4,5,6,7,0,1,2], 5 → 1\nTest 6: [3,1], 1 → 1",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-cpp",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-cpp"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-cpp",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'left' or 'mid') and put data inside it.\n\nFor example, 'int left = 0;' creates a variable that stores the number 0.",
+      "example": "int left = 0;   // Left pointer\nint right = 6;  // Right pointer\nint mid = 3;    // Middle index",
+      "action": "continue",
+      "next": "function-check-cpp"
+    },
+    {
+      "stepId": "function-check-cpp",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-cpp"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-cpp",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "int search(nums, target) {\n  // Returns index of target\n  return -1;\n}",
+      "action": "continue",
+      "next": "parameter-check-cpp"
+    },
+    {
+      "stepId": "parameter-check-cpp",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "array-check-cpp"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-cpp",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'int search(nums, target)', the 'nums' and 'target' are parameters.",
+      "example": "int search(nums, target) {\n  // Parameters receive values\n}\n\n// Call: search([4,5,6,7,0,1,2], 0)",
+      "action": "continue",
+      "next": "array-check-cpp"
+    },
+    {
+      "stepId": "array-check-cpp",
+      "mentorSays": "To solve this lesson, we'll need to work with arrays. Do you know what an array is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know arrays",
+          "next": "loop-check-cpp"
+        },
+        {
+          "label": "No, explain arrays",
+          "next": "array-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "array-explanation-cpp",
+      "mentorSays": "An array is a list of values stored in order. Each value has a position number called an 'index'. Array indices start counting from 0.\n\nFor example, nums = [4, 5, 6, 7, 0, 1, 2] means:\n- nums[0] = 4 (first element)\n- nums[1] = 5 (second element)\n- etc.",
+      "example": "nums = [4, 5, 6, 7, 0, 1, 2];\n\nnums[0] = 4\nnums[3] = 7\nnums[4] = 0",
+      "action": "continue",
+      "next": "loop-check-cpp"
+    },
+    {
+      "stepId": "loop-check-cpp",
+      "mentorSays": "To solve this lesson, we'll need to use loops. Do you know what a loop is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know loops",
+          "next": "coding-start-cpp"
+        },
+        {
+          "label": "No, explain loops",
+          "next": "loop-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "loop-explanation-cpp",
+      "mentorSays": "A loop lets you repeat code multiple times. A 'while' loop in C++ runs code while a condition is true.",
+      "example": "while (left <= right) {\n  // This code runs while condition is true\n  // Process middle element\n}",
+      "action": "continue",
+      "next": "coding-start-cpp"
+    },
+    {
+      "stepId": "coding-start-cpp",
+      "mentorSays": "Perfect! Let's implement the solution in C++.",
+      "example": "// C++ implementation",
+      "action": "continue",
+      "next": "coding-init-cpp"
+    },
+    {
+      "stepId": "coding-init-cpp",
+      "mentorSays": "Initialize binary search pointers.",
+      "example": "// C++ implementation",
+      "action": "continue",
+      "next": "coding-loop-cpp"
+    },
+    {
+      "stepId": "coding-loop-cpp",
+      "mentorSays": "Create while loop.",
+      "example": "// C++ implementation",
+      "action": "continue",
+      "next": "coding-calculate-mid-cpp"
+    },
+    {
+      "stepId": "coding-calculate-mid-cpp",
+      "mentorSays": "Calculate mid and check if found.",
+      "example": "// C++ implementation",
+      "action": "continue",
+      "next": "coding-check-left-sorted-cpp"
+    },
+    {
+      "stepId": "coding-check-left-sorted-cpp",
+      "mentorSays": "Check which half is sorted.",
+      "example": "// C++ implementation",
+      "action": "continue",
+      "next": "coding-search-left-half-cpp"
+    },
+    {
+      "stepId": "coding-search-left-half-cpp",
+      "mentorSays": "Search left half if target is there.",
+      "example": "// C++ implementation",
+      "action": "continue",
+      "next": "coding-search-right-half-cpp"
+    },
+    {
+      "stepId": "coding-search-right-half-cpp",
+      "mentorSays": "Search right half if target is there.",
+      "example": "// C++ implementation",
+      "action": "continue",
+      "next": "coding-return-cpp"
+    },
+    {
+      "stepId": "coding-return-cpp",
+      "mentorSays": "Return -1 if not found.",
+      "example": "// C++ implementation",
+      "action": "continue",
+      "next": "test-code-cpp"
+    },
+    {
+      "stepId": "test-code-cpp",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** nums = [4, 5, 6, 7, 0, 1, 2], target = 0\nExpected: 4 (target found at index 4)\n\n**Test 2:** nums = [4, 5, 6, 7, 0, 1, 2], target = 3\nExpected: -1 (target not found)\n\n**Test 3:** nums = [1], target = 0\nExpected: -1 (target not found)\n\n**Test 4:** nums = [1], target = 1\nExpected: 0 (target found at index 0)\n\n**Test 5:** nums = [4, 5, 6, 7, 0, 1, 2], target = 5\nExpected: 1 (target found at index 1)\n\n**Test 6:** nums = [3, 1], target = 1\nExpected: 1 (target found at index 1)\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: [4,5,6,7,0,1,2], 0 → 4\nTest 2: [4,5,6,7,0,1,2], 3 → -1\nTest 3: [1], 0 → -1\nTest 4: [1], 1 → 0\nTest 5: [4,5,6,7,0,1,2], 5 → 1\nTest 6: [3,1], 1 → 1",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-ts",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-ts"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-ts",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'left' or 'mid') and put data inside it.\n\nFor example, 'let left = 0;' creates a variable that stores the number 0.",
+      "example": "let left = 0;   // Left pointer\nlet right = 6;  // Right pointer\nlet mid = 3;    // Middle index",
+      "action": "continue",
+      "next": "function-check-ts"
+    },
+    {
+      "stepId": "function-check-ts",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-ts"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-ts",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "function search(nums, target) {\n  // Returns index of target\n  return -1;\n}",
+      "action": "continue",
+      "next": "parameter-check-ts"
+    },
+    {
+      "stepId": "parameter-check-ts",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "array-check-ts"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-ts",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'function search(nums, target)', the 'nums' and 'target' are parameters.",
+      "example": "function search(nums, target) {\n  // Parameters receive values\n}\n\n// Call: search([4,5,6,7,0,1,2], 0)",
+      "action": "continue",
+      "next": "array-check-ts"
+    },
+    {
+      "stepId": "array-check-ts",
+      "mentorSays": "To solve this lesson, we'll need to work with arrays. Do you know what an array is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know arrays",
+          "next": "loop-check-ts"
+        },
+        {
+          "label": "No, explain arrays",
+          "next": "array-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "array-explanation-ts",
+      "mentorSays": "An array is a list of values stored in order. Each value has a position number called an 'index'. Array indices start counting from 0.\n\nFor example, nums = [4, 5, 6, 7, 0, 1, 2] means:\n- nums[0] = 4 (first element)\n- nums[1] = 5 (second element)\n- etc.",
+      "example": "nums = [4, 5, 6, 7, 0, 1, 2];\n\nnums[0] = 4\nnums[3] = 7\nnums[4] = 0",
+      "action": "continue",
+      "next": "loop-check-ts"
+    },
+    {
+      "stepId": "loop-check-ts",
+      "mentorSays": "To solve this lesson, we'll need to use loops. Do you know what a loop is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know loops",
+          "next": "coding-start-ts"
+        },
+        {
+          "label": "No, explain loops",
+          "next": "loop-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "loop-explanation-ts",
+      "mentorSays": "A loop lets you repeat code multiple times. A 'while' loop in TypeScript runs code while a condition is true.",
+      "example": "while (left <= right) {\n  // This code runs while condition is true\n  // Process middle element\n}",
+      "action": "continue",
+      "next": "coding-start-ts"
+    },
+    {
+      "stepId": "coding-start-ts",
+      "mentorSays": "Perfect! Let's implement the solution in TypeScript.",
+      "example": "// TypeScript implementation",
+      "action": "continue",
+      "next": "coding-init-ts"
+    },
+    {
+      "stepId": "coding-init-ts",
+      "mentorSays": "Initialize binary search pointers.",
+      "example": "// TypeScript implementation",
+      "action": "continue",
+      "next": "coding-loop-ts"
+    },
+    {
+      "stepId": "coding-loop-ts",
+      "mentorSays": "Create while loop.",
+      "example": "// TypeScript implementation",
+      "action": "continue",
+      "next": "coding-calculate-mid-ts"
+    },
+    {
+      "stepId": "coding-calculate-mid-ts",
+      "mentorSays": "Calculate mid and check if found.",
+      "example": "// TypeScript implementation",
+      "action": "continue",
+      "next": "coding-check-left-sorted-ts"
+    },
+    {
+      "stepId": "coding-check-left-sorted-ts",
+      "mentorSays": "Check which half is sorted.",
+      "example": "// TypeScript implementation",
+      "action": "continue",
+      "next": "coding-search-left-half-ts"
+    },
+    {
+      "stepId": "coding-search-left-half-ts",
+      "mentorSays": "Search left half if target is there.",
+      "example": "// TypeScript implementation",
+      "action": "continue",
+      "next": "coding-search-right-half-ts"
+    },
+    {
+      "stepId": "coding-search-right-half-ts",
+      "mentorSays": "Search right half if target is there.",
+      "example": "// TypeScript implementation",
+      "action": "continue",
+      "next": "coding-return-ts"
+    },
+    {
+      "stepId": "coding-return-ts",
+      "mentorSays": "Return -1 if not found.",
+      "example": "// TypeScript implementation",
+      "action": "continue",
+      "next": "test-code-ts"
+    },
+    {
+      "stepId": "test-code-ts",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** nums = [4, 5, 6, 7, 0, 1, 2], target = 0\nExpected: 4 (target found at index 4)\n\n**Test 2:** nums = [4, 5, 6, 7, 0, 1, 2], target = 3\nExpected: -1 (target not found)\n\n**Test 3:** nums = [1], target = 0\nExpected: -1 (target not found)\n\n**Test 4:** nums = [1], target = 1\nExpected: 0 (target found at index 0)\n\n**Test 5:** nums = [4, 5, 6, 7, 0, 1, 2], target = 5\nExpected: 1 (target found at index 1)\n\n**Test 6:** nums = [3, 1], target = 1\nExpected: 1 (target found at index 1)\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: [4,5,6,7,0,1,2], 0 → 4\nTest 2: [4,5,6,7,0,1,2], 3 → -1\nTest 3: [1], 0 → -1\nTest 4: [1], 1 → 0\nTest 5: [4,5,6,7,0,1,2], 5 → 1\nTest 6: [3,1], 1 → 1",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "final",
+      "mentorSays": "🎉 Well done! You've successfully implemented the Search in Rotated Sorted Array solution!\n\n**Time Complexity:** O(log n)\n- We use binary search, which eliminates half the elements at each step\n- Even with rotation, we still achieve O(log n) time\n\n**Space Complexity:** O(1)\n- We only use a constant amount of extra space (left, right, mid variables)\n- No additional data structures are needed\n\n**Key Takeaways:**\n1. **One half is always sorted**: In a rotated sorted array, at least one half (left or right of mid) is always sorted\n2. **Identify sorted half**: Compare nums[left] with nums[mid] to determine which half is sorted\n3. **Target in sorted half**: If target is in the sorted half's range, search there; otherwise search the other half\n4. **Modified binary search**: The logic is similar to regular binary search, but we check which half is sorted first\n5. **Edge cases**: Handle single element, no rotation (fully sorted), target not found\n\n**Related Practice Lessons:**\n- Find Minimum in Rotated Sorted Array (LeetCode #153) - find the pivot\n- Search in Rotated Sorted Array II (LeetCode #81) - with duplicates\n- Find Peak Element (LeetCode #162) - similar modified binary search\n\nKeep practicing - rotated array lessons are common in interviews!",
+      "action": "continue"
+    }
+  ]
+}

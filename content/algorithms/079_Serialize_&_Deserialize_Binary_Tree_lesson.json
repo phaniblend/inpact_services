@@ -1,0 +1,526 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-algorithms-79",
+    "track": "algorithms",
+    "lessonNum": 79,
+    "title": "Serialize & Deserialize Binary Tree",
+    "shortName": "P79",
+    "intro": {
+      "tag": "LESSON #79",
+      "title": "Serialize & Deserialize Binary Tree",
+      "body": "In this lesson, you will build a program that can convert a binary tree into a string (serialize) and reconstruct the original tree from that string (deserialize). You will learn the core concept of tree traversal, specifically using depth-first search (DFS) to process each node. The main technologies involved are JavaScript functions, recursion, and string manipulation. By the end, you will understand how to preserve and restore the structure of a binary tree using a simple text format.",
+      "usecase": "Serializing and deserializing binary trees is essential for efficiently storing and transmitting hierarchical data structures in real applications. This pattern appears in web applications that need to save and restore complex UI component trees, such as dashboard layouts with nested panels, collapsible menus with submenus, or form builders with conditional sections. Developers use these techniques when implementing features like saving/loading workspace configurations, syncing application state across devices, or caching complex data structures for performance optimization. In database systems, tree serialization enables efficient storage of hierarchical data like organizational charts, file system directories, or product category trees."
+    },
+    "objectives": [
+      "Construct a binary tree node class with value, left, and right properties",
+      "Implement a serialize function that converts a binary tree to a string representation",
+      "Apply a deserialize function that reconstructs a binary tree from its string representation",
+      "Manipulate tree traversal algorithms to generate and parse serialized data",
+      "Initialize test cases to validate serialization and deserialization functionality",
+      "Integrate error handling for edge cases like empty trees and invalid input",
+      "Configure a complete workflow that serializes and deserializes binary trees end-to-end"
+    ],
+    "steps": [
+      {
+        "type": "reasoning",
+        "id": "step1",
+        "phase": "Step 1 of 19",
+        "title": "Introduction",
+        "content": {
+          "body": "Imagine you need to save a binary tree to a file or send it over a network. How can you represent its structure as a simple string? In this lesson, you'll learn how to serialize and deserialize a binary tree—converting it to and from a string format while preserving its shape.",
+          "title": "Introduction"
+        }
+      },
+      {
+        "type": "reasoning",
+        "id": "step2",
+        "phase": "Step 2 of 19",
+        "title": "What you'll learn",
+        "content": {
+          "body": "By the end of this lesson, you will be able to:\n1. Explain why serialization is needed for tree data structures.\n2. Apply a traversal order to convert a tree into a string.\n3. Implement both serialize and deserialize functions in JavaScript.\n4. Handle empty nodes (null values) during the conversion process.\n5. Reconstruct the original tree structure from the serialized string.",
+          "title": "What you'll learn"
+        }
+      },
+      {
+        "type": "discovery",
+        "id": "step3",
+        "phase": "Step 3 of 19",
+        "title": "Explore the tree",
+        "content": {
+          "body": "Look at this simple binary tree with root value 1, left child 2, and right child 3. If you had to write it down as text to share with someone, how would you represent it? Think about what information you need to capture: values, structure, and empty spots.",
+          "title": "Explore the tree",
+          "visualMetaphor": "Show exploring from the root down branches; one level or one branch at a time."
+        }
+      },
+      {
+        "type": "reflection",
+        "id": "step4",
+        "phase": "Step 4 of 19",
+        "title": "What you considered",
+        "content": {
+          "body": "You likely thought about listing values in some order and marking where branches end. This is the core challenge of serialization: capturing both values and structure in a linear format.",
+          "title": "What you considered"
+        }
+      },
+      {
+        "type": "scale-problem",
+        "id": "step5",
+        "phase": "Step 5 of 19",
+        "title": "Why it gets complex",
+        "content": {
+          "body": "With larger trees, simply listing values isn't enough—you need to preserve which node is whose child, and where branches are missing. Without a systematic approach, reconstructing the tree becomes impossible.",
+          "title": "Why it gets complex"
+        }
+      },
+      {
+        "type": "concept-bridge",
+        "id": "step6",
+        "phase": "Step 6 of 19",
+        "title": "Key idea",
+        "content": {
+          "body": "We can use tree traversal to explore branches from the root. By visiting nodes in a consistent order (like pre-order: root, left, right) and recording values—including null for empty branches—we create a complete blueprint. To deserialize, we replay the same traversal to rebuild the tree.",
+          "title": "Key idea",
+          "visualMetaphor": "Use branch/root visual reasoning; visiting nodes or exploring levels one at a time."
+        }
+      },
+      {
+        "type": "reveal-idea",
+        "id": "step7",
+        "phase": "Step 7 of 19",
+        "title": "The approach",
+        "content": {
+          "body": "We'll use depth-first pre-order traversal for both operations. During serialization, we visit each node, write its value, then recursively explore left and right branches—writing 'null' for empty ones. For deserialization, we read values in the same order, creating nodes and recursively building left and right subtrees.",
+          "title": "The approach"
+        }
+      },
+      {
+        "type": "flow-explainer",
+        "id": "step8",
+        "phase": "Step 8 of 19",
+        "title": "Steps",
+        "content": {
+          "body": "1. Serialize: Perform pre-order traversal, appending node values (or 'null') to an array, then join into a string.\n2. Deserialize: Split the string back into an array, then recursively consume values to reconstruct nodes and their children.\n3. Base case: When we encounter 'null', return null (empty branch).",
+          "title": "Steps"
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 19",
+        "title": "Set up the TreeNode class",
+        "instruction": "First, we need a basic TreeNode class to represent each node in our binary tree. Create the class with constructor that initializes val, left, and right properties.",
+        "hint": "The constructor should take a value parameter and set left/right to null by default.",
+        "analogousExample": "",
+        "seedCode": "// TreeNode class for binary tree nodes\nclass TreeNode {\n  // Your code here\n}\n\n// Example usage (not part of the solution)\n// const root = new TreeNode(1);\n// root.left = new TreeNode(2);\n// root.right = new TreeNode(3);",
+        "expectedOutcome": "A TreeNode class that can be instantiated with a value.",
+        "successCriteria": [],
+        "feedbackCorrect": "Great! You've created the foundation for our tree structure.",
+        "feedbackPartial": "Check that your constructor properly sets this.val, this.left, and this.right.",
+        "feedbackWrong": "Remember: class TreeNode { constructor(val) { this.val = val; this.left = null; this.right = null; } }",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "class",
+            "TreeNode",
+            "constructor",
+            "this.val",
+            "this.left",
+            "this.right"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 19",
+        "title": "Start the serialize function",
+        "instruction": "Create the serialize function that takes a root node. For now, just set up an empty array to collect values and define an inner helper function for traversal.",
+        "hint": "The function should return a string eventually, but first focus on structure.",
+        "analogousExample": "",
+        "seedCode": "class TreeNode {\n  constructor(val) {\n    this.val = val;\n    this.left = null;\n    this.right = null;\n  }\n}\n\nfunction serialize(root) {\n  // Your code here\n}",
+        "expectedOutcome": "A serialize function with an empty array and a placeholder helper.",
+        "successCriteria": [],
+        "feedbackCorrect": "Good setup! Now we're ready to implement traversal.",
+        "feedbackPartial": "Make sure you declare an array variable inside serialize.",
+        "feedbackWrong": "Try: function serialize(root) { const result = []; function traverse(node) {}; return ''; }",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "function",
+            "serialize",
+            "root",
+            "const",
+            "result",
+            "[]",
+            "function",
+            "traverse"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 19",
+        "title": "Implement pre-order traversal for serialization",
+        "instruction": "Inside the helper function, implement pre-order traversal: if node is null, push 'null' to result; otherwise, push node.val,",
+        "hint": "Remember the base case: empty tree (null root) should still be handled.",
+        "analogousExample": "",
+        "seedCode": "class TreeNode {\n  constructor(val) {\n    this.val = val;\n    this.left = null;\n    this.right = null;\n  }\n}\n\nfunction serialize(root) {\n  const result = [];\n  \n  function traverse(node) {\n    // Your code here\n  }\n  \n  traverse(root);\n  return result.join(',');\n}",
+        "expectedOutcome": "A complete serialize function that converts tree to comma-separated string.",
+        "successCriteria": [],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Check your if-else logic and recursive calls to traverse left and right.",
+        "feedbackWrong": "The traverse function should be: if (node === null) { result.push('null'); } else { result.push(node.val); traverse(node.left); traverse(node.right); }",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "if",
+            "node",
+            "null",
+            "push",
+            "'null'",
+            "node.val",
+            "traverse",
+            "node.left",
+            "node.right"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step12",
+        "type": "question",
+        "phase": "Step 12 of 19",
+        "title": "recursively call traverse on node.left and no",
+        "instruction": "recursively call traverse on node.left and node.right. Finally, call traverse(root) and return result joined by commas.",
+        "hint": "Remember the base case: empty tree (null root) should still be handled.",
+        "analogousExample": "",
+        "seedCode": "class TreeNode {\n  constructor(val) {\n    this.val = val;\n    this.left = null;\n    this.right = null;\n  }\n}\n\nfunction serialize(root) {\n  const result = [];\n  \n  function traverse(node) {\n    // Your code here\n  }\n  \n  traverse(root);\n  return result.join(',');\n}",
+        "expectedOutcome": "",
+        "successCriteria": [
+          "Complete the step as instructed."
+        ],
+        "feedbackCorrect": "Great! Step completed.",
+        "feedbackPartial": "Review the instruction and try again.",
+        "feedbackWrong": "Check the instruction and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "if",
+            "node",
+            "null",
+            "push",
+            "'null'",
+            "node.val",
+            "traverse",
+            "node.left",
+            "node.right"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step13",
+        "type": "question",
+        "phase": "Step 13 of 19",
+        "title": "Start the deserialize function",
+        "instruction": "Create the deserialize function that takes a string. Split it by commas into an array,",
+        "hint": "We'll consume values from the array one by one as we rebuild the tree.",
+        "analogousExample": "",
+        "seedCode": "class TreeNode {\n  constructor(val) {\n    this.val = val;\n    this.left = null;\n    this.right = null;\n  }\n}\n\nfunction serialize(root) {\n  const result = [];\n  function traverse(node) {\n    if (node === null) {\n      result.push('null');\n    } else {\n      result.push(node.val);\n      traverse(node.left);\n      traverse(node.right);\n    }\n  }\n  traverse(root);\n  return result.join(',');\n}\n\nfunction deserialize(data) {\n  // Your code here\n}",
+        "expectedOutcome": "A deserialize function that splits the string and has a helper.",
+        "successCriteria": [],
+        "feedbackCorrect": "Perfect setup! Now we can reconstruct nodes.",
+        "feedbackPartial": "Don't forget to split the data string and initialize an index.",
+        "feedbackWrong": "Try: function deserialize(data) { const vals = data.split(','); let i = 0; function build() {}; return build(); }",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "function",
+            "deserialize",
+            "data",
+            "split",
+            "','",
+            "let",
+            "i",
+            "0",
+            "function",
+            "build"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step14",
+        "type": "question",
+        "phase": "Step 14 of 19",
+        "title": "set up an index to track current position. De",
+        "instruction": "set up an index to track current position. Define a helper function to build nodes recursively.",
+        "hint": "We'll consume values from the array one by one as we rebuild the tree.",
+        "analogousExample": "",
+        "seedCode": "class TreeNode {\n  constructor(val) {\n    this.val = val;\n    this.left = null;\n    this.right = null;\n  }\n}\n\nfunction serialize(root) {\n  const result = [];\n  function traverse(node) {\n    if (node === null) {\n      result.push('null');\n    } else {\n      result.push(node.val);\n      traverse(node.left);\n      traverse(node.right);\n    }\n  }\n  traverse(root);\n  return result.join(',');\n}\n\nfunction deserialize(data) {\n  // Your code here\n}",
+        "expectedOutcome": "",
+        "successCriteria": [
+          "Complete the step as instructed."
+        ],
+        "feedbackCorrect": "Great! Step completed.",
+        "feedbackPartial": "Review the instruction and try again.",
+        "feedbackWrong": "Check the instruction and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "function",
+            "deserialize",
+            "data",
+            "split",
+            "','",
+            "let",
+            "i",
+            "0",
+            "function",
+            "build"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step15",
+        "type": "question",
+        "phase": "Step 15 of 19",
+        "title": "Implement node reconstruction",
+        "instruction": "In the build helper: get current value from array using index i. If it's 'null', increment i and return null. Otherwise, create a new TreeNode with the value (converted to number), increment i, set its left by recursively calling build(),",
+        "hint": "The order of operations matters: create node, then build left subtree, then build right subtree.",
+        "analogousExample": "",
+        "seedCode": "class TreeNode {\n  constructor(val) {\n    this.val = val;\n    this.left = null;\n    this.right = null;\n  }\n}\n\nfunction serialize(root) {\n  const result = [];\n  function traverse(node) {\n    if (node === null) {\n      result.push('null');\n    } else {\n      result.push(node.val);\n      traverse(node.left);\n      traverse(node.right);\n    }\n  }\n  traverse(root);\n  return result.join(',');\n}\n\nfunction deserialize(data) {\n  const vals = data.split(',');\n  let i = 0;\n  \n  function build() {\n    // Your code here\n  }\n  \n  return build();\n}",
+        "expectedOutcome": "A complete deserialize function that reconstructs the tree from string.",
+        "successCriteria": [],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Check value conversion and the recursive calls for left and right.",
+        "feedbackWrong": "The build function should be: const val = vals[i]; i++; if (val === 'null') return null; const node = new TreeNode(Number(val)); node.left = build(); node.right = build(); return node;",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "val",
+            "vals[i]",
+            "i++",
+            "'null'",
+            "new TreeNode",
+            "Number",
+            "node.left",
+            "build()",
+            "node.right",
+            "return node"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step16",
+        "type": "question",
+        "phase": "Step 16 of 19",
+        "title": "set its right similarly. Return the node",
+        "instruction": "set its right similarly. Return the node.",
+        "hint": "The order of operations matters: create node, then build left subtree, then build right subtree.",
+        "analogousExample": "",
+        "seedCode": "class TreeNode {\n  constructor(val) {\n    this.val = val;\n    this.left = null;\n    this.right = null;\n  }\n}\n\nfunction serialize(root) {\n  const result = [];\n  function traverse(node) {\n    if (node === null) {\n      result.push('null');\n    } else {\n      result.push(node.val);\n      traverse(node.left);\n      traverse(node.right);\n    }\n  }\n  traverse(root);\n  return result.join(',');\n}\n\nfunction deserialize(data) {\n  const vals = data.split(',');\n  let i = 0;\n  \n  function build() {\n    // Your code here\n  }\n  \n  return build();\n}",
+        "expectedOutcome": "",
+        "successCriteria": [
+          "Complete the step as instructed."
+        ],
+        "feedbackCorrect": "Great! Step completed.",
+        "feedbackPartial": "Review the instruction and try again.",
+        "feedbackWrong": "Check the instruction and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "val",
+            "vals[i]",
+            "i++",
+            "'null'",
+            "new TreeNode",
+            "Number",
+            "node.left",
+            "build()",
+            "node.right",
+            "return node"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step17",
+        "type": "question",
+        "phase": "Step 17 of 19",
+        "title": "Test the complete solution",
+        "instruction": "Create a small test tree, serialize it,",
+        "hint": "You can compare serialized strings or manually check a few node values.",
+        "analogousExample": "",
+        "seedCode": "class TreeNode {\n  constructor(val) {\n    this.val = val;\n    this.left = null;\n    this.right = null;\n  }\n}\n\nfunction serialize(root) {\n  const result = [];\n  function traverse(node) {\n    if (node === null) {\n      result.push('null');\n    } else {\n      result.push(node.val);\n      traverse(node.left);\n      traverse(node.right);\n    }\n  }\n  traverse(root);\n  return result.join(',');\n}\n\nfunction deserialize(data) {\n  const vals = data.split(',');\n  let i = 0;\n  function build() {\n    const val = vals[i];\n    i++;\n    if (val === 'null') return null;\n    const node = new TreeNode(Number(val));\n    node.left = build();\n    node.right = build();\n    return node;\n  }\n  return build();\n}\n\n// Test it:\nconst root = new TreeNode(1);\nroot.left = new TreeNode(2);\nroot.right = new TreeNode(3);\nroot.right.left = new TreeNode(4);\nroot.right.right = new TreeNode(5);\n\nconst serialized = serialize(root);\nconsole.log('Serialized:', serialized);\n\nconst reconstructed = deserialize(serialized);\nconsole.log('Reconstructed root value:', reconstructed.val); // should be 1\nconsole.log('Reconstructed right-left value:', reconstructed.right.left.val); // should be 4",
+        "expectedOutcome": "A working test that shows serialization and deserialize produce equivalent trees.",
+        "successCriteria": [],
+        "feedbackCorrect": "Perfect! Your solution correctly round-trips the tree.",
+        "feedbackPartial": "Make sure your test creates a non-trivial tree and checks values.",
+        "feedbackWrong": "The test should create a tree, serialize it, deserialize, and verify key values match.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "const root",
+            "serialize(root)",
+            "deserialize(serialized)",
+            "reconstructed.val",
+            "1"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step18",
+        "type": "question",
+        "phase": "Step 18 of 19",
+        "title": "deserialize the result. Verify that the origi",
+        "instruction": "deserialize the result. Verify that the original and reconstructed trees match by checking their structure.",
+        "hint": "You can compare serialized strings or manually check a few node values.",
+        "analogousExample": "",
+        "seedCode": "class TreeNode {\n  constructor(val) {\n    this.val = val;\n    this.left = null;\n    this.right = null;\n  }\n}\n\nfunction serialize(root) {\n  const result = [];\n  function traverse(node) {\n    if (node === null) {\n      result.push('null');\n    } else {\n      result.push(node.val);\n      traverse(node.left);\n      traverse(node.right);\n    }\n  }\n  traverse(root);\n  return result.join(',');\n}\n\nfunction deserialize(data) {\n  const vals = data.split(',');\n  let i = 0;\n  function build() {\n    const val = vals[i];\n    i++;\n    if (val === 'null') return null;\n    const node = new TreeNode(Number(val));\n    node.left = build();\n    node.right = build();\n    return node;\n  }\n  return build();\n}\n\n// Test it:\nconst root = new TreeNode(1);\nroot.left = new TreeNode(2);\nroot.right = new TreeNode(3);\nroot.right.left = new TreeNode(4);\nroot.right.right = new TreeNode(5);\n\nconst serialized = serialize(root);\nconsole.log('Serialized:', serialized);\n\nconst reconstructed = deserialize(serialized);\nconsole.log('Reconstructed root value:', reconstructed.val); // should be 1\nconsole.log('Reconstructed right-left value:', reconstructed.right.left.val); // should be 4",
+        "expectedOutcome": "",
+        "successCriteria": [
+          "Complete the step as instructed."
+        ],
+        "feedbackCorrect": "Great! Step completed.",
+        "feedbackPartial": "Review the instruction and try again.",
+        "feedbackWrong": "Check the instruction and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "const root",
+            "serialize(root)",
+            "deserialize(serialized)",
+            "reconstructed.val",
+            "1"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "type": "complete",
+        "id": "step19",
+        "phase": "Step 19 of 19",
+        "title": "Done",
+        "content": {
+          "body": "Congratulations! You've implemented tree serialization and deserialize using pre-order traversal. Remember: serialization records values and null markers in a specific order; deserialize replays that order to rebuild the tree. This pattern works because tree traversal creates a deterministic blueprint of the structure.",
+          "title": "Done"
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Introduction",
+        "id": "step1"
+      },
+      {
+        "label": "What you'll learn",
+        "id": "step2"
+      },
+      {
+        "label": "Explore the tree",
+        "id": "step3"
+      },
+      {
+        "label": "What you considered",
+        "id": "step4"
+      },
+      {
+        "label": "Why it gets complex",
+        "id": "step5"
+      },
+      {
+        "label": "Key idea",
+        "id": "step6"
+      },
+      {
+        "label": "The approach",
+        "id": "step7"
+      },
+      {
+        "label": "Steps",
+        "id": "step8"
+      },
+      {
+        "label": "Set up the TreeNode class",
+        "id": "step9"
+      },
+      {
+        "label": "Start the serialize function",
+        "id": "step10"
+      },
+      {
+        "label": "Implement pre-order traversal for serialization",
+        "id": "step11"
+      },
+      {
+        "label": "recursively call traverse on node.left and no",
+        "id": "step12"
+      },
+      {
+        "label": "Start the deserialize function",
+        "id": "step13"
+      },
+      {
+        "label": "set up an index to track current position. De",
+        "id": "step14"
+      },
+      {
+        "label": "Implement node reconstruction",
+        "id": "step15"
+      },
+      {
+        "label": "set its right similarly. Return the node",
+        "id": "step16"
+      },
+      {
+        "label": "Test the complete solution",
+        "id": "step17"
+      },
+      {
+        "label": "deserialize the result. Verify that the origi",
+        "id": "step18"
+      },
+      {
+        "label": "Done",
+        "id": "step19"
+      }
+    ],
+    "algorithmFamily": "tree",
+    "familyTeachingProfile": {
+      "mentalModel": "Explore branches from a root",
+      "conceptBridge": "Use branch/root visual reasoning; visiting nodes or exploring levels one at a time.",
+      "visualMetaphor": "Show exploring from the root down branches; one level or one branch at a time.",
+      "commonConfusions": [
+        "Which order do we visit?",
+        "What is the base case (empty tree)?"
+      ]
+    }
+  },
+  "source": "content"
+}

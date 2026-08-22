@@ -1,0 +1,270 @@
+```typescript
+import createINPACTEngine from "../inpact_engine_shared";
+
+const NODES = {
+  start: {
+    id: "start",
+    type: "lesson",
+    title: "Lesson 8: Forms and Validation",
+    content: `# Forms and Validation in React
+
+Forms are essential for user interaction in web applications. In this lesson, you'll learn how to:
+- Create controlled form components
+- Handle form submissions
+- Implement client-side validation
+- Display validation errors
+- Use form libraries like React Hook Form
+
+Let's start by understanding the basics of form handling in React.`,
+    nextId: "controlled-forms"
+  },
+
+  "controlled-forms": {
+    id: "controlled-forms",
+    type: "concept",
+    title: "Controlled Components",
+    content: `## Controlled Form Components
+
+In React, form elements like <input>, <textarea>, and <select> maintain their own state. To make them **controlled components**, we link their value to React state:
+
+\`\`\`typescript
+import { useState } from 'react';
+
+function ControlledForm() {
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    message: ''
+  });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log('Form submitted:', formData);
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input
+        name="name"
+        value={formData.name}
+        onChange={handleChange}
+        placeholder="Name"
+      />
+      <input
+        name="email"
+        type="email"
+        value={formData.email}
+        onChange={handleChange}
+        placeholder="Email"
+      />
+      <textarea
+        name="message"
+        value={formData.message}
+        onChange={handleChange}
+        placeholder="Message"
+      />
+      <button type="submit">Submit</button>
+    </form>
+  );
+}
+\`\`\`
+
+**Key Points:**
+- Each input's value comes from React state
+- onChange updates the state
+- Single source of truth for form data`,
+    nextId: "validation-basics"
+  },
+
+  "validation-basics": {
+    id: "validation-basics",
+    type: "concept",
+    title: "Basic Validation",
+    content: `## Form Validation
+
+Validation ensures users enter correct data. Let's implement basic validation:
+
+\`\`\`typescript
+import { useState } from 'react';
+
+interface FormErrors {
+  name?: string;
+  email?: string;
+  password?: string;
+}
+
+function ValidatedForm() {
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: ''
+  });
+  
+  const [errors, setErrors] = useState<FormErrors>({});
+
+  const validateForm = (): boolean => {
+    const newErrors: FormErrors = {};
+    
+    if (!formData.name.trim()) {
+      newErrors.name = 'Name is required';
+    } else if (formData.name.length < 2) {
+      newErrors.name = 'Name must be at least 2 characters';
+    }
+    
+    if (!formData.email) {
+      newErrors.email = 'Email is required';
+    } else if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(formData.email)) {
+      newErrors.email = 'Invalid email format';
+    }
+    
+    if (!formData.password) {
+      newErrors.password = 'Password is required';
+    } else if (formData.password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (validateForm()) {
+      console.log('Form is valid:', formData);
+      // Submit to server
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <div>
+        <input
+          name="name"
+          value={formData.name}
+          onChange={(e) => setFormData({...formData, name: e.target.value})}
+          placeholder="Name"
+        />
+        {errors.name && <span className="error">{errors.name}</span>}
+      </div>
+      
+      <div>
+        <input
+          name="email"
+          type="email"
+          value={formData.email}
+          onChange={(e) => setFormData({...formData, email: e.target.value})}
+          placeholder="Email"
+        />
+        {errors.email && <span className="error">{errors.email}</span>}
+      </div>
+      
+      <div>
+        <input
+          name="password"
+          type="password"
+          value={formData.password}
+          onChange={(e) => setFormData({...formData, password: e.target.value})}
+          placeholder="Password"
+        />
+        {errors.password && <span className="error">{errors.password}</span>}
+      </div>
+      
+      <button type="submit">Submit</button>
+    </form>
+  );
+}
+\`\`\`
+
+**Validation Strategies:**
+- Required fields
+- Format validation (email, phone)
+- Length constraints
+- Custom business rules`,
+    nextId: "real-time-validation"
+  },
+
+  "real-time-validation": {
+    id: "real-time-validation",
+    type: "concept",
+    title: "Real-time Validation",
+    content: `## Real-time Validation Feedback
+
+Provide immediate feedback as users type or leave fields:
+
+\`\`\`typescript
+import { useState, useEffect } from 'react';
+
+function RealTimeValidation() {
+  const [formData, setFormData] = useState({
+    username: '',
+    email: '',
+    age: ''
+  });
+  
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+
+  // Validate specific field
+  const validateField = (name: string, value: string): string => {
+    switch (name) {
+      case 'username':
+        if (!value) return 'Username is required';
+        if (value.length < 3) return 'Must be at least 3 characters';
+        if (!/^[a-zA-Z0-9_]+$/.test(value)) return 'Only letters, numbers, and underscores';
+        return '';
+        
+      case 'email':
+        if (!value) return 'Email is required';
+        if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(value)) return 'Invalid email format';
+        return '';
+        
+      case 'age':
+        if (!value) return 'Age is required';
+        const ageNum = parseInt(value);
+        if (isNaN(ageNum)) return 'Must be a number';
+        if (ageNum < 18) return 'Must be 18 or older';
+        if (ageNum > 120) return 'Enter a valid age';
+        return '';
+        
+      default:
+        return '';
+    }
+  };
+
+  // Update errors when form data changes
+  useEffect(() => {
+    const newErrors: Record<string, string> = {};
+    Object.keys(formData).forEach(key => {
+      if (touched[key]) {
+        const error = validateField(key, formData[key as keyof typeof formData]);
+        if (error) newErrors[key] = error;
+      }
+    });
+    setErrors(newErrors);
+  }, [formData, touched]);
+
+  const handleBlur = (field: string) => {
+    setTouched(prev => ({ ...prev, [field]: true }));
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const isFormValid = () => {
+    return Object.keys(formData).every(
+      key => !validateField(key, formData[key as keyof typeof formData])
+    );
+  };
+
+ 

@@ -1,0 +1,355 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-vue-113",
+    "track": "vue",
+    "lessonNum": 113,
+    "title": "OAuth2 PKCE Flow in a SPA",
+    "shortName": "P113",
+    "intro": {
+      "tag": "LESSON #113",
+      "title": "OAuth2 PKCE Flow in a SPA",
+      "body": "In this lesson, you will build a simple Vue.js single-page application (SPA) that securely logs a user in using the OAuth2 Proof Key for Code Exchange (PKCE) flow. You will learn the core concept of generating and exchanging cryptographic codes to protect against authorization code interception attacks. The main technologies involved are Vue's Composition API for reactive state management, the Web Crypto API for generating secure random values, and the browser's fetch API for making HTTP requests. By the end, you'll understand how to implement a secure, standards-compliant authentication flow in a client-side Vue app.",
+      "usecase": "The OAuth2 PKCE flow is essential for securing single-page applications that integrate with third-party services. You'll implement this pattern when building SPAs that require user authentication with platforms like Google, GitHub, or Microsoft—common in dashboards, admin panels, and data visualization tools. For example, a financial analytics SPA might use PKCE to securely connect users' bank accounts via Plaid without exposing credentials. This flow ensures that even if authorization codes are intercepted, they cannot be exchanged for tokens without the code verifier generated in your Vue app."
+    },
+    "objectives": [
+      "Construct a Vue component that initializes the OAuth2 PKCE authorization flow",
+      "Implement the code verifier and code challenge generation required for PKCE security",
+      "Configure the redirect URI and state parameters for secure OAuth2 callback handling",
+      "Integrate the authorization code exchange with your Vue application's token management",
+      "Manipulate the browser's location API to redirect users to the authorization endpoint",
+      "Apply token validation and storage within Vue's reactive state system",
+      "Control the application's authentication state using Vue's composition API"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 10",
+        "title": "Import Vue and required composition APIs (ref, onMounted)",
+        "instruction": "Import Vue, ref, and onMounted from the 'vue' package.",
+        "hint": "Use the import statement to bring in the necessary Vue composition APIs for this lesson.",
+        "analogousExample": "// Example: importing multiple items from a package\nimport { ref, computed } from 'vue'",
+        "seedCode": "// Import Vue, ref, and onMounted from 'vue'\n\n// Your component will go here",
+        "expectedOutcome": "The Vue composition APIs (ref and onMounted) are imported and ready to use in your component.",
+        "successCriteria": [
+          "Vue, ref, and onMounted are imported from 'vue'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You imported some items, but make sure to import Vue, ref, and onMounted from 'vue'.",
+        "feedbackWrong": "Check the import statement. You need to import Vue, ref, and onMounted from 'vue'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "vue",
+            "ref",
+            "onMounted",
+            "from",
+            "'vue'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 10",
+        "title": "Create the main Vue component structure",
+        "instruction": "Create a Vue component named OAuthPKCEFlow that uses the setup() function and returns an empty object.",
+        "hint": "In Vue 3, you can define a component with a setup function that returns an object containing data or methods to be used in the template.",
+        "analogousExample": "// Example of a Vue component with setup()\nconst MyComponent = {\n  setup() {\n    return {};\n  }\n};",
+        "seedCode": "// Import Vue, ref, and onMounted from 'vue'\n\n// Your component will go here\nconst OAuthPKCEFlow = {\n  setup() {\n    // Return an empty object for now\n    return {};\n  }\n};",
+        "expectedOutcome": "A Vue component named OAuthPKCEFlow is created with a setup() function that returns an empty object.",
+        "successCriteria": [
+          "The component OAuthPKCEFlow is defined with a setup() function that returns an empty object."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure the component is named OAuthPKCEFlow and has a setup() function that returns an empty object.",
+        "feedbackWrong": "The component structure is missing or incorrect. Please create a Vue component named OAuthPKCEFlow with a setup() function that returns an empty object.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "OAuthPKCEFlow",
+            "setup()",
+            "return",
+            "{}"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 10",
+        "title": "Initialize reactive state for authentication status",
+        "instruction": "Inside the setup() function, use ref() to create a reactive state variable named isAuthenticated and initialize it to false.",
+        "hint": "Remember to call ref() with the initial value false and assign it to a variable.",
+        "analogousExample": "// Creating reactive state with ref\nconst count = ref(0);",
+        "seedCode": "// Import Vue, ref, and onMounted from 'vue'\n\n// Your component will go here\nconst OAuthPKCEFlow = {\n  setup() {\n    // Use ref() to create isAuthenticated state here\n    \n    // Return an empty object for now\n    return {};\n  }\n};",
+        "expectedOutcome": "The component will have a reactive isAuthenticated state variable initialized to false.",
+        "successCriteria": [
+          "The setup() function contains a ref() call that creates isAuthenticated with initial value false."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're using ref() and initializing isAuthenticated to false.",
+        "feedbackWrong": "Check that you're using ref() inside setup() to create isAuthenticated with initial value false.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "isAuthenticated",
+            "ref",
+            "false"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 10",
+        "title": "Initialize reactive state for authorization code",
+        "instruction": "Inside the setup function, use ref() to create a reactive state variable named authCode and initialize it to an empty string.",
+        "hint": "You'll need to call ref('') and assign it to a variable named authCode.",
+        "analogousExample": "// Creating reactive state for a message\nconst message = ref('');",
+        "seedCode": "// Import Vue, ref, and onMounted from 'vue'\n\n// Your component will go here\nconst OAuthPKCEFlow = {\n  setup() {\n    // Use ref() to create isAuthenticated state here\n    \n    // Use ref() to create authCode state here\n    \n    // Return an empty object for now\n    return {};\n  }\n};",
+        "expectedOutcome": "The component will have a reactive authCode state variable initialized to an empty string.",
+        "successCriteria": [
+          "A variable named authCode is declared using ref('') inside the setup function."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're using ref('') to create the authCode variable inside the setup function.",
+        "feedbackWrong": "The authCode state variable wasn't created correctly. Remember to use ref('') to create a reactive variable named authCode inside the setup function.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "authCode",
+            "ref",
+            "''"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 10",
+        "title": "Define helper function to generate code verifier",
+        "instruction": "Inside the setup function, create a function named generateCodeVerifier that returns a random string for the PKCE code verifier.",
+        "hint": "You can create a function inside setup() just like any other JavaScript function. Use Math.random() and base64 encoding to generate a secure random string.",
+        "analogousExample": "// Example: a helper function inside setup\nfunction generateRandomId() {\n  return Math.random().toString(36).substring(2);\n}",
+        "seedCode": "// Import Vue, ref, and onMounted from 'vue'\n\n// Your component will go here\nconst OAuthPKCEFlow = {\n  setup() {\n    // Use ref() to create isAuthenticated state here\n    \n    // Use ref() to create authCode state here\n    \n    // Use ref() to create accessToken state here\n    \n    // Define generateCodeVerifier function here\n    \n    // Return an empty object for now\n    return {};\n  }\n};",
+        "expectedOutcome": "The setup function now contains a generateCodeVerifier function that returns a random string.",
+        "successCriteria": [
+          "The generateCodeVerifier function is defined inside setup() and returns a string value."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added a function, but make sure it's named exactly 'generateCodeVerifier' and returns a string value.",
+        "feedbackWrong": "The generateCodeVerifier function is not properly defined. Create a function with that name that returns a random string.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "generateCodeVerifier",
+            "function",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 10",
+        "title": "Define helper function to generate code challenge",
+        "instruction": "Inside your component's setup function, create a function named generateCodeChallenge that takes a verifier parameter and returns a SHA256 hash of that verifier (for now, return a placeholder string).",
+        "hint": "Define the function after your existing generateCodeVerifier function. You can use a simple placeholder like 'code-challenge-placeholder' for now.",
+        "analogousExample": "// Example: another helper function\nfunction calculateHash(input) {\n  // Placeholder for actual hash logic\n  return 'hashed-' + input;\n}",
+        "seedCode": "// Import Vue, ref, and onMounted from 'vue'\n\n// Your component will go here\nconst OAuthPKCEFlow = {\n  setup() {\n    // Use ref() to create isAuthenticated state here\n    \n    // Use ref() to create authCode state here\n    \n    // Use ref() to create accessToken state here\n    \n    // Define generateCodeVerifier function here\n    \n    // Define generateCodeChallenge function here\n    \n    // Return an empty object for now\n    return {};\n  }\n};",
+        "expectedOutcome": "Your component now has a generateCodeChallenge function that will later compute the PKCE code challenge from the verifier.",
+        "successCriteria": [
+          "The generateCodeChallenge function is defined inside setup, takes a verifier parameter, and returns a string (placeholder)."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure you've defined a function named generateCodeChallenge that accepts a verifier parameter and returns a string.",
+        "feedbackWrong": "The generateCodeChallenge function is missing or incorrect. It should be defined inside setup and return a string value.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "generateCodeChallenge",
+            "function",
+            "verifier",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 10",
+        "title": "Define handler function to initiate OAuth login",
+        "instruction": "Inside the component's setup function, create a function named startLogin that will handle initiating the OAuth2 PKCE authorization flow.",
+        "hint": "Define the function inside setup() before the return statement. You can leave the function body empty for now.",
+        "analogousExample": "// Example of a function definition in Vue setup\nfunction handleClick() {\n  // Function logic goes here\n}",
+        "seedCode": "// Import Vue, ref, and onMounted from 'vue'\n\n// Your component will go here\nconst OAuthPKCEFlow = {\n  setup() {\n    // Use ref() to create isAuthenticated state here\n    \n    // Use ref() to create authCode state here\n    \n    // Use ref() to create accessToken state here\n    \n    // Define generateCodeVerifier function here\n    \n    // Define generateCodeChallenge function here\n    \n    // Define startLogin function here\n    \n    // Return an empty object for now\n    return {};\n  }\n};",
+        "expectedOutcome": "The component will have a startLogin function defined in its setup function, ready to be filled with OAuth flow logic.",
+        "successCriteria": [
+          "A function named startLogin is defined inside the setup function."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you've defined a function named startLogin inside the setup function.",
+        "feedbackWrong": "The startLogin function is not properly defined. Check that you've created a function with the correct name inside the setup function.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "startLogin",
+            "function"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 10",
+        "title": "Add onMounted lifecycle hook to check for authorization code",
+        "instruction": "Inside your component's setup function, add an onMounted lifecycle hook that checks the URL for an authorization code parameter and calls your exchangeCodeForToken function if found.",
+        "hint": "Use window.location.search to get URL parameters, then check for a parameter named 'code'. If it exists, call exchangeCodeForToken with that code value.",
+        "analogousExample": "// Example of using onMounted to check URL parameters\nonMounted(() => {\n  const params = new URLSearchParams(window.location.search);\n  const code = params.get('code');\n  if (code) {\n    // Call your exchange function here\n  }\n});",
+        "seedCode": "// Import Vue, ref, and onMounted from 'vue'\n\n// Your component will go here\nconst OAuthPKCEFlow = {\n  setup() {\n    // Use ref() to create isAuthenticated state here\n    \n    // Use ref() to create authCode state here\n    \n    // Use ref() to create accessToken state here\n    \n    // Define generateCodeVerifier function here\n    \n    // Define generateCodeChallenge function here\n    \n    // Define startLogin function here\n    \n    // Define exchangeCodeForToken function here\n    \n    // Add onMounted hook here\n    \n    // Return an empty object for now\n    return {};\n  }\n};",
+        "expectedOutcome": "The component will automatically check for an authorization code in the URL when it mounts, preparing to exchange it for an access token.",
+        "successCriteria": [
+          "An onMounted hook is added that checks URL parameters for 'code' and calls exchangeCodeForToken when found."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added onMounted, but make sure it checks for the 'code' parameter and calls exchangeCodeForToken when found.",
+        "feedbackWrong": "The onMounted hook should check URL parameters for an authorization code and call the exchange function.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "onMounted",
+            "window.location.search",
+            "URLSearchParams",
+            "get('code')",
+            "exchangeCodeForToken"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 10",
+        "title": "Create template structure with login button and authentication status",
+        "instruction": "In your component's setup return object, add a template property that returns a div container with conditional rendering: show a welcome message with the access token when authenticated, otherwise show a login button that calls startLogin.",
+        "hint": "Use a ternary operator in the template to conditionally render content based on isAuthenticated.value. The login button should have a click handler that calls startLogin.",
+        "analogousExample": "// Conditional rendering in Vue template\nreturn {\n  template: `\n    <div>\n      {{ isLoggedIn ? 'Welcome!' : 'Please log in' }}\n      <button v-if=\"!isLoggedIn\" @click=\"login\">Login</button>\n    </div>\n  `\n}",
+        "seedCode": "// Import Vue, ref, and onMounted from 'vue'\n\n// Your component will go here\nconst OAuthPKCEFlow = {\n  setup() {\n    // Use ref() to create isAuthenticated state here\n    \n    // Use ref() to create authCode state here\n    \n    // Use ref() to create accessToken state here\n    \n    // Define generateCodeVerifier function here\n    \n    // Define generateCodeChallenge function here\n    \n    // Define startLogin function here\n    \n    // Define exchangeCodeForToken function here\n    \n    // Add onMounted hook here\n    \n    // Return an empty object for now\n    return {};\n  }\n};",
+        "expectedOutcome": "The component will have a template that conditionally displays authentication status and a login button.",
+        "successCriteria": [
+          "Template property exists in return object with div container, conditional rendering based on isAuthenticated, welcome message with accessToken when authenticated, and login button with @click=\"startLogin\" when not authenticated."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but check that your template includes both conditional rendering for authentication status and a login button that calls startLogin.",
+        "feedbackWrong": "The template structure is missing or incomplete. Make sure to add a template property with conditional rendering and a login button.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "template:",
+            "isAuthenticated",
+            "accessToken",
+            "@click=\"startLogin\""
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 10",
+        "title": "Wire login button to startLogin handler and display tokens",
+        "instruction": "Add @click event binding to the login button that calls the startLogin function, and display the authCode and accessToken values in the template.",
+        "hint": "Use @click=\"startLogin\" on the button element, and use {{ authCode }} and {{ accessToken }} to display the reactive state values.",
+        "analogousExample": "// Similar: event binding and displaying reactive values\n<button @click=\"handleClick\">Click me</button>\n<p>Value: {{ someValue }}</p>",
+        "seedCode": "// Import Vue, ref, and onMounted from 'vue'\n\n// Your component will go here\nconst OAuthPKCEFlow = {\n  setup() {\n    // Use ref() to create isAuthenticated state here\n    \n    // Use ref() to create authCode state here\n    \n    // Use ref() to create accessToken state here\n    \n    // Define generateCodeVerifier function here\n    \n    // Define generateCodeChallenge function here\n    \n    // Define startLogin function here\n    \n    // Define exchangeCodeForToken function here\n    \n    // Add onMounted hook here\n    \n    // Return an empty object for now\n    return {};\n  },\n  template: `\n    <div>\n      <h1>OAuth2 PKCE Flow Demo</h1>\n      <p>Authentication Status: {{ isAuthenticated ? 'Authenticated' : 'Not Authenticated' }}</p>\n      <button>Login with OAuth</button>\n    </div>\n  `\n};",
+        "expectedOutcome": "The login button will trigger the OAuth flow when clicked, and the authorization code and access token will be visible in the UI.",
+        "successCriteria": [
+          "The login button has @click=\"startLogin\" event binding, and the template displays {{ authCode }} and {{ accessToken }} values."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure you've added both the @click event to the button AND displayed both authCode and accessToken values in the template.",
+        "feedbackWrong": "The login button isn't properly wired to startLogin, or the token values aren't displayed. Check that you've added @click=\"startLogin\" to the button and used {{ authCode }} and {{ accessToken }} in the template.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "@click=\"startLogin\"",
+            "{{ authCode }}",
+            "{{ accessToken }}"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import Vue and required composition APIs (ref, onMounted)",
+        "id": "step1"
+      },
+      {
+        "label": "Create the main Vue component structure",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize reactive state for authentication status",
+        "id": "step3"
+      },
+      {
+        "label": "Initialize reactive state for authorization code",
+        "id": "step4"
+      },
+      {
+        "label": "Define helper function to generate code verifier",
+        "id": "step5"
+      },
+      {
+        "label": "Define helper function to generate code challenge",
+        "id": "step6"
+      },
+      {
+        "label": "Define handler function to initiate OAuth login",
+        "id": "step7"
+      },
+      {
+        "label": "Add onMounted lifecycle hook to check for authorization code",
+        "id": "step8"
+      },
+      {
+        "label": "Create template structure with login button and authentication status",
+        "id": "step9"
+      },
+      {
+        "label": "Wire login button to startLogin handler and display tokens",
+        "id": "step10"
+      }
+    ]
+  },
+  "source": "content"
+}

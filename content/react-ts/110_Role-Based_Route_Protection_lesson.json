@@ -1,0 +1,438 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-react-ts-110",
+    "track": "react-ts",
+    "lessonNum": 110,
+    "title": "Role-Based Route Protection",
+    "shortName": "P110",
+    "intro": {
+      "tag": "LESSON #110",
+      "title": "Role-Based Route Protection",
+      "body": "In this lesson, you will build a simple React application that protects certain routes based on a user's role. You will learn how to conditionally render components and restrict navigation using role-based logic. The core concepts involve React Router for navigation and TypeScript for type-safe user roles. You'll create a basic user authentication simulation and implement a protected route component. By the end, you'll understand how to control access to different parts of your app based on user permissions.",
+      "usecase": "Role-based route protection is essential in applications where different users have different levels of access, such as enterprise dashboards, admin panels, or SaaS platforms. For example, in a project management tool, an admin might see all project settings and user management pages, while a regular team member only sees task boards and reports. This pattern ensures security and a tailored user experience by restricting UI components like navigation menus, data tables, or configuration forms based on user roles, preventing unauthorized access to sensitive features."
+    },
+    "objectives": [
+      "Implement a role-based authentication context to manage user roles globally",
+      "Construct protected route components that conditionally render based on user roles",
+      "Configure route definitions with role requirements using TypeScript interfaces",
+      "Integrate role checks within navigation components to control access",
+      "Apply conditional rendering logic to display appropriate UI for different user roles",
+      "Initialize and update role state within React components using hooks",
+      "Manipulate routing behavior programmatically based on authentication status"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 12",
+        "title": "Import React and required hooks",
+        "instruction": "Import React, useState, and createContext from 'react'.",
+        "hint": "Use the import statement to bring in the necessary modules from the 'react' package.",
+        "analogousExample": "// Importing React and hooks\nimport React, { useState, createContext } from 'react';",
+        "seedCode": "// Import React, useState, and createContext from 'react'",
+        "expectedOutcome": "The necessary imports for React components with state and context are added.",
+        "successCriteria": [
+          "React, useState, and createContext are imported from 'react'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're importing React, useState, and createContext from 'react'.",
+        "feedbackWrong": "import React, useState, and createContext from 'react'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "React",
+            "useState",
+            "createContext",
+            "'react'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 12",
+        "title": "Define user roles and authentication context types",
+        "instruction": "Create a TypeScript type alias named 'UserRole' that defines three possible string literal values: 'admin', 'user', and 'guest'.",
+        "hint": "Use the 'type' keyword followed by the type name and an equals sign. Then define the union of string literals using the pipe (|) operator.",
+        "analogousExample": "// Example: defining a type for status values\ntype Status = 'pending' | 'success' | 'error';",
+        "seedCode": "// Import React, useState, and createContext from 'react'\n\n// Create a TypeScript type alias named 'UserRole' that defines three possible string literal values: 'admin', 'user', and 'guest'.",
+        "expectedOutcome": "You will have a UserRole type that can only be one of three specific string values, providing type safety for role-based authentication.",
+        "successCriteria": [
+          "The UserRole type is defined with the three string literal values 'admin', 'user', and 'guest' using TypeScript union syntax."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you've defined all three role values ('admin', 'user', 'guest') using the pipe (|) operator for union types.",
+        "feedbackWrong": "The UserRole type definition is missing or incorrect. Remember to use the 'type' keyword and define a union of the three string literal values: 'admin', 'user', and 'guest'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "type",
+            "UserRole",
+            "'admin'",
+            "'user'",
+            "'guest'",
+            "|"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 12",
+        "title": "Create authentication context",
+        "instruction": "Create a React context named AuthContext using createContext. Provide a default value of null and explicitly type it to allow a user object with role property of type UserRole or null.",
+        "hint": "Use createContext to create a context. The type should be an object with role: UserRole or null. Set the initial value to null.",
+        "analogousExample": "// Creating a typed context\nconst ThemeContext = createContext<'light' | 'dark' | null>(null);",
+        "seedCode": "// Import React, useState, and createContext from 'react'\n\n// Create a TypeScript type alias named 'UserRole' that defines three possible string literal values: 'admin', 'user', and 'guest'.\n\ntype UserRole = 'admin' | 'user' | 'guest';\n\n// Create AuthContext here",
+        "expectedOutcome": "A typed AuthContext is created with proper TypeScript annotations and a default value of null.",
+        "successCriteria": [
+          "AuthContext is created using createContext with type { role: UserRole } | null and default value null."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You created a context, but check the type annotation or default value.",
+        "feedbackWrong": "The AuthContext is missing or incorrectly typed. Ensure it uses createContext with the correct type.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "AuthContext",
+            "createContext",
+            "UserRole",
+            "null"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 12",
+        "title": "Create AuthProvider component",
+        "instruction": "Create a functional component named AuthProvider that takes children as props and returns a wrapper element.",
+        "hint": "Define a component that accepts props and returns JSX. You'll need to wrap children in a provider element later.",
+        "analogousExample": "// Example: a wrapper component\nfunction Container({ children }) {\n  return <div>{children}</div>;\n}",
+        "seedCode": "import React, { useState, createContext } from 'react';\n\ntype UserRole = 'admin' | 'user' | 'guest';\n\n// Create AuthProvider component here\n",
+        "expectedOutcome": "A functional component named AuthProvider is defined with props and a return statement.",
+        "successCriteria": [
+          "AuthProvider component is created as a functional component that accepts children props and returns JSX."
+        ],
+        "feedbackCorrect": "Great! You've created the AuthProvider component structure.",
+        "feedbackPartial": "You've started the component, but make sure it accepts children props and returns JSX.",
+        "feedbackWrong": "The component isn't defined correctly. Create a functional component named AuthProvider that takes children and returns JSX.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "AuthProvider",
+            "children",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 12",
+        "title": "Create useAuth custom hook",
+        "instruction": "Create a custom hook named 'useAuth' that returns the authentication context value. The hook should throw an error if used outside of AuthProvider.",
+        "hint": "Use the useContext hook to access the authentication context. Check if the context value is undefined to determine if it's being used outside the provider.",
+        "analogousExample": "// Example custom hook for accessing context\nfunction useTheme() {\n  const theme = useContext(ThemeContext);\n  if (theme === undefined) {\n    throw new Error('useTheme must be used within a ThemeProvider');\n  }\n  return theme;\n}",
+        "seedCode": "import React, { useState, createContext } from 'react';\n\ntype UserRole = 'admin' | 'user' | 'guest';\n\n// Create AuthProvider component here\n\n// Create useAuth custom hook here",
+        "expectedOutcome": "A custom hook named 'useAuth' is created that provides access to the authentication context with proper error handling.",
+        "successCriteria": [
+          "The useAuth hook is defined, uses useContext to access the authentication context, includes error handling for usage outside the provider, and returns the context value."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've created a custom hook, but it might be missing error handling or proper context access. Make sure to use useContext and check if the context value is undefined.",
+        "feedbackWrong": "The useAuth hook isn't properly implemented. Remember to create a function named 'useAuth' that uses useContext to access the authentication context and includes error handling.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "useAuth",
+            "useContext",
+            "throw",
+            "error",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 12",
+        "title": "Create ProtectedRoute component with role checking",
+        "instruction": "Create a functional component named ProtectedRoute that takes props: allowedRoles (array of UserRole) and children (ReactNode). Use the useAuth hook to get the current user role and conditionally render children only if the user's role is included in allowedRoles.",
+        "hint": "Define the component with proper TypeScript props interface. Inside, call useAuth() to get userRole, then check if userRole exists and is in allowedRoles. Return children if allowed, otherwise null or a fallback message.",
+        "analogousExample": "// Example: A wrapper component with conditional rendering\nfunction ProtectedContent({ allowed, children }: { allowed: boolean; children: React.ReactNode }) {\n  if (!allowed) return null;\n  return <>{children}</>;\n}",
+        "seedCode": "import React, { useState, createContext } from 'react';\n\ntype UserRole = 'admin' | 'user' | 'guest';\n\n// Create AuthProvider component here\n\n// Create useAuth custom hook here\n\n// Create ProtectedRoute component here",
+        "expectedOutcome": "A ProtectedRoute component is defined that uses useAuth to check the user's role against allowedRoles and conditionally renders its children.",
+        "successCriteria": [
+          "ProtectedRoute component is defined",
+          "It accepts allowedRoles and children props with correct types",
+          "It uses useAuth to get userRole",
+          "It conditionally renders children based on role check"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure the component uses useAuth and checks if userRole is in allowedRoles before rendering children.",
+        "feedbackWrong": "The ProtectedRoute component is missing or incorrect. Ensure it's a functional component that takes allowedRoles and children props, uses useAuth, and conditionally renders based on role.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "ProtectedRoute",
+            "allowedRoles",
+            "children",
+            "useAuth",
+            "userRole",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 12",
+        "title": "Implement role-based redirect logic",
+        "instruction": "Inside the ProtectedRoute component, add logic that redirects unauthorized users to a login page when they lack the required role. Use the useAuth hook to get the current user and check if their role matches the required role prop.",
+        "hint": "You can use conditional rendering with a ternary operator. If the user's role doesn't match the required role, return a redirect component (like a Navigate component from react-router-dom) to '/login'.",
+        "analogousExample": "// Example: role-based conditional redirect\nfunction ProtectedPage({ requiredRole }) {\n  const { user } = useAuth();\n  \n  if (user?.role !== requiredRole) {\n    return <Navigate to=\"/unauthorized\" />;\n  }\n  \n  return <div>Protected content</div>;\n}",
+        "seedCode": "import React, { useState, createContext } from 'react';\n\ntype UserRole = 'admin' | 'user' | 'guest';\n\n// Create AuthProvider component here\n\n// Create useAuth custom hook here\n\n// Create ProtectedRoute component here\nfunction ProtectedRoute({ children, requiredRole }: { children: React.ReactNode; requiredRole: UserRole }) {\n  // Add role-based redirect logic here\n  return (\n    <>\n      {children}\n    </>\n  );\n}",
+        "expectedOutcome": "The ProtectedRoute component will now redirect users who don't have the required role to the login page, while allowing authorized users to see the protected content.",
+        "successCriteria": [
+          "ProtectedRoute component contains logic that checks the user's role against requiredRole and redirects to '/login' when they don't match"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're using the useAuth hook to get the current user and comparing their role with the requiredRole prop. Also ensure you're returning a redirect when the roles don't match.",
+        "feedbackWrong": "The redirect logic isn't implemented correctly. Remember to use the useAuth hook to access the current user, check if their role matches the requiredRole prop, and return a redirect to '/login' when they don't match.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "useAuth",
+            "requiredRole",
+            "user?.role",
+            "Navigate",
+            "\"/login\""
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 12",
+        "title": "Create login component with role selection",
+        "instruction": "Create a functional component named Login that returns a div containing three buttons with labels 'Login as Admin', 'Login as User', and 'Login as Guest'.",
+        "hint": "Define a new component that returns JSX with three button elements. Use the button text exactly as given in the instruction.",
+        "analogousExample": "// Example of a simple component returning buttons\nfunction ButtonGroup() {\n  return (\n    <div>\n      <button>Option 1</button>\n      <button>Option 2</button>\n      <button>Option 3</button>\n    </div>\n  );\n}",
+        "seedCode": "import React, { useState, createContext } from 'react';\n\ntype UserRole = 'admin' | 'user' | 'guest';\n\n// Create AuthProvider component here\n\n// Create useAuth custom hook here\n\n// Create ProtectedRoute component here\nfunction ProtectedRoute({ children, requiredRole }: { children: React.ReactNode; requiredRole: UserRole }) {\n  // Add role-based redirect logic here\n  return (\n    <>\n      {children}\n    </>\n  );\n}\n\n// Create Login component here\n",
+        "expectedOutcome": "A new Login component is defined with three buttons for role selection.",
+        "successCriteria": [
+          "The Login component is defined and returns a div containing three buttons with the exact labels: 'Login as Admin', 'Login as User', and 'Login as Guest'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the Login component, but make sure it returns a div with exactly three buttons labeled 'Login as Admin', 'Login as User', and 'Login as Guest'.",
+        "feedbackWrong": "The Login component is missing or doesn't match the required structure. Create a functional component named Login that returns a div with three buttons for role selection.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "Login",
+            "return",
+            "div",
+            "button",
+            "Login as Admin",
+            "Login as User",
+            "Login as Guest"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 12",
+        "title": "Wire login component to authentication context",
+        "instruction": "Inside the Login component, add an onClick handler to each role selection button that calls the login function from the useAuth hook with the corresponding role.",
+        "hint": "Use the useAuth hook to get the login function, then call it with the role string when a button is clicked.",
+        "analogousExample": "// Example: wiring a button to a context function\nfunction ExampleComponent() {\n  const { someAction } = useSomeContext();\n  \n  return (\n    <button onClick={() => someAction('value')}>\n      Perform Action\n    </button>\n  );\n}",
+        "seedCode": "import React, { useState, createContext } from 'react';\n\ntype UserRole = 'admin' | 'user' | 'guest';\n\n// Create AuthProvider component here\n\n// Create useAuth custom hook here\n\n// Create ProtectedRoute component here\nfunction ProtectedRoute({ children, requiredRole }: { children: React.ReactNode; requiredRole: UserRole }) {\n  // Add role-based redirect logic here\n  return (\n    <>\n      {children}\n    </>\n  );\n}\n\n// Create Login component here\nfunction Login() {\n  // Add onClick handlers to buttons here\n  return (\n    <div>\n      <h2>Login</h2>\n      <button>Login as Admin</button>\n      <button>Login as User</button>\n      <button>Login as Guest</button>\n    </div>\n  );\n}",
+        "expectedOutcome": "Each login button will trigger authentication with the appropriate role when clicked.",
+        "successCriteria": [
+          "All three buttons have onClick handlers that call the login function with 'admin', 'user', and 'guest' roles respectively."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added some onClick handlers, but make sure all three buttons are wired correctly with the proper role arguments.",
+        "feedbackWrong": "The login buttons aren't properly connected to the authentication context yet. Remember to use the useAuth hook and call login with the role parameter.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "useAuth",
+            "login",
+            "onClick",
+            "'admin'",
+            "'user'",
+            "'guest'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 12",
+        "title": "Create role-specific content components",
+        "instruction": "Create a functional component named AdminDashboard that returns a heading with the text 'Admin Dashboard'.",
+        "hint": "Define a function called AdminDashboard that returns JSX with an <h1> element containing the dashboard title.",
+        "analogousExample": "// Similar: a component that returns a heading\nfunction UserProfile() {\n  return <h1>User Profile</h1>;\n}",
+        "seedCode": "import React, { useState, createContext } from 'react';\n\ntype UserRole = 'admin' | 'user' | 'guest';\n\n// Create AuthProvider component here\n\n// Create useAuth custom hook here\n\n// Create ProtectedRoute component here\nfunction ProtectedRoute({ children, requiredRole }: { children: React.ReactNode; requiredRole: UserRole }) {\n  // Add role-based redirect logic here\n  return (\n    <>\n      {children}\n    </>\n  );\n}\n\n// Create Login component here\nfunction Login() {\n  // Add onClick handlers to buttons here\n  return (\n    <div>\n      <h2>Login</h2>\n      <button>Login as Admin</button>\n      <button>Login as User</button>\n      <button>Login as Guest</button>\n    </div>\n  );\n}\n\n// Create AdminDashboard component here\n",
+        "expectedOutcome": "You will have an AdminDashboard component that displays a heading for the admin dashboard.",
+        "successCriteria": [
+          "The AdminDashboard component is defined and returns an <h1> with the text 'Admin Dashboard'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the AdminDashboard component, but make sure it returns an <h1> element with the exact text 'Admin Dashboard'.",
+        "feedbackWrong": "The AdminDashboard component is missing or doesn't return the correct heading. Create a function named AdminDashboard that returns <h1>Admin Dashboard</h1>.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "AdminDashboard",
+            "return",
+            "<h1>",
+            "Admin Dashboard"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 12",
+        "title": "Set up route structure with ProtectedRoute",
+        "instruction": "Create a new component named App that wraps the AdminDashboard component with ProtectedRoute, specifying 'admin' as the requiredRole.",
+        "hint": "Create a functional component that returns ProtectedRoute with the requiredRole prop set to 'admin' and AdminDashboard as its children.",
+        "analogousExample": "// Example: wrapping a component with a higher-order component\nfunction App() {\n  return (\n    <ProtectedRoute requiredRole=\"admin\">\n      <AdminDashboard />\n    </ProtectedRoute>\n  );\n}",
+        "seedCode": "import React, { useState, createContext } from 'react';\n\ntype UserRole = 'admin' | 'user' | 'guest';\n\n// Create AuthProvider component here\n\n// Create useAuth custom hook here\n\n// Create ProtectedRoute component here\nfunction ProtectedRoute({ children, requiredRole }: { children: React.ReactNode; requiredRole: UserRole }) {\n  // Add role-based redirect logic here\n  return (\n    <>\n      {children}\n    </>\n  );\n}\n\n// Create Login component here\nfunction Login() {\n  // Add onClick handlers to buttons here\n  return (\n    <div>\n      <h2>Login</h2>\n      <button>Login as Admin</button>\n      <button>Login as User</button>\n      <button>Login as Guest</button>\n    </div>\n  );\n}\n\n// Create AdminDashboard component here\n\n// Create App component here\n",
+        "expectedOutcome": "The App component will be created with ProtectedRoute wrapping AdminDashboard, establishing the route protection structure.",
+        "successCriteria": [
+          "App component exists and returns ProtectedRoute with requiredRole=\"admin\" and AdminDashboard as children."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure your App component returns ProtectedRoute with the correct props and AdminDashboard as children.",
+        "feedbackWrong": "The App component should wrap AdminDashboard with ProtectedRoute and specify 'admin' as the requiredRole.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "function App()",
+            "ProtectedRoute",
+            "requiredRole=\"admin\"",
+            "<AdminDashboard />"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step12",
+        "type": "question",
+        "phase": "Step 12 of 12",
+        "title": "Test the role-based protection flow",
+        "instruction": "In the App component, add a simple test message that displays the current user role and login status.",
+        "hint": "You can access the authentication context using the useAuth hook and display the user's role and login status in a paragraph.",
+        "analogousExample": "// Example: Displaying user information in a component\nfunction UserInfo() {\n  const { user } = useAuth();\n  return (\n    <div>\n      <p>Logged in: {user ? 'Yes' : 'No'}</p>\n      <p>Role: {user?.role || 'None'}</p>\n    </div>\n  );\n}",
+        "seedCode": "import React, { useState, createContext } from 'react';\n\ntype UserRole = 'admin' | 'user' | 'guest';\n\n// Create AuthProvider component here\n\n// Create useAuth custom hook here\n\n// Create ProtectedRoute component here\nfunction ProtectedRoute({ children, requiredRole }: { children: React.ReactNode; requiredRole: UserRole }) {\n  // Add role-based redirect logic here\n  return (\n    <>\n      {children}\n    </>\n  );\n}\n\n// Create Login component here\nfunction Login() {\n  // Add onClick handlers to buttons here\n  return (\n    <div>\n      <h2>Login</h2>\n      <button>Login as Admin</button>\n      <button>Login as User</button>\n      <button>Login as Guest</button>\n    </div>\n  );\n}\n\n// Create AdminDashboard component here\n\n// Create App component here\nfunction App() {\n  // Add test message here\n  return (\n    <div>\n      <h1>Role-Based Route Protection</h1>\n    </div>\n  );\n}",
+        "expectedOutcome": "The App component will display the current user's role and login status, allowing you to verify the authentication flow works correctly.",
+        "successCriteria": [
+          "The App component uses the useAuth hook to display the current user role and login status in a paragraph element."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're using the useAuth hook to access the authentication context and displaying both the login status and user role.",
+        "feedbackWrong": "The test message isn't displaying the authentication state correctly. Remember to use the useAuth hook to get the current user and show both whether they're logged in and their role.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "useAuth",
+            "user",
+            "role",
+            "Logged in",
+            "paragraph",
+            "App"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import React and required hooks",
+        "id": "step1"
+      },
+      {
+        "label": "Define user roles and authentication context types",
+        "id": "step2"
+      },
+      {
+        "label": "Create authentication context",
+        "id": "step3"
+      },
+      {
+        "label": "Create AuthProvider component",
+        "id": "step4"
+      },
+      {
+        "label": "Create useAuth custom hook",
+        "id": "step5"
+      },
+      {
+        "label": "Create ProtectedRoute component with role checking",
+        "id": "step6"
+      },
+      {
+        "label": "Implement role-based redirect logic",
+        "id": "step7"
+      },
+      {
+        "label": "Create login component with role selection",
+        "id": "step8"
+      },
+      {
+        "label": "Wire login component to authentication context",
+        "id": "step9"
+      },
+      {
+        "label": "Create role-specific content components",
+        "id": "step10"
+      },
+      {
+        "label": "Set up route structure with ProtectedRoute",
+        "id": "step11"
+      },
+      {
+        "label": "Test the role-based protection flow",
+        "id": "step12"
+      }
+    ]
+  },
+  "source": "content"
+}

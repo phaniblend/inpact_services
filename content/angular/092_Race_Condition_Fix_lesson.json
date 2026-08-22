@@ -1,0 +1,324 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-angular-92",
+    "track": "angular",
+    "lessonNum": 92,
+    "title": "Race Condition Fix",
+    "shortName": "P92",
+    "intro": {
+      "tag": "LESSON #92",
+      "title": "Race Condition Fix",
+      "body": "In this lesson, you will build a simple Angular application that fetches and displays a list of users from a mock API. You will learn how to fix a race condition, a common bug where the order of asynchronous operations can cause unpredictable results. Using Angular's HttpClient and RxJS operators like switchMap, you will ensure that only the latest API request is processed. This beginner-friendly project will help you understand how to manage asynchronous data flows safely in real-world applications.",
+      "usecase": "Race conditions frequently occur in Angular applications when multiple asynchronous operations compete for shared resources, such as data fetching in dashboards with real-time updates. For example, when users rapidly change filters on an analytics dashboard, multiple HTTP requests may be sent, and later responses can overwrite newer data, displaying incorrect metrics. Similarly, in e-commerce product listings, clicking different category filters in quick succession can cause the wrong products to appear. Developers must implement cancellation patterns or state tracking to ensure only the most relevant data updates the UI, preventing confusing user experiences."
+    },
+    "objectives": [
+      "Implement a service that fetches data using Angular's HttpClient",
+      "Apply the switchMap operator to cancel outdated HTTP requests",
+      "Construct a component that subscribes to an observable data stream",
+      "Configure a template to display data conditionally with *ngIf",
+      "Update component state to reflect loading and error conditions",
+      "Bind user input events to trigger data fetching",
+      "Control observable subscriptions to prevent memory leaks",
+      "Initialize a search interface that handles rapid user input without race conditions"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 8",
+        "title": "Import Component, OnInit, and HttpClient from Angular core",
+        "instruction": "Import Component and OnInit from '@angular/core' and HttpClient from '@angular/common/http'.",
+        "hint": "Use the import statement with curly braces to import multiple symbols from the same module.",
+        "analogousExample": "// Example: importing multiple Angular modules\nimport { Component, OnInit } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';",
+        "seedCode": {
+          "App.tsx": "// Import Component and OnInit from '@angular/core'\n// Import HttpClient from '@angular/common/http'",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "The necessary Angular modules for creating components and making HTTP requests are imported.",
+        "successCriteria": [
+          "Component and OnInit are imported from '@angular/core', and HttpClient is imported from '@angular/common/http'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're importing Component and OnInit from '@angular/core' and HttpClient from '@angular/common/http'.",
+        "feedbackWrong": "The imports are not correct. Please import Component and OnInit from '@angular/core' and HttpClient from '@angular/common/http'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "Component",
+            "OnInit",
+            "@angular/core",
+            "HttpClient",
+            "@angular/common/http"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 8",
+        "title": "Create the main RaceConditionFixComponent class",
+        "instruction": "Create a component class named RaceConditionFixComponent that implements the OnInit interface.",
+        "hint": "Use the @Component decorator above the class and include the necessary imports from '@angular/core'.",
+        "analogousExample": "// Example: a basic Angular component class\n@Component({\n  selector: 'app-example',\n  template: '<p>Example component</p>'\n})\nexport class ExampleComponent implements OnInit {\n  constructor() {}\n  ngOnInit(): void {}\n}",
+        "seedCode": {
+          "App.tsx": "import { Component, OnInit } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\n\n// Create the RaceConditionFixComponent class here\n",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "A component class named RaceConditionFixComponent is created with the OnInit interface implemented.",
+        "successCriteria": [
+          "The RaceConditionFixComponent class is defined with @Component decorator and implements OnInit."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure your class has the @Component decorator and implements OnInit.",
+        "feedbackWrong": "The component class isn't quite right. Check that you've used @Component and implemented OnInit.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "@Component",
+            "RaceConditionFixComponent",
+            "implements",
+            "OnInit",
+            "ngOnInit"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 8",
+        "title": "Add HttpClient to the component constructor",
+        "instruction": "Inside the RaceConditionFixComponent class, add a constructor that accepts a parameter of type HttpClient and assigns it to a private property.",
+        "hint": "Use dependency injection by declaring a constructor with a parameter typed as HttpClient. Make it private so it's available throughout the component.",
+        "analogousExample": "// Similar: injecting a service in a component constructor\nconstructor(private http: HttpClient) {}",
+        "seedCode": {
+          "App.tsx": "import { Component, OnInit } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\n\n// Create the RaceConditionFixComponent class here\nexport class RaceConditionFixComponent implements OnInit {\n  \n  constructor() {}\n  \n  ngOnInit() {}\n}",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "The component will have a constructor that properly injects HttpClient for making API calls.",
+        "successCriteria": [
+          "The constructor has a private parameter of type HttpClient."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure the HttpClient parameter is properly typed and marked as private.",
+        "feedbackWrong": "Check the constructor syntax. You need to declare a parameter with type HttpClient and make it private.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "constructor",
+            "private",
+            "HttpClient"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 8",
+        "title": "Initialize state properties in ngOnInit",
+        "instruction": "Inside the ngOnInit method, set the initial values for userData and isLoading. Set userData to null and isLoading to false.",
+        "hint": "Use 'this' keyword to access the component's properties and assign values directly in the ngOnInit method.",
+        "analogousExample": "// Example: initializing state in ngOnInit\nngOnInit() {\n  this.someData = null;\n  this.isLoading = false;\n}",
+        "seedCode": {
+          "App.tsx": "import { Component, OnInit } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\n\n// Create the RaceConditionFixComponent class here\nexport class RaceConditionFixComponent implements OnInit {\n  \n  // Add userData and isLoading properties here\n  \n  constructor() {}\n  \n  ngOnInit() {\n    // Initialize userData to null and isLoading to false here\n  }\n}",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "The ngOnInit method will initialize the component's state properties when the component loads.",
+        "successCriteria": [
+          "The ngOnInit method contains assignments setting this.userData to null and this.isLoading to false."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're setting both properties: userData to null and isLoading to false inside ngOnInit.",
+        "feedbackWrong": "The ngOnInit method should initialize both state properties. Try setting this.userData = null and this.isLoading = false inside the ngOnInit method.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "ngOnInit",
+            "this.userData",
+            "null",
+            "this.isLoading",
+            "false"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 8",
+        "title": "Add a button to trigger the problematic fetch",
+        "instruction": "In the component's template, add a button element with the text 'Fetch User' and bind its click event to the fetchUserData method.",
+        "hint": "Use Angular's event binding syntax (eventName)=\"methodName()\" for the click event.",
+        "analogousExample": "<!-- Similar: button with click handler -->\n<button (click)=\"handleClick()\">Click Me</button>",
+        "seedCode": {
+          "App.tsx": "import { Component, OnInit } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\n\n@Component({\n  selector: 'app-race-condition-fix',\n  template: `\n    <!-- Add button here -->\n  `,\n  styleUrls: ['./race-condition-fix.component.css']\n})\nexport class RaceConditionFixComponent implements OnInit {\n  userData: any = null;\n  isLoading: boolean = false;\n\n  constructor(private http: HttpClient) {}\n\n  ngOnInit() {\n    this.userData = null;\n    this.isLoading = false;\n  }\n\n  fetchUserData() {\n    this.isLoading = true;\n    this.http.get('https://jsonplaceholder.typicode.com/users/1').subscribe(data => {\n      this.userData = data;\n      this.isLoading = false;\n    });\n  }\n}",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "A button appears in the UI that, when clicked, triggers the fetchUserData method to demonstrate the race condition issue.",
+        "successCriteria": [
+          "The template contains a button element with text 'Fetch User' and its click event is bound to fetchUserData using (click)=\"fetchUserData()\"."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure the button has the correct text 'Fetch User' and the click event is properly bound to fetchUserData using Angular's event binding syntax.",
+        "feedbackWrong": "The button isn't properly configured. Check that you've added a button element with the correct text and click event binding.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<button",
+            "(click)=\"fetchUserData()\"",
+            "Fetch User"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 8",
+        "title": "Display user data and loading state in the template",
+        "instruction": "Inside the component's template, add conditional rendering to display user data when available and show a loading message while isLoading is true. Use Angular's *ngIf directive to conditionally render elements.",
+        "hint": "Use *ngIf to show different UI elements based on the isLoading and userData state properties. Remember to use property binding syntax for *ngIf.",
+        "analogousExample": "// Example: conditional rendering with *ngIf\n<div *ngIf=\"isLoading\">\n  <p>Loading...</p>\n</div>\n<div *ngIf=\"!isLoading && userData\">\n  <p>{{ userData.name }}</p>\n</div>",
+        "seedCode": {
+          "App.tsx": "import { Component, OnInit } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\n\n@Component({\n  selector: 'app-race-condition-fix',\n  template: `\n    <button (click)=\"fetchUserData()\">Fetch User Data</button>\n    <!-- Add conditional rendering here -->\n  `,\n  styleUrls: ['./race-condition-fix.component.css']\n})\nexport class RaceConditionFixComponent implements OnInit {\n  userData: any = null;\n  isLoading: boolean = false;\n\n  constructor(private http: HttpClient) {}\n\n  ngOnInit() {\n    this.userData = null;\n    this.isLoading = false;\n  }\n\n  fetchUserData() {\n    this.isLoading = true;\n    this.http.get('https://jsonplaceholder.typicode.com/users/1').subscribe(data => {\n      this.userData = data;\n      this.isLoading = false;\n    });\n  }\n}",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "The template will display a loading message when data is being fetched and show user data (like name or email) when available.",
+        "successCriteria": [
+          "Template uses *ngIf to conditionally show loading message and user data properties based on isLoading and userData state."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're using *ngIf correctly and displaying both loading state and user data properties.",
+        "feedbackWrong": "The template doesn't properly conditionally render based on isLoading and userData. Review how to use *ngIf with Angular's template syntax.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "*ngIf",
+            "isLoading",
+            "userData",
+            "{{",
+            "}}"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 8",
+        "title": "Implement race condition fix using request cancellation",
+        "instruction": "Modify the fetchUserData method to store the subscription in a property and unsubscribe from any previous subscription before making a new request.",
+        "hint": "Create a property to hold the subscription, check if it exists before making a new request, and unsubscribe from it.",
+        "analogousExample": "// Similar: Managing subscriptions in Angular\nprivate userSubscription: Subscription;\n\nfetchData() {\n  if (this.userSubscription) {\n    this.userSubscription.unsubscribe();\n  }\n  this.userSubscription = this.http.get('url').subscribe(data => {\n    // handle data\n  });\n}",
+        "seedCode": {
+          "App.tsx": "import { Component, OnInit } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\n\n@Component({\n  selector: 'app-race-condition-fix',\n  template: `\n    <button (click)=\"fetchUserData()\">Fetch User Data</button>\n    <!-- Add conditional rendering here -->\n  `,\n  styleUrls: ['./race-condition-fix.component.css']\n})\nexport class RaceConditionFixComponent implements OnInit {\n  userData: any = null;\n  isLoading: boolean = false;\n\n  constructor(private http: HttpClient) {}\n\n  ngOnInit() {\n    this.userData = null;\n    this.isLoading = false;\n  }\n\n  fetchUserData() {\n    this.isLoading = true;\n    this.http.get('https://jsonplaceholder.typicode.com/users/1').subscribe(data => {\n      this.userData = data;\n      this.isLoading = false;\n    });\n  }\n}",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "The fetchUserData method will now cancel any previous HTTP request before starting a new one, preventing race conditions.",
+        "successCriteria": [
+          "The component has a property to store the subscription, and fetchUserData checks for existing subscriptions and unsubscribes before making new requests."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure you're storing the subscription in a property and properly unsubscribing before making new requests.",
+        "feedbackWrong": "The race condition fix isn't fully implemented. You need to store the subscription and unsubscribe from previous requests before making new ones.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "private",
+            "subscription",
+            "unsubscribe",
+            "if",
+            "this.userSubscription"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 8",
+        "title": "Add a second button to demonstrate the fixed behavior",
+        "instruction": "Add a second button in the template that calls the fixed fetch method (you'll create this method next) and update the template to show both buttons side by side.",
+        "hint": "Place the new button next to the existing one, using the same button styling. Give it a descriptive label like 'Fetch User Data (Fixed)'.",
+        "analogousExample": "<!-- Two buttons in a template -->\n<button (click)=\"method1()\">Action 1</button>\n<button (click)=\"method2()\">Action 2</button>",
+        "seedCode": {
+          "App.tsx": "import { Component, OnInit } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\n\n@Component({\n  selector: 'app-race-condition-fix',\n  template: `\n    <button (click)=\"fetchUserData()\">Fetch User Data</button>\n    <!-- Add conditional rendering here -->\n  `,\n  styleUrls: ['./race-condition-fix.component.css']\n})\nexport class RaceConditionFixComponent implements OnInit {\n  userData: any = null;\n  isLoading: boolean = false;\n\n  constructor(private http: HttpClient) {}\n\n  ngOnInit() {\n    this.userData = null;\n    this.isLoading = false;\n  }\n\n  fetchUserData() {\n    this.isLoading = true;\n    this.http.get('https://jsonplaceholder.typicode.com/users/1').subscribe(data => {\n      this.userData = data;\n      this.isLoading = false;\n    });\n  }\n}",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "The template will have two buttons: one for the original fetch and one for the fixed version (to be implemented).",
+        "successCriteria": [
+          "A second button is added in the template with a click handler pointing to a method that will be created later."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You added a button, but make sure it's placed next to the existing one and has a descriptive label.",
+        "feedbackWrong": "The second button is missing or not properly placed in the template. Try adding it adjacent to the first button.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<button",
+            "(click)",
+            "fetchUserDataFixed",
+            "Fetch User Data (Fixed)"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import Component, OnInit, and HttpClient from Angular core",
+        "id": "step1"
+      },
+      {
+        "label": "Create the main RaceConditionFixComponent class",
+        "id": "step2"
+      },
+      {
+        "label": "Add HttpClient to the component constructor",
+        "id": "step3"
+      },
+      {
+        "label": "Initialize state properties in ngOnInit",
+        "id": "step4"
+      },
+      {
+        "label": "Add a button to trigger the problematic fetch",
+        "id": "step5"
+      },
+      {
+        "label": "Display user data and loading state in the template",
+        "id": "step6"
+      },
+      {
+        "label": "Implement race condition fix using request cancellation",
+        "id": "step7"
+      },
+      {
+        "label": "Add a second button to demonstrate the fixed behavior",
+        "id": "step8"
+      }
+    ],
+    "answerShape": "multi-file"
+  },
+  "source": "content"
+}

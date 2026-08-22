@@ -1,0 +1,391 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-node-108",
+    "track": "node",
+    "lessonNum": 108,
+    "title": "Build API key management endpoints",
+    "shortName": "P108",
+    "intro": {
+      "tag": "LESSON #108",
+      "title": "Build API key management endpoints",
+      "body": "In this lesson, you will build secure API endpoints to manage API keys, allowing users to generate, view, and revoke keys for accessing your Node.js application. You'll learn how to handle HTTP requests, validate user input, and interact with a database to store and retrieve key data. The core programming concepts include using Express.js for routing, middleware for authentication, and asynchronous operations for database queries. By the end, you'll have a functional key management system that follows RESTful principles and ensures data security.",
+      "usecase": "API key management endpoints are essential in any developer portal or admin dashboard where users generate and manage credentials for accessing your services. For example, Stripe's dashboard allows developers to create, view, and revoke API keys for secure payment integrations. Similarly, cloud platforms like AWS or Twilio provide administrative panels where users can rotate keys, set permissions, and monitor usage. As a backend developer, building these secure endpoints ensures controlled access and is a foundational skill for creating scalable, production-ready APIs."
+    },
+    "objectives": [
+      "Construct a Node.js route to generate and store a new API key",
+      "Implement middleware to validate API keys on incoming requests",
+      "Configure an endpoint to list all active API keys for a user",
+      "Manipulate the database to revoke an API key by updating its status",
+      "Integrate rate limiting based on API key usage",
+      "Apply input validation to ensure secure key generation parameters",
+      "Initialize a structured response format for all key management endpoints"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 11",
+        "title": "Import Express and required middleware",
+        "instruction": "Import Express, body-parser, and uuid by adding the necessary import statements at the top of your file.",
+        "hint": "Use the 'require' syntax to import these Node.js packages. Express is the web framework, body-parser helps parse JSON request bodies, and uuid generates unique identifiers for API keys.",
+        "analogousExample": "// Example: importing multiple modules\nconst express = require('express');\nconst bodyParser = require('body-parser');\nconst uuid = require('uuid');",
+        "seedCode": "// Import Express, body-parser, and uuid here\n\n// Your code will go below",
+        "expectedOutcome": "Your file will have the three required imports ready for building API key management endpoints.",
+        "successCriteria": [
+          "Express, body-parser, and uuid are imported using require statements."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but you're missing some imports. Make sure to import Express, body-parser, AND uuid using require statements.",
+        "feedbackWrong": "This doesn't look right. You need to import Express, body-parser, and uuid using require statements at the top of your file.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "express",
+            "body-parser",
+            "uuid",
+            "require"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 11",
+        "title": "Initialize Express app and middleware",
+        "instruction": "Create an Express application instance, use body-parser middleware to parse JSON, and set up an in-memory array to store API keys.",
+        "hint": "Call express() to create the app, use app.use() to add body-parser.json(), and declare an empty array variable for API keys.",
+        "analogousExample": "// Creating an Express app with middleware\nconst express = require('express');\nconst app = express();\napp.use(express.json());\nconst dataStore = [];",
+        "seedCode": "// Import Express, body-parser, and uuid here\nconst express = require('express');\nconst bodyParser = require('body-parser');\nconst { v4: uuidv4 } = require('uuid');\n\n// Your code will go below\n// Create Express app, use body-parser middleware, and set up in-memory storage for API keys",
+        "expectedOutcome": "An Express app instance is created, configured with JSON parsing middleware, and an empty array is ready to store API keys.",
+        "successCriteria": [
+          "Express app instance is created, body-parser.json() middleware is applied, and an empty array variable is declared for API keys."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've made progress. Check that you've created the Express app, used body-parser.json() middleware, and declared an empty array for API keys.",
+        "feedbackWrong": "The code doesn't meet the requirements. Ensure you create an Express app instance, apply body-parser.json() middleware, and declare an empty array for API key storage.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "express()",
+            "app.use",
+            "bodyParser.json",
+            "[]"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 11",
+        "title": "Create API keys data structure",
+        "instruction": "Initialize an empty array to store API key objects in your code.",
+        "hint": "Create a variable named 'apiKeys' and set it to an empty array [].",
+        "analogousExample": "// Example: creating an empty array for data\nconst items = [];",
+        "seedCode": "// Import Express, body-parser, and uuid here\nconst express = require('express');\nconst bodyParser = require('body-parser');\nconst { v4: uuidv4 } = require('uuid');\n\n// Your code will go below\n// Create Express app, use body-parser middleware, and set up in-memory storage for API keys\n\n// Initialize an empty array to store API key objects",
+        "expectedOutcome": "An empty array variable named 'apiKeys' is created to store API key objects.",
+        "successCriteria": [
+          "The code contains a variable declaration for 'apiKeys' initialized to an empty array."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you've declared a variable named 'apiKeys' and set it to an empty array [].",
+        "feedbackWrong": "The API keys data structure wasn't created correctly. You need to initialize an empty array variable named 'apiKeys'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "apiKeys",
+            "[]"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 11",
+        "title": "Create POST endpoint for generating API keys",
+        "instruction": "Define a POST route at '/api/keys' that generates a new API key object with a name and permissions.",
+        "hint": "Use app.post() to define the route. Inside the handler, create a new key object with an id (use uuidv4()), a name from the request body, and permissions from the request body.",
+        "analogousExample": "// Example: Defining a POST endpoint\napp.post('/api/items', (req, res) => {\n  const newItem = {\n    id: uuidv4(),\n    name: req.body.name\n  };\n  // ... store newItem\n  res.status(201).json(newItem);\n});",
+        "seedCode": "const express = require('express');\nconst bodyParser = require('body-parser');\nconst { v4: uuidv4 } = require('uuid');\n\nconst app = express();\napp.use(bodyParser.json());\n\nlet apiKeys = [];\n\n// Define POST endpoint for generating API keys here\napp.post('/api/keys', (req, res) => {\n  // Generate a new API key object\n});",
+        "expectedOutcome": "A POST route '/api/keys' is defined that will create a new API key object with a unique id, name, and permissions.",
+        "successCriteria": [
+          "The POST route '/api/keys' is defined with a handler that creates a new API key object containing id (generated with uuidv4()), name, and permissions from the request body."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the POST route, but make sure the handler creates a complete API key object with id, name, and permissions from the request body.",
+        "feedbackWrong": "The POST endpoint for generating API keys is not properly defined. Ensure you're using app.post() with the correct route path and creating a new key object inside the handler.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "app.post",
+            "'/api/keys'",
+            "uuidv4()",
+            "req.body.name",
+            "req.body.permissions"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 11",
+        "title": "Implement API key generation logic",
+        "instruction": "Inside the POST endpoint handler, replace the comment with code to generate a new API key object containing a UUID-based key, name, permissions, and creation date,",
+        "hint": "Create an object with properties: id (UUID), key (UUID), name (from request body or default), permissions (from request body or default), and createdAt (current date). Use uuidv4() for UUID generation and new Date() for the timestamp.",
+        "analogousExample": "// Example: generating a new resource object\nconst newResource = {\n  id: uuidv4(),\n  name: req.body.name || 'Default Name',\n  value: req.body.value || 0,\n  createdAt: new Date()\n};\nresources.push(newResource);\nres.json(newResource);",
+        "seedCode": "const express = require('express');\nconst bodyParser = require('body-parser');\nconst { v4: uuidv4 } = require('uuid');\n\nconst app = express();\napp.use(bodyParser.json());\n\nlet apiKeys = [];\n\n// Define POST endpoint for generating API keys here\napp.post('/api/keys', (req, res) => {\n  // Generate a new API key object\n});",
+        "expectedOutcome": "The POST endpoint now generates a unique API key with metadata and returns it as JSON when called.",
+        "successCriteria": [
+          "The endpoint handler creates an object with id, key, name, permissions, and createdAt properties, pushes it to apiKeys, and sends it as JSON response."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your object includes all required properties: id (UUID), key (UUID), name, permissions, and createdAt. Also remember to push to apiKeys and send the JSON response.",
+        "feedbackWrong": "The endpoint handler doesn't yet generate a complete API key object. Review the example: you need to create an object with the specified properties, add it to the apiKeys array, and return it as JSON.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "uuidv4()",
+            "new Date()",
+            "apiKeys.push",
+            "res.json"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 11",
+        "title": "push it to the apiKeys array and return it as",
+        "instruction": "push it to the apiKeys array and return it as JSON.",
+        "hint": "Create an object with properties: id (UUID), key (UUID), name (from request body or default), permissions (from request body or default), and createdAt (current date). Use uuidv4() for UUID generation and new Date() for the timestamp.",
+        "analogousExample": "// Example: generating a new resource object\nconst newResource = {\n  id: uuidv4(),\n  name: req.body.name || 'Default Name',\n  value: req.body.value || 0,\n  createdAt: new Date()\n};\nresources.push(newResource);\nres.json(newResource);",
+        "seedCode": "const express = require('express');\nconst bodyParser = require('body-parser');\nconst { v4: uuidv4 } = require('uuid');\n\nconst app = express();\napp.use(bodyParser.json());\n\nlet apiKeys = [];\n\n// Define POST endpoint for generating API keys here\napp.post('/api/keys', (req, res) => {\n  // Generate a new API key object\n});",
+        "expectedOutcome": "",
+        "successCriteria": [
+          "Complete the step as instructed."
+        ],
+        "feedbackCorrect": "Great! Step completed.",
+        "feedbackPartial": "Review the instruction and try again.",
+        "feedbackWrong": "Check the instruction and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "uuidv4()",
+            "new Date()",
+            "apiKeys.push",
+            "res.json"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 11",
+        "title": "Create GET endpoint to list all API keys",
+        "instruction": "Define a GET route for '/api/keys' that returns all stored API keys as a JSON response.",
+        "hint": "Use app.get() with the same path as the POST endpoint. In the handler, send the apiKeys array as JSON.",
+        "analogousExample": "// Similar: GET endpoint returning data\napp.get('/api/data', (req, res) => {\n  res.json(dataArray);\n});",
+        "seedCode": "const express = require('express');\nconst bodyParser = require('body-parser');\nconst { v4: uuidv4 } = require('uuid');\n\nconst app = express();\napp.use(bodyParser.json());\n\nlet apiKeys = [];\n\n// Define POST endpoint for generating API keys here\napp.post('/api/keys', (req, res) => {\n  // Generate a new API key object\n});\n\n// Define GET endpoint to list all API keys here\napp.get('/api/keys', (req, res) => {\n  // Return all API keys as JSON\n});",
+        "expectedOutcome": "A GET endpoint is added that responds with the apiKeys array when accessed.",
+        "successCriteria": [
+          "GET route '/api/keys' is defined and returns apiKeys as JSON."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure the route uses app.get() and sends the apiKeys array as JSON.",
+        "feedbackWrong": "The GET endpoint is missing or incorrect. Check the path and response method.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "app.get",
+            "'/api/keys'",
+            "res.json",
+            "apiKeys"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 11",
+        "title": "Create GET endpoint for specific API key",
+        "instruction": "Define a GET route '/api/keys/:id' that finds and returns a specific API key from the apiKeys array.",
+        "hint": "Use app.get() with the route containing a parameter ':id', then find the key using find() method on apiKeys array.",
+        "analogousExample": "// Example: GET endpoint to find a specific item by ID\napp.get('/api/items/:id', (req, res) => {\n  const item = items.find(i => i.id === req.params.id);\n  if (!item) return res.status(404).json({ error: 'Item not found' });\n  res.json(item);\n});",
+        "seedCode": "const express = require('express');\nconst bodyParser = require('body-parser');\nconst { v4: uuidv4 } = require('uuid');\n\nconst app = express();\napp.use(bodyParser.json());\n\nlet apiKeys = [];\n\n// Define POST endpoint for generating API keys here\napp.post('/api/keys', (req, res) => {\n  // Generate a new API key object\n});\n\n// Define GET endpoint to list all API keys here\napp.get('/api/keys', (req, res) => {\n  // Return all API keys as JSON\n});\n\n// Define GET endpoint for specific API key here",
+        "expectedOutcome": "A new GET route '/api/keys/:id' is added that can retrieve a single API key by its ID.",
+        "successCriteria": [
+          "The route '/api/keys/:id' is defined with app.get(), uses req.params.id to find the key, and returns appropriate JSON response."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added the route, but check the implementation - make sure you're finding the key correctly and handling the case where it doesn't exist.",
+        "feedbackWrong": "The endpoint isn't defined correctly. Review how to create GET routes with parameters and search arrays in JavaScript.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "app.get(\"/api/keys/:id\"",
+            "req.params.id",
+            "apiKeys.find",
+            "res.json"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 11",
+        "title": "Create DELETE endpoint to revoke API key",
+        "instruction": "Define a DELETE route handler for '/api/keys/:id' that removes an API key from the apiKeys array based on the id parameter.",
+        "hint": "Use app.delete() with the route path containing a parameter. Inside the handler, find the index of the key with matching id and remove it using splice(). Send a 200 response on success or 404 if not found.",
+        "analogousExample": "// Similar: DELETE endpoint to remove an item\napp.delete('/items/:id', (req, res) => {\n  const index = items.findIndex(item => item.id === req.params.id);\n  if (index !== -1) {\n    items.splice(index, 1);\n    res.status(200).json({ message: 'Item deleted' });\n  } else {\n    res.status(404).json({ error: 'Item not found' });\n  }\n});",
+        "seedCode": "const express = require('express');\nconst bodyParser = require('body-parser');\nconst { v4: uuidv4 } = require('uuid');\n\nconst app = express();\napp.use(bodyParser.json());\n\nlet apiKeys = [];\n\n// Define POST endpoint for generating API keys here\napp.post('/api/keys', (req, res) => {\n  // Generate a new API key object\n});\n\n// Define GET endpoint to list all API keys here\napp.get('/api/keys', (req, res) => {\n  // Return all API keys as JSON\n});\n\n// Define GET endpoint for specific API key here\n\n// Define DELETE endpoint to revoke API key here\napp.delete('/api/keys/:id', (req, res) => {\n  // Remove API key by id\n});",
+        "expectedOutcome": "The DELETE endpoint is defined and ready to remove an API key from the apiKeys array when a request is made with a specific id.",
+        "successCriteria": [
+          "A DELETE route '/api/keys/:id' is defined using app.delete() with a handler that attempts to find and remove an API key by id."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the DELETE endpoint, but make sure to include the logic to find and remove the key, and handle the response.",
+        "feedbackWrong": "The DELETE endpoint is not correctly defined. Check the route path and handler structure.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "app.delete",
+            "'/api/keys/:id'",
+            "req.params.id",
+            "findIndex",
+            "splice",
+            "res.status"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 11",
+        "title": "Add error handling middleware",
+        "instruction": "Add middleware after all your routes to handle 404 errors for unmatched routes.",
+        "hint": "Use app.use() with a function that takes req, res, and next parameters. Inside, set the response status to 404 and send a JSON error message.",
+        "analogousExample": "// Example: 404 error handling middleware\napp.use((req, res, next) => {\n  res.status(404).json({ error: 'Route not found' });\n});",
+        "seedCode": "const express = require('express');\nconst bodyParser = require('body-parser');\nconst { v4: uuidv4 } = require('uuid');\n\nconst app = express();\napp.use(bodyParser.json());\n\nlet apiKeys = [];\n\n// Define POST endpoint for generating API keys here\napp.post('/api/keys', (req, res) => {\n  // Generate a new API key object\n});\n\n// Define GET endpoint to list all API keys here\napp.get('/api/keys', (req, res) => {\n  // Return all API keys as JSON\n});\n\n// Define GET endpoint for specific API key here\n\n// Define DELETE endpoint to revoke API key here\napp.delete('/api/keys/:id', (req, res) => {\n  // Remove API key by id\n});\n\n// Add 404 error handling middleware here",
+        "expectedOutcome": "The app will respond with a 404 status and JSON error message for any route that doesn't match your defined endpoints.",
+        "successCriteria": [
+          "Middleware is added after all routes, uses app.use(), sets status to 404, and returns JSON with an error message."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your middleware is placed after all routes and returns a proper JSON response.",
+        "feedbackWrong": "Check that you've added middleware after all routes, set the status to 404, and returned JSON with an error message.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "app.use",
+            "404",
+            "json",
+            "error"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 11",
+        "title": "Start the Express server",
+        "instruction": "Start the Express server by calling app.listen() on port 3000 and log a message to the console when the server is running.",
+        "hint": "Use app.listen(port, callback) to start the server. The callback should log a message like 'Server running on port 3000'.",
+        "analogousExample": "// Starting a server in Express\napp.listen(3000, () => {\n  console.log('Server running on port 3000');\n});",
+        "seedCode": "const express = require('express');\nconst bodyParser = require('body-parser');\nconst { v4: uuidv4 } = require('uuid');\n\nconst app = express();\napp.use(bodyParser.json());\n\nlet apiKeys = [];\n\n// Define POST endpoint for generating API keys here\napp.post('/api/keys', (req, res) => {\n  // Generate a new API key object\n});\n\n// Define GET endpoint to list all API keys here\napp.get('/api/keys', (req, res) => {\n  // Return all API keys as JSON\n});\n\n// Define GET endpoint for specific API key here\n\n// Define DELETE endpoint to revoke API key here\napp.delete('/api/keys/:id', (req, res) => {\n  // Remove API key by id\n});\n\n// Add 404 error handling middleware here\n\n// Start the server here",
+        "expectedOutcome": "The Express server will start on port 3000 and log a confirmation message to the console.",
+        "successCriteria": [
+          "app.listen() is called with port 3000 and a callback that logs a server status message."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure you're calling app.listen() with both the port number and a callback function that logs a message.",
+        "feedbackWrong": "Check that you're starting the server with app.listen() on port 3000 and logging a message when it starts.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "app.listen",
+            "3000",
+            "console.log",
+            "Server"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import Express and required middleware",
+        "id": "step1"
+      },
+      {
+        "label": "Initialize Express app and middleware",
+        "id": "step2"
+      },
+      {
+        "label": "Create API keys data structure",
+        "id": "step3"
+      },
+      {
+        "label": "Create POST endpoint for generating API keys",
+        "id": "step4"
+      },
+      {
+        "label": "Implement API key generation logic",
+        "id": "step5"
+      },
+      {
+        "label": "push it to the apiKeys array and return it as",
+        "id": "step6"
+      },
+      {
+        "label": "Create GET endpoint to list all API keys",
+        "id": "step7"
+      },
+      {
+        "label": "Create GET endpoint for specific API key",
+        "id": "step8"
+      },
+      {
+        "label": "Create DELETE endpoint to revoke API key",
+        "id": "step9"
+      },
+      {
+        "label": "Add error handling middleware",
+        "id": "step10"
+      },
+      {
+        "label": "Start the Express server",
+        "id": "step11"
+      }
+    ]
+  },
+  "source": "content"
+}

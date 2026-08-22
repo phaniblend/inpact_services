@@ -1,0 +1,322 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-node-75",
+    "track": "node",
+    "lessonNum": 75,
+    "title": "Build backpressure aware producer controls",
+    "shortName": "P75",
+    "intro": {
+      "tag": "LESSON #75",
+      "title": "Build backpressure aware producer controls",
+      "body": "In this lesson, you will build a simple Node.js producer that sends data to a consumer while respecting backpressure signals. You will learn how to use the `stream.Writable` API to detect when the consumer is overwhelmed and pause your data production accordingly. The core programming concept is managing data flow control using streams and event-driven programming. You'll work with Node.js built-in modules like `stream` and use events like `'drain'` to implement responsive backpressure handling. By the end, you'll have a producer that adapts its output rate based on consumer readiness, preventing memory issues and improving application reliability.",
+      "usecase": "This pattern is essential for data-intensive Node.js applications like real-time analytics dashboards, where producers (data sources) must adapt to consumer processing speeds. In financial trading platforms, backpressure-aware producers prevent memory overflow when market data feeds exceed the capacity of risk calculation services. Video streaming services use similar controls to manage upload buffers when encoding servers become overloaded, ensuring smooth content delivery without crashes."
+    },
+    "objectives": [
+      "Implement a backpressure detection mechanism using stream buffer states",
+      "Construct a producer control system that responds to consumer readiness",
+      "Apply flow control logic to pause and resume data transmission",
+      "Configure event listeners for drain events to manage backpressure",
+      "Initialize buffer monitoring to track data accumulation",
+      "Integrate backpressure awareness into existing data production pipelines",
+      "Manipulate write operations based on stream buffer capacity"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 9",
+        "title": "Import required Node.js modules",
+        "instruction": "Import the stream module from Node.js to access Readable and Writable stream classes.",
+        "hint": "Use the require() function to import the built-in Node.js stream module.",
+        "analogousExample": "// Importing a core Node.js module\nconst fs = require('fs');",
+        "seedCode": "// Import the stream module here\n",
+        "expectedOutcome": "The stream module is imported and ready to use for creating streams and handling backpressure.",
+        "successCriteria": [
+          "The stream module is imported using require('stream')."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're importing the correct module. Use require('stream') to import the Node.js stream module.",
+        "feedbackWrong": "The stream module isn't imported correctly. Use require('stream') to import the Node.js stream module for stream operations.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "require",
+            "'stream'",
+            "stream"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 9",
+        "title": "Create a high-speed data producer function",
+        "instruction": "Define a function named 'fastProducer' that takes a 'writableStream' parameter and continuously pushes data to simulate a fast producer.",
+        "hint": "Create a function that uses a while loop to push data faster than it can be consumed. You can use setImmediate or process.nextTick to simulate continuous data generation.",
+        "analogousExample": "// Example: A function that continuously generates data\nfunction fastProducer(writableStream) {\n  let count = 0;\n  function generate() {\n    while (count < 1000) {\n      const canWrite = writableStream.write(`Data chunk ${count}\\n`);\n      count++;\n      if (!canWrite) {\n        // Handle backpressure\n        writableStream.once('drain', generate);\n        return;\n      }\n    }\n    writableStream.end();\n  }\n  generate();\n}",
+        "seedCode": "const stream = require('stream');\n\n// Define a function named 'fastProducer' that takes a 'writableStream' parameter and continuously pushes data to simulate a fast producer.",
+        "expectedOutcome": "A function named 'fastProducer' is defined that simulates a high-speed data producer by continuously pushing data to a writable stream.",
+        "successCriteria": [
+          "The 'fastProducer' function is defined with a 'writableStream' parameter and contains logic to continuously push data."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started defining the function, but make sure it takes a 'writableStream' parameter and contains logic to continuously push data (like a loop or recursive call).",
+        "feedbackWrong": "The function isn't properly defined. Remember to create a function named 'fastProducer' that takes a 'writableStream' parameter and simulates continuous data generation.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "function fastProducer",
+            "writableStream",
+            "write",
+            "while",
+            "count"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 9",
+        "title": "Initialize a Readable stream for data production",
+        "instruction": "Create a new Readable stream instance named 'dataSource' using the imported stream module.",
+        "hint": "Use the stream.Readable constructor to create a new instance.",
+        "analogousExample": "// Creating a readable stream\nconst readableStream = new stream.Readable();",
+        "seedCode": "const stream = require('stream');\n\n// Define a function named 'fastProducer' that takes a 'writableStream' parameter and continuously pushes data to simulate a fast producer.\n\n// Create a new Readable stream instance named 'dataSource'",
+        "expectedOutcome": "A Readable stream instance named 'dataSource' is created and ready to be used as the data source.",
+        "successCriteria": [
+          "The code includes a new Readable stream instance named 'dataSource' created with the stream module."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you've created a Readable stream instance named 'dataSource' using the stream module.",
+        "feedbackWrong": "Create a new Readable stream instance named 'dataSource' using the imported stream module.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "dataSource",
+            "new",
+            "stream.Readable",
+            "Readable"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 9",
+        "title": "Implement the _read method for data generation",
+        "instruction": "Add a _read method to the dataSource Readable stream that calls the fastProducer function.",
+        "hint": "The _read method is automatically called when the stream needs more data. Inside it, call fastProducer with the stream instance.",
+        "analogousExample": "// Example: Adding a _read method to a Readable stream\nclass MyStream extends stream.Readable {\n  _read() {\n    this.push('data');\n  }\n}",
+        "seedCode": "const stream = require('stream');\n\n// Define a function named 'fastProducer' that takes a 'writableStream' parameter and continuously pushes data to simulate a fast producer.\n\n// Create a new Readable stream instance named 'dataSource'\n\n// Add _read method here",
+        "expectedOutcome": "The dataSource stream will have a _read method that triggers data production.",
+        "successCriteria": [
+          "The _read method is defined on dataSource and calls fastProducer."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure the _read method is added to dataSource and calls fastProducer.",
+        "feedbackWrong": "The _read method is missing or not correctly calling fastProducer. Review how to add methods to a Readable stream.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "_read",
+            "fastProducer"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 9",
+        "title": "Create a slow consumer Writable stream",
+        "instruction": "Create a new Writable stream instance named 'slowConsumer' that simulates slow data processing by adding an artificial delay in its _write method.",
+        "hint": "Use the stream.Writable constructor to create a new writable stream. Inside the _write method, add a setTimeout to simulate processing delay before calling the callback.",
+        "analogousExample": "// Similar: a writable stream with processing delay\nconst slowWriter = new stream.Writable({\n  write(chunk, encoding, callback) {\n    setTimeout(() => {\n      console.log('Processed:', chunk.toString());\n      callback();\n    }, 100);\n  }\n});",
+        "seedCode": "const stream = require('stream');\n\n// Define a function named 'fastProducer' that takes a 'writableStream' parameter and continuously pushes data to simulate a fast producer.\n\n// Create a new Readable stream instance named 'dataSource'\n\n// Add _read method here\n\n// Create a new Writable stream instance named 'slowConsumer'",
+        "expectedOutcome": "You should have a Writable stream that processes data with artificial delays to simulate slow consumption.",
+        "successCriteria": [
+          "A Writable stream named 'slowConsumer' is created with a _write method that includes setTimeout to delay processing before calling the callback."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've created a Writable stream, but make sure it includes an artificial delay in the _write method using setTimeout before calling the callback.",
+        "feedbackWrong": "The Writable stream is missing or doesn't properly simulate slow consumption. Create a new stream.Writable instance with a _write method that delays processing.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "slowConsumer",
+            "stream.Writable",
+            "_write",
+            "setTimeout",
+            "callback"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 9",
+        "title": "Implement the _write method with processing delay",
+        "instruction": "Inside the slowConsumer Writable stream, add a _write method that processes chunks with a 100ms delay using setTimeout.",
+        "hint": "The _write method should take three parameters: chunk, encoding, and callback. Use setTimeout to delay calling the callback by 100 milliseconds.",
+        "analogousExample": "// Similar: Writable stream with delayed processing\nclass SlowProcessor extends stream.Writable {\n  _write(chunk, encoding, callback) {\n    setTimeout(() => {\n      console.log('Processed:', chunk.toString());\n      callback();\n    }, 100);\n  }\n}",
+        "seedCode": "const stream = require('stream');\n\n// Define a function named 'fastProducer' that takes a 'writableStream' parameter and continuously pushes data to simulate a fast producer.\n\n// Create a new Readable stream instance named 'dataSource'\n\n// Add _read method here\n\n// Create a new Writable stream instance named 'slowConsumer'\n\n// Add _write method here",
+        "expectedOutcome": "The slowConsumer stream will now simulate slow processing by delaying each chunk for 100ms before acknowledging completion.",
+        "successCriteria": [
+          "The _write method is implemented with setTimeout delaying callback() by 100ms."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure your _write method uses setTimeout to delay calling the callback by exactly 100 milliseconds.",
+        "feedbackWrong": "The _write method should include setTimeout to delay processing. Check the parameters and callback usage.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "_write",
+            "setTimeout",
+            "100",
+            "callback"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 9",
+        "title": "Pipe the producer to the consumer",
+        "instruction": "Use the pipe() method to connect the dataSource Readable stream to the slowConsumer Writable stream.",
+        "hint": "Call the pipe method on the dataSource stream and pass slowConsumer as the argument.",
+        "analogousExample": "// Similar: connecting two streams\nreadableStream.pipe(writableStream);",
+        "seedCode": "const stream = require('stream');\n\n// Define a function named 'fastProducer' that takes a 'writableStream' parameter and continuously pushes data to simulate a fast producer.\n\n// Create a new Readable stream instance named 'dataSource'\n\n// Add _read method here\n\n// Create a new Writable stream instance named 'slowConsumer'\n\n// Add _write method here\n\n// Pipe the producer to the consumer",
+        "expectedOutcome": "The dataSource stream is connected to the slowConsumer stream using the pipe() method, creating a data pipeline.",
+        "successCriteria": [
+          "The pipe() method is called on dataSource with slowConsumer as the argument."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're calling pipe() on the dataSource stream and passing slowConsumer as the argument.",
+        "feedbackWrong": "The pipe() method wasn't properly implemented. Remember to call dataSource.pipe(slowConsumer) to connect the streams.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "dataSource.pipe",
+            "slowConsumer"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 9",
+        "title": "Add backpressure detection to the producer",
+        "instruction": "Inside the _read method of your dataSource Readable stream, add a condition to check if the stream's internal buffer is full and pause data generation when backpressure occurs.",
+        "hint": "You can check if the stream is overwhelmed by examining the return value of the push method or by checking the stream's internal buffer state.",
+        "analogousExample": "// Example: checking backpressure in a Readable stream\n_read() {\n  const data = generateData();\n  const canPushMore = this.push(data);\n  if (!canPushMore) {\n    // Backpressure detected - pause generation\n    this.pause();\n  }\n}",
+        "seedCode": "const stream = require('stream');\n\n// Define a function named 'fastProducer' that takes a 'writableStream' parameter and continuously pushes data to simulate a fast producer.\n\n// Create a new Readable stream instance named 'dataSource'\n\n// Add _read method here\n\n// Create a new Writable stream instance named 'slowConsumer'\n\n// Add _write method here\n\n// Pipe the producer to the consumer",
+        "expectedOutcome": "The producer will now detect when the consumer is overwhelmed and pause data generation to prevent memory issues.",
+        "successCriteria": [
+          "The _read method includes a condition that checks for backpressure and calls pause() when detected."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're checking the return value of push() or the stream's buffer state, and calling pause() when backpressure is detected.",
+        "feedbackWrong": "The backpressure detection isn't implemented correctly. Review how to check if a Readable stream's buffer is full and pause generation when needed.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "push",
+            "pause",
+            "if",
+            "backpressure"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 9",
+        "title": "Add logging to monitor backpressure events",
+        "instruction": "Add console.log statements inside the producer's pause and resume logic to log when backpressure events occur.",
+        "hint": "Look for the existing pause and resume logic in your producer stream, and add console.log messages there.",
+        "analogousExample": "// Example: logging stream events\nproducerStream.on('pause', () => {\n  console.log('Producer paused due to backpressure');\n});\nproducerStream.on('resume', () => {\n  console.log('Producer resumed');\n});",
+        "seedCode": "const stream = require('stream');\n\n// Define a function named 'fastProducer' that takes a 'writableStream' parameter and continuously pushes data to simulate a fast producer.\n\n// Create a new Readable stream instance named 'dataSource'\n\n// Add _read method here\n\n// Create a new Writable stream instance named 'slowConsumer'\n\n// Add _write method here\n\n// Pipe the producer to the consumer\n\n// Add console.log statements to show when the producer pauses and resumes due to backpressure",
+        "expectedOutcome": "When you run the code, you should see log messages indicating when the producer pauses and resumes in response to backpressure from the slow consumer.",
+        "successCriteria": [
+          "The producer's pause and resume events are logged with console.log statements."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added some logging, but make sure to log both pause and resume events in the appropriate places.",
+        "feedbackWrong": "The logging for backpressure events is missing or incorrect. Check where the producer pauses and resumes and add console.log statements there.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "console.log",
+            "pause",
+            "resume"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import required Node.js modules",
+        "id": "step1"
+      },
+      {
+        "label": "Create a high-speed data producer function",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize a Readable stream for data production",
+        "id": "step3"
+      },
+      {
+        "label": "Implement the _read method for data generation",
+        "id": "step4"
+      },
+      {
+        "label": "Create a slow consumer Writable stream",
+        "id": "step5"
+      },
+      {
+        "label": "Implement the _write method with processing delay",
+        "id": "step6"
+      },
+      {
+        "label": "Pipe the producer to the consumer",
+        "id": "step7"
+      },
+      {
+        "label": "Add backpressure detection to the producer",
+        "id": "step8"
+      },
+      {
+        "label": "Add logging to monitor backpressure events",
+        "id": "step9"
+      }
+    ]
+  },
+  "source": "content"
+}

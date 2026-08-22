@@ -1,0 +1,895 @@
+{
+  "id": "search-2d-matrix",
+  "title": "Search a 2D Matrix",
+  "pattern": "binary-search",
+  "difficulty": "medium",
+  "language": "javascript",
+  "status": "draft",
+  "flow": [
+    {
+      "stepId": "title",
+      "mentorSays": "At the end of this lesson, you will be able to:\n\n1. Understand what the Search a 2D Matrix lesson asks for\n2. Treat a 2D matrix as a 1D sorted array\n3. Convert between 1D and 2D indices\n4. Use binary search to find the target\n5. Implement the solution step by step in your chosen language",
+      "action": "continue",
+      "next": "lesson-illustration"
+    },
+    {
+      "stepId": "lesson-illustration",
+      "mentorSays": "Perfect! Now let's understand what the Search a 2D Matrix lesson is asking.\n\n**Lesson Definition:**\nWrite an efficient algorithm that searches for a value `target` in an `m x n` integer matrix `matrix`. This matrix has the following properties:\n- Integers in each row are sorted from left to right\n- The first integer of each row is greater than the last integer of the previous row\n\n**Key Observations:**\n- Each row is sorted\n- Rows are sorted (first element of row i > last element of row i-1)\n- This means the entire matrix can be treated as one sorted array!\n- We can use binary search on the flattened matrix\n\n**Example 1:**\nmatrix = [\n  [1,  3,  5,  7],\n  [10, 11, 16, 20],\n  [23, 30, 34, 60]\n]\ntarget = 3\n\nTreat as 1D: [1, 3, 5, 7, 10, 11, 16, 20, 23, 30, 34, 60]\nTarget 3 is at index 1 in 1D, which is row 0, col 1.\nAnswer: true\n\n**Example 2:**\nSame matrix, target = 13\n\nTarget 13 is not in the matrix.\nAnswer: false\n\n**Step-by-step trace for Example 1 (Binary search approach):**\n\nmatrix = [[1,3,5,7], [10,11,16,20], [23,30,34,60]]\ntarget = 3\nrows = 3, cols = 4\n\nTreat as 1D array of length 12:\n- **left = 0, right = 11**\n- **mid = 5**: Convert to 2D: row = 5 // 4 = 1, col = 5 % 4 = 1, matrix[1][1] = 11\n  - 11 > 3, search left: right = 4\n- **mid = 2**: Convert to 2D: row = 2 // 4 = 0, col = 2 % 4 = 2, matrix[0][2] = 5\n  - 5 > 3, search left: right = 1\n- **mid = 0**: Convert to 2D: row = 0 // 4 = 0, col = 0 % 4 = 0, matrix[0][0] = 1\n  - 1 < 3, search right: left = 1\n- **mid = 1**: Convert to 2D: row = 1 // 4 = 0, col = 1 % 4 = 1, matrix[0][1] = 3\n  - 3 == 3, Found! Return true ✓\n\n**Key Insight:**\nWe can treat the 2D matrix as a 1D sorted array:\n- 1D index → 2D: row = index // cols, col = index % cols\n- 2D → 1D: index = row * cols + col\n- Then use standard binary search!\n\n**What makes this tricky:**\n1. Converting between 1D and 2D indices\n2. Understanding that the matrix is essentially one sorted array\n3. Getting the row and column counts correctly\n4. The index conversion formula\n\n**Common pitfalls:**\n- Using wrong conversion formula (row = mid / cols instead of mid // cols)\n- Not handling empty matrix\n- Off-by-one errors in index calculation\n- Confusing rows and columns",
+      "example": "Example 1:\nmatrix = [[1,3,5,7], [10,11,16,20], [23,30,34,60]]\ntarget = 3\nAnswer: true\n\nExample 2:\nSame matrix, target = 13\nAnswer: false",
+      "action": "continue",
+      "next": "thinking-challenge"
+    },
+    {
+      "stepId": "thinking-challenge",
+      "mentorSays": "Now that you understand what the lesson wants, here's the real question:\n\nHow would YOU search for a target in a 2D sorted matrix?\n\nThink about it for a moment. What approach feels natural to you?",
+      "choices": [
+        {
+          "label": "Treat matrix as 1D array, use binary search with index conversion",
+          "next": "explore-binary-search"
+        },
+        {
+          "label": "Search each row using binary search",
+          "next": "explore-row-search"
+        },
+        {
+          "label": "Use nested loops to check every element",
+          "next": "explore-nested"
+        }
+      ]
+    },
+    {
+      "stepId": "explore-row-search",
+      "mentorSays": "That's a good approach! You're thinking: \"I'll use binary search on each row to find the target.\"\n\nThis works! However, it's O(m log n) time where m is rows and n is columns.\n\nThere's a more efficient O(log(m*n)) approach by treating the matrix as one sorted array. Would you like to learn that?",
+      "action": "continue",
+      "next": "explore-binary-search"
+    },
+    {
+      "stepId": "explore-nested",
+      "mentorSays": "That's a straightforward approach! You're thinking: \"I'll check every element until I find the target.\"\n\nThis works! However, it's O(m*n) time, which is inefficient.\n\nThere's a much faster O(log(m*n)) approach using binary search. Would you like to learn that?",
+      "action": "continue",
+      "next": "explore-binary-search"
+    },
+    {
+      "stepId": "explore-binary-search",
+      "mentorSays": "Excellent choice! Treating the matrix as a 1D array and using binary search is the optimal solution. Here's the core idea:\n\n**The Algorithm:**\n1. **Get dimensions**: rows = matrix.length, cols = matrix[0].length\n2. **Treat as 1D**: left = 0, right = rows * cols - 1\n3. **Binary search**:\n   - Calculate mid\n   - Convert mid to 2D: row = mid // cols, col = mid % cols\n   - Compare matrix[row][col] with target\n   - Update left or right accordingly\n4. **Return**: true if found, false otherwise\n\n**Why it works**:\n- The matrix properties guarantee it's one sorted array when flattened\n- We can use standard binary search on the flattened array\n- Index conversion lets us access the 2D matrix correctly\n\n**Key insight**: The matrix is essentially one sorted array! We just need to convert indices between 1D and 2D.\n\nLet's trace with matrix = [[1,3,5,7], [10,11,16,20], [23,30,34,60]], target = 3:\n\n- **left=0, right=11, mid=5**: row=1, col=1, matrix[1][1]=11 > 3, search left: right=4\n- **left=0, right=4, mid=2**: row=0, col=2, matrix[0][2]=5 > 3, search left: right=1\n- **left=0, right=1, mid=0**: row=0, col=0, matrix[0][0]=1 < 3, search right: left=1\n- **left=1, right=1, mid=1**: row=0, col=1, matrix[0][1]=3 == 3, Found! ✓\n\nThis is O(log(m*n)) time and O(1) space! Now let's code it step by step.",
+      "action": "continue",
+      "next": "language-selection"
+    },
+    {
+      "stepId": "language-selection",
+      "mentorSays": "Great! Now let's code this solution. Which programming language would you like to use?",
+      "choices": [
+        {
+          "label": "JavaScript",
+          "next": "variable-check-js"
+        },
+        {
+          "label": "Python",
+          "next": "variable-check-python"
+        },
+        {
+          "label": "Java",
+          "next": "variable-check-java"
+        },
+        {
+          "label": "C++",
+          "next": "variable-check-cpp"
+        },
+        {
+          "label": "TypeScript",
+          "next": "variable-check-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-check-js",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-js"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-js",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'left' or 'mid') and put data inside it.",
+      "example": "let left = 0;   // Left pointer\nlet rows = matrix.length;  // Number of rows",
+      "action": "continue",
+      "next": "function-check-js"
+    },
+    {
+      "stepId": "function-check-js",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-js"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-js",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "function searchMatrix(matrix, target) {\n  // Returns true if target found\n  return false;\n}",
+      "action": "continue",
+      "next": "parameter-check-js"
+    },
+    {
+      "stepId": "parameter-check-js",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "array-check-js"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-js",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'function searchMatrix(matrix, target)', the 'matrix' and 'target' are parameters.",
+      "example": "function searchMatrix(matrix, target) {\n  // Parameters receive values\n}\n\n// Call: searchMatrix([[1,3],[10,11]], 3)",
+      "action": "continue",
+      "next": "array-check-js"
+    },
+    {
+      "stepId": "array-check-js",
+      "mentorSays": "To solve this lesson, we'll need to work with 2D arrays (matrices). Do you know what a 2D array is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know 2D arrays",
+          "next": "loop-check-js"
+        },
+        {
+          "label": "No, explain 2D arrays",
+          "next": "array-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "array-explanation-js",
+      "mentorSays": "A 2D array is an array of arrays. Each element is itself an array. We access elements using two indices: row and column.\n\nFor example, matrix[0][1] means: row 0, column 1.",
+      "example": "matrix = [[1, 3], [10, 11]];\n\nmatrix[0][0] = 1   // Row 0, Column 0\nmatrix[0][1] = 3   // Row 0, Column 1\nmatrix[1][0] = 10  // Row 1, Column 0",
+      "action": "continue",
+      "next": "loop-check-js"
+    },
+    {
+      "stepId": "loop-check-js",
+      "mentorSays": "To solve this lesson, we'll need to use loops. Do you know what a loop is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know loops",
+          "next": "coding-start-js"
+        },
+        {
+          "label": "No, explain loops",
+          "next": "loop-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "loop-explanation-js",
+      "mentorSays": "A loop lets you repeat code multiple times. A 'while' loop in JavaScript runs code while a condition is true.",
+      "example": "while (left <= right) {\n  // This code runs while condition is true\n  // Binary search logic\n}",
+      "action": "continue",
+      "next": "coding-start-js"
+    },
+    {
+      "stepId": "coding-start-js",
+      "mentorSays": "Perfect! Let's implement the search 2D matrix solution in JavaScript. We'll create a function that takes a matrix and target, and returns true if target is found.",
+      "example": "function searchMatrix(matrix, target) {\n  \n}",
+      "action": "continue",
+      "next": "coding-get-dimensions-js"
+    },
+    {
+      "stepId": "coding-get-dimensions-js",
+      "mentorSays": "First, get the dimensions of the matrix: number of rows and columns.",
+      "example": "function searchMatrix(matrix, target) {\n  // Get dimensions\n  let rows = matrix.length;\n  let cols = matrix[0].length;\n  \n}",
+      "action": "continue",
+      "next": "coding-init-pointers-js"
+    },
+    {
+      "stepId": "coding-init-pointers-js",
+      "mentorSays": "Initialize binary search pointers. Treat the matrix as a 1D array: left = 0, right = total elements - 1.",
+      "example": "function searchMatrix(matrix, target) {\n  let rows = matrix.length;\n  let cols = matrix[0].length;\n  \n  // Treat matrix as 1D array\n  let left = 0;\n  let right = rows * cols - 1;\n  \n}",
+      "action": "continue",
+      "next": "coding-binary-search-js"
+    },
+    {
+      "stepId": "coding-binary-search-js",
+      "mentorSays": "Create a while loop for binary search. Continue while left <= right.",
+      "example": "function searchMatrix(matrix, target) {\n  let rows = matrix.length;\n  let cols = matrix[0].length;\n  let left = 0;\n  let right = rows * cols - 1;\n  \n  while (left <= right) {\n    let mid = Math.floor((left + right) / 2);\n    \n    // Convert 1D index to 2D indices\n  }\n  \n}",
+      "action": "continue",
+      "next": "coding-convert-to-2d-js"
+    },
+    {
+      "stepId": "coding-convert-to-2d-js",
+      "mentorSays": "Convert the 1D mid index to 2D indices: row = mid // cols, col = mid % cols.",
+      "example": "function searchMatrix(matrix, target) {\n  let rows = matrix.length;\n  let cols = matrix[0].length;\n  let left = 0;\n  let right = rows * cols - 1;\n  \n  while (left <= right) {\n    let mid = Math.floor((left + right) / 2);\n    \n    // Convert 1D index to 2D\n    let row = Math.floor(mid / cols);\n    let col = mid % cols;\n    \n  }\n  \n}",
+      "action": "continue",
+      "next": "coding-compare-js"
+    },
+    {
+      "stepId": "coding-compare-js",
+      "mentorSays": "Compare matrix[row][col] with target. If equal, return true. If greater, search left. If less, search right.",
+      "example": "function searchMatrix(matrix, target) {\n  let rows = matrix.length;\n  let cols = matrix[0].length;\n  let left = 0;\n  let right = rows * cols - 1;\n  \n  while (left <= right) {\n    let mid = Math.floor((left + right) / 2);\n    let row = Math.floor(mid / cols);\n    let col = mid % cols;\n    \n    // Compare with target\n    if (matrix[row][col] === target) {\n      return true;\n    } else if (matrix[row][col] > target) {\n      right = mid - 1;\n    } else {\n      left = mid + 1;\n    }\n  }\n  \n}",
+      "action": "continue",
+      "next": "coding-return-js"
+    },
+    {
+      "stepId": "coding-return-js",
+      "mentorSays": "After the loop, if we haven't returned, the target wasn't found. Return false.",
+      "example": "function searchMatrix(matrix, target) {\n  let rows = matrix.length;\n  let cols = matrix[0].length;\n  let left = 0;\n  let right = rows * cols - 1;\n  \n  while (left <= right) {\n    let mid = Math.floor((left + right) / 2);\n    let row = Math.floor(mid / cols);\n    let col = mid % cols;\n    \n    if (matrix[row][col] === target) {\n      return true;\n    } else if (matrix[row][col] > target) {\n      right = mid - 1;\n    } else {\n      left = mid + 1;\n    }\n  }\n  \n  // Target not found\n  return false;\n}",
+      "action": "continue",
+      "next": "test-code-js"
+    },
+    {
+      "stepId": "test-code-js",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** matrix = [[1,3,5,7], [10,11,16,20], [23,30,34,60]], target = 3\nExpected: true (found at row 0, col 1)\n\n**Test 2:** Same matrix, target = 13\nExpected: false (not found)\n\n**Test 3:** matrix = [[1]], target = 1\nExpected: true (found)\n\n**Test 4:** matrix = [[1]], target = 2\nExpected: false (not found)\n\n**Test 5:** matrix = [[1,3,5,7], [10,11,16,20]], target = 11\nExpected: true (found at row 1, col 1)\n\n**Test 6:** matrix = [[1,3,5,7], [10,11,16,20]], target = 15\nExpected: false (not found)\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: [[1,3,5,7],[10,11,16,20],[23,30,34,60]], 3 → true\nTest 2: Same, 13 → false\nTest 3: [[1]], 1 → true\nTest 4: [[1]], 2 → false\nTest 5: [[1,3,5,7],[10,11,16,20]], 11 → true\nTest 6: Same, 15 → false",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-python",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-python"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-python",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'left' or 'mid') and put data inside it.",
+      "example": " left = 0;   // Left pointer\n rows = matrix.length;  // Number of rows",
+      "action": "continue",
+      "next": "function-check-python"
+    },
+    {
+      "stepId": "function-check-python",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-python"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-python",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "def searchMatrix(matrix, target) {\n  // Returns true if target found\n  return false;\n}",
+      "action": "continue",
+      "next": "parameter-check-python"
+    },
+    {
+      "stepId": "parameter-check-python",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "array-check-python"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-python",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'def searchMatrix(matrix, target)', the 'matrix' and 'target' are parameters.",
+      "example": "def searchMatrix(matrix, target) {\n  // Parameters receive values\n}\n\n// Call: searchMatrix([[1,3],[10,11]], 3)",
+      "action": "continue",
+      "next": "array-check-python"
+    },
+    {
+      "stepId": "array-check-python",
+      "mentorSays": "To solve this lesson, we'll need to work with 2D arrays (matrices). Do you know what a 2D array is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know 2D arrays",
+          "next": "loop-check-python"
+        },
+        {
+          "label": "No, explain 2D arrays",
+          "next": "array-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "array-explanation-python",
+      "mentorSays": "A 2D array is an array of arrays. Each element is itself an array. We access elements using two indices: row and column.\n\nFor example, matrix[0][1] means: row 0, column 1.",
+      "example": "matrix = [[1, 3], [10, 11]];\n\nmatrix[0][0] = 1   // Row 0, Column 0\nmatrix[0][1] = 3   // Row 0, Column 1\nmatrix[1][0] = 10  // Row 1, Column 0",
+      "action": "continue",
+      "next": "loop-check-python"
+    },
+    {
+      "stepId": "loop-check-python",
+      "mentorSays": "To solve this lesson, we'll need to use loops. Do you know what a loop is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know loops",
+          "next": "coding-start-python"
+        },
+        {
+          "label": "No, explain loops",
+          "next": "loop-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "loop-explanation-python",
+      "mentorSays": "A loop lets you repeat code multiple times. A 'while' loop in Python runs code while a condition is true.",
+      "example": "while (left <= right) {\n  // This code runs while condition is true\n  // Binary search logic\n}",
+      "action": "continue",
+      "next": "coding-start-python"
+    },
+    {
+      "stepId": "coding-start-python",
+      "mentorSays": "Perfect! Let's implement the solution in Python.",
+      "example": "// Python implementation",
+      "action": "continue",
+      "next": "coding-get-dimensions-python"
+    },
+    {
+      "stepId": "coding-get-dimensions-python",
+      "mentorSays": "Get matrix dimensions.",
+      "example": "// Python implementation",
+      "action": "continue",
+      "next": "coding-init-pointers-python"
+    },
+    {
+      "stepId": "coding-init-pointers-python",
+      "mentorSays": "Initialize binary search pointers.",
+      "example": "// Python implementation",
+      "action": "continue",
+      "next": "coding-binary-search-python"
+    },
+    {
+      "stepId": "coding-binary-search-python",
+      "mentorSays": "Create binary search loop.",
+      "example": "// Python implementation",
+      "action": "continue",
+      "next": "coding-convert-to-2d-python"
+    },
+    {
+      "stepId": "coding-convert-to-2d-python",
+      "mentorSays": "Convert 1D index to 2D indices.",
+      "example": "// Python implementation",
+      "action": "continue",
+      "next": "coding-compare-python"
+    },
+    {
+      "stepId": "coding-compare-python",
+      "mentorSays": "Compare with target and update pointers.",
+      "example": "// Python implementation",
+      "action": "continue",
+      "next": "coding-return-python"
+    },
+    {
+      "stepId": "coding-return-python",
+      "mentorSays": "Return false if not found.",
+      "example": "// Python implementation",
+      "action": "continue",
+      "next": "test-code-python"
+    },
+    {
+      "stepId": "test-code-python",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** matrix = [[1,3,5,7], [10,11,16,20], [23,30,34,60]], target = 3\nExpected: true (found at row 0, col 1)\n\n**Test 2:** Same matrix, target = 13\nExpected: false (not found)\n\n**Test 3:** matrix = [[1]], target = 1\nExpected: true (found)\n\n**Test 4:** matrix = [[1]], target = 2\nExpected: false (not found)\n\n**Test 5:** matrix = [[1,3,5,7], [10,11,16,20]], target = 11\nExpected: true (found at row 1, col 1)\n\n**Test 6:** matrix = [[1,3,5,7], [10,11,16,20]], target = 15\nExpected: false (not found)\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: [[1,3,5,7],[10,11,16,20],[23,30,34,60]], 3 → true\nTest 2: Same, 13 → false\nTest 3: [[1]], 1 → true\nTest 4: [[1]], 2 → false\nTest 5: [[1,3,5,7],[10,11,16,20]], 11 → true\nTest 6: Same, 15 → false",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-java",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-java"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-java",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'left' or 'mid') and put data inside it.",
+      "example": "boolean left = 0;   // Left pointer\nboolean rows = matrix.length;  // Number of rows",
+      "action": "continue",
+      "next": "function-check-java"
+    },
+    {
+      "stepId": "function-check-java",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-java"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-java",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "public boolean searchMatrix(matrix, target) {\n  // Returns true if target found\n  return false;\n}",
+      "action": "continue",
+      "next": "parameter-check-java"
+    },
+    {
+      "stepId": "parameter-check-java",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "array-check-java"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-java",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'public boolean searchMatrix(matrix, target)', the 'matrix' and 'target' are parameters.",
+      "example": "public boolean searchMatrix(matrix, target) {\n  // Parameters receive values\n}\n\n// Call: searchMatrix([[1,3],[10,11]], 3)",
+      "action": "continue",
+      "next": "array-check-java"
+    },
+    {
+      "stepId": "array-check-java",
+      "mentorSays": "To solve this lesson, we'll need to work with 2D arrays (matrices). Do you know what a 2D array is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know 2D arrays",
+          "next": "loop-check-java"
+        },
+        {
+          "label": "No, explain 2D arrays",
+          "next": "array-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "array-explanation-java",
+      "mentorSays": "A 2D array is an array of arrays. Each element is itself an array. We access elements using two indices: row and column.\n\nFor example, matrix[0][1] means: row 0, column 1.",
+      "example": "matrix = [[1, 3], [10, 11]];\n\nmatrix[0][0] = 1   // Row 0, Column 0\nmatrix[0][1] = 3   // Row 0, Column 1\nmatrix[1][0] = 10  // Row 1, Column 0",
+      "action": "continue",
+      "next": "loop-check-java"
+    },
+    {
+      "stepId": "loop-check-java",
+      "mentorSays": "To solve this lesson, we'll need to use loops. Do you know what a loop is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know loops",
+          "next": "coding-start-java"
+        },
+        {
+          "label": "No, explain loops",
+          "next": "loop-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "loop-explanation-java",
+      "mentorSays": "A loop lets you repeat code multiple times. A 'while' loop in Java runs code while a condition is true.",
+      "example": "while (left <= right) {\n  // This code runs while condition is true\n  // Binary search logic\n}",
+      "action": "continue",
+      "next": "coding-start-java"
+    },
+    {
+      "stepId": "coding-start-java",
+      "mentorSays": "Perfect! Let's implement the solution in Java.",
+      "example": "// Java implementation",
+      "action": "continue",
+      "next": "coding-get-dimensions-java"
+    },
+    {
+      "stepId": "coding-get-dimensions-java",
+      "mentorSays": "Get matrix dimensions.",
+      "example": "// Java implementation",
+      "action": "continue",
+      "next": "coding-init-pointers-java"
+    },
+    {
+      "stepId": "coding-init-pointers-java",
+      "mentorSays": "Initialize binary search pointers.",
+      "example": "// Java implementation",
+      "action": "continue",
+      "next": "coding-binary-search-java"
+    },
+    {
+      "stepId": "coding-binary-search-java",
+      "mentorSays": "Create binary search loop.",
+      "example": "// Java implementation",
+      "action": "continue",
+      "next": "coding-convert-to-2d-java"
+    },
+    {
+      "stepId": "coding-convert-to-2d-java",
+      "mentorSays": "Convert 1D index to 2D indices.",
+      "example": "// Java implementation",
+      "action": "continue",
+      "next": "coding-compare-java"
+    },
+    {
+      "stepId": "coding-compare-java",
+      "mentorSays": "Compare with target and update pointers.",
+      "example": "// Java implementation",
+      "action": "continue",
+      "next": "coding-return-java"
+    },
+    {
+      "stepId": "coding-return-java",
+      "mentorSays": "Return false if not found.",
+      "example": "// Java implementation",
+      "action": "continue",
+      "next": "test-code-java"
+    },
+    {
+      "stepId": "test-code-java",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** matrix = [[1,3,5,7], [10,11,16,20], [23,30,34,60]], target = 3\nExpected: true (found at row 0, col 1)\n\n**Test 2:** Same matrix, target = 13\nExpected: false (not found)\n\n**Test 3:** matrix = [[1]], target = 1\nExpected: true (found)\n\n**Test 4:** matrix = [[1]], target = 2\nExpected: false (not found)\n\n**Test 5:** matrix = [[1,3,5,7], [10,11,16,20]], target = 11\nExpected: true (found at row 1, col 1)\n\n**Test 6:** matrix = [[1,3,5,7], [10,11,16,20]], target = 15\nExpected: false (not found)\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: [[1,3,5,7],[10,11,16,20],[23,30,34,60]], 3 → true\nTest 2: Same, 13 → false\nTest 3: [[1]], 1 → true\nTest 4: [[1]], 2 → false\nTest 5: [[1,3,5,7],[10,11,16,20]], 11 → true\nTest 6: Same, 15 → false",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-cpp",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-cpp"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-cpp",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'left' or 'mid') and put data inside it.",
+      "example": "bool left = 0;   // Left pointer\nbool rows = matrix.length;  // Number of rows",
+      "action": "continue",
+      "next": "function-check-cpp"
+    },
+    {
+      "stepId": "function-check-cpp",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-cpp"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-cpp",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "bool searchMatrix(matrix, target) {\n  // Returns true if target found\n  return false;\n}",
+      "action": "continue",
+      "next": "parameter-check-cpp"
+    },
+    {
+      "stepId": "parameter-check-cpp",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "array-check-cpp"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-cpp",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'bool searchMatrix(matrix, target)', the 'matrix' and 'target' are parameters.",
+      "example": "bool searchMatrix(matrix, target) {\n  // Parameters receive values\n}\n\n// Call: searchMatrix([[1,3],[10,11]], 3)",
+      "action": "continue",
+      "next": "array-check-cpp"
+    },
+    {
+      "stepId": "array-check-cpp",
+      "mentorSays": "To solve this lesson, we'll need to work with 2D arrays (matrices). Do you know what a 2D array is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know 2D arrays",
+          "next": "loop-check-cpp"
+        },
+        {
+          "label": "No, explain 2D arrays",
+          "next": "array-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "array-explanation-cpp",
+      "mentorSays": "A 2D array is an array of arrays. Each element is itself an array. We access elements using two indices: row and column.\n\nFor example, matrix[0][1] means: row 0, column 1.",
+      "example": "matrix = [[1, 3], [10, 11]];\n\nmatrix[0][0] = 1   // Row 0, Column 0\nmatrix[0][1] = 3   // Row 0, Column 1\nmatrix[1][0] = 10  // Row 1, Column 0",
+      "action": "continue",
+      "next": "loop-check-cpp"
+    },
+    {
+      "stepId": "loop-check-cpp",
+      "mentorSays": "To solve this lesson, we'll need to use loops. Do you know what a loop is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know loops",
+          "next": "coding-start-cpp"
+        },
+        {
+          "label": "No, explain loops",
+          "next": "loop-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "loop-explanation-cpp",
+      "mentorSays": "A loop lets you repeat code multiple times. A 'while' loop in C++ runs code while a condition is true.",
+      "example": "while (left <= right) {\n  // This code runs while condition is true\n  // Binary search logic\n}",
+      "action": "continue",
+      "next": "coding-start-cpp"
+    },
+    {
+      "stepId": "coding-start-cpp",
+      "mentorSays": "Perfect! Let's implement the solution in C++.",
+      "example": "// C++ implementation",
+      "action": "continue",
+      "next": "coding-get-dimensions-cpp"
+    },
+    {
+      "stepId": "coding-get-dimensions-cpp",
+      "mentorSays": "Get matrix dimensions.",
+      "example": "// C++ implementation",
+      "action": "continue",
+      "next": "coding-init-pointers-cpp"
+    },
+    {
+      "stepId": "coding-init-pointers-cpp",
+      "mentorSays": "Initialize binary search pointers.",
+      "example": "// C++ implementation",
+      "action": "continue",
+      "next": "coding-binary-search-cpp"
+    },
+    {
+      "stepId": "coding-binary-search-cpp",
+      "mentorSays": "Create binary search loop.",
+      "example": "// C++ implementation",
+      "action": "continue",
+      "next": "coding-convert-to-2d-cpp"
+    },
+    {
+      "stepId": "coding-convert-to-2d-cpp",
+      "mentorSays": "Convert 1D index to 2D indices.",
+      "example": "// C++ implementation",
+      "action": "continue",
+      "next": "coding-compare-cpp"
+    },
+    {
+      "stepId": "coding-compare-cpp",
+      "mentorSays": "Compare with target and update pointers.",
+      "example": "// C++ implementation",
+      "action": "continue",
+      "next": "coding-return-cpp"
+    },
+    {
+      "stepId": "coding-return-cpp",
+      "mentorSays": "Return false if not found.",
+      "example": "// C++ implementation",
+      "action": "continue",
+      "next": "test-code-cpp"
+    },
+    {
+      "stepId": "test-code-cpp",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** matrix = [[1,3,5,7], [10,11,16,20], [23,30,34,60]], target = 3\nExpected: true (found at row 0, col 1)\n\n**Test 2:** Same matrix, target = 13\nExpected: false (not found)\n\n**Test 3:** matrix = [[1]], target = 1\nExpected: true (found)\n\n**Test 4:** matrix = [[1]], target = 2\nExpected: false (not found)\n\n**Test 5:** matrix = [[1,3,5,7], [10,11,16,20]], target = 11\nExpected: true (found at row 1, col 1)\n\n**Test 6:** matrix = [[1,3,5,7], [10,11,16,20]], target = 15\nExpected: false (not found)\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: [[1,3,5,7],[10,11,16,20],[23,30,34,60]], 3 → true\nTest 2: Same, 13 → false\nTest 3: [[1]], 1 → true\nTest 4: [[1]], 2 → false\nTest 5: [[1,3,5,7],[10,11,16,20]], 11 → true\nTest 6: Same, 15 → false",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-ts",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-ts"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-ts",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'left' or 'mid') and put data inside it.",
+      "example": "let left = 0;   // Left pointer\nlet rows = matrix.length;  // Number of rows",
+      "action": "continue",
+      "next": "function-check-ts"
+    },
+    {
+      "stepId": "function-check-ts",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-ts"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-ts",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "function searchMatrix(matrix, target) {\n  // Returns true if target found\n  return false;\n}",
+      "action": "continue",
+      "next": "parameter-check-ts"
+    },
+    {
+      "stepId": "parameter-check-ts",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "array-check-ts"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-ts",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'function searchMatrix(matrix, target)', the 'matrix' and 'target' are parameters.",
+      "example": "function searchMatrix(matrix, target) {\n  // Parameters receive values\n}\n\n// Call: searchMatrix([[1,3],[10,11]], 3)",
+      "action": "continue",
+      "next": "array-check-ts"
+    },
+    {
+      "stepId": "array-check-ts",
+      "mentorSays": "To solve this lesson, we'll need to work with 2D arrays (matrices). Do you know what a 2D array is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know 2D arrays",
+          "next": "loop-check-ts"
+        },
+        {
+          "label": "No, explain 2D arrays",
+          "next": "array-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "array-explanation-ts",
+      "mentorSays": "A 2D array is an array of arrays. Each element is itself an array. We access elements using two indices: row and column.\n\nFor example, matrix[0][1] means: row 0, column 1.",
+      "example": "matrix = [[1, 3], [10, 11]];\n\nmatrix[0][0] = 1   // Row 0, Column 0\nmatrix[0][1] = 3   // Row 0, Column 1\nmatrix[1][0] = 10  // Row 1, Column 0",
+      "action": "continue",
+      "next": "loop-check-ts"
+    },
+    {
+      "stepId": "loop-check-ts",
+      "mentorSays": "To solve this lesson, we'll need to use loops. Do you know what a loop is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know loops",
+          "next": "coding-start-ts"
+        },
+        {
+          "label": "No, explain loops",
+          "next": "loop-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "loop-explanation-ts",
+      "mentorSays": "A loop lets you repeat code multiple times. A 'while' loop in TypeScript runs code while a condition is true.",
+      "example": "while (left <= right) {\n  // This code runs while condition is true\n  // Binary search logic\n}",
+      "action": "continue",
+      "next": "coding-start-ts"
+    },
+    {
+      "stepId": "coding-start-ts",
+      "mentorSays": "Perfect! Let's implement the solution in TypeScript.",
+      "example": "// TypeScript implementation",
+      "action": "continue",
+      "next": "coding-get-dimensions-ts"
+    },
+    {
+      "stepId": "coding-get-dimensions-ts",
+      "mentorSays": "Get matrix dimensions.",
+      "example": "// TypeScript implementation",
+      "action": "continue",
+      "next": "coding-init-pointers-ts"
+    },
+    {
+      "stepId": "coding-init-pointers-ts",
+      "mentorSays": "Initialize binary search pointers.",
+      "example": "// TypeScript implementation",
+      "action": "continue",
+      "next": "coding-binary-search-ts"
+    },
+    {
+      "stepId": "coding-binary-search-ts",
+      "mentorSays": "Create binary search loop.",
+      "example": "// TypeScript implementation",
+      "action": "continue",
+      "next": "coding-convert-to-2d-ts"
+    },
+    {
+      "stepId": "coding-convert-to-2d-ts",
+      "mentorSays": "Convert 1D index to 2D indices.",
+      "example": "// TypeScript implementation",
+      "action": "continue",
+      "next": "coding-compare-ts"
+    },
+    {
+      "stepId": "coding-compare-ts",
+      "mentorSays": "Compare with target and update pointers.",
+      "example": "// TypeScript implementation",
+      "action": "continue",
+      "next": "coding-return-ts"
+    },
+    {
+      "stepId": "coding-return-ts",
+      "mentorSays": "Return false if not found.",
+      "example": "// TypeScript implementation",
+      "action": "continue",
+      "next": "test-code-ts"
+    },
+    {
+      "stepId": "test-code-ts",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** matrix = [[1,3,5,7], [10,11,16,20], [23,30,34,60]], target = 3\nExpected: true (found at row 0, col 1)\n\n**Test 2:** Same matrix, target = 13\nExpected: false (not found)\n\n**Test 3:** matrix = [[1]], target = 1\nExpected: true (found)\n\n**Test 4:** matrix = [[1]], target = 2\nExpected: false (not found)\n\n**Test 5:** matrix = [[1,3,5,7], [10,11,16,20]], target = 11\nExpected: true (found at row 1, col 1)\n\n**Test 6:** matrix = [[1,3,5,7], [10,11,16,20]], target = 15\nExpected: false (not found)\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: [[1,3,5,7],[10,11,16,20],[23,30,34,60]], 3 → true\nTest 2: Same, 13 → false\nTest 3: [[1]], 1 → true\nTest 4: [[1]], 2 → false\nTest 5: [[1,3,5,7],[10,11,16,20]], 11 → true\nTest 6: Same, 15 → false",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "final",
+      "mentorSays": "🎉 Well done! You've successfully implemented the Search a 2D Matrix solution!\n\n**Time Complexity:** O(log(m*n))\n- We use binary search on the flattened matrix\n- The search space is m*n elements\n- Binary search takes O(log(m*n)) time\n\n**Space Complexity:** O(1)\n- We only use a constant amount of extra space (left, right, mid, row, col variables)\n- No additional data structures are needed\n\n**Key Takeaways:**\n1. **Treat as 1D**: The matrix is essentially one sorted array when flattened\n2. **Index conversion**: row = mid // cols, col = mid % cols\n3. **Binary search**: Use standard binary search on the flattened array\n4. **Efficient**: O(log(m*n)) is much better than O(m*n) or O(m log n)\n5. **Matrix properties**: The sorted row and column properties enable this approach\n\n**Related Practice Lessons:**\n- Search a 2D Matrix II (LeetCode #240) - different matrix properties\n- Find Peak Element (LeetCode #162) - binary search variant\n- Sqrt(x) (LeetCode #69) - binary search on answer\n\nKeep practicing binary search lessons - they're common in interviews!",
+      "action": "continue"
+    }
+  ]
+}

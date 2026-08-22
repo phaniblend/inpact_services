@@ -1,0 +1,360 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-angular-43",
+    "track": "angular",
+    "lessonNum": 43,
+    "title": "useClickOutside",
+    "shortName": "P43",
+    "intro": {
+      "tag": "LESSON #43",
+      "title": "useClickOutside",
+      "body": "In this lesson, you will build a custom Angular directive that detects clicks outside a specific HTML element, a common pattern for closing dropdowns, modals, or popovers. You will learn how to listen for click events on the entire document and compare the event target to your element's boundaries. The core concept involves using Angular's HostListener for event handling and ElementRef to access the DOM. You'll implement this logic in a reusable directive, applying it to any component template. By the end, you'll have a practical tool for enhancing user interactions in your Angular applications.",
+      "usecase": "The click-outside pattern is essential for creating intuitive UI components that users expect to close when clicking elsewhere. You'll implement this in dropdown menus, modal dialogs, and date pickers to prevent interface clutter and improve user experience. In e-commerce filters or dashboard settings panels, click-outside behavior ensures users can easily dismiss options without hunting for close buttons. This pattern is fundamental for professional Angular applications where clean, predictable interactions are required."
+    },
+    "objectives": [
+      "Construct a custom directive that detects clicks outside a specified element",
+      "Initialize and manage a boolean state variable to track the visibility of a dropdown",
+      "Bind the custom directive to a template element to handle click-outside events",
+      "Configure the directive to toggle the dropdown state when clicking outside the target area",
+      "Implement a click handler that updates the dropdown state based on user interaction",
+      "Integrate the click-outside detection with a dropdown component to control its visibility",
+      "Manipulate the DOM by conditionally rendering dropdown content based on the click-outside state"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 10",
+        "title": "Import Component, ElementRef, HostListener, and ViewChild from Angular core",
+        "instruction": "Add the required imports from '@angular/core' for this lesson: Component, ElementRef, HostListener, and ViewChild.",
+        "hint": "Use the import statement with curly braces to import multiple symbols from the Angular core module.",
+        "analogousExample": "// Importing multiple Angular core features\nimport { Component, OnInit } from '@angular/core';",
+        "seedCode": "// Import Component, ElementRef, HostListener, and ViewChild from '@angular/core'",
+        "expectedOutcome": "The Angular core imports needed for click outside detection are added to the file.",
+        "successCriteria": [
+          "Component, ElementRef, HostListener, and ViewChild are imported from '@angular/core'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've imported some of the required symbols, but need all four: Component, ElementRef, HostListener, and ViewChild.",
+        "feedbackWrong": "The imports are missing or incorrect. You need to import Component, ElementRef, HostListener, and ViewChild from '@angular/core'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "Component",
+            "ElementRef",
+            "HostListener",
+            "ViewChild",
+            "@angular/core"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 10",
+        "title": "Create the main component class with selector and template",
+        "instruction": "Define a component class named ClickOutsideComponent with the selector 'app-click-outside' and an empty template.",
+        "hint": "Use the @Component decorator to configure the selector and template. The template can be an empty string for now.",
+        "analogousExample": "// Example: basic Angular component\n@Component({\n  selector: 'app-example',\n  template: ''\n})\nexport class ExampleComponent {}",
+        "seedCode": "// Import Component, ElementRef, HostListener, and ViewChild from '@angular/core'\nimport { Component, ElementRef, HostListener, ViewChild } from '@angular/core';\n\n// Define the ClickOutsideComponent class here",
+        "expectedOutcome": "The component class is defined with the correct selector and an empty template.",
+        "successCriteria": [
+          "ClickOutsideComponent class is defined with @Component decorator, selector 'app-click-outside', and template ''."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure the component has the @Component decorator with selector 'app-click-outside' and an empty template string.",
+        "feedbackWrong": "The component isn't properly defined. Check that you're using @Component decorator with the correct selector and template.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "@Component",
+            "selector",
+            "'app-click-outside'",
+            "template",
+            "''",
+            "ClickOutsideComponent"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 10",
+        "title": "Add a boolean state property to track dropdown visibility",
+        "instruction": "Inside the ClickOutsideComponent class, add a public boolean property named 'isDropdownOpen' and initialize it to false.",
+        "hint": "You can declare a property directly in the class body using TypeScript syntax: propertyName: type = initialValue.",
+        "analogousExample": "// Example: a boolean state property\nclass ExampleComponent {\n  isVisible: boolean = false;\n}",
+        "seedCode": "import { Component, ElementRef, HostListener, ViewChild } from '@angular/core';\n\n@Component({\n  selector: 'app-click-outside',\n  template: ''\n})\nexport class ClickOutsideComponent {\n  // Add isDropdownOpen property here\n}",
+        "expectedOutcome": "The component will have a boolean state property that tracks whether the dropdown is visible, initialized to false.",
+        "successCriteria": [
+          "The ClickOutsideComponent class contains a public property named 'isDropdownOpen' of type boolean set to false."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added a property, but check its name, type, or initial value. It should be 'isDropdownOpen: boolean = false'.",
+        "feedbackWrong": "The component is missing the required boolean state property. Add 'isDropdownOpen: boolean = false' inside the class.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "isDropdownOpen",
+            "boolean",
+            "false"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 10",
+        "title": "Use ViewChild to get reference to the dropdown element",
+        "instruction": "In the ClickOutsideComponent class, add a ViewChild property named 'dropdownRef' that will reference the dropdown container element.",
+        "hint": "Use the @ViewChild decorator with a template reference variable name (as a string) to get a reference to a DOM element in your template.",
+        "analogousExample": "// Similar: referencing an element with ViewChild\n@ViewChild('myElement') myElementRef: ElementRef;",
+        "seedCode": "import { Component, ElementRef, HostListener, ViewChild } from '@angular/core';\n\n@Component({\n  selector: 'app-click-outside',\n  template: ''\n})\nexport class ClickOutsideComponent {\n  // Add isDropdownOpen property here\n  \n  // Add ViewChild property here\n}",
+        "expectedOutcome": "The component now has a ViewChild property that will allow you to access the dropdown element in the template.",
+        "successCriteria": [
+          "A ViewChild property named 'dropdownRef' of type ElementRef is declared in the component class."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you've declared a property with the @ViewChild decorator and named it 'dropdownRef'.",
+        "feedbackWrong": "The ViewChild property is missing or incorrect. Check that you've used the @ViewChild decorator with the correct property name and type.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "@ViewChild",
+            "dropdownRef",
+            "ElementRef"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 10",
+        "title": "Create a method to toggle the dropdown visibility",
+        "instruction": "Inside the ClickOutsideComponent class, define a method named toggleDropdown that flips the value of the isDropdownOpen property.",
+        "hint": "You can toggle a boolean by setting it to the opposite of its current value using the logical NOT operator (!).",
+        "analogousExample": "// Similar: a method that toggles a boolean state\ntoggleLight() {\n  this.isLightOn = !this.isLightOn;\n}",
+        "seedCode": "import { Component, ElementRef, HostListener, ViewChild } from '@angular/core';\n\n@Component({\n  selector: 'app-click-outside',\n  template: ''\n})\nexport class ClickOutsideComponent {\n  isDropdownOpen = false;\n\n  @ViewChild('dropdown') dropdownRef!: ElementRef;\n\n  // Define toggleDropdown method here\n}",
+        "expectedOutcome": "The component will have a toggleDropdown method that changes the isDropdownOpen state between true and false.",
+        "successCriteria": [
+          "The toggleDropdown method is defined and correctly toggles the isDropdownOpen property."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but the method might not be correctly toggling the boolean value. Make sure you're using the logical NOT operator (!) to flip the current value.",
+        "feedbackWrong": "The toggleDropdown method is missing or not properly defined. Remember to create a method that flips the isDropdownOpen boolean value.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "toggleDropdown",
+            "isDropdownOpen",
+            "!"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 10",
+        "title": "Add HostListener to detect clicks outside the dropdown",
+        "instruction": "Add a HostListener decorator to your component class that listens for 'document:click' events and logs the event target for now.",
+        "hint": "Use @HostListener('document:click', ['$event']) above a method that takes an event parameter.",
+        "analogousExample": "// Example: HostListener for document clicks\n@HostListener('document:click', ['$event'])\nhandleDocumentClick(event: MouseEvent) {\n  console.log('Clicked:', event.target);\n}",
+        "seedCode": "import { Component, ElementRef, HostListener, ViewChild } from '@angular/core';\n\n@Component({\n  selector: 'app-click-outside',\n  template: ''\n})\nexport class ClickOutsideComponent {\n  isDropdownOpen = false;\n\n  @ViewChild('dropdown') dropdownRef!: ElementRef;\n\n  // Define toggleDropdown method here\n\n  // Add HostListener for document:click here\n}",
+        "expectedOutcome": "The component will have a HostListener that captures all document clicks and logs the event target to the console.",
+        "successCriteria": [
+          "A HostListener decorator is added that listens to 'document:click' events and logs the event target."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your HostListener is properly set up with 'document:click' and logs the event target.",
+        "feedbackWrong": "The HostListener wasn't added correctly. Check that you used @HostListener('document:click', ['$event']) above a method that takes an event parameter.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "@HostListener",
+            "'document:click'",
+            "event"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 10",
+        "title": "Implement click outside detection logic",
+        "instruction": "Inside the HostListener method, write the logic to check if the clicked element is outside the dropdown element and close the dropdown if it is.",
+        "hint": "Compare the event target with the dropdown element reference. Use the dropdownRef's nativeElement property to access the DOM element.",
+        "analogousExample": "// Example: Checking if click is outside an element\n@HostListener('document:click', ['$event'])\nonDocumentClick(event: MouseEvent) {\n  if (!this.elementRef.nativeElement.contains(event.target)) {\n    this.isOpen = false;\n  }\n}",
+        "seedCode": "import { Component, ElementRef, HostListener, ViewChild } from '@angular/core';\n\n@Component({\n  selector: 'app-click-outside',\n  template: ''\n})\nexport class ClickOutsideComponent {\n  isDropdownOpen = false;\n\n  @ViewChild('dropdown') dropdownRef!: ElementRef;\n\n  toggleDropdown() {\n    this.isDropdownOpen = !this.isDropdownOpen;\n  }\n\n  @HostListener('document:click', ['$event'])\n  onDocumentClick(event: MouseEvent) {\n    // Write logic here to check if click is outside dropdown\n  }\n}",
+        "expectedOutcome": "The HostListener method now contains logic that compares the clicked element with the dropdown element and closes the dropdown when clicks occur outside of it.",
+        "successCriteria": [
+          "The HostListener method contains a conditional check",
+          "The check compares event.target with dropdownRef.nativeElement",
+          "The isDropdownOpen property is set to false when click is outside"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure your logic includes: 1) Checking if the dropdownRef exists, 2) Comparing the event target with the dropdown element, and 3) Setting isDropdownOpen to false when the click is outside.",
+        "feedbackWrong": "The click outside detection logic isn't quite right. You need to check if the clicked element (event.target) is outside the dropdown element (dropdownRef.nativeElement) and close the dropdown if it is.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "dropdownRef",
+            "nativeElement",
+            "contains",
+            "event.target",
+            "isDropdownOpen",
+            "false"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 10",
+        "title": "Add a button to open/close the dropdown in the template",
+        "instruction": "In the component's template, add a button element with a click event bound to the toggleDropdown() method. Use the text 'Toggle Dropdown' for the button content.",
+        "hint": "Use Angular's event binding syntax (event)='method()' to connect the button click to your toggle method.",
+        "analogousExample": "// Adding a button with click handler in Angular template\n<button (click)=\"handleClick()\">Click Me</button>",
+        "seedCode": "import { Component, ElementRef, HostListener, ViewChild } from '@angular/core';\n\n@Component({\n  selector: 'app-click-outside',\n  template: ''\n})\nexport class ClickOutsideComponent {\n  isDropdownOpen = false;\n\n  @ViewChild('dropdown') dropdownRef!: ElementRef;\n\n  toggleDropdown() {\n    this.isDropdownOpen = !this.isDropdownOpen;\n  }\n\n  @HostListener('document:click', ['$event'])\n  onDocumentClick(event: MouseEvent) {\n    // Write logic here to check if click is outside dropdown\n  }\n}",
+        "expectedOutcome": "The component template will contain a button that calls toggleDropdown() when clicked, allowing users to open and close the dropdown.",
+        "successCriteria": [
+          "A button element is added to the template with (click)=\"toggleDropdown()\" and displays 'Toggle Dropdown' text."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added a button, but it's missing either the click event binding or the correct text. Make sure to use (click)=\"toggleDropdown()\" and 'Toggle Dropdown' as the button text.",
+        "feedbackWrong": "The button wasn't added correctly. Remember to add a button element to the template with (click)=\"toggleDropdown()\" and 'Toggle Dropdown' as the button content.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<button",
+            "(click)=\"toggleDropdown()\"",
+            "Toggle Dropdown"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 10",
+        "title": "Create the dropdown container with conditional display",
+        "instruction": "In the component's template, add a div element that uses *ngIf to conditionally render only when isDropdownOpen is true, and give it a template reference variable #dropdown.",
+        "hint": "Use Angular's structural directive *ngIf to control visibility based on the boolean state property. The template reference variable will allow the dropdown element to be referenced in the component class.",
+        "analogousExample": "// Example: conditional element with template reference\n<div *ngIf=\"isVisible\" #myElement>\n  Content appears when isVisible is true\n</div>",
+        "seedCode": "import { Component, ElementRef, HostListener, ViewChild } from '@angular/core';\n\n@Component({\n  selector: 'app-click-outside',\n  template: ''\n})\nexport class ClickOutsideComponent {\n  isDropdownOpen = false;\n\n  @ViewChild('dropdown') dropdownRef!: ElementRef;\n\n  toggleDropdown() {\n    this.isDropdownOpen = !this.isDropdownOpen;\n  }\n\n  @HostListener('document:click', ['$event'])\n  onDocumentClick(event: MouseEvent) {\n    // Write logic here to check if click is outside dropdown\n  }\n}",
+        "expectedOutcome": "The template will contain a div that only appears when the dropdown should be open, with a template reference variable that matches the ViewChild decorator.",
+        "successCriteria": [
+          "A div element with *ngIf=\"isDropdownOpen\" and #dropdown template reference variable is added to the component's template."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You added the div, but make sure it has both *ngIf=\"isDropdownOpen\" and the #dropdown template reference variable.",
+        "feedbackWrong": "The dropdown container is missing or incorrect. Add a div with *ngIf=\"isDropdownOpen\" and #dropdown.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "*ngIf=\"isDropdownOpen\"",
+            "#dropdown"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 10",
+        "title": "Add sample content to the dropdown and style the elements",
+        "instruction": "Inside the template, add a list of sample items inside the dropdown container and apply basic inline styles to the button and dropdown for visual feedback.",
+        "hint": "Use <ul> and <li> elements for the dropdown content. Add style attributes to the button and dropdown container with padding, background colors, and borders.",
+        "analogousExample": "// Adding content and styles to a container\n<ul style=\"list-style: none; padding: 0;\">\n  <li>Item 1</li>\n  <li>Item 2</li>\n</ul>",
+        "seedCode": "import { Component, ElementRef, HostListener, ViewChild } from '@angular/core';\n\n@Component({\n  selector: 'app-click-outside',\n  template: `\n    <button (click)=\"toggleDropdown()\" style=\"padding: 8px 16px; background: #007bff; color: white; border: none; border-radius: 4px;\">\n      Toggle Dropdown\n    </button>\n    <div #dropdown *ngIf=\"isDropdownOpen\" style=\"border: 1px solid #ccc; padding: 10px; margin-top: 8px; background: #f9f9f9;\">\n      <!-- Add dropdown content here -->\n    </div>\n  `\n})\nexport class ClickOutsideComponent {\n  isDropdownOpen = false;\n\n  @ViewChild('dropdown') dropdownRef!: ElementRef;\n\n  toggleDropdown() {\n    this.isDropdownOpen = !this.isDropdownOpen;\n  }\n\n  @HostListener('document:click', ['$event'])\n  onDocumentClick(event: MouseEvent) {\n    // Write logic here to check if click is outside dropdown\n  }\n}",
+        "expectedOutcome": "The dropdown will display a list of items when open, and both the button and dropdown will have basic styling for better visual distinction.",
+        "successCriteria": [
+          "The template includes a list inside the dropdown container with at least two items, and inline styles are applied to the button and dropdown."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You added some content or styling, but ensure both the list and inline styles are fully implemented.",
+        "feedbackWrong": "The dropdown content or styles are missing. Add a list inside the dropdown and apply inline styles to the button and dropdown container.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<ul>",
+            "<li>",
+            "style=",
+            "padding",
+            "background"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import Component, ElementRef, HostListener, and ViewChild from Angular core",
+        "id": "step1"
+      },
+      {
+        "label": "Create the main component class with selector and template",
+        "id": "step2"
+      },
+      {
+        "label": "Add a boolean state property to track dropdown visibility",
+        "id": "step3"
+      },
+      {
+        "label": "Use ViewChild to get reference to the dropdown element",
+        "id": "step4"
+      },
+      {
+        "label": "Create a method to toggle the dropdown visibility",
+        "id": "step5"
+      },
+      {
+        "label": "Add HostListener to detect clicks outside the dropdown",
+        "id": "step6"
+      },
+      {
+        "label": "Implement click outside detection logic",
+        "id": "step7"
+      },
+      {
+        "label": "Add a button to open/close the dropdown in the template",
+        "id": "step8"
+      },
+      {
+        "label": "Create the dropdown container with conditional display",
+        "id": "step9"
+      },
+      {
+        "label": "Add sample content to the dropdown and style the elements",
+        "id": "step10"
+      }
+    ]
+  },
+  "source": "content"
+}

@@ -1,0 +1,484 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-angular-84",
+    "track": "angular",
+    "lessonNum": 84,
+    "title": "Request Deduplication",
+    "shortName": "P84",
+    "intro": {
+      "tag": "LESSON #84",
+      "title": "Request Deduplication",
+      "body": "In this lesson, you will build a simple Angular application that demonstrates request deduplication. You will create a service that prevents duplicate HTTP requests from being sent simultaneously, improving performance and reducing server load. The core programming concept used is caching and tracking pending requests using a Map. You will work with Angular's HttpClient, RxJS Observables, and TypeScript to implement this pattern in a beginner-friendly way.",
+      "usecase": "Request deduplication is essential in Angular applications where multiple components might trigger the same API call simultaneously, such as in dashboard widgets displaying overlapping data or product filtering interfaces with interdependent controls. For example, in an e-commerce dashboard, clicking multiple category filters in quick succession could trigger duplicate requests for product listings, wasting bandwidth and potentially causing race conditions. Similarly, in financial applications with real-time stock tickers, multiple components watching the same symbol would benefit from sharing a single network request rather than making redundant calls. This pattern improves performance by preventing unnecessary network traffic and ensures data consistency across your application."
+    },
+    "objectives": [
+      "Implement a service to manage HTTP request deduplication in Angular",
+      "Configure a caching mechanism to store and retrieve pending API requests",
+      "Construct a reusable interceptor that prevents duplicate HTTP calls",
+      "Apply request deduplication logic to optimize application performance",
+      "Initialize and manage shared observable streams for concurrent requests",
+      "Integrate deduplication patterns into existing Angular service architectures",
+      "Manipulate HTTP request flows to eliminate redundant network calls"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 12",
+        "title": "Import Angular modules and HttpClient",
+        "instruction": "At the top of your TypeScript file, import Component and OnInit from '@angular/core', HttpClient and HttpClientModule from '@angular/common/http', and CommonModule from '@angular/common'.",
+        "hint": "Use the import keyword followed by the symbols you need from each module. Separate multiple imports from the same module with commas.",
+        "analogousExample": "// Example: importing multiple modules\nimport { Component, OnInit } from '@angular/core';\nimport { HttpClient, HttpClientModule } from '@angular/common/http';\nimport { CommonModule } from '@angular/common';",
+        "seedCode": {
+          "App.tsx": "// Import the required Angular modules and HttpClient here",
+          "store.ts": "// store setup",
+          "api.ts": "// api"
+        },
+        "expectedOutcome": "Your file will have the necessary imports to create an Angular component and make HTTP requests.",
+        "successCriteria": [
+          "Component and OnInit are imported from '@angular/core', HttpClient and HttpClientModule are imported from '@angular/common/http', and CommonModule is imported from '@angular/common'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've imported some of the required modules, but not all. Check that you have Component and OnInit from '@angular/core', HttpClient and HttpClientModule from '@angular/common/http', and CommonModule from '@angular/common'.",
+        "feedbackWrong": "The imports are missing or incorrect. You need to import Component and OnInit from '@angular/core', HttpClient and HttpClientModule from '@angular/common/http', and CommonModule from '@angular/common'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "Component",
+            "OnInit",
+            "@angular/core",
+            "HttpClient",
+            "HttpClientModule",
+            "@angular/common/http",
+            "CommonModule",
+            "@angular/common"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 12",
+        "title": "Create a data service with HttpClient",
+        "instruction": "Create an Angular service named 'DataService' with a constructor that injects HttpClient.",
+        "hint": "Use the @Injectable decorator and define a class with a constructor parameter of type HttpClient.",
+        "analogousExample": "// Example service with dependency injection\n@Injectable({\n  providedIn: 'root'\n})\nexport class ExampleService {\n  constructor(private http: HttpClient) {}\n}",
+        "seedCode": {
+          "App.tsx": "import { Injectable } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\n\n// Create your DataService here\n",
+          "store.ts": "// store setup",
+          "api.ts": "// api"
+        },
+        "expectedOutcome": "A DataService class is created with HttpClient injected in its constructor.",
+        "successCriteria": [
+          "DataService class is defined with @Injectable decorator and constructor injecting HttpClient."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you've defined the DataService class with the @Injectable decorator and injected HttpClient in the constructor.",
+        "feedbackWrong": "The service wasn't created correctly. Check that you've defined a class named DataService with proper dependency injection.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "DataService",
+            "@Injectable",
+            "constructor",
+            "HttpClient"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 12",
+        "title": "Define an interface for the response data",
+        "instruction": "Inside the DataService file, define a TypeScript interface named 'ApiResponse' with properties 'id' (number) and 'title' (string).",
+        "hint": "Use the 'interface' keyword followed by the interface name and property definitions with their types.",
+        "analogousExample": "// Example interface definition\ninterface User {\n  id: number;\n  name: string;\n}",
+        "seedCode": {
+          "App.tsx": "import { Injectable } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\n\n// Define your ApiResponse interface here\n\n// Create your DataService here",
+          "store.ts": "// store setup",
+          "api.ts": "// api"
+        },
+        "expectedOutcome": "An ApiResponse interface is defined with correct property types.",
+        "successCriteria": [
+          "The interface 'ApiResponse' is defined with 'id: number' and 'title: string' properties."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've defined an interface, but check that it has both 'id' and 'title' properties with correct types.",
+        "feedbackWrong": "The interface definition is missing or incorrect. Make sure to use the 'interface' keyword with the name 'ApiResponse' and define both properties.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "interface",
+            "ApiResponse",
+            "id:",
+            "number",
+            "title:",
+            "string"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 12",
+        "title": "Implement a basic GET method in the service",
+        "instruction": "In your DataService class, add a method named 'fetchData' that uses HttpClient.get() to fetch data from 'https://jsonplaceholder.typicode.com/posts/1' and returns the Observable.",
+        "hint": "Use the HttpClient instance (injected as 'http') and call its get method with the URL string as argument.",
+        "analogousExample": "// Example: service method returning Observable\nfetchUser() {\n  return this.http.get<User>('https://api.example.com/user');\n}",
+        "seedCode": {
+          "App.tsx": "import { Injectable } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\n\n// Define your ApiResponse interface here\n\n@Injectable({\n  providedIn: 'root'\n})\nexport class DataService {\n  constructor(private http: HttpClient) {}\n\n  // Add fetchData method here\n}",
+          "store.ts": "// store setup",
+          "api.ts": "// api"
+        },
+        "expectedOutcome": "The service now has a fetchData method that returns an Observable from an HTTP GET request.",
+        "successCriteria": [
+          "The DataService contains a fetchData method that returns this.http.get() with the correct URL."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure the method returns this.http.get() with the URL 'https://jsonplaceholder.typicode.com/posts/1'.",
+        "feedbackWrong": "The fetchData method is missing or incorrect. It should return this.http.get('https://jsonplaceholder.typicode.com/posts/1').",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "fetchData",
+            "return",
+            "this.http.get",
+            "'https://jsonplaceholder.typicode.com/posts/1'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 12",
+        "title": "Create the main component",
+        "instruction": "Create a new Angular component named 'DataDisplayComponent' using the Angular CLI or manually create its TypeScript class with the @Component decorator.",
+        "hint": "Use the Angular CLI command 'ng generate component DataDisplayComponent' or manually create a TypeScript file with a class decorated with @Component.",
+        "analogousExample": "// Example of a basic Angular component\n@Component({\n  selector: 'app-example',\n  templateUrl: './example.component.html',\n  styleUrls: ['./example.component.css']\n})\nexport class ExampleComponent {}",
+        "seedCode": {
+          "App.tsx": "import { Injectable } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\n\n// Define your ApiResponse interface here\n\n@Injectable({\n  providedIn: 'root'\n})\nexport class DataService {\n  constructor(private http: HttpClient) {}\n\n  // Add fetchData method here\n}\n\n// Create your DataDisplayComponent here",
+          "store.ts": "// store setup",
+          "api.ts": "// api"
+        },
+        "expectedOutcome": "A new Angular component named DataDisplayComponent is created with the @Component decorator and a basic class structure.",
+        "successCriteria": [
+          "The DataDisplayComponent class is defined with the @Component decorator and exported."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started creating the component, but make sure it has the @Component decorator and is exported as a class named DataDisplayComponent.",
+        "feedbackWrong": "The component wasn't created correctly. Ensure you define a class named DataDisplayComponent with the @Component decorator.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "DataDisplayComponent",
+            "@Component",
+            "export",
+            "class"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 12",
+        "title": "Inject the data service into the component",
+        "instruction": "In the DataDisplayComponent constructor, add a parameter to inject the DataService.",
+        "hint": "Add a parameter with the service type and access modifier (like private) to the constructor.",
+        "analogousExample": "// Example: injecting a service\nconstructor(private myService: MyService) {}",
+        "seedCode": {
+          "App.tsx": "import { Injectable } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\n\n// Define your ApiResponse interface here\n\n@Injectable({\n  providedIn: 'root'\n})\nexport class DataService {\n  constructor(private http: HttpClient) {}\n\n  // Add fetchData method here\n}\n\n// Create your DataDisplayComponent here\n\n@Component({\n  selector: 'app-data-display',\n  template: ''\n})\nexport class DataDisplayComponent {\n  constructor() {}\n}",
+          "store.ts": "// store setup",
+          "api.ts": "// api"
+        },
+        "expectedOutcome": "The component constructor now has a parameter that injects the DataService, making it available for use.",
+        "successCriteria": [
+          "DataService is injected as a parameter in the DataDisplayComponent constructor"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you've added a parameter with the correct type (DataService) to the constructor.",
+        "feedbackWrong": "The DataService is not properly injected. Check that you've added a parameter with the DataService type in the constructor.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "constructor",
+            "DataService",
+            "private"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 12",
+        "title": "Initialize component state for storing data",
+        "instruction": "In the DataDisplayComponent class, define two properties: 'data' with type 'ApiResponse | null' to store API response data, and 'loading' with type 'boolean' to track loading state. Initialize both with appropriate default values.",
+        "hint": "Add these properties inside the component class, before the constructor. Use TypeScript type annotations for proper typing.",
+        "analogousExample": "// Example: component properties with types\nclass ExampleComponent {\n  data: SomeType | null = null;\n  loading: boolean = false;\n  \n  constructor() {}\n}",
+        "seedCode": {
+          "App.tsx": "import { Injectable } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\n\n// Define your ApiResponse interface here\n\n@Injectable({\n  providedIn: 'root'\n})\nexport class DataService {\n  constructor(private http: HttpClient) {}\n\n  // Add fetchData method here\n}\n\n// Create your DataDisplayComponent here\n\n@Component({\n  selector: 'app-data-display',\n  template: ''\n})\nexport class DataDisplayComponent {\n  // Add data and loading properties here\n  \n  constructor() {}\n}",
+          "store.ts": "// store setup",
+          "api.ts": "// api"
+        },
+        "expectedOutcome": "The component now has typed properties to store API response data and track loading state, ready for use in the template and service calls.",
+        "successCriteria": [
+          "DataDisplayComponent has 'data' property of type 'ApiResponse | null' initialized to null, and 'loading' property of type 'boolean' initialized to false."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added some properties, but check that both 'data' and 'loading' are present with the correct types and initial values.",
+        "feedbackWrong": "The component properties are missing or incorrect. Make sure to define both 'data' and 'loading' with proper TypeScript types and initial values.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "data:",
+            "ApiResponse",
+            "null",
+            "loading:",
+            "boolean",
+            "false"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 12",
+        "title": "Create a method to fetch data without deduplication",
+        "instruction": "In the DataDisplayComponent class, add a method named fetchData that calls the service's fetchData method and updates the component's data and loading properties.",
+        "hint": "Create a method that uses the injected service to make the HTTP call, handles the response, and updates the component state.",
+        "analogousExample": "// Similar: a component method that calls a service\nfetchData() {\n  this.loading = true;\n  this.dataService.fetchData().subscribe({\n    next: (response) => {\n      this.data = response;\n      this.loading = false;\n    },\n    error: (error) => {\n      console.error('Error fetching data:', error);\n      this.loading = false;\n    }\n  });\n}",
+        "seedCode": {
+          "App.tsx": "import { Injectable } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\n\n// Define your ApiResponse interface here\n\n@Injectable({\n  providedIn: 'root'\n})\nexport class DataService {\n  constructor(private http: HttpClient) {}\n\n  // Add fetchData method here\n}\n\n// Create your DataDisplayComponent here\n\n@Component({\n  selector: 'app-data-display',\n  template: ''\n})\nexport class DataDisplayComponent {\n  // Add data and loading properties here\n  \n  constructor() {}\n  \n  // Add fetchData method here\n}",
+          "store.ts": "// store setup",
+          "api.ts": "// api"
+        },
+        "expectedOutcome": "The component now has a fetchData method that will call the service and update the component state when invoked.",
+        "successCriteria": [
+          "The DataDisplayComponent class contains a fetchData method that calls the service's fetchData method and properly updates the data and loading properties."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added a fetchData method, but it might not be calling the service correctly or updating all the required properties. Check that you're using the injected service and updating both data and loading.",
+        "feedbackWrong": "The fetchData method is missing or doesn't match the expected implementation. Make sure to create a method named fetchData that calls the service and updates the component's data and loading properties.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "fetchData()",
+            "dataService.fetchData()",
+            "subscribe",
+            "this.data",
+            "this.loading"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 12",
+        "title": "Add template to display data and a fetch button",
+        "instruction": "In the DataDisplayComponent's template, add a button to trigger data fetching and a paragraph to display the fetched data.",
+        "hint": "Use the button element with a click event binding and a paragraph element to show the data property.",
+        "analogousExample": "// Example: template with button and data display\n@Component({\n  selector: 'app-example',\n  template: `<button (click)=\"fetchData()\">Fetch</button>\n  <p>{{ data }}</p>`\n})",
+        "seedCode": {
+          "App.tsx": "import { Injectable } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\n\n// Define your ApiResponse interface here\n\n@Injectable({\n  providedIn: 'root'\n})\nexport class DataService {\n  constructor(private http: HttpClient) {}\n\n  // Add fetchData method here\n}\n\n// Create your DataDisplayComponent here\n\n@Component({\n  selector: 'app-data-display',\n  template: ''\n})\nexport class DataDisplayComponent {\n  // Add data and loading properties here\n  \n  constructor() {}\n  \n  // Add fetchData method here\n}",
+          "store.ts": "// store setup",
+          "api.ts": "// api"
+        },
+        "expectedOutcome": "The component template will have a button that triggers data fetching and a paragraph to display the fetched data.",
+        "successCriteria": [
+          "The template contains a button with (click) event binding to fetchData and a paragraph that displays the data property."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure both the button and paragraph are present in the template.",
+        "feedbackWrong": "The template is missing the required button or paragraph. Check the instruction again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "(click)=\"fetchData()\"",
+            "{{ data }}",
+            "button",
+            "p"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 12",
+        "title": "Wire the button to trigger data fetching",
+        "instruction": "In the DataDisplayComponent template, add a click event binding to the button that calls the component's fetchData method.",
+        "hint": "Use Angular's event binding syntax (event)='handler()' on the button element.",
+        "analogousExample": "// Example: wiring a button click\n<button (click)=\"handleClick()\">Click me</button>",
+        "seedCode": {
+          "App.tsx": "import { Injectable } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\n\ninterface ApiResponse {\n  id: number;\n  title: string;\n}\n\n@Injectable({\n  providedIn: 'root'\n})\nexport class DataService {\n  constructor(private http: HttpClient) {}\n\n  fetchData() {\n    return this.http.get<ApiResponse>('https://jsonplaceholder.typicode.com/posts/1');\n  }\n}\n\nimport { Component } from '@angular/core';\nimport { DataService } from './data.service';\n\n@Component({\n  selector: 'app-data-display',\n  template: `\n    <button>Fetch Data</button>\n    <div *ngIf=\"loading\">Loading...</div>\n    <div *ngIf=\"data\">\n      <h3>{{ data.title }}</h3>\n      <p>ID: {{ data.id }}</p>\n    </div>\n  `\n})\nexport class DataDisplayComponent {\n  data: ApiResponse | null = null;\n  loading = false;\n\n  constructor(private dataService: DataService) {}\n\n  fetchData() {\n    this.loading = true;\n    this.dataService.fetchData().subscribe({\n      next: (response) => {\n        this.data = response;\n        this.loading = false;\n      },\n      error: () => {\n        this.loading = false;\n      }\n    });\n  }\n}",
+          "store.ts": "// store setup",
+          "api.ts": "// api"
+        },
+        "expectedOutcome": "The button in the template now triggers the fetchData method when clicked.",
+        "successCriteria": [
+          "The button element has a (click) event binding that calls fetchData()."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure the button has a (click) event binding that calls fetchData().",
+        "feedbackWrong": "The button isn't wired correctly. Add (click)=\"fetchData()\" to the button element.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "(click)",
+            "fetchData()"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 12",
+        "title": "Implement request deduplication in the service",
+        "instruction": "In the DataService, add a private property to store ongoing requests and modify the fetchData method to return existing observables for duplicate calls.",
+        "hint": "Create a private property (like a Map or object) to track active requests by URL or key. In fetchData, check if a request for the same URL is already in progress and return that observable instead of making a new HTTP call.",
+        "analogousExample": "// Similar: caching ongoing requests\nprivate activeRequests = new Map<string, Observable<any>>();\n\nfetchData(key: string) {\n  if (this.activeRequests.has(key)) {\n    return this.activeRequests.get(key)!;\n  }\n  const request = this.http.get('...');\n  this.activeRequests.set(key, request);\n  return request;\n}",
+        "seedCode": {
+          "App.tsx": "import { Injectable } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\n\ninterface ApiResponse {\n  id: number;\n  title: string;\n}\n\n@Injectable({\n  providedIn: 'root'\n})\nexport class DataService {\n  constructor(private http: HttpClient) {}\n\n  fetchData() {\n    return this.http.get<ApiResponse>('https://jsonplaceholder.typicode.com/posts/1');\n  }\n}",
+          "store.ts": "// store setup",
+          "api.ts": "// api"
+        },
+        "expectedOutcome": "The service will prevent duplicate concurrent HTTP requests by returning the same observable for identical calls.",
+        "successCriteria": [
+          "DataService has a private property to track active requests and fetchData returns existing observables for duplicate calls."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure you're storing the observable in a private property and returning it when a duplicate request is detected.",
+        "feedbackWrong": "The service doesn't yet implement deduplication. Add a property to track active requests and modify fetchData to return existing observables for duplicate calls.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "private",
+            "activeRequests",
+            "Map",
+            "fetchData",
+            "has",
+            "get",
+            "set"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step12",
+        "type": "question",
+        "phase": "Step 12 of 12",
+        "title": "Test the deduplication behavior",
+        "instruction": "Run the application and click the fetch button multiple times quickly to observe that only one network request is made.",
+        "hint": "Open your browser's developer tools, go to the Network tab, and watch the requests when clicking the button rapidly.",
+        "analogousExample": "// Testing behavior by observing network requests\n// Open browser dev tools → Network tab → click button rapidly",
+        "seedCode": {
+          "App.tsx": "import { Injectable } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\n\ninterface ApiResponse {\n  id: number;\n  title: string;\n}\n\n@Injectable({\n  providedIn: 'root'\n})\nexport class DataService {\n  constructor(private http: HttpClient) {}\n\n  fetchData() {\n    return this.http.get<ApiResponse>('https://jsonplaceholder.typicode.com/posts/1');\n  }\n}",
+          "store.ts": "// store setup",
+          "api.ts": "// api"
+        },
+        "expectedOutcome": "When you click the fetch button multiple times quickly, you should see only one network request in the browser's Network tab, demonstrating request deduplication.",
+        "successCriteria": [
+          "Only one network request appears in the browser's Network tab despite multiple rapid clicks on the fetch button."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure to click the button multiple times quickly and check the Network tab in your browser's developer tools.",
+        "feedbackWrong": "The deduplication isn't working as expected. Review your service implementation and ensure the button is wired correctly.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "run",
+            "application",
+            "click",
+            "button",
+            "multiple",
+            "times",
+            "network",
+            "request"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import Angular modules and HttpClient",
+        "id": "step1"
+      },
+      {
+        "label": "Create a data service with HttpClient",
+        "id": "step2"
+      },
+      {
+        "label": "Define an interface for the response data",
+        "id": "step3"
+      },
+      {
+        "label": "Implement a basic GET method in the service",
+        "id": "step4"
+      },
+      {
+        "label": "Create the main component",
+        "id": "step5"
+      },
+      {
+        "label": "Inject the data service into the component",
+        "id": "step6"
+      },
+      {
+        "label": "Initialize component state for storing data",
+        "id": "step7"
+      },
+      {
+        "label": "Create a method to fetch data without deduplication",
+        "id": "step8"
+      },
+      {
+        "label": "Add template to display data and a fetch button",
+        "id": "step9"
+      },
+      {
+        "label": "Wire the button to trigger data fetching",
+        "id": "step10"
+      },
+      {
+        "label": "Implement request deduplication in the service",
+        "id": "step11"
+      },
+      {
+        "label": "Test the deduplication behavior",
+        "id": "step12"
+      }
+    ],
+    "answerShape": "multi-file"
+  },
+  "source": "content"
+}

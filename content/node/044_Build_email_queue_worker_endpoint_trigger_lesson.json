@@ -1,0 +1,356 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-node-44",
+    "track": "node",
+    "lessonNum": 44,
+    "title": "Build email queue worker endpoint trigger",
+    "shortName": "P44",
+    "intro": {
+      "tag": "LESSON #44",
+      "title": "Build email queue worker endpoint trigger",
+      "body": "In this lesson, you will build a Node.js endpoint that triggers an email queue worker. You will learn how to set up a simple HTTP server using the built-in 'http' module to listen for incoming requests. The core programming concept involves handling HTTP POST requests and using a queue simulation to process email tasks asynchronously. You will work with key constructs like server creation, request handling, and basic queue management. By the end, you'll have a functional endpoint that can receive a request and initiate an email-sending process in the background.",
+      "usecase": "Email queue workers are essential in production applications where sending emails must be reliable and non-blocking. When a user signs up for a service, purchases a product, or resets their password, the application typically adds an email job to a queue instead of sending it immediately. This pattern prevents API timeouts and ensures emails are delivered even during high traffic or temporary service outages. Developers implement these workers behind dashboard interfaces that show email delivery status, retry failed attempts, and provide analytics on email performance."
+    },
+    "objectives": [
+      "Construct an Express.js endpoint to receive email sending requests",
+      "Configure a message queue system to handle email tasks asynchronously",
+      "Implement a worker process that consumes messages from the email queue",
+      "Initialize and integrate an email service client within the worker",
+      "Apply error handling mechanisms for both queue operations and email delivery",
+      "Bind queue events to appropriate logging and monitoring functions",
+      "Manipulate queue message properties to include email metadata and retry logic"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 10",
+        "title": "Import required Node.js modules",
+        "instruction": "Import the required Node.js modules: express for creating the web server, bull for queue management, and nodemailer for sending emails.",
+        "hint": "Use the require() function to import each module. You'll need three separate require statements.",
+        "analogousExample": "// Importing modules in Node.js\nconst express = require('express');\nconst bull = require('bull');\nconst nodemailer = require('nodemailer');",
+        "seedCode": "// Import the required Node.js modules here",
+        "expectedOutcome": "The code will have three require statements importing express, bull, and nodemailer modules.",
+        "successCriteria": [
+          "express, bull, and nodemailer modules are imported using require() statements."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've imported some modules, but you're missing one or more. Make sure to import express, bull, and nodemailer.",
+        "feedbackWrong": "The imports aren't correct. You need to import express, bull, and nodemailer modules using require() statements.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "require('express')",
+            "require('bull')",
+            "require('nodemailer')"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 10",
+        "title": "Initialize Express application",
+        "instruction": "Create an Express application instance and store it in a variable named 'app'.",
+        "hint": "Use the imported Express module to create an application instance with express().",
+        "analogousExample": "// Creating an Express application instance\nconst app = express();",
+        "seedCode": "const express = require('express');\n\n// Create an Express application instance here\n",
+        "expectedOutcome": "The Express application instance is created and assigned to a variable named 'app'.",
+        "successCriteria": [
+          "An Express application instance is created using express() and stored in a variable named 'app'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've created an Express instance, but make sure it's stored in a variable named 'app'.",
+        "feedbackWrong": "The Express application instance wasn't created correctly. Use express() to create it and store it in a variable named 'app'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "app",
+            "express()"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 10",
+        "title": "Create email queue with Bull",
+        "instruction": "Initialize a Bull queue for handling email jobs by creating a constant named 'emailQueue' that uses the imported Bull module with the queue name 'email'.",
+        "hint": "Use the Bull constructor with the queue name as the first argument. The queue name should be 'email'.",
+        "analogousExample": "// Example: Creating a Bull queue\nconst myQueue = new Bull('queue-name');",
+        "seedCode": "const express = require('express');\nconst Bull = require('bull');\n\n// Create an Express application instance here\nconst app = express();\n\n// Initialize a Bull queue for email jobs here\n",
+        "expectedOutcome": "A Bull queue instance named 'emailQueue' is created with the queue name 'email'.",
+        "successCriteria": [
+          "The constant 'emailQueue' is declared and initialized with a new Bull instance using the queue name 'email'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure you're using the Bull constructor with the queue name 'email' and storing it in a constant named 'emailQueue'.",
+        "feedbackWrong": "The Bull queue wasn't created correctly. Remember to use the Bull constructor with the queue name 'email' and assign it to a constant named 'emailQueue'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "emailQueue",
+            "new Bull",
+            "'email'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 10",
+        "title": "Configure nodemailer transporter",
+        "instruction": "Create a nodemailer transporter with SMTP configuration for sending emails. Use nodemailer.createTransport() with an object containing host, port, secure, and auth properties.",
+        "hint": "You'll need to call nodemailer.createTransport() with configuration options. The auth object should contain your email user and password (use environment variables in production).",
+        "analogousExample": "// Example: creating a transporter for sending emails\nconst transporter = nodemailer.createTransport({\n  host: 'smtp.gmail.com',\n  port: 587,\n  secure: false,\n  auth: {\n    user: 'your-email@gmail.com',\n    pass: 'your-password'\n  }\n});",
+        "seedCode": "const express = require('express');\nconst Bull = require('bull');\n\n// Create an Express application instance here\nconst app = express();\n\n// Initialize a Bull queue for email jobs here\n\n// Create a nodemailer transporter with SMTP configuration here\n",
+        "expectedOutcome": "A nodemailer transporter object is created and ready to send emails through your configured SMTP server.",
+        "successCriteria": [
+          "A transporter constant is created using nodemailer.createTransport() with host, port, secure, and auth properties configured."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you've included all required configuration properties: host, port, secure, and auth with user and password.",
+        "feedbackWrong": "The transporter configuration is incomplete or incorrect. Review the nodemailer.createTransport() syntax and ensure you've included all SMTP configuration properties.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "createTransport",
+            "host",
+            "port",
+            "secure",
+            "auth",
+            "transporter"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 10",
+        "title": "Define email queue worker function",
+        "instruction": "Define an async function named 'processEmailJob' that takes a 'job' parameter and uses the nodemailer transporter to send the email data from the job.",
+        "hint": "Create a function that will process each email job from the queue. Use 'await transporter.sendMail()' with the job's data.",
+        "analogousExample": "// Example: async job processing function\nasync function processTask(job) {\n  const result = await performTask(job.data);\n  console.log('Task completed:', result);\n}",
+        "seedCode": "const express = require('express');\nconst Bull = require('bull');\n\n// Create an Express application instance here\nconst app = express();\n\n// Initialize a Bull queue for email jobs here\n\n// Create a nodemailer transporter with SMTP configuration here\n\n// Define your email queue worker function here\n",
+        "expectedOutcome": "You should have an async function 'processEmailJob' that can process email jobs by sending them via nodemailer.",
+        "successCriteria": [
+          "An async function named 'processEmailJob' is defined with a 'job' parameter and contains logic to send email using the transporter."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure your function is async, takes a 'job' parameter, and uses the transporter to send the email data.",
+        "feedbackWrong": "The function definition doesn't match the requirements. It should be an async function named 'processEmailJob' that processes email jobs.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "async",
+            "function",
+            "processEmailJob",
+            "job",
+            "transporter",
+            "sendMail"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 10",
+        "title": "Set up queue processing",
+        "instruction": "Configure the email queue to use the worker function you defined earlier for processing jobs.",
+        "hint": "Use the queue's .process() method and pass your worker function as the callback.",
+        "analogousExample": "// Similar: configuring a queue to process jobs\nqueue.process(async (job) => {\n  console.log('Processing job:', job.data);\n});",
+        "seedCode": "const express = require('express');\nconst Bull = require('bull');\n\n// Create an Express application instance here\nconst app = express();\n\n// Initialize a Bull queue for email jobs here\nconst emailQueue = new Bull('emailQueue');\n\n// Create a nodemailer transporter with SMTP configuration here\nconst nodemailer = require('nodemailer');\nconst transporter = nodemailer.createTransport({\n  host: 'smtp.example.com',\n  port: 587,\n  secure: false,\n  auth: {\n    user: 'user@example.com',\n    pass: 'password'\n  }\n});\n\n// Define your email queue worker function here\nasync function emailWorker(job) {\n  const { to, subject, text } = job.data;\n  \n  try {\n    await transporter.sendMail({\n      from: 'sender@example.com',\n      to,\n      subject,\n      text\n    });\n    console.log(`Email sent to ${to}`);\n  } catch (error) {\n    console.error('Failed to send email:', error);\n    throw error;\n  }\n}\n\n// Configure the queue to use the worker function here",
+        "expectedOutcome": "The email queue is now set up to automatically process incoming jobs using your worker function.",
+        "successCriteria": [
+          "The emailQueue.process() method is called with emailWorker as the callback function."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure you're calling .process() on the emailQueue and passing the emailWorker function as the argument.",
+        "feedbackWrong": "The queue processing isn't configured yet. You need to call emailQueue.process() and pass your emailWorker function to it.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "emailQueue.process",
+            "emailWorker"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 10",
+        "title": "Create POST endpoint for adding email jobs",
+        "instruction": "Create an Express POST route at '/email' that extracts email data from the request body and adds it to the emailQueue.",
+        "hint": "Use app.post() to define the route. The route handler should extract to, subject, and text from req.body, then call emailQueue.add() with that data.",
+        "analogousExample": "// Similar: creating a POST endpoint\napp.post('/submit', (req, res) => {\n  const { name, email } = req.body;\n  // Add to queue or database\n  res.status(200).send('Received');\n});",
+        "seedCode": "const express = require('express');\nconst Bull = require('bull');\n\n// Create an Express application instance here\nconst app = express();\n\n// Initialize a Bull queue for email jobs here\nconst emailQueue = new Bull('emailQueue');\n\n// Create a nodemailer transporter with SMTP configuration here\nconst nodemailer = require('nodemailer');\nconst transporter = nodemailer.createTransport({\n  host: 'smtp.example.com',\n  port: 587,\n  secure: false,\n  auth: {\n    user: 'user@example.com',\n    pass: 'password'\n  }\n});\n\n// Define your email queue worker function here\nasync function emailWorker(job) {\n  const { to, subject, text } = job.data;\n  \n  try {\n    await transporter.sendMail({\n      from: 'sender@example.com',\n      to,\n      subject,\n      text\n    });\n    console.log(`Email sent to ${to}`);\n  } catch (error) {\n    console.error('Failed to send email:', error);\n    throw error;\n  }\n}\n\n// Configure the queue to use the worker function here\nemailQueue.process(emailWorker);\n\n// Create a POST endpoint for adding email jobs here\napp.post('/email', (req, res) => {\n  // Extract email data and add to queue\n});",
+        "expectedOutcome": "A POST endpoint is created that accepts email requests and queues them for processing.",
+        "successCriteria": [
+          "The code includes app.post('/email', ...) that extracts to, subject, and text from req.body and calls emailQueue.add() with that data."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've created the POST endpoint, but make sure you're extracting the email data from req.body and adding it to the emailQueue.",
+        "feedbackWrong": "The POST endpoint is missing or incomplete. Remember to create app.post('/email', ...) that extracts email data and adds it to emailQueue.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "app.post",
+            "'/email'",
+            "req.body",
+            "emailQueue.add"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 10",
+        "title": "Add error handling to the endpoint",
+        "instruction": "Inside the POST endpoint's callback function, wrap the queue addition logic in a try-catch block to handle errors gracefully.",
+        "hint": "Use try-catch around the emailQueue.add() call, then send appropriate HTTP responses in both success and error cases.",
+        "analogousExample": "// Example: try-catch in an Express endpoint\napp.post('/data', async (req, res) => {\n  try {\n    await saveData(req.body);\n    res.status(201).json({ message: 'Data saved' });\n  } catch (error) {\n    console.error(error);\n    res.status(500).json({ error: 'Failed to save data' });\n  }\n});",
+        "seedCode": "const express = require('express');\nconst Bull = require('bull');\n\n// Create an Express application instance here\nconst app = express();\n\n// Initialize a Bull queue for email jobs here\nconst emailQueue = new Bull('emailQueue');\n\n// Create a nodemailer transporter with SMTP configuration here\nconst nodemailer = require('nodemailer');\nconst transporter = nodemailer.createTransport({\n  host: 'smtp.example.com',\n  port: 587,\n  secure: false,\n  auth: {\n    user: 'user@example.com',\n    pass: 'password'\n  }\n});\n\n// Define your email queue worker function here\nasync function emailWorker(job) {\n  const { to, subject, text } = job.data;\n  \n  try {\n    await transporter.sendMail({\n      from: 'sender@example.com',\n      to,\n      subject,\n      text\n    });\n    console.log(`Email sent to ${to}`);\n  } catch (error) {\n    console.error('Failed to send email:', error);\n    throw error;\n  }\n}\n\n// Configure the queue to use the worker function here\nemailQueue.process(emailWorker);\n\n// Create a POST endpoint for adding email jobs here\napp.post('/email', (req, res) => {\n  // Extract email data and add to queue\n  try {\n    // Add your queue addition logic here\n  } catch (error) {\n    // Handle errors here\n  }\n});",
+        "expectedOutcome": "The endpoint will now properly handle errors when adding jobs to the queue, returning appropriate HTTP status codes and messages.",
+        "successCriteria": [
+          "The POST endpoint callback contains a try-catch block with emailQueue.add() inside the try block, and returns HTTP responses for both success (200/201) and error (500) cases."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track with the try-catch structure, but make sure to include the emailQueue.add() call inside the try block and return proper HTTP responses in both branches.",
+        "feedbackWrong": "The endpoint still needs proper error handling. Remember to wrap the queue addition logic in a try-catch block and return appropriate HTTP responses for both success and error scenarios.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "try",
+            "catch",
+            "emailQueue.add",
+            "res.status",
+            "res.json"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 10",
+        "title": "Start the Express server",
+        "instruction": "Configure the Express server to listen on port 3000 and log a startup message.",
+        "hint": "Use app.listen() with the port number and a callback function that logs a message.",
+        "analogousExample": "// Starting a server in Express\napp.listen(3000, () => {\n  console.log('Server running on port 3000');\n});",
+        "seedCode": "const express = require('express');\nconst Bull = require('bull');\n\n// Create an Express application instance here\nconst app = express();\n\n// Initialize a Bull queue for email jobs here\nconst emailQueue = new Bull('emailQueue');\n\n// Create a nodemailer transporter with SMTP configuration here\nconst nodemailer = require('nodemailer');\nconst transporter = nodemailer.createTransport({\n  host: 'smtp.example.com',\n  port: 587,\n  secure: false,\n  auth: {\n    user: 'user@example.com',\n    pass: 'password'\n  }\n});\n\n// Define your email queue worker function here\nasync function emailWorker(job) {\n  const { to, subject, text } = job.data;\n  \n  try {\n    await transporter.sendMail({\n      from: 'sender@example.com',\n      to,\n      subject,\n      text\n    });\n    console.log(`Email sent to ${to}`);\n  } catch (error) {\n    console.error('Failed to send email:', error);\n    throw error;\n  }\n}\n\n// Configure the queue to use the worker function here\nemailQueue.process(emailWorker);\n\n// Create a POST endpoint for adding email jobs here\napp.post('/email', (req, res) => {\n  // Extract email data and add to queue\n  try {\n    // Add your queue addition logic here\n  } catch (error) {\n    // Handle errors here\n  }\n});\n\n// Start the Express server here",
+        "expectedOutcome": "The Express server will be configured to listen on port 3000 and log a startup message when the application runs.",
+        "successCriteria": [
+          "The app.listen() method is called with port 3000 and a callback that logs a startup message."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure you're calling app.listen() with both the port number and a callback function that logs a message.",
+        "feedbackWrong": "The server isn't configured to listen yet. Use app.listen() with port 3000 and a callback that logs a startup message.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "app.listen",
+            "3000",
+            "console.log"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 10",
+        "title": "Test the complete endpoint",
+        "instruction": "Start the Express server and test the POST endpoint by sending a sample email job.",
+        "hint": "Call app.listen() to start the server, then use a tool like curl or Postman to send a POST request to /email with JSON email data.",
+        "analogousExample": "// Starting a server and testing an endpoint\napp.listen(3000, () => {\n  console.log('Server running on port 3000');\n});\n\n// Sample POST request body:\n// {\n//   \"to\": \"recipient@example.com\",\n//   \"subject\": \"Test Email\",\n//   \"text\": \"This is a test email from the queue.\"\n// }",
+        "seedCode": "const express = require('express');\nconst Bull = require('bull');\n\n// Create an Express application instance here\nconst app = express();\n\n// Initialize a Bull queue for email jobs here\nconst emailQueue = new Bull('emailQueue');\n\n// Create a nodemailer transporter with SMTP configuration here\nconst nodemailer = require('nodemailer');\nconst transporter = nodemailer.createTransport({\n  host: 'smtp.example.com',\n  port: 587,\n  secure: false,\n  auth: {\n    user: 'user@example.com',\n    pass: 'password'\n  }\n});\n\n// Define your email queue worker function here\nasync function emailWorker(job) {\n  const { to, subject, text } = job.data;\n  \n  try {\n    await transporter.sendMail({\n      from: 'sender@example.com',\n      to,\n      subject,\n      text\n    });\n    console.log(`Email sent to ${to}`);\n  } catch (error) {\n    console.error('Failed to send email:', error);\n    throw error;\n  }\n}\n\n// Configure the queue to use the worker function here\nemailQueue.process(emailWorker);\n\n// Create a POST endpoint for adding email jobs here\napp.post('/email', (req, res) => {\n  // Extract email data and add to queue\n  try {\n    // Add your queue addition logic here\n  } catch (error) {\n    // Handle errors here\n  }\n});\n\n// Start the Express server here\n// Add app.listen() to start the server",
+        "expectedOutcome": "The server starts successfully and the POST endpoint accepts email job requests, adding them to the queue for processing.",
+        "successCriteria": [
+          "The Express server is started with app.listen() and the POST endpoint /email can receive sample email data."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the server, but make sure the POST endpoint is fully implemented to accept email data. Check that the endpoint extracts data from req.body and adds it to emailQueue.",
+        "feedbackWrong": "The server isn't starting or the endpoint isn't functional. Ensure you call app.listen() with a port and that the POST endpoint handles incoming requests properly.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "app.listen",
+            "3000",
+            "console.log",
+            "Server running"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import required Node.js modules",
+        "id": "step1"
+      },
+      {
+        "label": "Initialize Express application",
+        "id": "step2"
+      },
+      {
+        "label": "Create email queue with Bull",
+        "id": "step3"
+      },
+      {
+        "label": "Configure nodemailer transporter",
+        "id": "step4"
+      },
+      {
+        "label": "Define email queue worker function",
+        "id": "step5"
+      },
+      {
+        "label": "Set up queue processing",
+        "id": "step6"
+      },
+      {
+        "label": "Create POST endpoint for adding email jobs",
+        "id": "step7"
+      },
+      {
+        "label": "Add error handling to the endpoint",
+        "id": "step8"
+      },
+      {
+        "label": "Start the Express server",
+        "id": "step9"
+      },
+      {
+        "label": "Test the complete endpoint",
+        "id": "step10"
+      }
+    ]
+  },
+  "source": "content"
+}

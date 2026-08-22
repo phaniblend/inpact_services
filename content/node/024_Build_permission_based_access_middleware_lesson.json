@@ -1,0 +1,396 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-node-24",
+    "track": "node",
+    "lessonNum": 24,
+    "title": "Build permission based access middleware",
+    "shortName": "P24",
+    "intro": {
+      "tag": "LESSON #24",
+      "title": "Build permission based access middleware",
+      "body": "In this lesson, you will build a permission-based access middleware for a Node.js application. You will learn how to create a function that checks a user's permissions before allowing access to specific routes. The core programming concept involves using middleware functions, conditional logic, and HTTP status codes. You will work with JavaScript, Express.js middleware, and simple permission objects. This will help you control what different users can do in your application based on their roles.",
+      "usecase": "Permission-based access middleware is a foundational pattern in any multi-user application, ensuring users only see and interact with data and features they are authorized to use. In real-world software, this is critical for admin dashboards where different user roles (like 'admin', 'editor', or 'viewer') have varying levels of access to data tables, settings panels, or user management tools. As a developer, you'll implement this middleware to secure API endpoints, controlling access to sensitive operations such as deleting records, modifying configurations, or viewing financial reports, thereby enforcing business rules and data privacy directly in your Node.js backend."
+    },
+    "objectives": [
+      "Construct a middleware function that validates user permissions",
+      "Implement permission checking logic within route handlers",
+      "Configure Express.js middleware to intercept and authorize requests",
+      "Integrate permission middleware with existing authentication systems",
+      "Manipulate request objects to pass user permission data to subsequent handlers",
+      "Apply different permission levels to protect specific API endpoints",
+      "Initialize a permission-based access control system for a Node.js application"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 11",
+        "title": "Import required Node.js modules",
+        "instruction": "Import the 'http' module for creating a server and the 'url' module for parsing request URLs.",
+        "hint": "Use the require() function to import both modules. You'll need them later to build the middleware.",
+        "analogousExample": "// Similar: importing Node.js modules\nconst fs = require('fs');\nconst path = require('path');",
+        "seedCode": "// Import the required modules here",
+        "expectedOutcome": "The 'http' and 'url' modules are imported and ready to use in your middleware code.",
+        "successCriteria": [
+          "Both 'http' and 'url' modules are imported using require() statements."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you import both 'http' and 'url' modules using require().",
+        "feedbackWrong": "import both 'http' and 'url' modules using require() statements.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "require('http')",
+            "require('url')"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 11",
+        "title": "Create a basic HTTP server",
+        "instruction": "Create an HTTP server using the imported http module's createServer() method. Have it listen on port 3000 and log a startup message to the console when it starts.",
+        "hint": "Use http.createServer() to create the server, then call .listen(3000) on it. Inside .listen(), add a callback that logs your message.",
+        "analogousExample": "// Similar: creating a basic server\nconst http = require('http');\n\nconst server = http.createServer((req, res) => {\n  res.end('Hello');\n});\n\nserver.listen(3000, () => {\n  console.log('Server running on port 3000');\n});",
+        "seedCode": "// Import the required modules here\nconst http = require('http');\n\n// Create your HTTP server below\n",
+        "expectedOutcome": "A basic HTTP server that starts on port 3000 and logs a message to the console.",
+        "successCriteria": [
+          "The server is created with http.createServer(), listens on port 3000, and logs a startup message."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're using http.createServer() and calling .listen(3000) with a callback that logs a message.",
+        "feedbackWrong": "The server wasn't set up correctly. Review the http module documentation for creating a server.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "createServer",
+            "listen",
+            "3000",
+            "console.log"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 11",
+        "title": "Define a sample user object with permissions",
+        "instruction": "Create a user object containing an id, name, and a permissions array (e.g., ['read', 'write']). Add this object after the HTTP server creation.",
+        "hint": "Define a constant variable named 'user' with properties id, name, and permissions. Use an array for permissions.",
+        "analogousExample": "// Example: a user object\nconst user = {\n  id: 1,\n  name: 'Alice',\n  permissions: ['read', 'write']\n};",
+        "seedCode": "// Import the required modules here\nconst http = require('http');\n\n// Create your HTTP server below\n\n// Define your user object here",
+        "expectedOutcome": "A user object is defined with id, name, and permissions properties.",
+        "successCriteria": [
+          "A user object exists with id, name, and permissions array properties."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure your user object has id, name, and permissions array properties.",
+        "feedbackWrong": "The user object is missing required properties. It should have id, name, and permissions array.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "user",
+            "id",
+            "name",
+            "permissions",
+            "["
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 11",
+        "title": "Create a permission checking function",
+        "instruction": "Create a function named 'hasPermission' that takes a user object and a requiredPermission string as parameters, and returns true if the user's permissions array includes the requiredPermission, otherwise returns false.",
+        "hint": "Define a function that checks if the user.permissions array contains the required permission using the includes() method.",
+        "analogousExample": "// Example: a function that checks access\nfunction canAccess(user, resource) {\n  return user.allowedResources.includes(resource);\n}",
+        "seedCode": "// Import the required modules here\nconst http = require('http');\n\n// Create your HTTP server below\n\n// Define your user object here\n\n// Create your permission checking function here",
+        "expectedOutcome": "A function named 'hasPermission' that correctly checks if a user has a specific permission.",
+        "successCriteria": [
+          "The 'hasPermission' function is defined with two parameters (user and requiredPermission) and returns a boolean based on whether user.permissions includes requiredPermission."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've created a function, but make sure it: 1. Is named 'hasPermission' 2. Takes two parameters: user and requiredPermission 3. Returns true/false by checking user.permissions.includes(requiredPermission)",
+        "feedbackWrong": "The permission checking function isn't quite right. Remember to create a function named 'hasPermission' that checks if the user's permissions array includes the required permission string.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "hasPermission",
+            "user",
+            "requiredPermission",
+            "permissions",
+            "includes",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 11",
+        "title": "Define the middleware function structure",
+        "instruction": "Create a function named 'permissionMiddleware' that accepts three parameters: req, res, and next, following the Express-like middleware pattern.",
+        "hint": "Define a function that takes these three parameters in order. The function body can be empty for now.",
+        "analogousExample": "// Example: middleware function structure\nfunction loggingMiddleware(req, res, next) {\n  // middleware logic here\n}",
+        "seedCode": "// Import the required modules here\nconst http = require('http');\n\n// Create your HTTP server below\n\n// Define your user object here\n\n// Create your permission checking function here\n\n// Define your middleware function here\nfunction permissionMiddleware(req, res, next) {\n  \n}",
+        "expectedOutcome": "You will have a middleware function skeleton ready to implement permission logic in later steps.",
+        "successCriteria": [
+          "A function named 'permissionMiddleware' is defined with parameters (req, res, next) in that order."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure the function is named 'permissionMiddleware' and accepts exactly three parameters: req, res, and next.",
+        "feedbackWrong": "The middleware function structure isn't quite right. Create a function named 'permissionMiddleware' with parameters (req, res, next).",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "permissionMiddleware",
+            "req",
+            "res",
+            "next"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 11",
+        "title": "Add permission validation logic to middleware",
+        "instruction": "Inside your permissionMiddleware function, add logic that calls your permission checking function and conditionally calls next() or sends a 403 response.",
+        "hint": "Use an if statement to check the permission result. If allowed, call next(); otherwise, use res.writeHead(403) and res.end() to send a forbidden response.",
+        "analogousExample": "// Similar: middleware with conditional logic\nfunction authMiddleware(req, res, next) {\n  const isAuthenticated = checkAuth(req);\n  if (isAuthenticated) {\n    next();\n  } else {\n    res.writeHead(401);\n    res.end('Unauthorized');\n  }\n}",
+        "seedCode": "// Import the required modules here\nconst http = require('http');\n\n// Create your HTTP server below\n\n// Define your user object here\n\n// Create your permission checking function here\n\n// Define your middleware function here\nfunction permissionMiddleware(req, res, next) {\n  // Add permission validation logic here\n}",
+        "expectedOutcome": "The middleware function now contains conditional logic that validates permissions and either proceeds or blocks the request.",
+        "successCriteria": [
+          "The permissionMiddleware function includes an if statement that calls the permission checking function and conditionally calls next() or sends a 403 response."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but ensure you have both the permission check and the conditional response logic.",
+        "feedbackWrong": "Check that you added the permission validation logic inside the middleware function.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "if",
+            "next()",
+            "403",
+            "writeHead",
+            "end"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 11",
+        "title": "Create route handlers for different endpoints",
+        "instruction": "Create a handler function for the '/admin' route that requires 'admin' permission. The function should take request and response parameters and send a response with a message.",
+        "hint": "Define a function named adminHandler that uses res.writeHead and res.end to send a response. You can include a simple message like 'Admin area'.",
+        "analogousExample": "// Example: a route handler function\nfunction homeHandler(req, res) {\n  res.writeHead(200, { 'Content-Type': 'text/plain' });\n  res.end('Home page');\n}",
+        "seedCode": "// Import the required modules here\nconst http = require('http');\n\n// Create your HTTP server below\n\n// Define your user object here\n\n// Create your permission checking function here\n\n// Define your middleware function here\nfunction permissionMiddleware(req, res, next) {\n  // Add permission validation logic here\n}\n\n// Create your '/admin' route handler here",
+        "expectedOutcome": "A function named adminHandler is defined that handles requests to the '/admin' endpoint and sends a response.",
+        "successCriteria": [
+          "The adminHandler function is created with req and res parameters and sends a response using res.writeHead and res.end."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the handler, but make sure it's a complete function that sends an HTTP response. Check that you're using res.writeHead and res.end.",
+        "feedbackWrong": "The admin route handler isn't properly defined. Create a function that takes req and res parameters and sends a response with a status code and message.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "adminHandler",
+            "function",
+            "req",
+            "res",
+            "writeHead",
+            "end"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 11",
+        "title": "Wire middleware to specific routes",
+        "instruction": "In your server's request handler, check if the request URL is '/admin' and call the permissionMiddleware function before executing the admin route handler.",
+        "hint": "Inside the server's request handler, use an if statement to check req.url. If it matches '/admin', call permissionMiddleware with req, res, and a callback function that contains the admin route handler logic.",
+        "analogousExample": "// Example: applying middleware to a specific route\nif (req.url === '/protected') {\n  authMiddleware(req, res, () => {\n    res.writeHead(200);\n    res.end('Protected content');\n  });\n}",
+        "seedCode": "const http = require('http');\n\nconst server = http.createServer((req, res) => {\n  // Check URL and apply middleware to '/admin' route here\n});\n\nconst user = {\n  id: 1,\n  name: 'Admin User',\n  permissions: ['admin', 'read', 'write']\n};\n\nfunction checkPermission(user, requiredPermission) {\n  return user.permissions.includes(requiredPermission);\n}\n\nfunction permissionMiddleware(req, res, next) {\n  const requiredPermission = 'admin';\n  if (checkPermission(user, requiredPermission)) {\n    next();\n  } else {\n    res.writeHead(403, { 'Content-Type': 'text/plain' });\n    res.end('Access forbidden: insufficient permissions');\n  }\n}\n\nfunction adminRouteHandler(req, res) {\n  res.writeHead(200, { 'Content-Type': 'text/plain' });\n  res.end('Welcome to the admin panel');\n}\n\nserver.listen(3000, () => {\n  console.log('Server running on port 3000');\n});",
+        "expectedOutcome": "The permissionMiddleware will only be executed for requests to the '/admin' route, protecting it with permission checks while leaving other routes unaffected.",
+        "successCriteria": [
+          "The server's request handler contains an if statement that checks req.url === '/admin' and calls permissionMiddleware with req, res, and a callback containing adminRouteHandler."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're calling permissionMiddleware with the correct parameters (req, res, callback) and only for the '/admin' route.",
+        "feedbackWrong": "The middleware isn't properly wired to the '/admin' route. Check that you're using an if statement to match the URL and calling permissionMiddleware with a callback that contains the admin route handler.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "if",
+            "req.url",
+            "'/admin'",
+            "permissionMiddleware",
+            "req",
+            "res",
+            "() =>",
+            "adminRouteHandler"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 11",
+        "title": "Test the middleware with different permission scen",
+        "instruction": "Modify the user object's permissions to only include 'read' (removing 'admin'),",
+        "hint": "Update the user.permissions array to ['read'] only, then run your server and make a request to http://localhost:3000/admin to see the access forbidden message.",
+        "analogousExample": "// Similar: modifying an object property\nconst config = { accessLevel: 'admin' };\nconfig.accessLevel = 'user';",
+        "seedCode": "const http = require('http');\n\nconst server = http.createServer((req, res) => {\n  // Check URL and apply middleware to '/admin' route here\n});\n\nconst user = {\n  id: 1,\n  name: 'Admin User',\n  permissions: ['admin', 'read', 'write']\n};\n\nfunction checkPermission(user, requiredPermission) {\n  return user.permissions.includes(requiredPermission);\n}\n\nfunction permissionMiddleware(req, res, next) {\n  const requiredPermission = 'admin';\n  if (checkPermission(user, requiredPermission)) {\n    next();\n  } else {\n    res.writeHead(403, { 'Content-Type': 'text/plain' });\n    res.end('Access forbidden: insufficient permissions');\n  }\n}\n\nfunction adminRouteHandler(req, res) {\n  res.writeHead(200, { 'Content-Type': 'text/plain' });\n  res.end('Welcome to the admin panel');\n}\n\nserver.listen(3000, () => {\n  console.log('Server running on port 3000');\n});",
+        "expectedOutcome": "When you run the server and access the '/admin' route, you should see 'Access forbidden: insufficient permissions' with a 403 status code because the user no longer has 'admin' permission.",
+        "successCriteria": [
+          "The user.permissions array is updated to ['read'] only, and accessing the '/admin' route returns the 403 forbidden response."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you've removed 'admin' from the user.permissions array and tested the route to see the 403 response.",
+        "feedbackWrong": "Check that you modified the user.permissions array correctly and that your server is running when testing the route.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "user.permissions",
+            "['read']",
+            "403"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 11",
+        "title": "test accessing the '/admin' route to verify t",
+        "instruction": "test accessing the '/admin' route to verify the middleware returns a 403 response.",
+        "hint": "Update the user.permissions array to ['read'] only, then run your server and make a request to http://localhost:3000/admin to see the access forbidden message.",
+        "analogousExample": "// Similar: modifying an object property\nconst config = { accessLevel: 'admin' };\nconfig.accessLevel = 'user';",
+        "seedCode": "const http = require('http');\n\nconst server = http.createServer((req, res) => {\n  // Check URL and apply middleware to '/admin' route here\n});\n\nconst user = {\n  id: 1,\n  name: 'Admin User',\n  permissions: ['admin', 'read', 'write']\n};\n\nfunction checkPermission(user, requiredPermission) {\n  return user.permissions.includes(requiredPermission);\n}\n\nfunction permissionMiddleware(req, res, next) {\n  const requiredPermission = 'admin';\n  if (checkPermission(user, requiredPermission)) {\n    next();\n  } else {\n    res.writeHead(403, { 'Content-Type': 'text/plain' });\n    res.end('Access forbidden: insufficient permissions');\n  }\n}\n\nfunction adminRouteHandler(req, res) {\n  res.writeHead(200, { 'Content-Type': 'text/plain' });\n  res.end('Welcome to the admin panel');\n}\n\nserver.listen(3000, () => {\n  console.log('Server running on port 3000');\n});",
+        "expectedOutcome": "",
+        "successCriteria": [
+          "Complete the step as instructed."
+        ],
+        "feedbackCorrect": "Great! Step completed.",
+        "feedbackPartial": "Review the instruction and try again.",
+        "feedbackWrong": "Check the instruction and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "user.permissions",
+            "['read']",
+            "403"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 11",
+        "title": "Refactor to make middleware configurable",
+        "instruction": "Modify the permissionMiddleware function to accept a requiredPermission parameter, making it reusable across different routes.",
+        "hint": "Update the function signature to include a parameter, then use that parameter inside the function instead of the hardcoded 'admin' value.",
+        "analogousExample": "// Similar: parameterized function\nfunction greet(name) {\n  console.log(`Hello, ${name}!`);\n}",
+        "seedCode": "const http = require('http');\n\nconst server = http.createServer((req, res) => {\n  // Check URL and apply middleware to '/admin' route here\n});\n\nconst user = {\n  id: 1,\n  name: 'Admin User',\n  permissions: ['admin', 'read', 'write']\n};\n\nfunction checkPermission(user, requiredPermission) {\n  return user.permissions.includes(requiredPermission);\n}\n\nfunction permissionMiddleware(req, res, next) {\n  const requiredPermission = 'admin';\n  if (checkPermission(user, requiredPermission)) {\n    next();\n  } else {\n    res.writeHead(403, { 'Content-Type': 'text/plain' });\n    res.end('Access forbidden: insufficient permissions');\n  }\n}\n\nfunction adminRouteHandler(req, res) {\n  res.writeHead(200, { 'Content-Type': 'text/plain' });\n  res.end('Welcome to the admin panel');\n}\n\nserver.listen(3000, () => {\n  console.log('Server running on port 3000');\n});",
+        "expectedOutcome": "The middleware function will be parameterized, allowing it to check different permissions based on the route it's applied to.",
+        "successCriteria": [
+          "The permissionMiddleware function accepts a requiredPermission parameter and uses it instead of the hardcoded 'admin' value."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but the middleware still uses the hardcoded 'admin' value instead of the parameter. Make sure to use the parameter inside the function.",
+        "feedbackWrong": "The middleware function still has the hardcoded 'admin' value. You need to modify it to accept a parameter and use that parameter for the permission check.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "permissionMiddleware",
+            "requiredPermission",
+            "parameter",
+            "checkPermission"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import required Node.js modules",
+        "id": "step1"
+      },
+      {
+        "label": "Create a basic HTTP server",
+        "id": "step2"
+      },
+      {
+        "label": "Define a sample user object with permissions",
+        "id": "step3"
+      },
+      {
+        "label": "Create a permission checking function",
+        "id": "step4"
+      },
+      {
+        "label": "Define the middleware function structure",
+        "id": "step5"
+      },
+      {
+        "label": "Add permission validation logic to middleware",
+        "id": "step6"
+      },
+      {
+        "label": "Create route handlers for different endpoints",
+        "id": "step7"
+      },
+      {
+        "label": "Wire middleware to specific routes",
+        "id": "step8"
+      },
+      {
+        "label": "Test the middleware with different permission scen",
+        "id": "step9"
+      },
+      {
+        "label": "test accessing the '/admin' route to verify t",
+        "id": "step10"
+      },
+      {
+        "label": "Refactor to make middleware configurable",
+        "id": "step11"
+      }
+    ]
+  },
+  "source": "content"
+}

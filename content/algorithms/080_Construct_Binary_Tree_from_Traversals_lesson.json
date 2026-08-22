@@ -1,0 +1,386 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-algorithms-80",
+    "track": "algorithms",
+    "lessonNum": 80,
+    "title": "Construct Binary Tree from Traversals",
+    "shortName": "P80",
+    "intro": {
+      "tag": "LESSON #80",
+      "title": "Construct Binary Tree from Traversals",
+      "body": "In this lesson, you will build a function that reconstructs a binary tree from its preorder and inorder traversal arrays. You will learn the core concept of using recursion to divide the lesson into smaller subproblems based on root identification in the traversals. The main technologies involved are JavaScript functions, arrays, recursion, and basic tree node objects. This exercise will help you understand how tree structures relate to their traversal sequences and practice recursive thinking in a practical context.",
+      "usecase": "Reconstructing a binary tree from its traversal data is a fundamental pattern in software that builds or restores hierarchical structures from serialized data. This is essential in applications like file system browsers, where directory trees are loaded from a stored traversal order, or in document editors that rebuild a collapsed outline or table of contents from saved metadata. Developers use this algorithm when implementing features like restoring a user's expanded/collapsed state in a complex UI dashboard or parsing configuration files that define nested menu systems, ensuring the interface accurately reflects the intended hierarchical relationships."
+    },
+    "objectives": [
+      "Construct a binary tree node class with left and right child references",
+      "Initialize arrays to store inorder and preorder traversal data",
+      "Implement a recursive function to build binary trees from traversal sequences",
+      "Manipulate array indices to track subtree boundaries during construction",
+      "Apply base case conditions to handle empty subtree scenarios",
+      "Integrate traversal data with recursive tree-building logic",
+      "Render the constructed tree structure for verification"
+    ],
+    "steps": [
+      {
+        "type": "reasoning",
+        "id": "step1",
+        "phase": "Step 1 of 17",
+        "title": "Introduction",
+        "content": {
+          "body": "Have you ever looked at a family tree and wondered how to reconstruct it from just two different lists of names? That's exactly what we'll do with binary trees! In this lesson, you'll learn how to build a binary tree using two different traversal lists.",
+          "title": "Introduction"
+        }
+      },
+      {
+        "type": "reasoning",
+        "id": "step2",
+        "phase": "Step 2 of 17",
+        "title": "What you'll learn",
+        "content": {
+          "body": "• Explain how preorder and inorder traversals describe a binary tree\n• Apply the root-first approach to reconstruct a tree\n• Implement a recursive function that builds a binary tree from traversal arrays",
+          "title": "What you'll learn"
+        }
+      },
+      {
+        "type": "discovery",
+        "id": "step3",
+        "phase": "Step 3 of 17",
+        "title": "Explore a small tree",
+        "content": {
+          "body": "Let's explore a tiny binary tree with 3 nodes. The root is 1, left child is 2, right child is 3. If we visit nodes in preorder (root, left, right), we get [1, 2, 3]. In inorder (left, root, right), we get [2, 1, 3]. Can you see how these lists relate to the tree structure?",
+          "title": "Explore a small tree",
+          "visualMetaphor": "Imagine exploring from the root down branches: preorder visits the root first, then explores left branch, then right branch."
+        }
+      },
+      {
+        "type": "discovery",
+        "id": "step4",
+        "phase": "Step 4 of 17",
+        "title": "Try a bigger example",
+        "content": {
+          "body": "Now consider this tree: root 3, left child 9, right child 20 (which has left 15 and right 7). The preorder is [3, 9, 20, 15, 7] and inorder is [9, 3, 15, 20, 7]. Look at the first element in preorder - that's always the root. Where does that root appear in the inorder list?",
+          "title": "Try a bigger example",
+          "visualMetaphor": "Exploring one level at a time: the root splits the inorder list into left subtree nodes and right subtree nodes."
+        }
+      },
+      {
+        "type": "discovery",
+        "id": "step5",
+        "phase": "Step 5 of 17",
+        "title": "What if we have no tree?",
+        "content": {
+          "body": "What happens when both traversal arrays are empty? What tree should we return? Think about the simplest case - when there are no nodes to explore.",
+          "title": "What if we have no tree?",
+          "visualMetaphor": "When exploring branches from a root, what happens when there's no root to start from?"
+        }
+      },
+      {
+        "type": "reflection",
+        "id": "step6",
+        "phase": "Step 6 of 17",
+        "title": "What you discovered",
+        "content": {
+          "body": "You just discovered key patterns: preorder always gives the root first, and inorder shows how nodes are arranged left-to-right. You also recognized that empty arrays mean no tree exists.",
+          "title": "What you discovered"
+        }
+      },
+      {
+        "type": "scale-problem",
+        "id": "step7",
+        "phase": "Step 7 of 17",
+        "title": "Why manual checking fails",
+        "content": {
+          "body": "Manually matching nodes works for small trees, but with 100+ nodes, it becomes impossible to track by hand. We need a systematic method that works for any size tree.",
+          "title": "Why manual checking fails"
+        }
+      },
+      {
+        "type": "concept-bridge",
+        "id": "step8",
+        "phase": "Step 8 of 17",
+        "title": "Tree exploration thinking",
+        "content": {
+          "body": "Think of building a tree like exploring from the root down branches. The preorder tells us which node to visit next as we explore. The inorder tells us which nodes belong on the left vs right branches. We'll use this branch/root reasoning to build the tree one level at a time.",
+          "title": "Tree exploration thinking",
+          "visualMetaphor": "Show exploring from the root down branches; one level or one branch at a time."
+        }
+      },
+      {
+        "type": "reveal-idea",
+        "id": "step9",
+        "phase": "Step 9 of 17",
+        "title": "The recursive approach",
+        "content": {
+          "body": "Here's the clever idea: 1) Take the first preorder element as root. 2) Find that root in inorder - everything left of it goes in left subtree, right goes in right subtree. 3) Recursively build left and right subtrees using the corresponding portions of both arrays. The base case? When our arrays are empty - return null (no tree).",
+          "title": "The recursive approach"
+        }
+      },
+      {
+        "type": "flow-explainer",
+        "id": "step10",
+        "phase": "Step 10 of 17",
+        "title": "Step-by-step logic",
+        "content": {
+          "body": "1. If preorder or inorder is empty, return null (base case)\n2. Take first element of preorder as root value\n3. Find root value's index in inorder array\n4. Split inorder into left and right portions around this index\n5. Split preorder accordingly (after the root)\n6. Recursively build left subtree with left portions\n7. Recursively build right subtree with right portions\n8. Return the root node with its subtrees attached",
+          "title": "Step-by-step logic"
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 17",
+        "title": "Create the function skeleton",
+        "instruction": "Start by creating a function called buildTree that takes preorder and inorder arrays as parameters.",
+        "hint": "Remember to define the function with two parameters.",
+        "analogousExample": "",
+        "seedCode": "",
+        "expectedOutcome": "Function definition with correct parameters",
+        "successCriteria": [],
+        "feedbackCorrect": "Great! You've set up the function that will build our tree.",
+        "feedbackPartial": "Almost there - make sure you have both parameters.",
+        "feedbackWrong": "Let's try again. We need a function that takes two arrays.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "function",
+            "buildTree",
+            "preorder",
+            "inorder"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step12",
+        "type": "question",
+        "phase": "Step 12 of 17",
+        "title": "Add the base case",
+        "instruction": "Inside the function, check if either array is empty. If so, return null.",
+        "hint": "Use an if statement to check the length of the arrays.",
+        "analogousExample": "",
+        "seedCode": "function buildTree(preorder, inorder) {\n  \n}",
+        "expectedOutcome": "Base case that returns null for empty arrays",
+        "successCriteria": [],
+        "feedbackCorrect": "Perfect! This handles the simplest case - no tree to build.",
+        "feedbackPartial": "Good start. Make sure you're checking both arrays.",
+        "feedbackWrong": "Remember: when there's no data, there's no tree. Return null.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "if",
+            "length",
+            "return",
+            "null"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step13",
+        "type": "question",
+        "phase": "Step 13 of 17",
+        "title": "Extract the root value",
+        "instruction": "Get the first element from preorder - this will be our root value.",
+        "hint": "The first element is at index 0 of the preorder array.",
+        "analogousExample": "",
+        "seedCode": "function buildTree(preorder, inorder) {\n  if (preorder.length === 0 || inorder.length === 0) {\n    return null;\n  }\n  \n}",
+        "expectedOutcome": "Root value extracted from preorder[0]",
+        "successCriteria": [],
+        "feedbackCorrect": "Excellent! You've identified the root of our tree.",
+        "feedbackPartial": "Close! Remember arrays are zero-indexed.",
+        "feedbackWrong": "Think about which element represents the root in preorder traversal.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "preorder[0]",
+            "rootVal",
+            "="
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step14",
+        "type": "question",
+        "phase": "Step 14 of 17",
+        "title": "Find root position in inorder",
+        "instruction": "Find the index of the root value in the inorder array using indexOf().",
+        "hint": "Use the indexOf method on the inorder array.",
+        "analogousExample": "",
+        "seedCode": "function buildTree(preorder, inorder) {\n  if (preorder.length === 0 || inorder.length === 0) {\n    return null;\n  }\n  \n  const rootVal = preorder[0];\n  \n}",
+        "expectedOutcome": "Root index found in inorder array",
+        "successCriteria": [],
+        "feedbackCorrect": "Well done! This tells us how to split the tree.",
+        "feedbackPartial": "Almost - make sure you're finding where rootVal appears in inorder.",
+        "feedbackWrong": "We need to locate our root in the inorder list to know left vs right.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "inorder.indexOf",
+            "rootVal",
+            "rootIndex"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step15",
+        "type": "question",
+        "phase": "Step 15 of 17",
+        "title": "Split the arrays",
+        "instruction": "Create left and right portions of both arrays based on the root index.",
+        "hint": "Use slice() to get portions of the arrays.",
+        "analogousExample": "",
+        "seedCode": "function buildTree(preorder, inorder) {\n  if (preorder.length === 0 || inorder.length === 0) {\n    return null;\n  }\n  \n  const rootVal = preorder[0];\n  const rootIndex = inorder.indexOf(rootVal);\n  \n}",
+        "expectedOutcome": "Four new arrays: leftInorder, rightInorder, leftPreorder, rightPreorder",
+        "successCriteria": [],
+        "feedbackCorrect": "Perfect splitting! Now we know exactly which nodes go where.",
+        "feedbackPartial": "Good progress. Remember to slice both arrays appropriately.",
+        "feedbackWrong": "Think about: left subtree nodes come before root in inorder, right after.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "slice",
+            "leftInorder",
+            "rightInorder",
+            "leftPreorder",
+            "rightPreorder"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step16",
+        "type": "question",
+        "phase": "Step 16 of 17",
+        "title": "Build and return the tree",
+        "instruction": "Create the root node, recursively build left and right subtrees, and return the complete tree.",
+        "hint": "Call buildTree recursively with the split arrays, then attach results to root.",
+        "analogousExample": "",
+        "seedCode": "function buildTree(preorder, inorder) {\n  if (preorder.length === 0 || inorder.length === 0) {\n    return null;\n  }\n  \n  const rootVal = preorder[0];\n  const rootIndex = inorder.indexOf(rootVal);\n  \n  const leftInorder = inorder.slice(0, rootIndex);\n  const rightInorder = inorder.slice(rootIndex + 1);\n  const leftPreorder = preorder.slice(1, 1 + leftInorder.length);\n  const rightPreorder = preorder.slice(1 + leftInorder.length);\n  \n}",
+        "expectedOutcome": "Complete tree construction with recursive calls",
+        "successCriteria": [],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Almost there! Don't forget to create the node and make recursive calls.",
+        "feedbackWrong": "Remember: create a node, build its left and right children recursively, then return it.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "new TreeNode",
+            "buildTree",
+            "left",
+            "right",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "type": "complete",
+        "id": "step17",
+        "phase": "Step 17 of 17",
+        "title": "Lesson complete",
+        "content": {
+          "body": "You've successfully implemented an algorithm to construct a binary tree from preorder and inorder traversals! Remember: preorder gives you the roots as you explore, inorder tells you left from right. The key insight is using the root to split the lesson into smaller subtree lessons - classic tree exploration thinking. This approach works for trees of any size by recursively exploring branches from each root.",
+          "title": "Lesson complete"
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Introduction",
+        "id": "step1"
+      },
+      {
+        "label": "What you'll learn",
+        "id": "step2"
+      },
+      {
+        "label": "Explore a small tree",
+        "id": "step3"
+      },
+      {
+        "label": "Try a bigger example",
+        "id": "step4"
+      },
+      {
+        "label": "What if we have no tree?",
+        "id": "step5"
+      },
+      {
+        "label": "What you discovered",
+        "id": "step6"
+      },
+      {
+        "label": "Why manual checking fails",
+        "id": "step7"
+      },
+      {
+        "label": "Tree exploration thinking",
+        "id": "step8"
+      },
+      {
+        "label": "The recursive approach",
+        "id": "step9"
+      },
+      {
+        "label": "Step-by-step logic",
+        "id": "step10"
+      },
+      {
+        "label": "Create the function skeleton",
+        "id": "step11"
+      },
+      {
+        "label": "Add the base case",
+        "id": "step12"
+      },
+      {
+        "label": "Extract the root value",
+        "id": "step13"
+      },
+      {
+        "label": "Find root position in inorder",
+        "id": "step14"
+      },
+      {
+        "label": "Split the arrays",
+        "id": "step15"
+      },
+      {
+        "label": "Build and return the tree",
+        "id": "step16"
+      },
+      {
+        "label": "Lesson complete",
+        "id": "step17"
+      }
+    ],
+    "algorithmFamily": "tree",
+    "familyTeachingProfile": {
+      "mentalModel": "Explore branches from a root",
+      "conceptBridge": "Use branch/root visual reasoning; visiting nodes or exploring levels one at a time.",
+      "visualMetaphor": "Show exploring from the root down branches; one level or one branch at a time.",
+      "commonConfusions": [
+        "Which order do we visit?",
+        "What is the base case (empty tree)?"
+      ]
+    }
+  },
+  "source": "content"
+}

@@ -1,0 +1,351 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-js-99",
+    "track": "js",
+    "lessonNum": 99,
+    "title": "Build race condition safe search UI",
+    "shortName": "P99",
+    "intro": {
+      "tag": "LESSON #99",
+      "title": "Build race condition safe search UI",
+      "body": "In this lesson, you will build a search input component that safely handles user typing without showing outdated results. You will learn how race conditions occur when fast user input triggers multiple asynchronous search calls that may return out of order. The core concept is using JavaScript's AbortController to cancel previous requests when a new one is made, ensuring only the latest search results are displayed. You will implement this with React state hooks and event handlers to create a responsive, error-free UI. By the end, you'll have a practical understanding of managing asynchronous operations in a real-world front-end scenario.",
+      "usecase": "This pattern is essential for search interfaces in e-commerce platforms like Amazon or travel sites like Booking.com, where users rapidly type queries while the system fetches results. It prevents outdated search results from overwriting newer ones when network responses arrive out of order. Developers implement this in dashboard filters, admin panels with live data, and any autocomplete field where API calls must be canceled or ignored if stale. Without race condition handling, users see incorrect data that damages trust and usability."
+    },
+    "objectives": [
+      "Implement a search input component with controlled state management",
+      "Configure asynchronous search functions with proper error handling",
+      "Apply request cancellation logic to prevent outdated responses",
+      "Construct a debounced search handler to optimize API calls",
+      "Initialize and update loading states during search operations",
+      "Render search results conditionally based on response validity",
+      "Integrate race condition safeguards into the complete search workflow"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 10",
+        "title": "Import React and useState",
+        "instruction": "Import React and the useState hook from the 'react' library.",
+        "hint": "Use the import statement to bring in React and useState from 'react'.",
+        "analogousExample": "// Example: importing React and a hook\nimport React, { useState } from 'react';",
+        "seedCode": "// Import React and useState here",
+        "expectedOutcome": "You will have the necessary imports to start building a React component with state.",
+        "successCriteria": [
+          "React and useState are imported from 'react'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're importing both React and useState from 'react'.",
+        "feedbackWrong": "That's not quite right. You need to import React and useState from 'react' to proceed.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "React",
+            "useState",
+            "'react'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 10",
+        "title": "Create the SearchComponent function component",
+        "instruction": "Create a function component named SearchComponent that returns null initially.",
+        "hint": "Define a function called SearchComponent that returns null. You can use either a function declaration or arrow function syntax.",
+        "analogousExample": "// Example: a simple component returning null\nfunction ExampleComponent() {\n  return null;\n}",
+        "seedCode": "import React, { useState } from 'react';\n\n// Create SearchComponent function component here",
+        "expectedOutcome": "A functional component named SearchComponent is defined and returns null.",
+        "successCriteria": [
+          "SearchComponent is defined as a function and returns null."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you've defined a function named SearchComponent that returns null.",
+        "feedbackWrong": "Check that you've created a function component named SearchComponent that returns null.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "SearchComponent",
+            "return",
+            "null"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 10",
+        "title": "Initialize search query state",
+        "instruction": "Inside the SearchComponent function, use the useState hook to create a state variable named 'searchQuery' with an initial value of an empty string.",
+        "hint": "Call useState with an empty string as the initial value, and destructure the returned array to get the state variable and setter function.",
+        "analogousExample": "// Example: creating a state variable for user input\nconst [username, setUsername] = useState('');",
+        "seedCode": "import React, { useState } from 'react';\n\n// Create SearchComponent function component here\nfunction SearchComponent() {\n  // Initialize searchQuery state here\n  \n  return null;\n}",
+        "expectedOutcome": "The SearchComponent function will have a searchQuery state variable initialized to an empty string, ready to store user input.",
+        "successCriteria": [
+          "The useState hook is called with an empty string, and the returned array is destructured into 'searchQuery' and 'setSearchQuery'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure you're using useState with an empty string initial value and destructuring it into 'searchQuery' and 'setSearchQuery'.",
+        "feedbackWrong": "Inside the SearchComponent function, use useState to create a state variable named 'searchQuery' starting with an empty string value.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "useState",
+            "searchQuery",
+            "''",
+            "setSearchQuery"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 10",
+        "title": "Initialize search results state",
+        "instruction": "Inside the SearchComponent function, add another useState hook to create a state variable called 'searchResults' initialized with an empty array.",
+        "hint": "Follow the same pattern as the searchQuery state, but name the variable 'searchResults' and set its initial value to [].",
+        "analogousExample": "// Similar: state for a list of items\nconst [items, setItems] = useState([]);",
+        "seedCode": "import React, { useState } from 'react';\n\nfunction SearchComponent() {\n  // Initialize searchQuery state here\n  const [searchQuery, setSearchQuery] = useState('');\n  \n  // Add searchResults state here\n  \n  return null;\n}",
+        "expectedOutcome": "The component will have two state variables: searchQuery (string) and searchResults (array).",
+        "successCriteria": [
+          "A state variable named 'searchResults' is declared with useState, initialized to an empty array."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're using useState with the exact variable name 'searchResults' and initializing it to [].",
+        "feedbackWrong": "Add 'const [searchResults, setSearchResults] = useState([]);' inside the component function.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "searchResults",
+            "useState",
+            "[]"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 10",
+        "title": "Create handleSearchInputChange handler",
+        "instruction": "Inside your SearchComponent, create a function named handleSearchInputChange that takes an event parameter and updates the searchQuery state with the input's current value.",
+        "hint": "Define a function that calls setSearchQuery with event.target.value.",
+        "analogousExample": "// Example: handler function that updates state\nfunction handleInputChange(event) {\n  setInputValue(event.target.value);\n}",
+        "seedCode": "import React, { useState } from 'react';\n\nfunction SearchComponent() {\n  const [searchQuery, setSearchQuery] = useState('');\n  const [searchResults, setSearchResults] = useState([]);\n  \n  // Create handleSearchInputChange function here\n  \n  return null;\n}",
+        "expectedOutcome": "A handleSearchInputChange function is defined that updates searchQuery when called with an input event.",
+        "successCriteria": [
+          "The handleSearchInputChange function is defined, takes an event parameter, and calls setSearchQuery with event.target.value."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've created a function, but make sure it takes an event parameter and calls setSearchQuery with event.target.value.",
+        "feedbackWrong": "Try creating a function named handleSearchInputChange that updates the searchQuery state with the input value from an event.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "handleSearchInputChange",
+            "setSearchQuery",
+            "event.target.value"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 10",
+        "title": "Return basic component structure with search input",
+        "instruction": "Return JSX from your component with a search input field. The input should have its value bound to the searchQuery state and its onChange event wired to the handleSearchInputChange handler.",
+        "hint": "Replace the current return statement with JSX containing an input element. Use the value and onChange attributes to connect it to your state and handler.",
+        "analogousExample": "// Example: returning JSX with an input\nfunction MyComponent() {\n  const [text, setText] = useState('');\n  \n  const handleChange = (e) => setText(e.target.value);\n  \n  return (\n    <input\n      type=\"text\"\n      value={text}\n      onChange={handleChange}\n    />\n  );\n}",
+        "seedCode": "import React, { useState } from 'react';\n\nfunction SearchComponent() {\n  const [searchQuery, setSearchQuery] = useState('');\n  const [searchResults, setSearchResults] = useState([]);\n  \n  // Create handleSearchInputChange function here\n  \n  return (\n    <input\n      type=\"text\"\n      value={searchQuery}\n      onChange={handleSearchInputChange}\n    />\n  );\n}",
+        "expectedOutcome": "The component now returns a search input field that displays the current searchQuery value and updates it when the user types.",
+        "successCriteria": [
+          "The component returns JSX with an input element that has value={searchQuery} and onChange={handleSearchInputChange}."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure your input element has both the value and onChange attributes correctly set.",
+        "feedbackWrong": "The component doesn't return the expected JSX structure with a properly connected input field.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "return",
+            "input",
+            "value={searchQuery}",
+            "onChange={handleSearchInputChange}"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 10",
+        "title": "Add search button to the UI",
+        "instruction": "Add a button element after the input in your component's return statement to trigger searches.",
+        "hint": "Place a <button> element right after the closing tag of the <input>. You can give it text like 'Search'.",
+        "analogousExample": "// Adding a button to a form\nfunction Form() {\n  return (\n    <div>\n      <input type=\"text\" />\n      <button>Submit</button>\n    </div>\n  );\n}",
+        "seedCode": "import React, { useState } from 'react';\n\nfunction SearchComponent() {\n  const [searchQuery, setSearchQuery] = useState('');\n  const [searchResults, setSearchResults] = useState([]);\n  \n  // Create handleSearchInputChange function here\n  \n  return (\n    <input\n      type=\"text\"\n      value={searchQuery}\n      onChange={handleSearchInputChange}\n    />\n  );\n}",
+        "expectedOutcome": "The UI will now show a search button next to the input field.",
+        "successCriteria": [
+          "A <button> element is added after the <input> element in the return statement."
+        ],
+        "feedbackCorrect": "Great! You've added a search button to the UI.",
+        "feedbackPartial": "You're close. Make sure you've added a <button> element after the input.",
+        "feedbackWrong": "The button wasn't added correctly. Check that you placed a <button> element in the return statement after the input.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<button>",
+            "</button>"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 10",
+        "title": "Create mock search API function",
+        "instruction": "Create a mockSearchAPI function that simulates an API call with a delay and returns search results as a promise. Place it inside your SearchComponent function, above the return statement.",
+        "hint": "Define a function that returns a new Promise. Inside the promise, use setTimeout to simulate network delay, then resolve with mock data.",
+        "analogousExample": "// Example: mock API function\nfunction mockSearchAPI(query) {\n  return new Promise((resolve) => {\n    setTimeout(() => {\n      resolve([`Result for ${query} 1`, `Result for ${query} 2`]);\n    }, 500);\n  });\n}",
+        "seedCode": "import React, { useState } from 'react';\n\nfunction SearchComponent() {\n  const [searchQuery, setSearchQuery] = useState('');\n  const [searchResults, setSearchResults] = useState([]);\n  \n  // Create handleSearchInputChange function here\n  \n  // Create mockSearchAPI function here\n  \n  return (\n    <input\n      type=\"text\"\n      value={searchQuery}\n      onChange={handleSearchInputChange}\n    />\n  );\n}",
+        "expectedOutcome": "You'll have a mockSearchAPI function that returns a promise with simulated delay, ready to be called later.",
+        "successCriteria": [
+          "The mockSearchAPI function is defined, returns a Promise, uses setTimeout to simulate delay, and resolves with mock search results."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure your function returns a Promise and uses setTimeout to delay the response.",
+        "feedbackWrong": "The mockSearchAPI function isn't quite right. It should return a Promise that resolves with mock data after a delay.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "mockSearchAPI",
+            "Promise",
+            "setTimeout",
+            "resolve"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 10",
+        "title": "Create handleSearchSubmit handler",
+        "instruction": "Create a function named handleSearchSubmit inside your component. This function should call the mockSearchAPI function with the current searchQuery and update the searchResults state with the returned data.",
+        "hint": "Define a function that uses the mockSearchAPI and setSearchResults to update the results state.",
+        "analogousExample": "// Example: a function that updates state based on API call\nfunction handleSubmit() {\n  const data = fetchData();\n  setData(data);\n}",
+        "seedCode": "import React, { useState } from 'react';\n\nfunction SearchComponent() {\n  const [searchQuery, setSearchQuery] = useState('');\n  const [searchResults, setSearchResults] = useState([]);\n  \n  // Create handleSearchInputChange function here\n  \n  // Create mockSearchAPI function here\n  \n  // Create handleSearchSubmit function here\n  \n  return (\n    <input\n      type=\"text\"\n      value={searchQuery}\n      onChange={handleSearchInputChange}\n    />\n  );\n}",
+        "expectedOutcome": "A handleSearchSubmit function is defined that calls mockSearchAPI and updates searchResults state.",
+        "successCriteria": [
+          "The handleSearchSubmit function is defined, calls mockSearchAPI with searchQuery, and updates searchResults with the returned data."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've created a function, but make sure it calls mockSearchAPI with searchQuery and updates searchResults with the returned data.",
+        "feedbackWrong": "The handleSearchSubmit function is not properly defined. It should call mockSearchAPI and update the searchResults state.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "handleSearchSubmit",
+            "mockSearchAPI",
+            "searchQuery",
+            "setSearchResults"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 10",
+        "title": "Wire search button to handleSearchSubmit",
+        "instruction": "Add a search button to your component's return statement and wire its onClick handler to call the handleSearchSubmit function.",
+        "hint": "Add a <button> element with an onClick attribute that calls handleSearchSubmit. Place it after the input element.",
+        "analogousExample": "// Adding a button with click handler\nfunction MyComponent() {\n  const handleClick = () => {\n    console.log('Button clicked!');\n  };\n  \n  return (\n    <div>\n      <button onClick={handleClick}>Click me</button>\n    </div>\n  );\n}",
+        "seedCode": "import React, { useState } from 'react';\n\nfunction SearchComponent() {\n  const [searchQuery, setSearchQuery] = useState('');\n  const [searchResults, setSearchResults] = useState([]);\n  \n  const handleSearchInputChange = (e) => {\n    setSearchQuery(e.target.value);\n  };\n  \n  const mockSearchAPI = (query) => {\n    return new Promise((resolve) => {\n      setTimeout(() => {\n        resolve([`Result for: ${query}`]);\n      }, Math.random() * 1000);\n    });\n  };\n  \n  const handleSearchSubmit = async () => {\n    const results = await mockSearchAPI(searchQuery);\n    setSearchResults(results);\n  };\n  \n  return (\n    <div>\n      <input\n        type=\"text\"\n        value={searchQuery}\n        onChange={handleSearchInputChange}\n      />\n      {/* Add search button with onClick handler here */}\n    </div>\n  );\n}",
+        "expectedOutcome": "The component will display a search button that triggers the search submission when clicked.",
+        "successCriteria": [
+          "A <button> element is added with onClick={handleSearchSubmit}."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You added a button, but make sure it has onClick={handleSearchSubmit} to properly trigger the search.",
+        "feedbackWrong": "The search button isn't properly connected. Add a <button> with onClick={handleSearchSubmit}.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<button",
+            "onClick={handleSearchSubmit}"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import React and useState",
+        "id": "step1"
+      },
+      {
+        "label": "Create the SearchComponent function component",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize search query state",
+        "id": "step3"
+      },
+      {
+        "label": "Initialize search results state",
+        "id": "step4"
+      },
+      {
+        "label": "Create handleSearchInputChange handler",
+        "id": "step5"
+      },
+      {
+        "label": "Return basic component structure with search input",
+        "id": "step6"
+      },
+      {
+        "label": "Add search button to the UI",
+        "id": "step7"
+      },
+      {
+        "label": "Create mock search API function",
+        "id": "step8"
+      },
+      {
+        "label": "Create handleSearchSubmit handler",
+        "id": "step9"
+      },
+      {
+        "label": "Wire search button to handleSearchSubmit",
+        "id": "step10"
+      }
+    ]
+  },
+  "source": "content"
+}

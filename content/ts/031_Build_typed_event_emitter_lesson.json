@@ -1,0 +1,408 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-ts-31",
+    "track": "ts",
+    "lessonNum": 31,
+    "title": "Build typed event emitter",
+    "shortName": "P31",
+    "intro": {
+      "tag": "LESSON #31",
+      "title": "Build typed event emitter",
+      "body": "In this lesson, you will build a typed event emitter in TypeScript, a reusable utility that allows different parts of an application to communicate by sending and listening for events. You'll learn how to use TypeScript generics to define the types of events and their associated data, ensuring type safety when emitting events and handling callbacks. The main constructs involved include classes, generic type parameters, and callback functions. By the end, you'll have a functional event emitter that can manage multiple event types with strict type checking.",
+      "usecase": "Typed event emitters are fundamental to building interactive, decoupled components in modern web applications. For example, in a dashboard with multiple widgets like charts, data tables, and notifications, a typed emitter allows widgets to publish and subscribe to events—such as 'dataUpdated' or 'filterApplied'—with full type safety, ensuring the correct payload structure. This pattern is also essential in UI frameworks for handling custom events in modals, form submissions, or real-time chat features, where developers need to guarantee that event listeners receive the expected data types, reducing runtime errors and improving maintainability."
+    },
+    "objectives": [
+      "Implement a generic EventEmitter class with TypeScript type parameters",
+      "Configure typed event listeners with specific callback signatures",
+      "Manipulate internal data structures to store and retrieve event handlers",
+      "Apply type constraints to ensure event names match registered handlers",
+      "Construct a publish-subscribe pattern with compile-time type safety",
+      "Initialize event emitter instances with proper type inference",
+      "Integrate the typed event emitter into a sample application context"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 11",
+        "title": "Define the EventMap type interface",
+        "instruction": "Create an interface called EventMap that uses a generic type parameter to define event names as keys and their payload types as values.",
+        "hint": "Use the TypeScript interface syntax with a generic type parameter. The keys should be strings and the values should be any type.",
+        "analogousExample": "// Example: Generic interface for mapping keys to values\ninterface StringMap<T> {\n  [key: string]: T;\n}",
+        "seedCode": "// Create your EventMap interface here",
+        "expectedOutcome": "An EventMap interface that can be used to type event names and their payloads throughout the emitter implementation.",
+        "successCriteria": [
+          "EventMap interface is defined with a generic type parameter and uses index signature syntax to map string keys to values."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure your interface uses the correct syntax with a generic type parameter and properly maps string keys to values.",
+        "feedbackWrong": "The EventMap interface needs to be defined with a generic type parameter. Try using: interface EventMap<T> { [key: string]: T; }",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "interface",
+            "EventMap",
+            "<",
+            ">",
+            "[key: string]",
+            ":",
+            "T"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 11",
+        "title": "Create the TypedEventEmitter class",
+        "instruction": "Create a class named TypedEventEmitter that accepts a generic type parameter T extending EventMap.",
+        "hint": "Use the class keyword followed by the class name and generic type parameter. The generic should extend your EventMap interface.",
+        "analogousExample": "// Example: a generic class with a type constraint\nclass Container<T extends { id: string }> {\n  private items: T[] = [];\n}",
+        "seedCode": "// Create your EventMap interface here\n\n// Create the TypedEventEmitter class here",
+        "expectedOutcome": "A class definition with a generic type parameter that extends EventMap.",
+        "successCriteria": [
+          "The TypedEventEmitter class is defined with a generic type parameter T extending EventMap."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure the class has a generic type parameter that extends EventMap.",
+        "feedbackWrong": "The class definition is missing or incorrect. Ensure you create a class named TypedEventEmitter with a generic type parameter extending EventMap.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "class",
+            "TypedEventEmitter",
+            "<T",
+            "extends",
+            "EventMap"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 11",
+        "title": "Initialize the listeners storage",
+        "instruction": "Inside the TypedEventEmitter class, add a private property named 'listeners' that stores event listeners. Use the EventMap type to ensure it's properly typed: it should be a map where each event key points to an array of callback functions.",
+        "hint": "The property should be private and typed as Record<K, Array<callback>> where K extends keyof EventMap. Initialize it as an empty object.",
+        "analogousExample": "// Example: private storage property in a class\nclass Store<T> {\n  private items: Record<string, T[]> = {};\n}",
+        "seedCode": "// Create your EventMap interface here\n\n// Create the TypedEventEmitter class here\n\nclass TypedEventEmitter<EventMap extends Record<string, any>> {\n  // Add private listeners property here\n}",
+        "expectedOutcome": "The TypedEventEmitter class will have a private 'listeners' property that is properly typed to store arrays of callback functions for each event.",
+        "successCriteria": [
+          "The class contains a private property named 'listeners' typed as Record<K, Array<(payload: EventMap[K]) => void>> where K extends keyof EventMap, initialized as an empty object."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added a listeners property, but check: is it private? Is it properly typed using EventMap? Did you initialize it as an empty object?",
+        "feedbackWrong": "The listeners property is missing or incorrect. It should be a private property that stores arrays of callback functions, typed with EventMap.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "private",
+            "listeners",
+            "Record",
+            "keyof",
+            "EventMap",
+            "=",
+            "{}"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 11",
+        "title": "Implement the on method",
+        "instruction": "Add an 'on' method to your TypedEventEmitter class that accepts an event name (typed as keyof EventMap) and a callback function (typed to match the event's payload),",
+        "hint": "The method signature should be: on<K extends keyof EventMap>(event: K, callback: (payload: EventMap[K]) => void): void. Inside the method, push the callback into the listeners array for that event.",
+        "analogousExample": "// Example: Adding a method to a class\nclass Store {\n  private items: string[] = [];\n  \n  addItem(item: string): void {\n    this.items.push(item);\n  }\n}",
+        "seedCode": "// Create your EventMap interface here\n\n// Create the TypedEventEmitter class here\n\nclass TypedEventEmitter<EventMap extends Record<string, any>> {\n  // Add private listeners property here\n  \n  // Add the on method here\n}",
+        "expectedOutcome": "The TypedEventEmitter class will have a properly typed 'on' method that can register event listeners with type safety.",
+        "successCriteria": [
+          "The 'on' method is added to the class with correct TypeScript generics, accepts event name and callback parameters, and stores the callback in the listeners map."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added an 'on' method, but check: 1) Does it use generics to type the event parameter? 2) Does the callback parameter match the event's payload type? 3) Does it properly store the callback in the listeners map?",
+        "feedbackWrong": "The 'on' method is missing or incorrect. Remember: 1) Use generics: on<K extends keyof EventMap>(event: K, ...) 2) The callback should be (payload: EventMap[K]) => void 3) Push the callback into this.listeners[event] array.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "on",
+            "K extends keyof EventMap",
+            "EventMap[K]",
+            "push",
+            "this.listeners"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 11",
+        "title": "stores the callback in the listeners map",
+        "instruction": "stores the callback in the listeners map.",
+        "hint": "The method signature should be: on<K extends keyof EventMap>(event: K, callback: (payload: EventMap[K]) => void): void. Inside the method, push the callback into the listeners array for that event.",
+        "analogousExample": "// Example: Adding a method to a class\nclass Store {\n  private items: string[] = [];\n  \n  addItem(item: string): void {\n    this.items.push(item);\n  }\n}",
+        "seedCode": "// Create your EventMap interface here\n\n// Create the TypedEventEmitter class here\n\nclass TypedEventEmitter<EventMap extends Record<string, any>> {\n  // Add private listeners property here\n  \n  // Add the on method here\n}",
+        "expectedOutcome": "",
+        "successCriteria": [
+          "Complete the step as instructed."
+        ],
+        "feedbackCorrect": "Great! Step completed.",
+        "feedbackPartial": "Review the instruction and try again.",
+        "feedbackWrong": "Check the instruction and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "on",
+            "K extends keyof EventMap",
+            "EventMap[K]",
+            "push",
+            "this.listeners"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 11",
+        "title": "Implement the off method",
+        "instruction": "Add an 'off' method to the TypedEventEmitter class that removes a specific callback from the listeners for a given event. The method should accept an event name and the callback to remove, and return void.",
+        "hint": "Inside the class, define a method named 'off' with type parameters matching the 'on' method. Use the event name to get the listener array, then filter out the callback to remove.",
+        "analogousExample": "// Similar: a method to remove a subscription\nclass SubscriptionManager {\n  private subscribers: Function[] = [];\n  \n  unsubscribe(callback: Function): void {\n    this.subscribers = this.subscribers.filter(sub => sub !== callback);\n  }\n}",
+        "seedCode": "// Create your EventMap interface here\n\n// Create the TypedEventEmitter class here\n\nclass TypedEventEmitter<EventMap extends Record<string, any>> {\n  private listeners: { [K in keyof EventMap]?: ((data: EventMap[K]) => void)[] } = {};\n  \n  on<K extends keyof EventMap>(event: K, callback: (data: EventMap[K]) => void): void {\n    if (!this.listeners[event]) {\n      this.listeners[event] = [];\n    }\n    this.listeners[event]!.push(callback);\n  }\n  \n  // Add the off method here\n}",
+        "expectedOutcome": "The TypedEventEmitter class now has an 'off' method that can remove a specific callback for a typed event.",
+        "successCriteria": [
+          "The 'off' method is defined with proper TypeScript generics, accesses the listeners array, and filters out the callback to remove."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure the 'off' method uses the same generic type parameters as 'on' and correctly filters the callback from the listeners array.",
+        "feedbackWrong": "The 'off' method is missing or incorrect. It should accept an event name and callback, then remove that callback from the listeners array for that event.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "off",
+            "K extends keyof EventMap",
+            "event: K",
+            "callback: (data: EventMap[K]) => void",
+            "this.listeners[event]",
+            "filter"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 11",
+        "title": "Implement the emit method",
+        "instruction": "Add an emit method to the TypedEventEmitter class that calls all registered callbacks for a given event with the provided payload.",
+        "hint": "The method should accept an event name and data, retrieve the listener array for that event, and call each callback with the data.",
+        "analogousExample": "// Similar: a method that triggers actions\nclass Speaker {\n  private listeners: (() => void)[] = [];\n  \n  emit() {\n    this.listeners.forEach(callback => callback());\n  }\n}",
+        "seedCode": "// Create your EventMap interface here\n\n// Create the TypedEventEmitter class here\n\nclass TypedEventEmitter<EventMap extends Record<string, any>> {\n  private listeners: { [K in keyof EventMap]?: ((data: EventMap[K]) => void)[] } = {};\n  \n  on<K extends keyof EventMap>(event: K, callback: (data: EventMap[K]) => void): void {\n    if (!this.listeners[event]) {\n      this.listeners[event] = [];\n    }\n    this.listeners[event]!.push(callback);\n  }\n  \n  // Add the off method here\n  \n  // Add the emit method here\n}",
+        "expectedOutcome": "The class will have a complete emit method that can trigger events with type-checked data.",
+        "successCriteria": [
+          "The emit method is added to the class, accepts an event name and payload, and calls all registered callbacks for that event."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added a method, but check that it correctly retrieves the listener array and calls each callback with the data.",
+        "feedbackWrong": "The emit method is missing or doesn't match the expected signature. Review the method structure and type parameters.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "emit",
+            "event",
+            "data",
+            "listeners",
+            "forEach",
+            "callback"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 11",
+        "title": "Create a UserEvents type definition",
+        "instruction": "Create a type alias named UserEvents that defines specific event names and their payload types for user-related events.",
+        "hint": "Use the type keyword to create a type alias. Define event names as keys and their payload types as values.",
+        "analogousExample": "// Example: defining a concrete event map for a different domain\ntype GameEvents = {\n  scoreUpdate: number;\n  gameOver: { finalScore: number, winner: string };\n  playerJoined: string;\n};",
+        "seedCode": "// Create your EventMap interface here\n\n// Create the TypedEventEmitter class here\n\nclass TypedEventEmitter<EventMap extends Record<string, any>> {\n  private listeners: { [K in keyof EventMap]?: ((data: EventMap[K]) => void)[] } = {};\n  \n  on<K extends keyof EventMap>(event: K, callback: (data: EventMap[K]) => void): void {\n    if (!this.listeners[event]) {\n      this.listeners[event] = [];\n    }\n    this.listeners[event]!.push(callback);\n  }\n  \n  // Add the off method here\n  \n  // Add the emit method here\n}\n\n// Create the UserEvents type definition here",
+        "expectedOutcome": "A UserEvents type alias is created with at least two event definitions.",
+        "successCriteria": [
+          "The UserEvents type alias is defined with proper TypeScript syntax and includes event names with their payload types."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure to define a type alias named UserEvents with event names and their payload types.",
+        "feedbackWrong": "The UserEvents type definition is missing or incorrect. Please create a type alias with event names and their payload types.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "type",
+            "UserEvents",
+            "{",
+            "}",
+            ":",
+            "string",
+            "number"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 11",
+        "title": "Instantiate the typed event emitter",
+        "instruction": "Create an instance of TypedEventEmitter using the UserEvents type as the generic parameter. Declare it as a constant named 'userEmitter'.",
+        "hint": "Use the 'new' keyword followed by the class name with the UserEvents generic type argument.",
+        "analogousExample": "// Creating an instance of a generic class\nconst myInstance = new MyClass<MyType>();",
+        "seedCode": "// Create your EventMap interface here\n\n// Create the TypedEventEmitter class here\n\nclass TypedEventEmitter<EventMap extends Record<string, any>> {\n  private listeners: { [K in keyof EventMap]?: ((data: EventMap[K]) => void)[] } = {};\n  \n  on<K extends keyof EventMap>(event: K, callback: (data: EventMap[K]) => void): void {\n    if (!this.listeners[event]) {\n      this.listeners[event] = [];\n    }\n    this.listeners[event]!.push(callback);\n  }\n  \n  // Add the off method here\n  \n  // Add the emit method here\n}\n\n// Create the UserEvents type definition here\n\n// Instantiate the typed event emitter here",
+        "expectedOutcome": "A constant named 'userEmitter' is declared, which is an instance of TypedEventEmitter parameterized with the UserEvents type.",
+        "successCriteria": [
+          "The code includes a constant declaration 'userEmitter' that is a new instance of TypedEventEmitter<UserEvents>."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're using the UserEvents type as the generic parameter and naming the constant 'userEmitter'.",
+        "feedbackWrong": "create an instance of TypedEventEmitter with the UserEvents type as the generic parameter.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "userEmitter",
+            "new",
+            "TypedEventEmitter",
+            "UserEvents"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 11",
+        "title": "Register event listeners with type checking",
+        "instruction": "Use the on method to register a type-safe callback for the 'login' event on your emitter instance.",
+        "hint": "Call the on method on your emitter instance, passing 'login' as the event name and a callback function that receives the typed data parameter.",
+        "analogousExample": "// Registering a typed event listener\nemitter.on('login', (userData) => {\n  console.log(`User logged in: ${userData.name}`);\n});",
+        "seedCode": "// Create your EventMap interface here\n\n// Create the TypedEventEmitter class here\n\nclass TypedEventEmitter<EventMap extends Record<string, any>> {\n  private listeners: { [K in keyof EventMap]?: ((data: EventMap[K]) => void)[] } = {};\n  \n  on<K extends keyof EventMap>(event: K, callback: (data: EventMap[K]) => void): void {\n    if (!this.listeners[event]) {\n      this.listeners[event] = [];\n    }\n    this.listeners[event]!.push(callback);\n  }\n  \n  // Add the off method here\n  \n  // Add the emit method here\n}\n\n// Create the UserEvents type definition here\n\n// Instantiate the typed event emitter here\n\n// Register event listeners with type checking",
+        "expectedOutcome": "The emitter instance will have a properly typed callback registered for the 'login' event.",
+        "successCriteria": [
+          "The on method is called on the emitter instance with 'login' as the event name and a callback function that receives the typed data parameter."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure you're calling the on method on your emitter instance and passing both the event name ('login') and a callback function.",
+        "feedbackWrong": "Check that you're using the on method correctly. You need to call it on your emitter instance with 'login' as the event name and provide a callback function.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "on",
+            "'login'",
+            "callback",
+            "userData"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 11",
+        "title": "Emit events with type-safe payloads",
+        "instruction": "Call the emit method on your event emitter instance to trigger the 'login' and 'logout' events with payloads that match the UserEvents type definition.",
+        "hint": "Use the emit method you implemented earlier, passing the event name and the correct payload object for that event type.",
+        "analogousExample": "// Example: emitting typed events\nemitter.emit('login', { username: 'alice', timestamp: new Date() });\nemitter.emit('logout', { username: 'alice' });",
+        "seedCode": "// Create your EventMap interface here\n\n// Create the TypedEventEmitter class here\n\nclass TypedEventEmitter<EventMap extends Record<string, any>> {\n  private listeners: { [K in keyof EventMap]?: ((data: EventMap[K]) => void)[] } = {};\n  \n  on<K extends keyof EventMap>(event: K, callback: (data: EventMap[K]) => void): void {\n    if (!this.listeners[event]) {\n      this.listeners[event] = [];\n    }\n    this.listeners[event]!.push(callback);\n  }\n  \n  off<K extends keyof EventMap>(event: K, callback: (data: EventMap[K]) => void): void {\n    const callbacks = this.listeners[event];\n    if (callbacks) {\n      const index = callbacks.indexOf(callback);\n      if (index > -1) {\n        callbacks.splice(index, 1);\n      }\n    }\n  }\n  \n  emit<K extends keyof EventMap>(event: K, data: EventMap[K]): void {\n    const callbacks = this.listeners[event];\n    if (callbacks) {\n      callbacks.forEach(callback => callback(data));\n    }\n  }\n}\n\n// Create the UserEvents type definition here\ninterface UserEvents {\n  login: { username: string; timestamp: Date };\n  logout: { username: string };\n}\n\n// Instantiate the typed event emitter here\nconst userEmitter = new TypedEventEmitter<UserEvents>();\n\n// Register event listeners with type checking\nuserEmitter.on('login', (data) => {\n  console.log(`User ${data.username} logged in at ${data.timestamp}`);\n});\n\nuserEmitter.on('logout', (data) => {\n  console.log(`User ${data.username} logged out`);\n});\n\n// Emit events with type-safe payloads here",
+        "expectedOutcome": "The event emitter will trigger both registered listeners with correctly typed payloads, demonstrating type safety in action.",
+        "successCriteria": [
+          "The emit method is called for 'login' event with a payload containing username and timestamp",
+          "The emit method is called for 'logout' event with a payload containing username"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure you're calling emit for both 'login' and 'logout' events with payloads that match the UserEvents interface.",
+        "feedbackWrong": "Try calling the emit method on your userEmitter instance. Remember to pass the event name and a payload object that matches the type definition for that event.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "emit",
+            "'login'",
+            "username",
+            "timestamp",
+            "'logout'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Define the EventMap type interface",
+        "id": "step1"
+      },
+      {
+        "label": "Create the TypedEventEmitter class",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize the listeners storage",
+        "id": "step3"
+      },
+      {
+        "label": "Implement the on method",
+        "id": "step4"
+      },
+      {
+        "label": "stores the callback in the listeners map",
+        "id": "step5"
+      },
+      {
+        "label": "Implement the off method",
+        "id": "step6"
+      },
+      {
+        "label": "Implement the emit method",
+        "id": "step7"
+      },
+      {
+        "label": "Create a UserEvents type definition",
+        "id": "step8"
+      },
+      {
+        "label": "Instantiate the typed event emitter",
+        "id": "step9"
+      },
+      {
+        "label": "Register event listeners with type checking",
+        "id": "step10"
+      },
+      {
+        "label": "Emit events with type-safe payloads",
+        "id": "step11"
+      }
+    ]
+  },
+  "source": "content"
+}

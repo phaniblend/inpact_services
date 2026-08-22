@@ -1,0 +1,360 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-node-80",
+    "track": "node",
+    "lessonNum": 80,
+    "title": "Build audit logging for all mutations",
+    "shortName": "P80",
+    "intro": {
+      "tag": "LESSON #80",
+      "title": "Build audit logging for all mutations",
+      "body": "In this lesson, you will build an audit logging system to automatically record every change (mutation) made to your application's data. You will learn how to intercept and log these changes using middleware in Node.js. The core concept involves creating a logging function that captures details like the action, timestamp, and user, then saving this information to a log file. You'll work with Node.js's built-in 'fs' module for file operations and middleware patterns to integrate logging seamlessly. By the end, you'll have a functional audit log that helps track data modifications for security and debugging purposes.",
+      "usecase": "Audit logging for mutations is essential in enterprise applications where tracking data changes is critical for compliance, security, and debugging. In financial platforms like banking dashboards, every transaction modification must be logged with user details and timestamps for regulatory audits. E-commerce admin panels use mutation logging to track inventory updates, price changes, and order status modifications. Healthcare systems implement this pattern to maintain audit trails of patient record updates, ensuring data integrity and meeting HIPAA requirements. Developers implement this pattern whenever they need to answer 'who changed what, when, and why' for any data modification in their applications."
+    },
+    "objectives": [
+      "Construct a middleware function to intercept and log mutation requests",
+      "Initialize a logging utility to capture mutation details in a structured format",
+      "Integrate the audit logging middleware into your Node.js application's request pipeline",
+      "Manipulate request and response objects to extract relevant mutation data for logging",
+      "Configure log persistence by writing audit entries to a file or database",
+      "Apply conditional logic to filter and log only successful mutation operations",
+      "Update existing mutation endpoints to ensure all relevant data is captured in audit logs"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 10",
+        "title": "Import required Node.js modules",
+        "instruction": "Import the fs, path, and crypto modules from Node.js core using the require() function.",
+        "hint": "Use the require() function to import each module. These are built-in Node.js modules, so you don't need to install anything.",
+        "analogousExample": "// Example of importing Node.js modules\nconst fs = require('fs');\nconst path = require('path');\nconst crypto = require('crypto');",
+        "seedCode": "// Import the required Node.js modules here",
+        "expectedOutcome": "The fs, path, and crypto modules are imported and ready to use for file operations, path handling, and cryptographic functions.",
+        "successCriteria": [
+          "The fs, path, and crypto modules are imported using require() statements."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've imported some modules, but not all three. Make sure to import fs, path, and crypto using require() statements.",
+        "feedbackWrong": "The imports aren't quite right. You need to import three Node.js core modules: fs, path, and crypto using require() statements.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "require('fs')",
+            "require('path')",
+            "require('crypto')"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 10",
+        "title": "Create the audit log directory structure",
+        "instruction": "Define two constants: one for the audit log directory path and one for the audit log file path. Use `path.join()` to create platform-independent paths.",
+        "hint": "You can use `path.join(__dirname, 'logs', 'audit.log')` to create the file path. Define the directory path similarly.",
+        "analogousExample": "// Example: defining path constants\nconst logDir = path.join(__dirname, 'logs');\nconst logFile = path.join(logDir, 'audit.log');",
+        "seedCode": "// Import the required Node.js modules here\nconst path = require('path');\n\n// Define constants for log directory and file paths here",
+        "expectedOutcome": "You will have two constants defined: one for the directory where audit logs will be stored and one for the specific audit log file.",
+        "successCriteria": [
+          "Two constants are defined using path.join() to create the directory and file paths for audit logs."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You defined one path constant, but you need both the directory and file paths. Make sure to use path.join() for both.",
+        "feedbackWrong": "The constants for the audit log directory and file paths are not properly defined. Check the hint and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "const",
+            "path.join",
+            "__dirname",
+            "'logs'",
+            "'audit.log'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 10",
+        "title": "Initialize the log directory",
+        "instruction": "Create a function named ensureLogDirectory that checks if the log directory exists and creates it if it doesn't.",
+        "hint": "Use the fs module's existsSync and mkdirSync methods to check and create the directory. Remember to use the path constant you'll define for the directory.",
+        "analogousExample": "// Example of a directory creation function\nfunction ensureDirectory(dirPath) {\n  if (!fs.existsSync(dirPath)) {\n    fs.mkdirSync(dirPath, { recursive: true });\n  }\n}",
+        "seedCode": "// Import the required Node.js modules here\nconst path = require('path');\nconst fs = require('fs');\n\n// Define constants for log directory and file paths here\nconst LOG_DIR = path.join(__dirname, 'logs');\n\n// Create the ensureLogDirectory function here",
+        "expectedOutcome": "A function that ensures the log directory exists before any log files are written.",
+        "successCriteria": [
+          "The ensureLogDirectory function is defined and uses fs.existsSync and fs.mkdirSync to check/create the directory."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your function checks if the directory exists before creating it.",
+        "feedbackWrong": "The function isn't quite right. Check the example and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "ensureLogDirectory",
+            "existsSync",
+            "mkdirSync",
+            "LOG_DIR"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 10",
+        "title": "Create the audit log entry structure",
+        "instruction": "Define a function named createAuditEntry that returns a standardized log entry object with properties for action, userId, timestamp, and details.",
+        "hint": "The function should take parameters for the action, userId, and details, generate a timestamp, and return an object with these properties.",
+        "analogousExample": "// Similar: a function that creates a standardized object\nfunction createUserProfile(name, age) {\n  return {\n    name: name,\n    age: age,\n    createdAt: new Date().toISOString()\n  };\n}",
+        "seedCode": "// Import the required Node.js modules here\nconst path = require('path');\nconst fs = require('fs');\n\n// Define constants for log directory and file paths here\nconst LOG_DIR = path.join(__dirname, 'logs');\n\n// Create the ensureLogDirectory function here\n\n// Define the createAuditEntry function here",
+        "expectedOutcome": "A function that creates consistent audit log entry objects with the required properties.",
+        "successCriteria": [
+          "The createAuditEntry function is defined and returns an object with action, userId, timestamp, and details properties."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your function returns an object with all four required properties: action, userId, timestamp, and details.",
+        "feedbackWrong": "The function definition is missing or incorrect. Ensure you create a function named createAuditEntry that returns a standardized log entry object.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "createAuditEntry",
+            "function",
+            "return",
+            "action",
+            "userId",
+            "timestamp",
+            "details"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 10",
+        "title": "Generate unique IDs for log entries",
+        "instruction": "Create a function named generateLogId that returns a unique identifier string using the crypto module's randomUUID method.",
+        "hint": "You'll need to import the crypto module first, then define a function that returns crypto.randomUUID().",
+        "analogousExample": "// Example: generating a unique ID\nconst crypto = require('crypto');\nfunction generateUniqueId() {\n  return crypto.randomUUID();\n}",
+        "seedCode": "// Import the required Node.js modules here\nconst path = require('path');\nconst fs = require('fs');\n\n// Define constants for log directory and file paths here\nconst LOG_DIR = path.join(__dirname, 'logs');\n\n// Create the ensureLogDirectory function here\n\n// Define the createAuditEntry function here\n\n// Create the generateLogId function here",
+        "expectedOutcome": "A generateLogId function that uses crypto.randomUUID() to create unique identifiers for audit log entries.",
+        "successCriteria": [
+          "The crypto module is imported and a generateLogId function is defined that returns crypto.randomUUID()."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you've imported the crypto module and defined a function named generateLogId that returns crypto.randomUUID().",
+        "feedbackWrong": "The function isn't quite right. Remember to import crypto and create a function called generateLogId that returns crypto.randomUUID().",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "crypto",
+            "randomUUID",
+            "generateLogId",
+            "function"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 10",
+        "title": "Write log entries to file",
+        "instruction": "Create a function named 'writeAuditLog' that takes a log entry object as a parameter and appends it as a JSON string to the audit log file with proper error handling.",
+        "hint": "Use fs.appendFileSync or fs.appendFile with a try-catch block to handle potential file system errors. Remember to stringify the log entry and add a newline character.",
+        "analogousExample": "// Similar: appending data to a file\nfunction writeToFile(data) {\n    try {\n        fs.appendFileSync('output.txt', JSON.stringify(data) + '\\n');\n        console.log('Data written successfully');\n    } catch (error) {\n        console.error('Error writing to file:', error.message);\n    }\n}",
+        "seedCode": "const path = require('path');\nconst fs = require('fs');\n\nconst LOG_DIR = path.join(__dirname, 'logs');\n\n// Create the ensureLogDirectory function here\n\n// Define the createAuditEntry function here\n\n// Create the generateLogId function here\n\n// Create the writeAuditLog function here",
+        "expectedOutcome": "A function named writeAuditLog that properly appends JSON-formatted log entries to a file with error handling.",
+        "successCriteria": [
+          "The writeAuditLog function exists, takes a log entry parameter, uses fs.appendFile or fs.appendFileSync, includes error handling with try-catch, and properly stringifies the log entry."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your function includes error handling and properly formats the log entry as JSON before appending it to the file.",
+        "feedbackWrong": "The function doesn't seem to be implemented correctly. Review the requirements: create a function named writeAuditLog that takes a log entry, appends it to a file with JSON.stringify, and includes error handling.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "writeAuditLog",
+            "function",
+            "appendFile",
+            "JSON.stringify",
+            "try",
+            "catch"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 10",
+        "title": "Create the main audit logging function",
+        "instruction": "Create a function named logAudit that orchestrates the entire audit logging process by calling the existing helper functions in sequence.",
+        "hint": "Define a function that takes parameters for the action, user, and details, then uses the helper functions to generate an ID, create an entry, ensure the directory exists, and write the log.",
+        "analogousExample": "// Example: a function that orchestrates multiple steps\nfunction processOrder(order) {\n  const id = generateOrderId();\n  const orderDetails = createOrderDetails(order);\n  ensureOrderDirectory();\n  writeOrderToFile(id, orderDetails);\n}",
+        "seedCode": "const path = require('path');\nconst fs = require('fs');\n\nconst LOG_DIR = path.join(__dirname, 'logs');\n\n// Create the ensureLogDirectory function here\n\n// Define the createAuditEntry function here\n\n// Create the generateLogId function here\n\n// Create the writeAuditLog function here\n\n// Create the logAudit function here",
+        "expectedOutcome": "A main logging function that coordinates the audit logging workflow is created.",
+        "successCriteria": [
+          "The logAudit function is defined and calls the helper functions in the correct order."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your logAudit function properly calls all the helper functions in sequence.",
+        "feedbackWrong": "The logAudit function doesn't seem to be implemented correctly. Review the helper functions and ensure they're called in the right order.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "function logAudit",
+            "generateLogId",
+            "createAuditEntry",
+            "ensureLogDirectory",
+            "writeAuditLog"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 10",
+        "title": "Create sample mutation functions",
+        "instruction": "Create a function named 'createUser' that simulates creating a user in a database. It should take a username parameter and return a success message.",
+        "hint": "Define a function that accepts a username parameter and returns a string indicating the user was created.",
+        "analogousExample": "// Example: a simple mutation function\nfunction updateItem(itemId) {\n  return `Item ${itemId} updated successfully`;\n}",
+        "seedCode": "const path = require('path');\nconst fs = require('fs');\n\nconst LOG_DIR = path.join(__dirname, 'logs');\n\n// Create the ensureLogDirectory function here\n\n// Define the createAuditEntry function here\n\n// Create the generateLogId function here\n\n// Create the writeAuditLog function here\n\n// Create the logAudit function here\n\n// Create the createUser function here",
+        "expectedOutcome": "A function named 'createUser' that accepts a username and returns a success message string.",
+        "successCriteria": [
+          "The createUser function is defined, takes a username parameter, and returns a string containing the username."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your function is named 'createUser', accepts a username parameter, and returns a string message.",
+        "feedbackWrong": "Create a function named 'createUser' that takes a username parameter and returns a success message string.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "createUser",
+            "username",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 10",
+        "title": "Wrap mutations with audit logging",
+        "instruction": "Modify the createUser function to call the logAudit function before executing its main logic.",
+        "hint": "Add a call to logAudit at the beginning of the createUser function, passing appropriate arguments like the action name and user data.",
+        "analogousExample": "// Example: wrapping a function with logging\nfunction updateProduct(product) {\n  logAudit('update_product', { product });\n  // Rest of update logic\n}",
+        "seedCode": "const path = require('path');\nconst fs = require('fs');\n\nconst LOG_DIR = path.join(__dirname, 'logs');\n\n// Create the ensureLogDirectory function here\n\n// Define the createAuditEntry function here\n\n// Create the generateLogId function here\n\n// Create the writeAuditLog function here\n\n// Create the logAudit function here\n\n// Create the createUser function here\nfunction createUser(userData) {\n  // Add audit logging call here\n  console.log('Creating user:', userData);\n  return { id: Date.now(), ...userData };\n}",
+        "expectedOutcome": "The createUser function will now log an audit entry before creating a user.",
+        "successCriteria": [
+          "The createUser function includes a call to logAudit with appropriate arguments before its main logic."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure to call logAudit at the beginning of the function.",
+        "feedbackWrong": "The createUser function should call logAudit before executing its main logic.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "logAudit",
+            "createUser"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 10",
+        "title": "Test the audit logging system",
+        "instruction": "Call the createUser function with sample data to test the audit logging system and check the generated log file.",
+        "hint": "Invoke the createUser function with an object containing user data (like name and email).",
+        "analogousExample": "// Testing a function with sample data\ncreateUser({ name: 'John Doe', email: 'john@example.com' });",
+        "seedCode": "const path = require('path');\nconst fs = require('fs');\n\nconst LOG_DIR = path.join(__dirname, 'logs');\n\n// Create the ensureLogDirectory function here\n\n// Define the createAuditEntry function here\n\n// Create the generateLogId function here\n\n// Create the writeAuditLog function here\n\n// Create the logAudit function here\n\n// Create the createUser function here\nfunction createUser(userData) {\n  // Add audit logging call here\n  console.log('Creating user:', userData);\n  return { id: Date.now(), ...userData };\n}\n\n// Test the audit logging system here",
+        "expectedOutcome": "The createUser function is called with sample data, and the console logs the user creation while the audit logging system records the mutation.",
+        "successCriteria": [
+          "createUser is invoked with an object containing user data."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure to call createUser with an object containing user data like name and email.",
+        "feedbackWrong": "The test call is missing or incorrect. Invoke createUser with sample user data to trigger the audit logging.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "createUser",
+            "(",
+            "{"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import required Node.js modules",
+        "id": "step1"
+      },
+      {
+        "label": "Create the audit log directory structure",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize the log directory",
+        "id": "step3"
+      },
+      {
+        "label": "Create the audit log entry structure",
+        "id": "step4"
+      },
+      {
+        "label": "Generate unique IDs for log entries",
+        "id": "step5"
+      },
+      {
+        "label": "Write log entries to file",
+        "id": "step6"
+      },
+      {
+        "label": "Create the main audit logging function",
+        "id": "step7"
+      },
+      {
+        "label": "Create sample mutation functions",
+        "id": "step8"
+      },
+      {
+        "label": "Wrap mutations with audit logging",
+        "id": "step9"
+      },
+      {
+        "label": "Test the audit logging system",
+        "id": "step10"
+      }
+    ]
+  },
+  "source": "content"
+}

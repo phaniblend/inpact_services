@@ -1,0 +1,424 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-node-65",
+    "track": "node",
+    "lessonNum": 65,
+    "title": "Build fallback long polling endpoint",
+    "shortName": "P65",
+    "intro": {
+      "tag": "LESSON #65",
+      "title": "Build fallback long polling endpoint",
+      "body": "In this lesson, you will build a fallback long polling endpoint using Node.js. You will learn how to create a simple HTTP server that holds client requests open until new data is available, simulating real-time updates. The core programming concept involves managing asynchronous operations and request timeouts with JavaScript's setTimeout and clearTimeout. You'll use Node.js built-in modules like http to handle incoming requests and send delayed responses. This technique provides a reliable fallback for scenarios where more advanced real-time protocols like WebSockets are not supported.",
+      "usecase": "Long polling endpoints serve as a reliable fallback when WebSocket connections fail in real-time applications. You'll see this pattern in collaborative tools like Google Docs, where document changes must sync across users even with spotty connections. In live dashboards for monitoring systems or financial trading platforms, long polling ensures critical data updates reach users when persistent connections aren't available. Developers implement this as a robust alternative to maintain functionality in diverse network conditions."
+    },
+    "objectives": [
+      "Implement a basic long polling endpoint using Node.js HTTP server",
+      "Configure request timeouts to manage long polling connections",
+      "Initialize and maintain a pending requests queue for client connections",
+      "Construct response logic that sends updates when data becomes available",
+      "Manipulate response headers to control client-side polling behavior",
+      "Integrate fallback mechanisms when long polling connections expire",
+      "Apply error handling for connection interruptions and client disconnects"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 12",
+        "title": "Import required modules",
+        "instruction": "Import the http and url modules from Node.js to create an HTTP server and parse request URLs.",
+        "hint": "Use the require() function to import Node.js built-in modules. Both modules are built into Node.js, so you don't need to install anything.",
+        "analogousExample": "// Example: importing built-in modules\nconst fs = require('fs');\nconst path = require('path');",
+        "seedCode": "// Import the http and url modules here",
+        "expectedOutcome": "The http and url modules are imported and ready to use for building the long polling endpoint.",
+        "successCriteria": [
+          "Both http and url modules are imported using require() statements."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but you need to import both modules. Make sure you're using require() for both http and url.",
+        "feedbackWrong": "import two built-in Node.js modules: http for creating the server and url for parsing URLs. Use require() statements for both.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "require('http')",
+            "require('url')"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 12",
+        "title": "Create HTTP server",
+        "instruction": "Create an HTTP server using the imported http module's createServer method and store it in a variable named 'server'.",
+        "hint": "Call http.createServer() and assign the result to a const variable named 'server'.",
+        "analogousExample": "// Creating a basic HTTP server\nconst server = http.createServer();",
+        "seedCode": "// Import the http and url modules here\n\n// Create your HTTP server here",
+        "expectedOutcome": "An HTTP server instance is created and stored in the 'server' variable.",
+        "successCriteria": [
+          "The server variable is declared using const and assigned the result of http.createServer()."
+        ],
+        "feedbackCorrect": "Great! You've successfully created an HTTP server instance.",
+        "feedbackPartial": "You're on the right track, but make sure you're using http.createServer() and storing it in a variable named 'server'.",
+        "feedbackWrong": "Use http.createServer() to create the server and store it in a variable named 'server'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "server",
+            "createServer",
+            "http"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 12",
+        "title": "Initialize polling data store",
+        "instruction": "Create an empty array to store pending client requests that are waiting for updates. Place this array at the top of your file, after the imports but before the server creation.",
+        "hint": "You can create an empty array using const pendingRequests = [];",
+        "analogousExample": "// Example: creating an empty array for storing data\nconst todoList = [];",
+        "seedCode": "// Import the http and url modules here\nconst http = require('http');\nconst url = require('url');\n\n// Create your HTTP server here\nconst server = http.createServer((req, res) => {\n  // Request handling will go here\n});\n\nserver.listen(3000, () => {\n  console.log('Server listening on port 3000');\n});",
+        "expectedOutcome": "An empty array variable is created to track pending long polling requests.",
+        "successCriteria": [
+          "An empty array named pendingRequests (or similar) is declared and initialized."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've created an array, but make sure it's empty and named appropriately for tracking pending requests.",
+        "feedbackWrong": "Try creating an empty array variable to store pending client requests.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "pendingRequests",
+            "=",
+            "[",
+            "]"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 12",
+        "title": "Parse request URL",
+        "instruction": "Inside the server's request handler, use the url module to parse the request URL and extract the pathname. Store the parsed URL object in a variable called 'parsedUrl'.",
+        "hint": "Use the url.parse() method with the request's URL string. Then access the parsedUrl.pathname property.",
+        "analogousExample": "// Example: parsing a URL\nconst parsed = url.parse('http://example.com/api/data');\nconsole.log(parsed.pathname); // '/api/data'",
+        "seedCode": "const http = require('http');\nconst url = require('url');\n\nconst server = http.createServer((req, res) => {\n  // Parse the request URL here\n  const parsedUrl = url.parse(req.url);\n});\n\nserver.listen(3000, () => {\n  console.log('Server listening on port 3000');\n});",
+        "expectedOutcome": "The server will now parse incoming request URLs to identify different endpoints.",
+        "successCriteria": [
+          "The request handler includes a 'parsedUrl' variable that stores the result of url.parse(req.url)."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're using url.parse() with req.url and storing the result in a variable named 'parsedUrl'.",
+        "feedbackWrong": "The URL parsing isn't quite right. Use the url module's parse() method on the request URL.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "parsedUrl",
+            "url.parse",
+            "req.url"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 12",
+        "title": "Handle long polling endpoint",
+        "instruction": "Inside the request handler, check if the parsed URL pathname is '/poll'. If it is, push the response object into the pendingRequests array.",
+        "hint": "You can access the pathname from parsedUrl.pathname. Use an if statement to compare it with '/poll'. The pendingRequests array was created in step 3.",
+        "analogousExample": "// Checking a route and storing a response\nif (parsedUrl.pathname === '/api/data') {\n  activeConnections.push(res);\n}",
+        "seedCode": "const http = require('http');\nconst url = require('url');\n\nconst pendingRequests = [];\n\nconst server = http.createServer((req, res) => {\n  const parsedUrl = url.parse(req.url);\n  \n  // Check if this is a long polling request\n  if (parsedUrl.pathname === '/poll') {\n    pendingRequests.push(res);\n  }\n});\n\nserver.listen(3000, () => {\n  console.log('Server listening on port 3000');\n});",
+        "expectedOutcome": "The server will now recognize requests to '/poll' and store their response objects for later use.",
+        "successCriteria": [
+          "The code includes an if statement that checks parsedUrl.pathname === '/poll' and pushes the res object into pendingRequests."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're checking the pathname property and pushing the response object (res) into the array.",
+        "feedbackWrong": "The long polling endpoint isn't properly configured. Check that you're comparing parsedUrl.pathname with '/poll' and storing the response object.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "parsedUrl.pathname",
+            "'/poll'",
+            "pendingRequests.push",
+            "res"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 12",
+        "title": "Set response headers",
+        "instruction": "Inside the long polling request handler, set the response headers to 'Content-Type: application/json' and add CORS headers to allow cross-origin requests.",
+        "hint": "Use res.setHeader() to set headers. You'll need to set 'Content-Type' and 'Access-Control-Allow-Origin' headers.",
+        "analogousExample": "// Setting response headers in a Node.js server\nres.setHeader('Content-Type', 'application/json');\nres.setHeader('Access-Control-Allow-Origin', '*');",
+        "seedCode": "const http = require('http');\nconst url = require('url');\n\nconst pendingRequests = [];\n\nconst server = http.createServer((req, res) => {\n  const parsedUrl = url.parse(req.url);\n  \n  // Check if this is a long polling request\n  if (parsedUrl.pathname === '/poll') {\n    // Set response headers here\n    \n    pendingRequests.push(res);\n  }\n});\n\nserver.listen(3000, () => {\n  console.log('Server listening on port 3000');\n});",
+        "expectedOutcome": "The long polling endpoint will properly configure headers for JSON responses and CORS support.",
+        "successCriteria": [
+          "Response headers are set with 'Content-Type: application/json' and 'Access-Control-Allow-Origin: *' inside the polling handler."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've set some headers, but make sure to include both 'Content-Type' and CORS headers.",
+        "feedbackWrong": "The headers aren't set correctly. Check that you're using res.setHeader() inside the polling handler.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "setHeader",
+            "Content-Type",
+            "application/json",
+            "Access-Control-Allow-Origin"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 12",
+        "title": "Handle data update endpoint",
+        "instruction": "Add an else-if condition to check if the request path is '/update' and send data to all pending polling requests.",
+        "hint": "Use parsedUrl.pathname to check for '/update'. Inside the condition, iterate through pendingRequests and send a response to each.",
+        "analogousExample": "// Similar: handling a different endpoint\nif (parsedUrl.pathname === '/data') {\n  res.writeHead(200, { 'Content-Type': 'application/json' });\n  res.end(JSON.stringify({ message: 'Data received' }));\n}",
+        "seedCode": "const http = require('http');\nconst url = require('url');\n\nconst pendingRequests = [];\n\nconst server = http.createServer((req, res) => {\n  const parsedUrl = url.parse(req.url);\n  \n  // Check if this is a long polling request\n  if (parsedUrl.pathname === '/poll') {\n    // Set response headers here\n    \n    pendingRequests.push(res);\n  }\n  // Add else-if condition for '/update' here\n});\n\nserver.listen(3000, () => {\n  console.log('Server listening on port 3000');\n});",
+        "expectedOutcome": "The server will now have an endpoint that can trigger updates for all waiting clients.",
+        "successCriteria": [
+          "An else-if condition checks for '/update' and sends a response to each pending request."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're checking for '/update' and iterating through pendingRequests.",
+        "feedbackWrong": "The update endpoint isn't implemented correctly. Check the pathname and ensure you're responding to all pending requests.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "else if",
+            "parsedUrl.pathname",
+            "'/update'",
+            "pendingRequests",
+            "forEach",
+            "res.writeHead",
+            "res.end"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 12",
+        "title": "Send responses to waiting clients",
+        "instruction": "Inside the '/update' endpoint handler, add a loop that iterates through the pendingRequests array and sends a JSON response to each waiting client with the updated data,",
+        "hint": "Use a for loop or forEach to go through each response object in pendingRequests. For each response, use res.writeHead() with status 200 and Content-Type: application/json, then res.end() with JSON.stringify() containing the new data.",
+        "analogousExample": "// Example: responding to multiple waiting clients\npendingRequests.forEach(res => {\n  res.writeHead(200, { 'Content-Type': 'application/json' });\n  res.end(JSON.stringify({ data: 'updated' }));\n});\npendingRequests.length = 0;",
+        "seedCode": "const http = require('http');\nconst url = require('url');\n\nconst pendingRequests = [];\n\nconst server = http.createServer((req, res) => {\n  const parsedUrl = url.parse(req.url);\n  \n  // Check if this is a long polling request\n  if (parsedUrl.pathname === '/poll') {\n    // Set response headers here\n    \n    pendingRequests.push(res);\n  }\n  // Add else-if condition for '/update' here\n  else if (parsedUrl.pathname === '/update') {\n    // Loop through pendingRequests and send responses\n    \n  }\n});\n\nserver.listen(3000, () => {\n  console.log('Server listening on port 3000');\n});",
+        "expectedOutcome": "When data is updated via the /update endpoint, all waiting long polling clients receive a JSON response with the new data, and the pendingRequests array is emptied.",
+        "successCriteria": [
+          "The code includes a loop that iterates over pendingRequests, sends a JSON response with status 200 and Content-Type header to each, and clears the array after sending."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the loop, but make sure to send proper JSON responses with headers and clear the pending array after.",
+        "feedbackWrong": "Check the structure: you need to loop through pendingRequests, send a JSON response to each, then clear the array.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "pendingRequests",
+            "forEach",
+            "writeHead",
+            "application/json",
+            "JSON.stringify",
+            "length = 0"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 12",
+        "title": "clears the array",
+        "instruction": "clears the array.",
+        "hint": "Use a for loop or forEach to go through each response object in pendingRequests. For each response, use res.writeHead() with status 200 and Content-Type: application/json, then res.end() with JSON.stringify() containing the new data.",
+        "analogousExample": "// Example: responding to multiple waiting clients\npendingRequests.forEach(res => {\n  res.writeHead(200, { 'Content-Type': 'application/json' });\n  res.end(JSON.stringify({ data: 'updated' }));\n});\npendingRequests.length = 0;",
+        "seedCode": "const http = require('http');\nconst url = require('url');\n\nconst pendingRequests = [];\n\nconst server = http.createServer((req, res) => {\n  const parsedUrl = url.parse(req.url);\n  \n  // Check if this is a long polling request\n  if (parsedUrl.pathname === '/poll') {\n    // Set response headers here\n    \n    pendingRequests.push(res);\n  }\n  // Add else-if condition for '/update' here\n  else if (parsedUrl.pathname === '/update') {\n    // Loop through pendingRequests and send responses\n    \n  }\n});\n\nserver.listen(3000, () => {\n  console.log('Server listening on port 3000');\n});",
+        "expectedOutcome": "",
+        "successCriteria": [
+          "Complete the step as instructed."
+        ],
+        "feedbackCorrect": "Great! Step completed.",
+        "feedbackPartial": "Review the instruction and try again.",
+        "feedbackWrong": "Check the instruction and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "pendingRequests",
+            "forEach",
+            "writeHead",
+            "application/json",
+            "JSON.stringify",
+            "length = 0"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 12",
+        "title": "Handle other routes",
+        "instruction": "Add an else block after your existing if/else-if conditions to send a 404 response for any request that doesn't match '/poll' or '/update' endpoints.",
+        "hint": "After your else-if block for '/update', add else { ... } with res.writeHead(404) and res.end().",
+        "analogousExample": "// Similar: default response for unmatched routes\nif (req.url === '/api') {\n  // handle API\n} else {\n  res.writeHead(404);\n  res.end('Not found');\n}",
+        "seedCode": "const http = require('http');\nconst url = require('url');\n\nconst pendingRequests = [];\n\nconst server = http.createServer((req, res) => {\n  const parsedUrl = url.parse(req.url);\n  \n  // Check if this is a long polling request\n  if (parsedUrl.pathname === '/poll') {\n    // Set response headers here\n    \n    pendingRequests.push(res);\n  }\n  // Add else-if condition for '/update' here\n  else if (parsedUrl.pathname === '/update') {\n    // Loop through pendingRequests and send responses\n    \n  }\n  else {\n    // Send 404 response for other routes\n    \n  }\n});\n\nserver.listen(3000, () => {\n  console.log('Server listening on port 3000');\n});",
+        "expectedOutcome": "The server will respond with a 404 status for any request to paths other than '/poll' or '/update'.",
+        "successCriteria": [
+          "An else block is added after the existing conditions, containing res.writeHead(404) and res.end()."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You added an else block, but make sure it includes both res.writeHead(404) and res.end().",
+        "feedbackWrong": "The else block for handling other routes is missing or incomplete.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "else",
+            "writeHead(404)",
+            "end()"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 12",
+        "title": "Test the long polling server",
+        "instruction": "Start the server by running the code,",
+        "hint": "You can test the endpoints by opening two browser tabs: one to http://localhost:3000/poll (which will wait) and another to http://localhost:3000/update (which will trigger the response).",
+        "analogousExample": "// Starting a server and testing endpoints\nconst server = http.createServer((req, res) => {\n  // Handle requests\n});\nserver.listen(3000, () => {\n  console.log('Server started');\n});",
+        "seedCode": "const http = require('http');\nconst url = require('url');\n\nconst pendingRequests = [];\n\nconst server = http.createServer((req, res) => {\n  const parsedUrl = url.parse(req.url);\n  \n  // Check if this is a long polling request\n  if (parsedUrl.pathname === '/poll') {\n    // Set response headers here\n    \n    pendingRequests.push(res);\n  }\n  // Add else-if condition for '/update' here\n  else if (parsedUrl.pathname === '/update') {\n    // Loop through pendingRequests and send responses\n    \n  }\n  else {\n    // Send 404 response for other routes\n    \n  }\n});\n\nserver.listen(3000, () => {\n  console.log('Server listening on port 3000');\n});",
+        "expectedOutcome": "The server starts successfully and you can test the long polling behavior by making requests to /poll and /update endpoints.",
+        "successCriteria": [
+          "Server starts without errors and both endpoints respond appropriately when tested."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the server, but make sure to test both endpoints to verify the long polling behavior works correctly.",
+        "feedbackWrong": "The server may not have started correctly or the endpoints aren't responding as expected. Check the console for errors and verify your implementation.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "server.listen",
+            "3000",
+            "console.log",
+            "Server listening"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step12",
+        "type": "question",
+        "phase": "Step 12 of 12",
+        "title": "test both the polling endpoint and the update",
+        "instruction": "test both the polling endpoint and the update endpoint to see the long polling in action.",
+        "hint": "You can test the endpoints by opening two browser tabs: one to http://localhost:3000/poll (which will wait) and another to http://localhost:3000/update (which will trigger the response).",
+        "analogousExample": "// Starting a server and testing endpoints\nconst server = http.createServer((req, res) => {\n  // Handle requests\n});\nserver.listen(3000, () => {\n  console.log('Server started');\n});",
+        "seedCode": "const http = require('http');\nconst url = require('url');\n\nconst pendingRequests = [];\n\nconst server = http.createServer((req, res) => {\n  const parsedUrl = url.parse(req.url);\n  \n  // Check if this is a long polling request\n  if (parsedUrl.pathname === '/poll') {\n    // Set response headers here\n    \n    pendingRequests.push(res);\n  }\n  // Add else-if condition for '/update' here\n  else if (parsedUrl.pathname === '/update') {\n    // Loop through pendingRequests and send responses\n    \n  }\n  else {\n    // Send 404 response for other routes\n    \n  }\n});\n\nserver.listen(3000, () => {\n  console.log('Server listening on port 3000');\n});",
+        "expectedOutcome": "",
+        "successCriteria": [
+          "Complete the step as instructed."
+        ],
+        "feedbackCorrect": "Great! Step completed.",
+        "feedbackPartial": "Review the instruction and try again.",
+        "feedbackWrong": "Check the instruction and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "server.listen",
+            "3000",
+            "console.log",
+            "Server listening"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import required modules",
+        "id": "step1"
+      },
+      {
+        "label": "Create HTTP server",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize polling data store",
+        "id": "step3"
+      },
+      {
+        "label": "Parse request URL",
+        "id": "step4"
+      },
+      {
+        "label": "Handle long polling endpoint",
+        "id": "step5"
+      },
+      {
+        "label": "Set response headers",
+        "id": "step6"
+      },
+      {
+        "label": "Handle data update endpoint",
+        "id": "step7"
+      },
+      {
+        "label": "Send responses to waiting clients",
+        "id": "step8"
+      },
+      {
+        "label": "clears the array",
+        "id": "step9"
+      },
+      {
+        "label": "Handle other routes",
+        "id": "step10"
+      },
+      {
+        "label": "Test the long polling server",
+        "id": "step11"
+      },
+      {
+        "label": "test both the polling endpoint and the update",
+        "id": "step12"
+      }
+    ]
+  },
+  "source": "content"
+}

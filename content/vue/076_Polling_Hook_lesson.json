@@ -1,0 +1,293 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-vue-76",
+    "track": "vue",
+    "lessonNum": 76,
+    "title": "Polling Hook",
+    "shortName": "P76",
+    "intro": {
+      "tag": "LESSON #76",
+      "title": "Polling Hook",
+      "body": "In this lesson, you will build a reusable Vue composable (hook) that performs polling—a technique to fetch data from a server at regular intervals. You will learn how to use Vue's reactive APIs like `ref` and `onUnmounted` to manage state and handle cleanup. The main technologies involved are Vue 3's Composition API and JavaScript's `setInterval` function. By the end, you'll have a custom polling hook that can be integrated into any Vue component to keep data up-to-date automatically.",
+      "usecase": "Polling hooks are essential for real-time data updates in modern web applications. You'll see them powering live dashboards that display constantly changing metrics like stock prices, server monitoring stats, or social media analytics. They're also crucial for collaborative tools where multiple users need to see synchronized data changes, such as live document editing or team project management boards. As a Vue developer, implementing a polling hook allows you to create responsive interfaces that automatically fetch fresh data without requiring manual user refreshes."
+    },
+    "objectives": [
+      "Construct a custom Vue composition function that implements polling logic",
+      "Initialize reactive state variables to track polling status and data",
+      "Configure polling intervals and control their execution lifecycle",
+      "Integrate the polling hook with a Vue component to fetch and display data",
+      "Manipulate polling behavior through user interactions like start, stop, and reset",
+      "Apply error handling within the polling hook to manage failed requests",
+      "Update component UI dynamically based on polling state changes"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 8",
+        "title": "Import Vue and the necessary composition API functions",
+        "instruction": "Import ref and onUnmounted from 'vue'.",
+        "hint": "Use the import statement to bring in the composition API functions needed for polling.",
+        "analogousExample": "// Importing functions from a module\nimport { ref, onMounted } from 'vue'",
+        "seedCode": "// Import ref and onUnmounted from 'vue'",
+        "expectedOutcome": "The Vue composition API functions ref and onUnmounted are imported, ready for use in the polling hook.",
+        "successCriteria": [
+          "ref and onUnmounted are imported from 'vue'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're importing both ref and onUnmounted from 'vue'.",
+        "feedbackWrong": "That's not quite right. You need to import ref and onUnmounted from 'vue'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "ref",
+            "onUnmounted",
+            "'vue'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 8",
+        "title": "Create the usePolling composable function",
+        "instruction": "Create a function named usePolling that takes interval and callback parameters. The function should be a composable that will eventually handle polling logic.",
+        "hint": "Define a function with the name usePolling that accepts two parameters: interval and callback. You can use either a function declaration or an arrow function.",
+        "analogousExample": "// Example: a simple composable function\nfunction useCounter() {\n  const count = ref(0)\n  return { count }\n}",
+        "seedCode": "// Import ref and onUnmounted from 'vue'\n\n// Create the usePolling composable function\n",
+        "expectedOutcome": "A usePolling function is defined with interval and callback parameters.",
+        "successCriteria": [
+          "The code contains a function named usePolling that accepts interval and callback as parameters."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you've created a function named usePolling that accepts both interval and callback parameters.",
+        "feedbackWrong": "The function definition is missing or incorrect. Create a function named usePolling that takes interval and callback parameters.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "usePolling",
+            "interval",
+            "callback"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 8",
+        "title": "Initialize reactive state for the polling timer",
+        "instruction": "Inside the usePolling function, create a timerId ref initialized to null to track the polling interval.",
+        "hint": "Use the ref function you imported earlier to create a reactive reference for the timer ID.",
+        "analogousExample": "// Creating a reactive reference for a timer ID\nconst timerId = ref(null);",
+        "seedCode": "// Import ref and onUnmounted from 'vue'\nimport { ref, onUnmounted } from 'vue';\n\n// Create the usePolling composable function\nfunction usePolling() {\n  // Initialize timerId ref here\n}",
+        "expectedOutcome": "The usePolling function will have a reactive timerId variable that can store the interval ID for later cleanup.",
+        "successCriteria": [
+          "A timerId ref is created inside usePolling and initialized to null."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're creating a ref inside the usePolling function and initializing it to null.",
+        "feedbackWrong": "The timerId ref wasn't created correctly. Remember to use the ref function inside usePolling with an initial value of null.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "timerId",
+            "ref",
+            "null"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 8",
+        "title": "Set up cleanup with onUnmounted",
+        "instruction": "Inside the usePolling function, add an onUnmounted hook that calls the stopPolling function to clean up the timer when the component using this composable is destroyed.",
+        "hint": "Call onUnmounted and pass stopPolling as the callback. This ensures the timer is cleared if the component unmounts while polling is active.",
+        "analogousExample": "// Example: using onUnmounted for cleanup\nimport { onUnmounted } from 'vue';\n\nfunction useEventListener() {\n  const listener = () => {};\n  onUnmounted(() => {\n    window.removeEventListener('click', listener);\n  });\n}",
+        "seedCode": "// Import ref and onUnmounted from 'vue'\nimport { ref, onUnmounted } from 'vue';\n\n// Create the usePolling composable function\nfunction usePolling() {\n  // Initialize timerId ref here\n  const timerId = ref(null);\n  \n  // Define startPolling function here\n  \n  // Define stopPolling function here\n  \n  // Add onUnmounted cleanup here\n}",
+        "expectedOutcome": "The usePolling function now includes an onUnmounted hook that will call stopPolling when the component unmounts, preventing memory leaks from lingering timers.",
+        "successCriteria": [
+          "The usePolling function contains an onUnmounted hook that calls stopPolling."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but the cleanup isn't quite complete. Make sure you're calling onUnmounted with stopPolling as the callback inside the usePolling function.",
+        "feedbackWrong": "The cleanup hook is missing or incorrect. Remember to add onUnmounted(stopPolling) inside the usePolling function to clean up the timer when the component unmounts.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "onUnmounted",
+            "stopPolling"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 8",
+        "title": "Return the polling functions from the composable",
+        "instruction": "Return an object containing the startPolling and stopPolling functions from your usePolling composable.",
+        "hint": "At the end of your usePolling function, use the return keyword followed by an object with startPolling and stopPolling properties.",
+        "analogousExample": "// Example: returning functions from a composable\nfunction useCounter() {\n  const count = ref(0);\n  const increment = () => count.value++;\n  const decrement = () => count.value--;\n  \n  return {\n    increment,\n    decrement\n  };\n}",
+        "seedCode": "// Import ref and onUnmounted from 'vue'\nimport { ref, onUnmounted } from 'vue';\n\n// Create the usePolling composable function\nfunction usePolling() {\n  // Initialize timerId ref here\n  const timerId = ref(null);\n  \n  // Define startPolling function here\n  \n  // Define stopPolling function here\n  \n  // Add onUnmounted cleanup here\n  \n  // Return the polling functions here\n}",
+        "expectedOutcome": "The usePolling composable now returns an object with startPolling and stopPolling functions, making them available to components that use this composable.",
+        "successCriteria": [
+          "The usePolling function returns an object containing both startPolling and stopPolling functions."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're returning both startPolling and stopPolling functions in an object.",
+        "feedbackWrong": "The composable needs to return an object containing both polling functions. Check that you're using the return keyword with the correct object structure.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "return",
+            "{",
+            "startPolling",
+            "stopPolling",
+            "}"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 8",
+        "title": "Create the main PollingDemo component",
+        "instruction": "Create a new Vue component named PollingDemo with the <script setup> syntax and a basic template structure.",
+        "hint": "Use the Vue single-file component format with <script setup> and <template> sections.",
+        "analogousExample": "// Example of a Vue component with script setup\n<script setup>\n// Component logic goes here\n</script>\n\n<template>\n  <div>\n    <h1>Component Title</h1>\n  </div>\n</template>",
+        "seedCode": "// Import ref and onUnmounted from 'vue'\nimport { ref, onUnmounted } from 'vue';\n\n// Create the usePolling composable function\nfunction usePolling() {\n  // Initialize timerId ref here\n  const timerId = ref(null);\n  \n  // Define startPolling function here\n  \n  // Define stopPolling function here\n  \n  // Add onUnmounted cleanup here\n  \n  // Return the polling functions here\n}\n\n// Create the PollingDemo component here",
+        "expectedOutcome": "A PollingDemo component is created with script setup and template sections, ready to demonstrate the polling hook.",
+        "successCriteria": [
+          "The PollingDemo component is defined with <script setup> and <template> sections."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you've included both <script setup> and <template> sections.",
+        "feedbackWrong": "The PollingDemo component isn't properly defined. Check that you're using Vue's single-file component format.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "PollingDemo",
+            "<script setup>",
+            "<template>"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 8",
+        "title": "Use the polling hook in the component",
+        "instruction": "Inside the PollingDemo component, call the usePolling composable with an interval of 2000 milliseconds and a callback function that logs 'Polling...' to the console. Destructure the returned startPolling and stopPolling functions.",
+        "hint": "Call usePolling() with an interval argument and a callback function, then destructure the returned object.",
+        "analogousExample": "// Similar: using a custom composable\nconst { start, stop } = useTimer(1000, () => console.log('Tick'));",
+        "seedCode": "// Import ref and onUnmounted from 'vue'\nimport { ref, onUnmounted } from 'vue';\n\n// Create the usePolling composable function\nfunction usePolling() {\n  // Initialize timerId ref here\n  const timerId = ref(null);\n  \n  // Define startPolling function here\n  \n  // Define stopPolling function here\n  \n  // Add onUnmounted cleanup here\n  \n  // Return the polling functions here\n}\n\n// Create the PollingDemo component here\nfunction PollingDemo() {\n  // Call usePolling here with interval and callback\n  \n  return null;\n}",
+        "expectedOutcome": "The usePolling composable is called with the correct arguments, and its returned functions are destructured for use in the component.",
+        "successCriteria": [
+          "usePolling is called with interval 2000 and a callback that logs 'Polling...', and startPolling and stopPolling are destructured from the result."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're calling usePolling with both arguments and destructuring both functions.",
+        "feedbackWrong": "Check that you're calling usePolling inside the component with the correct interval and callback, and destructuring the returned functions.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "usePolling",
+            "2000",
+            "console.log",
+            "'Polling...'",
+            "startPolling",
+            "stopPolling"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 8",
+        "title": "Add UI controls and wire them to polling functions",
+        "instruction": "In the PollingDemo component's template, add two buttons with text 'Start Polling' and 'Stop Polling', and wire their click events to call startPolling and stopPolling respectively.",
+        "hint": "Use the @click directive to bind click events to the polling functions you returned from usePolling.",
+        "analogousExample": "// Adding buttons with click handlers in Vue\n<template>\n  <div>\n    <button @click=\"startAction\">Start</button>\n    <button @click=\"stopAction\">Stop</button>\n  </div>\n</template>",
+        "seedCode": "// Import ref and onUnmounted from 'vue'\nimport { ref, onUnmounted } from 'vue';\n\n// Create the usePolling composable function\nfunction usePolling() {\n  // Initialize timerId ref here\n  const timerId = ref(null);\n  \n  // Define startPolling function here\n  \n  // Define stopPolling function here\n  \n  // Add onUnmounted cleanup here\n  \n  // Return the polling functions here\n}\n\n// Create the PollingDemo component here\nfunction PollingDemo() {\n  // Call usePolling here with interval and callback\n  \n  return (\n    <div>\n      <!-- Add Start and Stop buttons here -->\n    </div>\n  );\n}",
+        "expectedOutcome": "The component will have two interactive buttons that can start and stop the polling mechanism when clicked.",
+        "successCriteria": [
+          "Two buttons with text 'Start Polling' and 'Stop Polling' are present in the template, and each button's click event is correctly bound to the corresponding polling function."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added the buttons, but the click events might not be correctly wired. Make sure each button's @click directive calls the correct polling function.",
+        "feedbackWrong": "The buttons or their click handlers are missing. Add two buttons with the specified text and wire their click events to startPolling and stopPolling.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<button",
+            "@click=\"startPolling\"",
+            "Start Polling",
+            "@click=\"stopPolling\"",
+            "Stop Polling"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import Vue and the necessary composition API functions",
+        "id": "step1"
+      },
+      {
+        "label": "Create the usePolling composable function",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize reactive state for the polling timer",
+        "id": "step3"
+      },
+      {
+        "label": "Set up cleanup with onUnmounted",
+        "id": "step4"
+      },
+      {
+        "label": "Return the polling functions from the composable",
+        "id": "step5"
+      },
+      {
+        "label": "Create the main PollingDemo component",
+        "id": "step6"
+      },
+      {
+        "label": "Use the polling hook in the component",
+        "id": "step7"
+      },
+      {
+        "label": "Add UI controls and wire them to polling functions",
+        "id": "step8"
+      }
+    ]
+  },
+  "source": "content"
+}

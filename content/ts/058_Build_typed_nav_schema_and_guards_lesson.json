@@ -1,0 +1,398 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-ts-58",
+    "track": "ts",
+    "lessonNum": 58,
+    "title": "Build typed nav schema and guards",
+    "shortName": "P58",
+    "intro": {
+      "tag": "LESSON #58",
+      "title": "Build typed nav schema and guards",
+      "body": "In this lesson, you will build a typed navigation schema and guard functions to safely manage routes in a TypeScript application. You'll learn how to define a set of allowed routes as a union type, creating a single source of truth for your app's navigation. Using this schema, you will implement guard functions that use type narrowing to check if a given string is a valid route before navigating. This approach ensures type safety, prevents runtime errors, and provides better developer experience through autocompletion and error checking.",
+      "usecase": "This pattern is essential for building robust navigation systems in enterprise applications like admin dashboards, e-commerce platforms, and SaaS products. For example, in a banking dashboard, typed navigation schemas ensure users can only access routes appropriate to their role (customer vs. admin), while guards prevent unauthorized access to sensitive financial data pages. Developers implement these to create maintainable, type-safe navigation structures that prevent runtime errors and enforce business rules across complex multi-view applications."
+    },
+    "objectives": [
+      "Construct a TypeScript type definition for a navigation schema with typed routes.",
+      "Initialize a constant object that implements the navigation schema type.",
+      "Implement a type guard function to validate route objects at runtime.",
+      "Apply the type guard within a conditional block to control program flow.",
+      "Manipulate the navigation schema to add a new typed route property.",
+      "Integrate the navigation schema and guard into a simple route-checking utility."
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 11",
+        "title": "Import TypeScript and define navigation route types",
+        "instruction": "Create a type definition for navigation routes with home, about, and contact routes, each having required and optional parameters.",
+        "hint": "Define a TypeScript type or interface that represents different route objects with properties like id, path, and params.",
+        "analogousExample": "// Example: defining a type for user profiles\ntype UserProfile = {\n  id: number;\n  name: string;\n  age?: number; // optional\n};",
+        "seedCode": "// Define your navigation route type here\n",
+        "expectedOutcome": "A TypeScript type definition that can be used to type-check navigation routes throughout the application.",
+        "successCriteria": [
+          "A type or interface named something like NavRoute or Route is defined with properties for id, path, and params (with required and optional fields)."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure your type includes properties for id, path, and params with both required and optional fields.",
+        "feedbackWrong": "Try defining a TypeScript type or interface with properties like id (string), path (string), and params (an object with some required and optional fields).",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "type",
+            "interface",
+            "id",
+            "path",
+            "params",
+            "?",
+            "string"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 11",
+        "title": "Define the navigation schema interface",
+        "instruction": "Create an interface named NavigationSchema that maps route names (as string keys) to their corresponding route types (the Route type you defined earlier).",
+        "hint": "Think of NavigationSchema as a blueprint for your entire navigation system. Use the Route type as the value type for each route name key.",
+        "analogousExample": "// Similar: an interface mapping IDs to user objects\ninterface UserMap {\n  [userId: string]: User;\n}",
+        "seedCode": "// Define your navigation route type here\n\n// Create your NavigationSchema interface here",
+        "expectedOutcome": "You'll have a structured NavigationSchema interface that defines the shape of your navigation system.",
+        "successCriteria": [
+          "The NavigationSchema interface is defined with string index signature mapping to Route type."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure your interface has the correct name and properly maps string keys to the Route type.",
+        "feedbackWrong": "Try again. You need to create an interface named NavigationSchema that maps route names (strings) to Route types.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "interface",
+            "NavigationSchema",
+            "Route"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 11",
+        "title": "Create the concrete navigation schema object",
+        "instruction": "Create a constant named navigationSchema that satisfies the NavigationSchema interface. Define it with at least one route object containing path and metadata properties.",
+        "hint": "Use the 'const' keyword to declare navigationSchema and assign it an object that matches the NavigationSchema interface structure you defined earlier.",
+        "analogousExample": "// Example: a typed object matching an interface\ninterface User {\n  name: string;\n  age: number;\n}\n\nconst user: User = {\n  name: 'Alex',\n  age: 30\n};",
+        "seedCode": "// Define your navigation route type here\n\n// Create your NavigationSchema interface here\n\n// Create your navigationSchema object here",
+        "expectedOutcome": "You will have a typed navigationSchema object that implements your NavigationSchema interface with actual route data.",
+        "successCriteria": [
+          "A constant named navigationSchema is declared and assigned an object with at least one route that includes path and metadata properties, satisfying the NavigationSchema interface."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure navigationSchema is a constant with an object that matches the NavigationSchema interface structure.",
+        "feedbackWrong": "Check that you've declared a constant named navigationSchema with an object containing route configurations that include path and metadata.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "navigationSchema",
+            "const",
+            "path",
+            "metadata"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 11",
+        "title": "Define type guards for route validation",
+        "instruction": "Create three type guard functions: isHomeRoute, isAboutRoute, and isContactRoute. Each should take a parameter of type Route and return a boolean indicating if it matches that specific route type.",
+        "hint": "Type guard functions use the 'is' keyword in their return type annotation to help TypeScript narrow types. For example: function isHomeRoute(route: Route): route is HomeRoute { return route.path === '/home'; }",
+        "analogousExample": "// Type guard example\nfunction isAdmin(user: User): user is AdminUser {\n  return user.role === 'admin';\n}",
+        "seedCode": "// Define your navigation route type here\n\n// Create your NavigationSchema interface here\n\n// Create your navigationSchema object here\n\n// Create your type guard functions here",
+        "expectedOutcome": "Three type guard functions that can validate whether a given Route object matches specific route types.",
+        "successCriteria": [
+          "isHomeRoute, isAboutRoute, and isContactRoute functions are defined with proper type annotations and return boolean values based on route properties."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've created some type guards, but make sure all three functions (isHomeRoute, isAboutRoute, isContactRoute) are defined with proper return type annotations using the 'is' keyword.",
+        "feedbackWrong": "Type guard functions are missing or incorrectly defined. Each function should take a Route parameter and return a boolean with a type predicate like 'route is HomeRoute'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "isHomeRoute",
+            "isAboutRoute",
+            "isContactRoute",
+            "Route",
+            "route is",
+            "boolean"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 11",
+        "title": "Create a generic route validation function",
+        "instruction": "Create a function named validateRoute that takes a route object and returns a boolean indicating if it's a valid route according to your schema.",
+        "hint": "Use your type guard functions inside validateRoute to check the route object's properties.",
+        "analogousExample": "// Example: A validation function using type guards\nfunction validateUser(user: unknown): boolean {\n  return isAdmin(user) || isGuest(user);\n}",
+        "seedCode": "// Define your navigation route type here\n\n// Create your NavigationSchema interface here\n\n// Create your navigationSchema object here\n\n// Create your type guard functions here\n\n// Create your validateRoute function here",
+        "expectedOutcome": "A validateRoute function that leverages your type guards to validate any route object.",
+        "successCriteria": [
+          "validateRoute function is defined and uses the type guard functions to check route validity."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've created a function, but make sure it uses your type guard functions to validate the route object.",
+        "feedbackWrong": "The validateRoute function is missing or doesn't properly use the type guards for validation.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "validateRoute",
+            "function",
+            "return",
+            "boolean"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 11",
+        "title": "Define the main App component structure",
+        "instruction": "Create a functional component named App that returns a JSX element. Use TypeScript to explicitly annotate the return type as JSX.Element.",
+        "hint": "Define a component that returns a simple JSX element like a <div> with some text content.",
+        "analogousExample": "// Example of a typed functional component\nfunction App(): JSX.Element {\n  return <div>Hello World</div>;\n}",
+        "seedCode": "// Define your navigation route type here\n\n// Create your NavigationSchema interface here\n\n// Create your navigationSchema object here\n\n// Create your type guard functions here\n\n// Create your validateRoute function here\n\n// Create your App component here",
+        "expectedOutcome": "A functional App component with proper TypeScript return type annotation is defined.",
+        "successCriteria": [
+          "App component is defined as a function with explicit JSX.Element return type and returns a JSX element."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've created a component, but check if it has the correct return type annotation (JSX.Element).",
+        "feedbackWrong": "The App component isn't properly defined. Make sure to create a function named App that returns JSX with explicit return type.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "App",
+            "JSX.Element",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 11",
+        "title": "Initialize component state for current route",
+        "instruction": "Inside your App component, initialize a state variable named 'currentRoute' using useState. The state should be typed with the NavigationSchema interface and initialized with the 'home' route from your navigationSchema object.",
+        "hint": "Use useState with a generic type parameter to specify the state type. Import useState from 'react' if you haven't already.",
+        "analogousExample": "// Example: typed state initialization\nimport { useState } from 'react';\n\ninterface User {\n  name: string;\n  age: number;\n}\n\nfunction UserProfile() {\n  const [user, setUser] = useState<User>({ name: 'Alex', age: 25 });\n  return null;\n}",
+        "seedCode": "// Define your navigation route type here\n\n// Create your NavigationSchema interface here\n\n// Create your navigationSchema object here\n\n// Create your type guard functions here\n\n// Create your validateRoute function here\n\n// Create your App component here\n\nimport { useState } from 'react';\n\nconst App = () => {\n  // Initialize currentRoute state here\n  return (\n    <div>\n      <h1>Navigation Demo</h1>\n    </div>\n  );\n};\n\nexport default App;",
+        "expectedOutcome": "The App component will have a typed state variable that tracks the current navigation route, initialized to the 'home' route.",
+        "successCriteria": [
+          "The useState hook is called with the NavigationSchema type and initialized with navigationSchema.home"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure to: 1) Use the NavigationSchema type for the state, 2) Initialize it with navigationSchema.home, and 3) Name the state variable 'currentRoute'.",
+        "feedbackWrong": "The state initialization is missing or incorrect. You need to use useState with the NavigationSchema type and initialize it with the 'home' route from your navigationSchema object.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "useState",
+            "currentRoute",
+            "NavigationSchema",
+            "navigationSchema.home"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 11",
+        "title": "Create navigation handler functions",
+        "instruction": "Inside your App component, create three navigation handler functions: navigateToHome, navigateToAbout, and navigateToContact. Each function should call the validateRoute function with the appropriate route name and update the currentRoute state with the validated result.",
+        "hint": "Define each function using either function declarations or arrow functions. Inside each function, call validateRoute with a route name like 'home', 'about', or 'contact', then use setCurrentRoute with the result.",
+        "analogousExample": "// Similar: navigation handler functions\nfunction goToPage(pageName: string) {\n  const validated = validatePage(pageName);\n  setCurrentPage(validated);\n}",
+        "seedCode": "import { useState } from 'react';\n\nconst App = () => {\n  // Initialize currentRoute state here\n  \n  // Create your navigation handler functions here\n  \n  return (\n    <div>\n      <h1>Navigation Demo</h1>\n    </div>\n  );\n};\n\nexport default App;",
+        "expectedOutcome": "Three navigation handler functions are defined inside the App component, each validating a specific route and updating the currentRoute state.",
+        "successCriteria": [
+          "The navigateToHome, navigateToAbout, and navigateToContact functions are defined, each calling validateRoute with the correct route name and using setCurrentRoute with the result."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've created some navigation handlers, but make sure you have all three: navigateToHome, navigateToAbout, and navigateToContact. Each should validate its route and update state.",
+        "feedbackWrong": "The navigation handlers aren't properly defined. Create three functions that validate routes and update the currentRoute state.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "navigateToHome",
+            "navigateToAbout",
+            "navigateToContact",
+            "validateRoute",
+            "setCurrentRoute"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 11",
+        "title": "Build the navigation UI structure",
+        "instruction": "Inside your component's return statement, add a <nav> element containing buttons for each route defined in your navigation schema (Home, About, Contact).",
+        "hint": "Place the <nav> element after the <h1> tag. Each button should have a descriptive label matching the route name.",
+        "analogousExample": "// Example: navigation UI structure\n<nav>\n  <button>Home</button>\n  <button>About</button>\n  <button>Contact</button>\n</nav>",
+        "seedCode": "import { useState } from 'react';\n\nconst App = () => {\n  // Initialize currentRoute state here\n  \n  // Create your navigation handler functions here\n  \n  return (\n    <div>\n      <h1>Navigation Demo</h1>\n      {/* Add navigation UI here */}\n    </div>\n  );\n};\n\nexport default App;",
+        "expectedOutcome": "A navigation bar with three buttons (Home, About, Contact) appears below the main heading.",
+        "successCriteria": [
+          "The component returns a <nav> element containing three <button> elements with appropriate labels."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you have exactly three buttons (Home, About, Contact) inside the <nav> element.",
+        "feedbackWrong": "The navigation UI structure is incomplete. Add a <nav> element with three buttons for the Home, About, and Contact routes.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<nav>",
+            "<button>",
+            "Home",
+            "About",
+            "Contact"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 11",
+        "title": "Wire navigation buttons to handlers and display cu",
+        "instruction": "Add three navigation buttons inside the div, each with an onClick handler calling the appropriate navigation function (navigateToHome, navigateToProfile, navigateToSettings).",
+        "hint": "Create button elements with onClick handlers that call the navigation functions you defined earlier. Use a paragraph element with curly braces to display the currentRoute state value.",
+        "analogousExample": "// Example: Adding interactive buttons and displaying state\n<button onClick={() => handleClick('home')}>Go Home</button>\n<button onClick={() => handleClick('profile')}>Go to Profile</button>\n<p>Current page: {currentPage}</p>",
+        "seedCode": "import { useState } from 'react';\n\nconst App = () => {\n  // Initialize currentRoute state here\n  \n  // Create your navigation handler functions here\n  \n  return (\n    <div>\n      <h1>Navigation Demo</h1>\n      {/* Add navigation UI here */}\n    </div>\n  );\n};\n\nexport default App;",
+        "expectedOutcome": "The UI will have three navigation buttons that change the current route when clicked, and a paragraph that updates to show the current route information.",
+        "successCriteria": [
+          "Three button elements with onClick handlers calling navigateToHome, navigateToProfile, and navigateToSettings are present. A paragraph element displays the currentRoute state value."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure you have all three navigation buttons with proper onClick handlers and a paragraph showing the currentRoute value.",
+        "feedbackWrong": "The navigation buttons or route display paragraph are missing or incorrect. Check that you've added three buttons with onClick handlers and a paragraph displaying currentRoute.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "onClick",
+            "navigateToHome",
+            "navigateToProfile",
+            "navigateToSettings",
+            "currentRoute",
+            "<p>"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 11",
+        "title": "add a paragraph below the buttons to display ",
+        "instruction": "add a paragraph below the buttons to display the current route name and parameters.",
+        "hint": "Create button elements with onClick handlers that call the navigation functions you defined earlier. Use a paragraph element with curly braces to display the currentRoute state value.",
+        "analogousExample": "// Example: Adding interactive buttons and displaying state\n<button onClick={() => handleClick('home')}>Go Home</button>\n<button onClick={() => handleClick('profile')}>Go to Profile</button>\n<p>Current page: {currentPage}</p>",
+        "seedCode": "import { useState } from 'react';\n\nconst App = () => {\n  // Initialize currentRoute state here\n  \n  // Create your navigation handler functions here\n  \n  return (\n    <div>\n      <h1>Navigation Demo</h1>\n      {/* Add navigation UI here */}\n    </div>\n  );\n};\n\nexport default App;",
+        "expectedOutcome": "",
+        "successCriteria": [
+          "Complete the step as instructed."
+        ],
+        "feedbackCorrect": "Great! Step completed.",
+        "feedbackPartial": "Review the instruction and try again.",
+        "feedbackWrong": "Check the instruction and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "onClick",
+            "navigateToHome",
+            "navigateToProfile",
+            "navigateToSettings",
+            "currentRoute",
+            "<p>"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import TypeScript and define navigation route types",
+        "id": "step1"
+      },
+      {
+        "label": "Define the navigation schema interface",
+        "id": "step2"
+      },
+      {
+        "label": "Create the concrete navigation schema object",
+        "id": "step3"
+      },
+      {
+        "label": "Define type guards for route validation",
+        "id": "step4"
+      },
+      {
+        "label": "Create a generic route validation function",
+        "id": "step5"
+      },
+      {
+        "label": "Define the main App component structure",
+        "id": "step6"
+      },
+      {
+        "label": "Initialize component state for current route",
+        "id": "step7"
+      },
+      {
+        "label": "Create navigation handler functions",
+        "id": "step8"
+      },
+      {
+        "label": "Build the navigation UI structure",
+        "id": "step9"
+      },
+      {
+        "label": "Wire navigation buttons to handlers and display cu",
+        "id": "step10"
+      },
+      {
+        "label": "add a paragraph below the buttons to display ",
+        "id": "step11"
+      }
+    ]
+  },
+  "source": "content"
+}

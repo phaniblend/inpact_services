@@ -1,0 +1,389 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-algorithms-10",
+    "track": "algorithms",
+    "lessonNum": 10,
+    "title": "Subarray Sum Equals K",
+    "shortName": "P10",
+    "intro": {
+      "tag": "LESSON #10",
+      "title": "Subarray Sum Equals K",
+      "body": "In this lesson, you will build a function that counts the number of contiguous subarrays within an array of integers whose sum equals a given target value, k. You will learn the core concept of using a hash map (or object) to store cumulative sums, which allows for efficient O(n) time complexity by avoiding nested loops. The main technologies involved are JavaScript arrays, objects for the hash map, and basic arithmetic operations. This approach demonstrates a common pattern in algorithm design for optimizing lessons that involve subarray sums.",
+      "usecase": "The 'Subarray Sum Equals K' algorithm is a core pattern for analyzing contiguous data segments in real-time systems. For instance, in a financial dashboard, it can identify periods where daily transaction sums match a target threshold, helping detect anomalies or specific performance goals. In e-commerce analytics, it can find time windows where user activity sums to a promotional target, enabling dynamic UI updates for marketing panels. This technique is essential for building interactive filters and data visualizations that require efficient, on-the-fly computation over sequences."
+    },
+    "objectives": [
+      "Implement a brute-force solution to find subarrays with a target sum",
+      "Construct a prefix sum array to optimize subarray sum calculations",
+      "Apply a hash map to track prefix sums and their frequencies",
+      "Manipulate cumulative sums while iterating through the array",
+      "Initialize and update a counter variable to track valid subarrays",
+      "Integrate the prefix sum and hash map approach into a complete solution",
+      "Configure the algorithm to handle edge cases like negative numbers and zero-sum subarrays"
+    ],
+    "steps": [
+      {
+        "type": "reasoning",
+        "id": "step1",
+        "phase": "Step 1 of 16",
+        "title": "Welcome",
+        "content": {
+          "body": "Have you ever wondered how to efficiently find all subarrays that sum to a specific number? In this lesson, we'll learn a clever technique using a hash map to solve this common lesson. You'll discover how remembering what you've already seen can dramatically improve your algorithm's speed.",
+          "title": "Welcome"
+        }
+      },
+      {
+        "type": "reasoning",
+        "id": "step2",
+        "phase": "Step 2 of 16",
+        "title": "What you'll learn",
+        "content": {
+          "body": "By the end of this lesson, you'll be able to:\n1. Explain why brute force checking every subarray is inefficient\n2. Apply the concept of prefix sums to understand subarray sums\n3. Implement a hash map solution to count subarrays summing to K\n4. Determine what to store as keys and values in your lookup structure\n5. Decide when to check the structure versus when to add to it",
+          "title": "What you'll learn"
+        }
+      },
+      {
+        "type": "discovery",
+        "id": "step3",
+        "phase": "Step 3 of 16",
+        "title": "Try it",
+        "content": {
+          "body": "(No content)",
+          "title": "Try it",
+          "prompt": "In the array [1, 2, 3], which subarrays sum to 3?",
+          "exampleArray": [
+            1,
+            2,
+            3
+          ],
+          "target": 3,
+          "successMessage": "Great! You found [1, 2] and [3] as subarrays that sum to 3."
+        }
+      },
+      {
+        "type": "discovery",
+        "id": "step4",
+        "phase": "Step 4 of 16",
+        "title": "Try a bigger array",
+        "content": {
+          "body": "(No content)",
+          "title": "Try a bigger array",
+          "prompt": "In [2, 1, 3, 4, 2], which subarrays sum to 6?",
+          "exampleArray": [
+            2,
+            1,
+            3,
+            4,
+            2
+          ],
+          "target": 6,
+          "successMessage": "Well done! You found [2, 1, 3] and [4, 2] as subarrays that sum to 6."
+        }
+      },
+      {
+        "type": "discovery",
+        "id": "step5",
+        "phase": "Step 5 of 16",
+        "title": "One more",
+        "content": {
+          "body": "(No content)",
+          "title": "One more",
+          "prompt": "In [1, -1, 1, 1, 1, -1], which subarrays sum to 2?",
+          "exampleArray": [
+            1,
+            -1,
+            1,
+            1,
+            1,
+            -1
+          ],
+          "target": 2,
+          "successMessage": "Excellent! You found several subarrays like [1, -1, 1, 1] and [1, 1] that sum to 2."
+        }
+      },
+      {
+        "type": "reflection",
+        "id": "step6",
+        "phase": "Step 6 of 16",
+        "title": "What you did",
+        "content": {
+          "body": "What you just did was brute force: you checked every possible subarray by considering all starting and ending points. For each subarray, you calculated the sum from scratch. This works for small arrays but becomes very slow as arrays grow larger.",
+          "title": "What you did"
+        }
+      },
+      {
+        "type": "scale-problem",
+        "id": "step7",
+        "phase": "Step 7 of 16",
+        "title": "Why it gets hard",
+        "content": {
+          "body": "When the array has 10,000 elements, checking every possible subarray means checking millions of combinations. Each subarray sum calculation can be expensive too. We need a smarter method that avoids re-scanning and re-calculating. Can't figure it out? Click Show me on the next step.",
+          "title": "Why it gets hard"
+        }
+      },
+      {
+        "type": "concept-bridge",
+        "id": "step8",
+        "phase": "Step 8 of 16",
+        "title": "Key idea",
+        "content": {
+          "body": "The key insight is to remember what we have already seen. Instead of recalculating sums for every subarray, we can keep track of prefix sums (running totals) as we move through the array. Then we use a lookup structure (like a JavaScript object or Map) to remember which prefix sums we've encountered and how many times we've seen them.",
+          "title": "Key idea",
+          "visualMetaphor": "Think of it like a notebook where we write down every running total we've calculated so far. When we get a new running total, we check our notebook to see if we've previously had a running total that's exactly K less than our current one. If we have, we know we've found subarrays that sum to K."
+        }
+      },
+      {
+        "type": "reveal-idea",
+        "id": "step9",
+        "phase": "Step 9 of 16",
+        "title": "The approach",
+        "content": {
+          "body": "We'll use a single pass through the array while maintaining a running total (prefix sum). At each step, we check if we've previously seen a prefix sum that's exactly (current prefix sum - K). If yes, we add to our count. Then we record the current prefix sum in our lookup structure.",
+          "title": "The approach",
+          "showMeFirst": true,
+          "illustratedExample": "Let's walk through [1, 1, 1] with K = 2:\n\nStep 1: prefix sum = 1, need (1-2) = -1 → not in map. Add {1:1}\nStep 2: prefix sum = 2, need (2-2) = 0 → 0 is in map (we initialized it). Count += 1. Add {1:1, 2:1}\nStep 3: prefix sum = 3, need (3-2) = 1 → 1 is in map. Count += 1. Add {1:1, 2:1, 3:1}\n\nTotal count = 2 subarrays: [1,1] and [1,1] (the second and third positions)."
+        }
+      },
+      {
+        "type": "flow-explainer",
+        "id": "step10",
+        "phase": "Step 10 of 16",
+        "title": "Steps",
+        "content": {
+          "body": "1. Initialize a count variable to 0 and a prefix sum variable to 0\n2. Create a lookup object/map and initialize it with {0:1} (a prefix sum of 0 occurs once before we start)\n3. Loop through each number in the array:\n   a. Add the current number to the prefix sum\n   b. Calculate needed = prefix sum - K\n   c. If needed exists in the lookup, add its value to count\n   d. Add/update the current prefix sum in the lookup\n4. Return the count",
+          "title": "Steps"
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 16",
+        "title": "Initialize variables",
+        "instruction": "Start by creating the function skeleton and initializing the count and prefix sum variables.",
+        "hint": "You'll need a count variable starting at 0 and a prefixSum variable also starting at 0.",
+        "analogousExample": "",
+        "seedCode": "function subarraySum(nums, k) {\n  // Your code here\n}",
+        "expectedOutcome": "Initialize count and prefixSum variables",
+        "successCriteria": [],
+        "feedbackCorrect": "Perfect! You've set up the basic variables we'll need.",
+        "feedbackPartial": "You're on the right track. Remember to initialize both variables to 0.",
+        "feedbackWrong": "Let's start with the basics. We need a count variable and a prefixSum variable, both starting at 0.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "count",
+            "prefixSum",
+            "0"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step12",
+        "type": "question",
+        "phase": "Step 12 of 16",
+        "title": "Create the lookup structure",
+        "instruction": "Create a Map (or object) to store prefix sums we've seen. Initialize it with prefix sum 0 occurring once.",
+        "hint": "We need to account for subarrays starting from the beginning, so we initialize with {0: 1}.",
+        "analogousExample": "",
+        "seedCode": "function subarraySum(nums, k) {\n  let count = 0;\n  let prefixSum = 0;\n  // Your code here\n}",
+        "expectedOutcome": "Create and initialize the lookup map",
+        "successCriteria": [],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Good start. Remember to initialize the map with {0: 1} to handle subarrays starting at index 0.",
+        "feedbackWrong": "We need a Map or object to remember prefix sums. Initialize it with {0: 1} to account for subarrays starting from the beginning.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "Map",
+            "set",
+            "0",
+            "1",
+            "Object",
+            "0:1"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step13",
+        "type": "question",
+        "phase": "Step 13 of 16",
+        "title": "Loop through the array",
+        "instruction": "Create a loop to iterate through each number in the nums array.",
+        "hint": "Use a for loop or for...of loop to go through each element.",
+        "analogousExample": "",
+        "seedCode": "function subarraySum(nums, k) {\n  let count = 0;\n  let prefixSum = 0;\n  const prefixMap = new Map();\n  prefixMap.set(0, 1);\n  // Your code here\n}",
+        "expectedOutcome": "Create a loop to iterate through nums",
+        "successCriteria": [],
+        "feedbackCorrect": "Great! Now we can process each number in the array.",
+        "feedbackPartial": "You're close. Make sure your loop goes through every element in nums.",
+        "feedbackWrong": "We need to examine each number in the array. Create a loop that iterates through all elements of nums.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "for",
+            "nums",
+            "length",
+            "of"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step14",
+        "type": "question",
+        "phase": "Step 14 of 16",
+        "title": "Update prefix sum and check for matches",
+        "instruction": "Inside the loop, update the prefix sum and check if (prefixSum - k) exists in the map. If it does, add its value to count.",
+        "hint": "First add the current number to prefixSum, then calculate needed = prefixSum - k, then check if needed is in the map.",
+        "analogousExample": "",
+        "seedCode": "function subarraySum(nums, k) {\n  let count = 0;\n  let prefixSum = 0;\n  const prefixMap = new Map();\n  prefixMap.set(0, 1);\n  \n  for (let num of nums) {\n    // Your code here\n  }\n}",
+        "expectedOutcome": "Update prefixSum and check for matching subarrays",
+        "successCriteria": [],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Good progress. Remember to: 1) update prefixSum, 2) calculate needed, 3) check if needed exists in the map.",
+        "feedbackWrong": "Inside the loop, we need to: add current num to prefixSum, calculate needed = prefixSum - k, then check if needed exists in prefixMap. If it does, add its value to count.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "prefixSum",
+            "+=",
+            "num",
+            "prefixSum - k",
+            "has",
+            "get",
+            "count",
+            "+="
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step15",
+        "type": "question",
+        "phase": "Step 15 of 16",
+        "title": "Update the map and return count",
+        "instruction": "After checking for matches, update the map with the current prefix sum. Finally, return the count.",
+        "hint": "Add the current prefixSum to the map (increment its count if it already exists). After the loop, return the count.",
+        "analogousExample": "",
+        "seedCode": "function subarraySum(nums, k) {\n  let count = 0;\n  let prefixSum = 0;\n  const prefixMap = new Map();\n  prefixMap.set(0, 1);\n  \n  for (let num of nums) {\n    prefixSum += num;\n    const needed = prefixSum - k;\n    if (prefixMap.has(needed)) {\n      count += prefixMap.get(needed);\n    }\n    // Your code here\n  }\n}",
+        "expectedOutcome": "Update map with current prefixSum and return count",
+        "successCriteria": [],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Almost there! Don't forget to update the map with the current prefixSum and return the count after the loop.",
+        "feedbackWrong": "We need to: 1) update prefixMap with current prefixSum (increment if exists, set to 1 if not), and 2) return count after the loop completes.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "set",
+            "prefixSum",
+            "return",
+            "count"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "type": "complete",
+        "id": "step16",
+        "phase": "Step 16 of 16",
+        "title": "Done",
+        "content": {
+          "body": "Congratulations! You've implemented an efficient solution to count subarrays summing to K. Remember these key points:\n\n1. We store prefix sums as keys in our lookup structure and their frequencies as values\n2. We check the structure BEFORE adding the current prefix sum (to avoid counting the current element as matching itself)\n3. The initial {0: 1} in the map handles subarrays starting from index 0\n4. This approach transforms an O(n²) brute force solution into an O(n) efficient algorithm\n\nThis 'remember what we've already seen' pattern with hash maps is powerful for many array lessons!",
+          "title": "Done"
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Welcome",
+        "id": "step1"
+      },
+      {
+        "label": "What you'll learn",
+        "id": "step2"
+      },
+      {
+        "label": "Try it",
+        "id": "step3"
+      },
+      {
+        "label": "Try a bigger array",
+        "id": "step4"
+      },
+      {
+        "label": "One more",
+        "id": "step5"
+      },
+      {
+        "label": "What you did",
+        "id": "step6"
+      },
+      {
+        "label": "Why it gets hard",
+        "id": "step7"
+      },
+      {
+        "label": "Key idea",
+        "id": "step8"
+      },
+      {
+        "label": "The approach",
+        "id": "step9"
+      },
+      {
+        "label": "Steps",
+        "id": "step10"
+      },
+      {
+        "label": "Initialize variables",
+        "id": "step11"
+      },
+      {
+        "label": "Create the lookup structure",
+        "id": "step12"
+      },
+      {
+        "label": "Loop through the array",
+        "id": "step13"
+      },
+      {
+        "label": "Update prefix sum and check for matches",
+        "id": "step14"
+      },
+      {
+        "label": "Update the map and return count",
+        "id": "step15"
+      },
+      {
+        "label": "Done",
+        "id": "step16"
+      }
+    ],
+    "algorithmFamily": "array-hashmap",
+    "familyTeachingProfile": {
+      "mentalModel": "Remember what we have already seen",
+      "conceptBridge": "Show the learner how to use a lookup structure (e.g. object or Map) to remember seen values and avoid re-scanning.",
+      "visualMetaphor": "A notebook where we write down what we've seen and check it in one step.",
+      "commonConfusions": [
+        "What do we store as key vs value?",
+        "When do we check the structure vs add to it?"
+      ]
+    }
+  },
+  "source": "content"
+}

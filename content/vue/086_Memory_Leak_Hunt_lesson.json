@@ -1,0 +1,366 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-vue-86",
+    "track": "vue",
+    "lessonNum": 86,
+    "title": "Memory Leak Hunt",
+    "shortName": "P86",
+    "intro": {
+      "tag": "LESSON #86",
+      "title": "Memory Leak Hunt",
+      "body": "In this lesson, you will build a simple Vue application that simulates a memory leak scenario to understand how they occur and how to prevent them. You will learn the core concept of memory leaks in web applications, which happen when memory is allocated but not properly released, leading to performance issues. The main technologies involved are Vue's reactive state, lifecycle hooks like `onMounted` and `onUnmounted`, and event listeners. By the end, you'll practice identifying and fixing common memory leak patterns in a beginner-friendly, hands-on way.",
+      "usecase": "Memory leak detection is crucial in long-running Vue applications like admin dashboards or data visualization tools where users interact with dynamic charts, filters, and modals. Developers must ensure that event listeners, timers, and reactive subscriptions in components like real-time monitoring panels or complex form wizards are properly cleaned up when components unmount. Without proper cleanup, these applications gradually consume more memory, leading to sluggish performance and browser crashes during extended user sessions. Mastering memory leak prevention helps build enterprise applications that remain responsive even after hours of continuous use with multiple tab switches and component lifecycles."
+    },
+    "objectives": [
+      "Initialize reactive data properties to track memory usage in a Vue component",
+      "Implement event listeners and timers that demonstrate potential memory leak patterns",
+      "Apply Vue lifecycle hooks to properly clean up subscriptions and intervals",
+      "Construct a memory monitoring utility that logs allocation changes",
+      "Configure watchers to observe component destruction and resource release",
+      "Manipulate DOM references and event handlers to prevent orphaned connections",
+      "Integrate cleanup routines within beforeUnmount and unmounted lifecycle phases"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 10",
+        "title": "Import Vue and the necessary composition API functions (ref, onMounted, onUnmounted)",
+        "instruction": "Import ref, onMounted, and onUnmounted from 'vue' to prepare for managing memory and component lifecycle.",
+        "hint": "Use the import statement to bring in the three functions from the Vue package.",
+        "analogousExample": "// Importing functions from a module\nimport { ref, onMounted, onUnmounted } from 'vue'",
+        "seedCode": "// Import ref, onMounted, and onUnmounted from 'vue'",
+        "expectedOutcome": "The Vue composition API functions ref, onMounted, and onUnmounted are imported and ready to use.",
+        "successCriteria": [
+          "ref, onMounted, and onUnmounted are imported from 'vue'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close, but make sure to import all three functions: ref, onMounted, and onUnmounted from 'vue'.",
+        "feedbackWrong": "Check the import statement. You need to import ref, onMounted, and onUnmounted from 'vue'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "ref",
+            "onMounted",
+            "onUnmounted",
+            "'vue'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 10",
+        "title": "Create the main Vue component structure",
+        "instruction": "Define and export a default Vue component named 'MemoryLeakHunt' with an empty template.",
+        "hint": "Create a component that will serve as the main container for the memory leak demonstration.",
+        "analogousExample": "// Similar: a basic Vue component structure\nexport default {\n  name: 'MemoryLeakHunt',\n  template: '<div></div>'\n}",
+        "seedCode": "// Import ref, onMounted, and onUnmounted from 'vue'\n\nexport default {\n  name: 'MemoryLeakHunt',\n  template: '<div></div>'\n}",
+        "expectedOutcome": "A Vue component named 'MemoryLeakHunt' is defined and exported with a basic empty template.",
+        "successCriteria": [
+          "The component is exported as default, has the name 'MemoryLeakHunt', and includes a template with an empty div."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure the component is exported as default, has the correct name, and includes a template with an empty div element.",
+        "feedbackWrong": "The component structure isn't quite right. Remember to export a default Vue component named 'MemoryLeakHunt' with a template containing an empty div.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "export default",
+            "MemoryLeakHunt",
+            "template",
+            "<div></div>"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 10",
+        "title": "Initialize reactive state for tracking memory usage",
+        "instruction": "Inside the component's setup function, use the ref function to create a reactive state variable called 'memoryUsage' initialized to 0.",
+        "hint": "Remember to import ref from 'vue' (already done) and use it inside the setup function to create reactive state.",
+        "analogousExample": "// Creating reactive state with ref\nconst count = ref(0);",
+        "seedCode": "import { ref, onMounted, onUnmounted } from 'vue';\n\nexport default {\n  name: 'MemoryLeakHunt',\n  setup() {\n    // Create reactive state here\n  },\n  template: '<div></div>'\n}",
+        "expectedOutcome": "The component now has a reactive memoryUsage state variable initialized to 0.",
+        "successCriteria": [
+          "The setup function contains a const memoryUsage = ref(0) declaration."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're using ref(0) to initialize the memoryUsage variable.",
+        "feedbackWrong": "Try again. You need to create a reactive state variable called memoryUsage initialized to 0 using the ref function.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "memoryUsage",
+            "ref",
+            "0"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 10",
+        "title": "Initialize state for tracking leaked intervals",
+        "instruction": "Inside the setup function, use the ref function to create a reactive array called 'intervalIds' and initialize it as an empty array.",
+        "hint": "Use ref([]) to create a reactive array. This will store the IDs of intervals we create.",
+        "analogousExample": "// Creating a reactive array for tracking items\nconst items = ref([]);",
+        "seedCode": "import { ref, onMounted, onUnmounted } from 'vue';\n\nexport default {\n  name: 'MemoryLeakHunt',\n  setup() {\n    // Create reactive state here\n    \n  },\n  template: '<div></div>'\n}",
+        "expectedOutcome": "A reactive array named intervalIds is created to store interval IDs that could cause memory leaks if not cleaned up.",
+        "successCriteria": [
+          "The intervalIds variable is declared using ref([]) inside the setup function."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're using ref([]) to create a reactive array named intervalIds inside the setup function.",
+        "feedbackWrong": "create a reactive array called intervalIds using the ref function.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "intervalIds",
+            "ref",
+            "[]"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 10",
+        "title": "Define a function to simulate memory allocation",
+        "instruction": "Inside the setup function, define a function named 'allocateMemory' that increments the 'memoryUsage' value by 100.",
+        "hint": "Create a regular JavaScript function that updates the reactive state. You can access the current value of 'memoryUsage' and add 100 to it.",
+        "analogousExample": "// Example: a function that updates reactive state\nfunction increaseCount() {\n  count.value += 1;\n}",
+        "seedCode": "import { ref, onMounted, onUnmounted } from 'vue';\n\nexport default {\n  name: 'MemoryLeakHunt',\n  setup() {\n    // Create reactive state here\n    const memoryUsage = ref(0);\n    const leakedIntervals = ref([]);\n    \n    // Define allocateMemory function here\n    \n  },\n  template: '<div></div>'\n}",
+        "expectedOutcome": "You'll have a function that can be called to simulate memory allocation by increasing the memoryUsage value.",
+        "successCriteria": [
+          "The 'allocateMemory' function is defined and correctly increments 'memoryUsage.value' by 100."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've defined a function, but make sure it correctly increments 'memoryUsage.value' by 100.",
+        "feedbackWrong": "The function isn't defined correctly. Check that it's named 'allocateMemory' and updates 'memoryUsage.value' by adding 100.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "allocateMemory",
+            "memoryUsage",
+            "value",
+            "100"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 10",
+        "title": "Define a function to start a managed interval",
+        "instruction": "Define a function called 'startManagedInterval' inside the setup() function. This function should use setInterval to call allocateMemory every 1000 milliseconds, store the returned interval ID in the 'leakedIntervals' array, and log the ID to the console.",
+        "hint": "Use setInterval with allocateMemory as the callback, push the returned ID into leakedIntervals.value, and add a console.log statement.",
+        "analogousExample": "// Similar: a function that stores timer IDs\nfunction startTimer() {\n  const timerId = setInterval(() => {\n    console.log('Tick');\n  }, 1000);\n  timerIds.push(timerId);\n  console.log('Started timer:', timerId);\n}",
+        "seedCode": "import { ref, onMounted, onUnmounted } from 'vue';\n\nexport default {\n  name: 'MemoryLeakHunt',\n  setup() {\n    // Create reactive state here\n    const memoryUsage = ref(0);\n    const leakedIntervals = ref([]);\n    \n    // Define allocateMemory function here\n    function allocateMemory() {\n      memoryUsage.value += 10;\n    }\n    \n    // Define startManagedInterval function here\n    \n  },\n  template: '<div></div>'\n}",
+        "expectedOutcome": "You will have a function that properly stores interval IDs for later cleanup, demonstrating correct memory management practices.",
+        "successCriteria": [
+          "The startManagedInterval function is defined, uses setInterval with allocateMemory as callback every second, stores the interval ID in leakedIntervals, and logs the ID."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure your function stores the interval ID in leakedIntervals and logs it.",
+        "feedbackWrong": "The function should use setInterval to call allocateMemory every second, store the ID, and log it.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "startManagedInterval",
+            "setInterval",
+            "allocateMemory",
+            "leakedIntervals",
+            "push",
+            "console.log"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 10",
+        "title": "Define a cleanup function to clear all intervals",
+        "instruction": "Define a function called 'cleanupIntervals' inside the setup function. This function should loop through the 'leakedIntervals' array, call clearInterval for each ID, and",
+        "hint": "You can use a forEach loop or a for loop to iterate through the leakedIntervals array. For each interval ID, call clearInterval(id). After clearing all intervals, set leakedIntervals.value to an empty array.",
+        "analogousExample": "// Example cleanup function\nfunction cleanupTasks() {\n  taskIds.forEach(id => clearTimeout(id));\n  taskIds = [];\n}",
+        "seedCode": "import { ref, onMounted, onUnmounted } from 'vue';\n\nexport default {\n  name: 'MemoryLeakHunt',\n  setup() {\n    // Create reactive state here\n    const memoryUsage = ref(0);\n    const leakedIntervals = ref([]);\n    \n    // Define allocateMemory function here\n    function allocateMemory() {\n      memoryUsage.value += 10;\n    }\n    \n    // Define startManagedInterval function here\n    \n    // Define cleanupIntervals function here\n    \n  },\n  template: '<div></div>'\n}",
+        "expectedOutcome": "A cleanupIntervals function is defined that properly clears all stored interval IDs and empties the leakedIntervals array.",
+        "successCriteria": [
+          "The cleanupIntervals function is defined, loops through leakedIntervals, calls clearInterval for each ID, and sets leakedIntervals.value to an empty array."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've defined the cleanupIntervals function, but make sure it loops through leakedIntervals, calls clearInterval for each ID, and empties the array.",
+        "feedbackWrong": "The cleanupIntervals function is missing or doesn't properly clear intervals. It should loop through leakedIntervals, call clearInterval for each ID, and empty the array.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "cleanupIntervals",
+            "function",
+            "leakedIntervals",
+            "clearInterval",
+            "forEach",
+            "value",
+            "[]"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 10",
+        "title": "empty the array",
+        "instruction": "empty the array.",
+        "hint": "You can use a forEach loop or a for loop to iterate through the leakedIntervals array. For each interval ID, call clearInterval(id). After clearing all intervals, set leakedIntervals.value to an empty array.",
+        "analogousExample": "// Example cleanup function\nfunction cleanupTasks() {\n  taskIds.forEach(id => clearTimeout(id));\n  taskIds = [];\n}",
+        "seedCode": "import { ref, onMounted, onUnmounted } from 'vue';\n\nexport default {\n  name: 'MemoryLeakHunt',\n  setup() {\n    // Create reactive state here\n    const memoryUsage = ref(0);\n    const leakedIntervals = ref([]);\n    \n    // Define allocateMemory function here\n    function allocateMemory() {\n      memoryUsage.value += 10;\n    }\n    \n    // Define startManagedInterval function here\n    \n    // Define cleanupIntervals function here\n    \n  },\n  template: '<div></div>'\n}",
+        "expectedOutcome": "",
+        "successCriteria": [
+          "Complete the step as instructed."
+        ],
+        "feedbackCorrect": "Great! Step completed.",
+        "feedbackPartial": "Review the instruction and try again.",
+        "feedbackWrong": "Check the instruction and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "cleanupIntervals",
+            "function",
+            "leakedIntervals",
+            "clearInterval",
+            "forEach",
+            "value",
+            "[]"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 10",
+        "title": "Set up component lifecycle hooks for mounting and cleanup",
+        "instruction": "Inside the setup function, use the imported onMounted hook to call startManagedInterval when the component mounts, and use onUnmounted to call cleanupIntervals when the component unmounts.",
+        "hint": "Call onMounted with a callback function that invokes startManagedInterval, and onUnmounted with a callback that invokes cleanupIntervals.",
+        "analogousExample": "// Lifecycle hooks example\nonMounted(() => {\n  console.log('Component mounted');\n});\nonUnmounted(() => {\n  console.log('Component unmounted');\n});",
+        "seedCode": "import { ref, onMounted, onUnmounted } from 'vue';\n\nexport default {\n  name: 'MemoryLeakHunt',\n  setup() {\n    const memoryUsage = ref(0);\n    const leakedIntervals = ref([]);\n    \n    function allocateMemory() {\n      memoryUsage.value += 10;\n    }\n    \n    // Define startManagedInterval function here\n    \n    // Define cleanupIntervals function here\n    \n    // Add lifecycle hooks here\n    \n  },\n  template: '<div></div>'\n}",
+        "expectedOutcome": "The component will automatically start a managed interval when mounted and clean up all intervals when unmounted.",
+        "successCriteria": [
+          "onMounted hook calls startManagedInterval, and onUnmounted hook calls cleanupIntervals."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added some lifecycle hooks, but make sure both onMounted and onUnmounted are used with the correct function calls.",
+        "feedbackWrong": "The lifecycle hooks are not properly set up. Check that you're calling onMounted and onUnmounted with the right functions.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "onMounted",
+            "startManagedInterval",
+            "onUnmounted",
+            "cleanupIntervals"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 10",
+        "title": "Build the component template with controls and display",
+        "instruction": "Inside the template, add a heading 'Memory Leak Hunt', a paragraph that displays the current memory usage, and three buttons: one to start a leaking interval, one to start a managed interval, and one to clean up all intervals.",
+        "hint": "Use double curly braces {{ }} to display reactive values in the template. Add click event handlers to buttons using @click.",
+        "analogousExample": "// Example template structure\ntemplate: `<div>\n  <h2>Memory Leak Hunt</h2>\n  <p>Memory Usage: {{ memoryUsage }}</p>\n  <button @click=\"startLeakingInterval\">Start Leaking Interval</button>\n  <button @click=\"startManagedInterval\">Start Managed Interval</button>\n  <button @click=\"cleanupIntervals\">Clean Up Intervals</button>\n</div>`",
+        "seedCode": "import { ref, onMounted, onUnmounted } from 'vue';\n\nexport default {\n  name: 'MemoryLeakHunt',\n  setup() {\n    const memoryUsage = ref(0);\n    const leakedIntervals = ref([]);\n    \n    function allocateMemory() {\n      memoryUsage.value += 10;\n    }\n    \n    // Define startManagedInterval function here\n    \n    // Define cleanupIntervals function here\n    \n    // Add lifecycle hooks here\n    \n  },\n  template: '<div></div>'\n}",
+        "expectedOutcome": "The component template now includes a heading, memory usage display, and three interactive buttons that will trigger the corresponding functions.",
+        "successCriteria": [
+          "The template contains an h2 heading with the text 'Memory Leak Hunt', a paragraph displaying 'Memory Usage: {{ memoryUsage }}', and three buttons with @click handlers for startLeakingInterval, startManagedInterval, and cleanupIntervals."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you have all three buttons with their correct click handlers and the memory usage display.",
+        "feedbackWrong": "The template doesn't match the requirements. Check that you have the heading, paragraph with memory usage, and three buttons with proper @click handlers.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<h2>Memory Leak Hunt</h2>",
+            "{{ memoryUsage }}",
+            "@click=\"startLeakingInterval\"",
+            "@click=\"startManagedInterval\"",
+            "@click=\"cleanupIntervals\""
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import Vue and the necessary composition API functions (ref, onMounted, onUnmounted)",
+        "id": "step1"
+      },
+      {
+        "label": "Create the main Vue component structure",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize reactive state for tracking memory usage",
+        "id": "step3"
+      },
+      {
+        "label": "Initialize state for tracking leaked intervals",
+        "id": "step4"
+      },
+      {
+        "label": "Define a function to simulate memory allocation",
+        "id": "step5"
+      },
+      {
+        "label": "Define a function to start a managed interval",
+        "id": "step6"
+      },
+      {
+        "label": "Define a cleanup function to clear all intervals",
+        "id": "step7"
+      },
+      {
+        "label": "empty the array",
+        "id": "step8"
+      },
+      {
+        "label": "Set up component lifecycle hooks for mounting and cleanup",
+        "id": "step9"
+      },
+      {
+        "label": "Build the component template with controls and display",
+        "id": "step10"
+      }
+    ]
+  },
+  "source": "content"
+}

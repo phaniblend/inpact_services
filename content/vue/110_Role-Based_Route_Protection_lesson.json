@@ -1,0 +1,429 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-vue-110",
+    "track": "vue",
+    "lessonNum": 110,
+    "title": "Role-Based Route Protection",
+    "shortName": "P110",
+    "intro": {
+      "tag": "LESSON #110",
+      "title": "Role-Based Route Protection",
+      "body": "In this lesson, you will build a simple Vue application that restricts access to certain pages based on a user's role, such as 'admin' or 'user'. You will learn how to use Vue Router's navigation guards to check a user's role before allowing them to visit a route. The main technologies involved are Vue 3's Composition API for state management and Vue Router for handling page navigation. By the end, you'll understand how to protect routes dynamically and display different content to users with different permissions.",
+      "usecase": "Role-based route protection is a core security pattern in any application with multiple user types. For example, an admin dashboard might show analytics and user management routes only to administrators, while a customer portal restricts order history and settings to logged-in users. In a healthcare app, doctors could access patient records and scheduling, while receptionists see only appointment calendars. Implementing this ensures users only interact with the parts of the UI—like specific dashboard panels, forms, or menus—that their permissions allow, preventing unauthorized access and data breaches."
+    },
+    "objectives": [
+      "Implement a Vuex store module to manage user authentication state and roles",
+      "Configure Vue Router navigation guards to intercept route access",
+      "Construct role-based permission checks using computed properties",
+      "Integrate route meta fields with role requirements for access control",
+      "Manipulate component rendering based on user role permissions",
+      "Initialize protected routes that redirect unauthorized users",
+      "Apply conditional navigation based on authentication status and role assignments"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 12",
+        "title": "Import Vue and required composition APIs",
+        "instruction": "Import ref and computed from 'vue'.",
+        "hint": "Use the import statement to bring in the composition API functions you'll need for reactive state and computed properties.",
+        "analogousExample": "// Importing composition API functions\nimport { ref, computed } from 'vue'",
+        "seedCode": "// Import ref and computed from 'vue'",
+        "expectedOutcome": "You'll have access to Vue's composition API functions for creating reactive state and computed properties.",
+        "successCriteria": [
+          "ref and computed are imported from 'vue'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close, but make sure you're importing both ref and computed from 'vue'.",
+        "feedbackWrong": "import ref and computed from 'vue'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "ref",
+            "computed",
+            "'vue'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 12",
+        "title": "Create the main Vue component",
+        "instruction": "Create a Vue component named 'RoleBasedRouteProtection' with a setup function that returns an empty template.",
+        "hint": "Use the Vue 3 Composition API syntax with a setup function that returns an object containing a template render function.",
+        "analogousExample": "// Example Vue component structure\nconst MyComponent = {\n  setup() {\n    return () => null\n  }\n}",
+        "seedCode": "// Import ref and computed from 'vue'\n\n// Create the RoleBasedRouteProtection component here",
+        "expectedOutcome": "A Vue component named 'RoleBasedRouteProtection' is created with a setup function that returns an empty template.",
+        "successCriteria": [
+          "The component is named 'RoleBasedRouteProtection' and has a setup function that returns a template render function."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure the component is named 'RoleBasedRouteProtection' and has a setup function that returns a template render function.",
+        "feedbackWrong": "The component structure isn't quite right. Check that you've named it 'RoleBasedRouteProtection' and used the Vue 3 Composition API setup function.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "RoleBasedRouteProtection",
+            "setup",
+            "return",
+            "()"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 12",
+        "title": "Initialize user role state",
+        "instruction": "Inside your RoleBasedRouteProtection component, use ref to create a reactive state variable called userRole with an initial value of 'guest'.",
+        "hint": "Remember to call ref() with the initial value and assign it to a constant variable.",
+        "analogousExample": "// Similar: creating reactive state for a user\nconst username = ref('anonymous');",
+        "seedCode": "// Import ref and computed from 'vue'\n\n// Create the RoleBasedRouteProtection component here\nconst RoleBasedRouteProtection = {\n  setup() {\n    // Initialize userRole state here\n    \n    return {\n      // Expose reactive state to template\n    }\n  }\n}",
+        "expectedOutcome": "You'll have a userRole reactive state variable initialized with 'guest' that can be used to track the current user's role.",
+        "successCriteria": [
+          "The component contains a userRole state variable created with ref() and initialized to 'guest'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're using ref() to create the reactive state and initializing it with the string 'guest'.",
+        "feedbackWrong": "We need to create a reactive state variable called userRole using ref() with an initial value of 'guest'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "userRole",
+            "ref",
+            "'guest'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 12",
+        "title": "Define available routes with required roles",
+        "instruction": "Inside the setup function, create a constant named 'routes' that is an array of route objects. Each object should have 'name', 'path', and 'requiredRole' properties.",
+        "hint": "Define the routes array directly in the setup function. Use descriptive names and paths, and assign roles like 'admin', 'user', or 'guest' to requiredRole.",
+        "analogousExample": "// Example: defining a routes array\nconst routes = [\n  { name: 'Home', path: '/', requiredRole: 'guest' },\n  { name: 'Dashboard', path: '/dashboard', requiredRole: 'user' },\n  { name: 'AdminPanel', path: '/admin', requiredRole: 'admin' }\n];",
+        "seedCode": "// Import ref and computed from 'vue'\n\n// Create the RoleBasedRouteProtection component here\nconst RoleBasedRouteProtection = {\n  setup() {\n    // Initialize userRole state here\n    \n    // Define available routes with required roles here\n    \n    return {\n      // Expose reactive state to template\n    }\n  }\n}",
+        "expectedOutcome": "A routes array is defined inside the setup function, containing at least three route objects with name, path, and requiredRole properties.",
+        "successCriteria": [
+          "The routes constant is defined as an array of objects, each with name, path, and requiredRole properties."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure routes is an array of objects, and each object has name, path, and requiredRole properties.",
+        "feedbackWrong": "The routes array is not correctly defined. Ensure it's an array of objects with name, path, and requiredRole properties.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "routes",
+            "name",
+            "path",
+            "requiredRole"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 12",
+        "title": "Create computed property for accessible routes",
+        "instruction": "Inside the setup function, create a computed property named 'accessibleRoutes' that filters the 'routes' array to only include routes where the current user's role matches the route's required role.",
+        "hint": "Use the computed function imported earlier. Filter the routes array based on whether the userRole is included in the route's requiredRoles array.",
+        "analogousExample": "// Example: computed property that filters an array\nconst accessibleItems = computed(() => {\n  return items.filter(item => item.requiredRole === currentRole);\n});",
+        "seedCode": "// Import ref and computed from 'vue'\nimport { ref, computed } from 'vue';\n\n// Create the RoleBasedRouteProtection component here\nconst RoleBasedRouteProtection = {\n  setup() {\n    // Initialize userRole state here\n    const userRole = ref('guest');\n    \n    // Define available routes with required roles here\n    const routes = [\n      { name: 'Home', path: '/', requiredRoles: ['guest', 'user', 'admin'] },\n      { name: 'Dashboard', path: '/dashboard', requiredRoles: ['user', 'admin'] },\n      { name: 'Admin', path: '/admin', requiredRoles: ['admin'] }\n    ];\n    \n    // Create computed property for accessible routes here\n    \n    return {\n      // Expose reactive state to template\n    }\n  }\n}",
+        "expectedOutcome": "A computed property named 'accessibleRoutes' is created that dynamically filters the routes array based on the current userRole value.",
+        "successCriteria": [
+          "The computed property 'accessibleRoutes' is defined inside setup() and returns a filtered array of routes accessible to the current userRole."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your computed property correctly filters the routes array. Check that you're comparing userRole with the requiredRoles array.",
+        "feedbackWrong": "The computed property isn't filtering routes correctly. Remember to use the computed function and filter the routes array based on whether userRole is included in each route's requiredRoles.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "accessibleRoutes",
+            "computed",
+            "filter",
+            "userRole",
+            "requiredRoles"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 12",
+        "title": "Create role change handler",
+        "instruction": "Inside the setup function, create a function named changeRole that takes a newRole parameter and updates the userRole ref with that value.",
+        "hint": "Define a regular JavaScript function that sets userRole.value to the provided newRole.",
+        "analogousExample": "// Example: a function that updates a ref\nfunction updateName(newName) {\n  name.value = newName;\n}",
+        "seedCode": "// Import ref and computed from 'vue'\nimport { ref, computed } from 'vue';\n\n// Create the RoleBasedRouteProtection component here\nconst RoleBasedRouteProtection = {\n  setup() {\n    // Initialize userRole state here\n    const userRole = ref('guest');\n    \n    // Define available routes with required roles here\n    const routes = [\n      { name: 'Home', path: '/', requiredRoles: ['guest', 'user', 'admin'] },\n      { name: 'Dashboard', path: '/dashboard', requiredRoles: ['user', 'admin'] },\n      { name: 'Admin', path: '/admin', requiredRoles: ['admin'] }\n    ];\n    \n    // Create computed property for accessible routes here\n    \n    // Create role change handler here\n    \n    return {\n      // Expose reactive state to template\n    }\n  }\n}",
+        "expectedOutcome": "A changeRole function is defined that can update the userRole state when called.",
+        "successCriteria": [
+          "The changeRole function is defined inside setup, takes a newRole parameter, and sets userRole.value to newRole."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure your changeRole function takes a parameter and updates userRole.value with it.",
+        "feedbackWrong": "The changeRole function isn't defined correctly. It should take a newRole parameter and update userRole.value with that value.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "changeRole",
+            "newRole",
+            "userRole.value"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 12",
+        "title": "Add role selection controls",
+        "instruction": "In the component's return object, add a template section with a select dropdown that allows the user to switch between 'guest', 'user', and 'admin' roles. The dropdown should be bound to the userRole state using v-model.",
+        "hint": "Add a <select> element with <option> tags for each role value. Use v-model to bind the select to userRole.",
+        "analogousExample": "// Similar: a dropdown bound to a reactive state\n<select v-model=\"selectedOption\">\n  <option value=\"option1\">Option 1</option>\n  <option value=\"option2\">Option 2</option>\n</select>",
+        "seedCode": "// Import ref and computed from 'vue'\nimport { ref, computed } from 'vue';\n\n// Create the RoleBasedRouteProtection component here\nconst RoleBasedRouteProtection = {\n  setup() {\n    // Initialize userRole state here\n    const userRole = ref('guest');\n    \n    // Define available routes with required roles here\n    const routes = [\n      { name: 'Home', path: '/', requiredRoles: ['guest', 'user', 'admin'] },\n      { name: 'Dashboard', path: '/dashboard', requiredRoles: ['user', 'admin'] },\n      { name: 'Admin', path: '/admin', requiredRoles: ['admin'] }\n    ];\n    \n    // Create computed property for accessible routes here\n    \n    // Create role change handler here\n    \n    return {\n      // Expose reactive state to template\n    }\n  }\n}",
+        "expectedOutcome": "The component will have a dropdown UI element that allows users to select their role, with the selection bound to the userRole reactive state.",
+        "successCriteria": [
+          "A select dropdown with three options ('guest', 'user', 'admin') is present in the template and bound to userRole using v-model."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added some UI elements, but make sure you have a select dropdown with all three role options and it's properly bound to userRole using v-model.",
+        "feedbackWrong": "The role selection controls are missing or incomplete. Add a select dropdown with options for 'guest', 'user', and 'admin' roles, bound to userRole with v-model.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<select",
+            "v-model=\"userRole\"",
+            "<option",
+            "guest",
+            "user",
+            "admin"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 12",
+        "title": "Display current role",
+        "instruction": "In the component's return object, expose the userRole state so it can be displayed in the template.",
+        "hint": "Add userRole to the return object so it becomes reactive in the template.",
+        "analogousExample": "// Exposing reactive state\nreturn {\n  count,\n  message\n}",
+        "seedCode": "// Import ref and computed from 'vue'\nimport { ref, computed } from 'vue';\n\n// Create the RoleBasedRouteProtection component here\nconst RoleBasedRouteProtection = {\n  setup() {\n    // Initialize userRole state here\n    const userRole = ref('guest');\n    \n    // Define available routes with required roles here\n    const routes = [\n      { name: 'Home', path: '/', requiredRoles: ['guest', 'user', 'admin'] },\n      { name: 'Dashboard', path: '/dashboard', requiredRoles: ['user', 'admin'] },\n      { name: 'Admin', path: '/admin', requiredRoles: ['admin'] }\n    ];\n    \n    // Create computed property for accessible routes here\n    \n    // Create role change handler here\n    \n    return {\n      // Expose reactive state to template\n      \n    }\n  }\n}",
+        "expectedOutcome": "The userRole state will be available in the template for display.",
+        "successCriteria": [
+          "The return object includes userRole as a property."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure userRole is included in the return object so it's accessible in the template.",
+        "feedbackWrong": "The userRole state needs to be exposed in the return object. Add userRole as a property in the return statement.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "userRole"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 12",
+        "title": "Create accessible routes list",
+        "instruction": "Inside the component's template, add an unordered list that uses v-for to render each route from the accessibleRoutes computed property, displaying the route name.",
+        "hint": "Use <ul> with <li> elements inside. The v-for directive should iterate over accessibleRoutes and display each route's name property.",
+        "analogousExample": "// Example: rendering a list of items\n<ul>\n  <li v-for=\"item in items\" :key=\"item.id\">{{ item.name }}</li>\n</ul>",
+        "seedCode": "// Import ref and computed from 'vue'\nimport { ref, computed } from 'vue';\n\n// Create the RoleBasedRouteProtection component here\nconst RoleBasedRouteProtection = {\n  setup() {\n    // Initialize userRole state here\n    const userRole = ref('guest');\n    \n    // Define available routes with required roles here\n    const routes = [\n      { name: 'Home', path: '/', requiredRoles: ['guest', 'user', 'admin'] },\n      { name: 'Dashboard', path: '/dashboard', requiredRoles: ['user', 'admin'] },\n      { name: 'Admin', path: '/admin', requiredRoles: ['admin'] }\n    ];\n    \n    // Create computed property for accessible routes here\n    const accessibleRoutes = computed(() => {\n      return routes.filter(route => route.requiredRoles.includes(userRole.value));\n    });\n    \n    // Create role change handler here\n    const changeRole = (newRole) => {\n      userRole.value = newRole;\n    };\n    \n    return {\n      // Expose reactive state to template\n      userRole,\n      accessibleRoutes,\n      changeRole\n    }\n  },\n  template: `\n    <div>\n      <h2>Role-Based Route Protection</h2>\n      <div>\n        <label>Current Role:</label>\n        <span>{{ userRole }}</span>\n      </div>\n      <div>\n        <button @click=\"changeRole('guest')\">Guest</button>\n        <button @click=\"changeRole('user')\">User</button>\n        <button @click=\"changeRole('admin')\">Admin</button>\n      </div>\n      <!-- Add accessible routes list here -->\n    </div>\n  `\n}",
+        "expectedOutcome": "The UI will display a bulleted list showing the names of routes accessible to the current user role.",
+        "successCriteria": [
+          "An unordered list (<ul>) with list items (<li>) uses v-for to iterate over accessibleRoutes and displays each route's name."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure you're using v-for to iterate over accessibleRoutes and displaying the route names inside list items.",
+        "feedbackWrong": "The list isn't displaying correctly. Check that you're using <ul> and <li> elements with v-for to render accessibleRoutes.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<ul>",
+            "<li>",
+            "v-for",
+            "accessibleRoutes",
+            "{{",
+            "name"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 12",
+        "title": "Add visual indicators for route access",
+        "instruction": "In the template, add a list that shows all routes with visual styling to distinguish accessible routes (green) from restricted routes (red). Use the accessibleRoutes computed property to conditionally apply a CSS class.",
+        "hint": "Use v-for to iterate through the routes array. For each route, check if it's in accessibleRoutes to determine which CSS class to apply.",
+        "analogousExample": "// Example: conditional styling based on state\n<div v-for=\"item in items\" :key=\"item.id\" :class=\"{ 'accessible': isAccessible(item), 'restricted': !isAccessible(item) }\">\n  {{ item.name }}\n</div>",
+        "seedCode": "// Import ref and computed from 'vue'\nimport { ref, computed } from 'vue';\n\n// Create the RoleBasedRouteProtection component here\nconst RoleBasedRouteProtection = {\n  setup() {\n    // Initialize userRole state here\n    const userRole = ref('guest');\n    \n    // Define available routes with required roles here\n    const routes = [\n      { name: 'Home', path: '/', requiredRoles: ['guest', 'user', 'admin'] },\n      { name: 'Dashboard', path: '/dashboard', requiredRoles: ['user', 'admin'] },\n      { name: 'Admin', path: '/admin', requiredRoles: ['admin'] }\n    ];\n    \n    // Create computed property for accessible routes here\n    const accessibleRoutes = computed(() => {\n      return routes.filter(route => route.requiredRoles.includes(userRole.value));\n    });\n    \n    // Create role change handler here\n    const changeRole = (newRole) => {\n      userRole.value = newRole;\n    };\n    \n    return {\n      // Expose reactive state to template\n      userRole,\n      accessibleRoutes,\n      changeRole,\n      routes\n    }\n  },\n  template: `\n    <div>\n      <h2>Role-Based Route Protection</h2>\n      <div>\n        <label>Current Role:</label>\n        <span>{{ userRole }}</span>\n      </div>\n      <div>\n        <button @click=\"changeRole('guest')\">Guest</button>\n        <button @click=\"changeRole('user')\">User</button>\n        <button @click=\"changeRole('admin')\">Admin</button>\n      </div>\n      <!-- Add accessible routes list here -->\n      <div>\n        <h3>All Routes:</h3>\n        <ul>\n          <li v-for=\"route in routes\" :key=\"route.name\" :class=\"{ 'accessible': accessibleRoutes.some(r => r.name === route.name), 'restricted': !accessibleRoutes.some(r => r.name === route.name) }\">\n            {{ route.name }}\n          </li>\n        </ul>\n      </div>\n    </div>\n  `\n}",
+        "expectedOutcome": "The UI now displays all routes with visual styling: accessible routes appear in green, restricted routes in red.",
+        "successCriteria": [
+          "A list of all routes is displayed with conditional CSS classes applied based on whether each route is in accessibleRoutes."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added the list, but the conditional styling might not be working correctly. Make sure you're checking if each route is in accessibleRoutes.",
+        "feedbackWrong": "The list or conditional styling is missing. Remember to use v-for to iterate through routes and apply CSS classes conditionally.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "v-for",
+            "routes",
+            "accessibleRoutes",
+            ":class",
+            "accessible",
+            "restricted"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 12",
+        "title": "Create route protection simulation",
+        "instruction": "Add a button that simulates navigating to a protected route and shows an access denied message if the user lacks permission. Place it after the role selection buttons in your template.",
+        "hint": "You'll need to add a new reactive state for the access denied message, a function to check access, and update the template with a button and conditional message display.",
+        "analogousExample": "// Example of route protection simulation\nconst accessDeniedMessage = ref('');\nconst simulateNavigation = (routeName) => {\n  const route = routes.find(r => r.name === routeName);\n  if (route && route.requiredRoles.includes(userRole.value)) {\n    accessDeniedMessage.value = '';\n  } else {\n    accessDeniedMessage.value = `Access denied to ${routeName}`;\n  }\n};",
+        "seedCode": "// Import ref and computed from 'vue'\nimport { ref, computed } from 'vue';\n\n// Create the RoleBasedRouteProtection component here\nconst RoleBasedRouteProtection = {\n  setup() {\n    // Initialize userRole state here\n    const userRole = ref('guest');\n    \n    // Define available routes with required roles here\n    const routes = [\n      { name: 'Home', path: '/', requiredRoles: ['guest', 'user', 'admin'] },\n      { name: 'Dashboard', path: '/dashboard', requiredRoles: ['user', 'admin'] },\n      { name: 'Admin', path: '/admin', requiredRoles: ['admin'] }\n    ];\n    \n    // Create computed property for accessible routes here\n    const accessibleRoutes = computed(() => {\n      return routes.filter(route => route.requiredRoles.includes(userRole.value));\n    });\n    \n    // Create role change handler here\n    const changeRole = (newRole) => {\n      userRole.value = newRole;\n    };\n    \n    // Add route protection simulation here\n    \n    return {\n      // Expose reactive state to template\n      userRole,\n      accessibleRoutes,\n      changeRole,\n      routes\n    }\n  },\n  template: `\n    <div>\n      <h2>Role-Based Route Protection</h2>\n      <div>\n        <label>Current Role:</label>\n        <span>{{ userRole }}</span>\n      </div>\n      <div>\n        <button @click=\"changeRole('guest')\">Guest</button>\n        <button @click=\"changeRole('user')\">User</button>\n        <button @click=\"changeRole('admin')\">Admin</button>\n      </div>\n      <!-- Add route protection simulation button and message here -->\n      <div>\n        <h3>All Routes:</h3>\n        <ul>\n          <li v-for=\"route in routes\" :key=\"route.name\" :class=\"{ 'accessible': accessibleRoutes.some(r => r.name === route.name), 'restricted': !accessibleRoutes.some(r => r.name === route.name) }\">\n            {{ route.name }}\n          </li>\n        </ul>\n      </div>\n    </div>\n  `\n}",
+        "expectedOutcome": "The component will have a new button to simulate navigation to the Admin route, and an access denied message that appears when the user lacks permission.",
+        "successCriteria": [
+          "A button exists that simulates navigation to the Admin route, and an access denied message appears conditionally based on the user's role."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you've added both the simulation button and the conditional message display.",
+        "feedbackWrong": "The route protection simulation isn't complete. Check that you've added the reactive state, simulation function, button, and conditional message display.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "accessDeniedMessage",
+            "ref",
+            "simulateNavigation",
+            "button",
+            "v-if",
+            "Admin"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step12",
+        "type": "question",
+        "phase": "Step 12 of 12",
+        "title": "Test the complete role-based protection",
+        "instruction": "Add a final verification section that demonstrates the role-based protection is working by showing a summary message based on the current role.",
+        "hint": "You can add a new <div> with a dynamic message that changes when the userRole changes. Use the userRole value to display different text for each role.",
+        "analogousExample": "// Example: dynamic message based on state\nconst message = computed(() => {\n  return `Current role is ${userRole.value}`;\n});",
+        "seedCode": "// Import ref and computed from 'vue'\nimport { ref, computed } from 'vue';\n\n// Create the RoleBasedRouteProtection component here\nconst RoleBasedRouteProtection = {\n  setup() {\n    // Initialize userRole state here\n    const userRole = ref('guest');\n    \n    // Define available routes with required roles here\n    const routes = [\n      { name: 'Home', path: '/', requiredRoles: ['guest', 'user', 'admin'] },\n      { name: 'Dashboard', path: '/dashboard', requiredRoles: ['user', 'admin'] },\n      { name: 'Admin', path: '/admin', requiredRoles: ['admin'] }\n    ];\n    \n    // Create computed property for accessible routes here\n    const accessibleRoutes = computed(() => {\n      return routes.filter(route => route.requiredRoles.includes(userRole.value));\n    });\n    \n    // Create role change handler here\n    const changeRole = (newRole) => {\n      userRole.value = newRole;\n    };\n    \n    // Add route protection simulation here\n    \n    return {\n      // Expose reactive state to template\n      userRole,\n      accessibleRoutes,\n      changeRole,\n      routes\n    }\n  },\n  template: `\n    <div>\n      <h2>Role-Based Route Protection</h2>\n      <div>\n        <label>Current Role:</label>\n        <span>{{ userRole }}</span>\n      </div>\n      <div>\n        <button @click=\"changeRole('guest')\">Guest</button>\n        <button @click=\"changeRole('user')\">User</button>\n        <button @click=\"changeRole('admin')\">Admin</button>\n      </div>\n      <!-- Add route protection simulation button and message here -->\n      <div>\n        <h3>All Routes:</h3>\n        <ul>\n          <li v-for=\"route in routes\" :key=\"route.name\" :class=\"{ 'accessible': accessibleRoutes.some(r => r.name === route.name), 'restricted': !accessibleRoutes.some(r => r.name === route.name) }\">\n            {{ route.name }}\n          </li>\n        </ul>\n      </div>\n      <!-- Add final verification section here -->\n    </div>\n  `\n}",
+        "expectedOutcome": "A new section appears below the routes list showing a verification message that changes when you switch roles (e.g., 'Guest can access 1 route(s)', 'User can access 2 route(s)', 'Admin can access 3 route(s)').",
+        "successCriteria": [
+          "A new <div> is added to the template with a verification message",
+          "The message dynamically updates based on userRole",
+          "The message shows the number of accessible routes for the current role"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You added a verification section, but it doesn't fully demonstrate the role-based protection. Make sure the message dynamically updates with the current role and shows the number of accessible routes.",
+        "feedbackWrong": "The verification section is missing or doesn't work correctly. Add a new <div> with a message that changes based on the current role and shows how many routes are accessible.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<div>",
+            "{{",
+            "userRole",
+            "accessibleRoutes",
+            "length"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import Vue and required composition APIs",
+        "id": "step1"
+      },
+      {
+        "label": "Create the main Vue component",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize user role state",
+        "id": "step3"
+      },
+      {
+        "label": "Define available routes with required roles",
+        "id": "step4"
+      },
+      {
+        "label": "Create computed property for accessible routes",
+        "id": "step5"
+      },
+      {
+        "label": "Create role change handler",
+        "id": "step6"
+      },
+      {
+        "label": "Add role selection controls",
+        "id": "step7"
+      },
+      {
+        "label": "Display current role",
+        "id": "step8"
+      },
+      {
+        "label": "Create accessible routes list",
+        "id": "step9"
+      },
+      {
+        "label": "Add visual indicators for route access",
+        "id": "step10"
+      },
+      {
+        "label": "Create route protection simulation",
+        "id": "step11"
+      },
+      {
+        "label": "Test the complete role-based protection",
+        "id": "step12"
+      }
+    ]
+  },
+  "source": "content"
+}

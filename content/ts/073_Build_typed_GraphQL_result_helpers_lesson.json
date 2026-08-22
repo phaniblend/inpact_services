@@ -1,0 +1,374 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-ts-73",
+    "track": "ts",
+    "lessonNum": 73,
+    "title": "Build typed GraphQL result helpers",
+    "shortName": "P73",
+    "intro": {
+      "tag": "LESSON #73",
+      "title": "Build typed GraphQL result helpers",
+      "body": "In this lesson, you will build a set of helper functions to safely handle and type the results from a GraphQL API call. You'll learn how to use TypeScript's generic types and type guards to create functions that check if a result is an error or contains valid data. The main technologies involved are TypeScript's type system and basic function definitions. By the end, you'll have reusable helpers that make your GraphQL integration more robust and type-safe.",
+      "usecase": "Typed GraphQL result helpers are essential for building robust data-driven frontends, such as admin dashboards and e-commerce platforms. For example, a dashboard displaying user analytics or a product catalog with filters relies on fetching complex, nested data from a GraphQL API. These helpers ensure that the data structure returned from the API matches the TypeScript types used in UI components, preventing runtime errors in tables, charts, or detail panels. By implementing them, developers can confidently manage data fetching in real-world applications, improving code reliability and developer experience during feature development and maintenance."
+    },
+    "objectives": [
+      "Construct a TypeScript interface to define the shape of a typed GraphQL query result.",
+      "Implement a generic helper function that safely extracts data from a GraphQL response.",
+      "Apply type guards to validate the structure of a GraphQL result at runtime.",
+      "Configure a type-safe error handler for GraphQL network or data inconsistencies.",
+      "Integrate the typed helper into a mock data fetching function to enforce type constraints.",
+      "Manipulate nested GraphQL data structures using typed accessor methods.",
+      "Initialize a reusable utility module that exports the typed GraphQL helpers."
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 10",
+        "title": "Import TypeScript types and GraphQL result utilities",
+        "instruction": "Import the necessary TypeScript types and GraphQL result utilities that will be used throughout the lesson. Add the imports at the top of your file.",
+        "hint": "You'll need to import types for GraphQL operations and result handling utilities. Start with the basic imports for typed GraphQL helpers.",
+        "analogousExample": "// Example: importing TypeScript types and utilities\nimport { GraphQLResult, GraphQLError } from 'graphql';\nimport { TypedDocumentNode } from '@graphql-typed-document-node/core';",
+        "seedCode": "// Add your imports here",
+        "expectedOutcome": "The file will have the foundational imports needed for typed GraphQL operations.",
+        "successCriteria": [
+          "GraphQLResult, GraphQLError, and TypedDocumentNode are imported from their respective packages."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you've imported all the required types: GraphQLResult, GraphQLError, and TypedDocumentNode.",
+        "feedbackWrong": "The imports don't match what's needed. Check that you're importing GraphQLResult and GraphQLError from 'graphql', and TypedDocumentNode from '@graphql-typed-document-node/core'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "GraphQLResult",
+            "GraphQLError",
+            "TypedDocumentNode",
+            "from"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 10",
+        "title": "Define the GraphQL query result interface",
+        "instruction": "Create an interface named 'GraphQLResult' that defines a strongly-typed structure for GraphQL query responses. The interface should have a 'data' property of type 'any' and an optional 'errors' property that is an array of objects with a 'message' string property.",
+        "hint": "Use the 'interface' keyword followed by the interface name and define the properties with their types. Remember to mark 'errors' as optional with '?'.",
+        "analogousExample": "// Example: defining a typed interface\ninterface ApiResponse {\n  data: any;\n  errors?: { message: string }[];\n}",
+        "seedCode": "// Add your imports here\n\n// Create your GraphQLResult interface below",
+        "expectedOutcome": "You will have a properly typed TypeScript interface that represents the structure of GraphQL query results.",
+        "successCriteria": [
+          "The GraphQLResult interface is defined with 'data: any' and optional 'errors?: { message: string }[]' properties."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure your interface has both the 'data' property (type 'any') and an optional 'errors' property (array of objects with 'message' string).",
+        "feedbackWrong": "The interface definition doesn't match the required structure. Review the instruction and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "interface",
+            "GraphQLResult",
+            "data",
+            "any",
+            "errors",
+            "message",
+            "string"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 10",
+        "title": "Define the GraphQL mutation result interface",
+        "instruction": "Create an interface named GraphQLMutationResult that defines the structure of a GraphQL mutation response with proper TypeScript typing.",
+        "hint": "Think about what fields a GraphQL mutation response typically contains - like success status, error messages, and returned data.",
+        "analogousExample": "// Example: Another typed interface\ninterface ApiResponse {\n  success: boolean;\n  data?: any;\n  errors?: string[];\n}",
+        "seedCode": "// Add your imports here\n\n// Create your GraphQLResult interface below\n\n// Create your GraphQLMutationResult interface below",
+        "expectedOutcome": "You should have a new interface named GraphQLMutationResult that defines the shape of mutation responses.",
+        "successCriteria": [
+          "The GraphQLMutationResult interface is defined with proper TypeScript type annotations."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your interface includes the essential fields for mutation responses.",
+        "feedbackWrong": "Try again. Create an interface named GraphQLMutationResult with appropriate TypeScript types.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "interface",
+            "GraphQLMutationResult",
+            "{",
+            "}"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 10",
+        "title": "Create a type for GraphQL operation status",
+        "instruction": "Create a TypeScript union type named 'GraphQLOperationStatus' that represents the possible statuses of a GraphQL operation: 'loading', 'success', and 'error'.",
+        "hint": "Use the 'type' keyword followed by the type name and the union operator '|' to combine the string literal values.",
+        "analogousExample": "// Example: a union type for different states\ntype RequestState = 'idle' | 'pending' | 'fulfilled' | 'rejected';",
+        "seedCode": "// Add your imports here\n\n// Create your GraphQLResult interface below\n\n// Create your GraphQLMutationResult interface below\n\n// Create your GraphQLOperationStatus type below",
+        "expectedOutcome": "A union type named GraphQLOperationStatus is defined with the three string literal values.",
+        "successCriteria": [
+          "The GraphQLOperationStatus type is defined as a union of 'loading', 'success', and 'error'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure GraphQLOperationStatus includes all three status values: 'loading', 'success', and 'error'.",
+        "feedbackWrong": "The GraphQLOperationStatus type is not correctly defined. It should be a union type with the three string literal values.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "type",
+            "GraphQLOperationStatus",
+            "'loading'",
+            "'success'",
+            "'error'",
+            "|"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 10",
+        "title": "Define the base GraphQL result type",
+        "instruction": "Create a generic TypeScript type called GraphQLResult<T> that includes three properties: data (of type T | null), errors (string array), and status (using the GraphQLOperationStatus type you created earlier).",
+        "hint": "Use the 'type' keyword with generic syntax <T>. The status property should use the GraphQLOperationStatus type you defined in step 4.",
+        "analogousExample": "// Similar: generic type for API responses\ntype ApiResponse<T> = {\n  data: T | null;\n  error?: string;\n  status: 'loading' | 'success' | 'error';\n};",
+        "seedCode": "// Add your imports here\n\n// Create your GraphQLResult interface below\n\n// Create your GraphQLMutationResult interface below\n\n// Create your GraphQLOperationStatus type below\n\n// Create your GraphQLResult<T> type below",
+        "expectedOutcome": "A generic GraphQLResult<T> type that can be used as the foundation for all GraphQL operation results in your application.",
+        "successCriteria": [
+          "The GraphQLResult<T> type is defined with generic parameter T, and includes data: T | null, errors: string[], and status: GraphQLOperationStatus properties."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your GraphQLResult type includes all three required properties with the correct types: data (T | null), errors (string[]), and status (GraphQLOperationStatus).",
+        "feedbackWrong": "The GraphQLResult type doesn't match the requirements. It should be a generic type with data (T | null), errors (string[]), and status (GraphQLOperationStatus) properties.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "type",
+            "GraphQLResult",
+            "<T>",
+            "data:",
+            "T | null",
+            "errors:",
+            "string[]",
+            "status:",
+            "GraphQLOperationStatus"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 10",
+        "title": "Create the typed query result helper",
+        "instruction": "Create a function named createQueryResult that takes a parameter data of type GraphQLQueryResult and returns a GraphQLResult<GraphQLQueryResult>.",
+        "hint": "Define a function with the specified name, parameter with type annotation, and return type annotation. Use the GraphQLResult generic type you created earlier.",
+        "analogousExample": "// Example: a typed helper function\nfunction createResponse<T>(value: T): Response<T> {\n  return { data: value, status: 'success' };\n}",
+        "seedCode": "// Add your imports here\n\n// Create your GraphQLQueryResult interface below\n\n// Create your GraphQLMutationResult interface below\n\n// Create your GraphQLOperationStatus type below\n\n// Create your GraphQLResult<T> type below\n\n// Create your createQueryResult function below",
+        "expectedOutcome": "A typed helper function that wraps query data in the GraphQLResult structure.",
+        "successCriteria": [
+          "The createQueryResult function is defined with proper TypeScript types and returns a GraphQLResult<GraphQLQueryResult>."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure your function has the correct name, parameter type, and return type.",
+        "feedbackWrong": "The function doesn't match the requirements. Check the name, parameter type, and return type.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "createQueryResult",
+            "data:",
+            "GraphQLQueryResult",
+            "GraphQLResult<GraphQLQueryResult>",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 10",
+        "title": "Create the typed mutation result helper",
+        "instruction": "Create a function named createMutationResult that takes mutation data as a parameter and returns a typed GraphQL mutation result object.",
+        "hint": "Define a function that accepts mutation data and returns an object matching the GraphQLMutationResult interface.",
+        "analogousExample": "// Similar: a function that returns a typed object\nfunction createUser(name: string) {\n  return { name, id: Date.now() };\n}",
+        "seedCode": "// Add your imports here\n\n// Create your GraphQLQueryResult interface below\n\n// Create your GraphQLMutationResult interface below\n\n// Create your GraphQLOperationStatus type below\n\n// Create your GraphQLResult<T> type below\n\n// Create your createQueryResult function below\n\n// Create your createMutationResult function below",
+        "expectedOutcome": "A createMutationResult function is implemented that returns a properly typed GraphQL mutation result.",
+        "successCriteria": [
+          "The createMutationResult function is defined, accepts mutation data, and returns an object with the correct GraphQLMutationResult type."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the function, but make sure it returns a GraphQLMutationResult object with the required properties.",
+        "feedbackWrong": "The function isn't properly implemented. Check that it returns a typed mutation result object.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "createMutationResult",
+            "function",
+            "return",
+            "GraphQLMutationResult"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 10",
+        "title": "Add error handling to the query helper",
+        "instruction": "Update the createQueryResult function to include error handling by adding an optional error parameter and returning appropriate error status in the GraphQLResult.",
+        "hint": "Add an optional error parameter of type string | undefined to the function signature, then include it in the returned GraphQLResult object.",
+        "analogousExample": "// Similar: function with error handling\nfunction fetchData<T>(data: T, error?: string): Result<T> {\n  return {\n    data,\n    error,\n    status: error ? 'error' : 'success'\n  };\n}",
+        "seedCode": "// Add your imports here\n\n// Create your GraphQLQueryResult interface below\n\n// Create your GraphQLMutationResult interface below\n\n// Create your GraphQLOperationStatus type below\n\n// Create your GraphQLResult<T> type below\n\n// Create your createQueryResult function below\n\n// Create your createMutationResult function below",
+        "expectedOutcome": "The createQueryResult function now accepts an optional error parameter and returns a GraphQLResult with proper error status.",
+        "successCriteria": [
+          "The createQueryResult function signature includes an optional error parameter and returns a GraphQLResult object containing error and status fields."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure the error parameter is optional and the returned object includes both error and status fields.",
+        "feedbackWrong": "The function doesn't yet handle errors properly. Review the expected signature and return type.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "createQueryResult",
+            "error?",
+            "GraphQLResult",
+            "status"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 10",
+        "title": "Add error handling to the mutation helper",
+        "instruction": "Update the createMutationResult function to include error handling by adding an error property to the returned object when an error occurs.",
+        "hint": "Add a conditional check inside the function to return an object with status 'error' and the error message.",
+        "analogousExample": "// Similar: function with error handling\nfunction processData(data: string) {\n  if (!data) {\n    return { success: false, error: 'No data provided' };\n  }\n  return { success: true, result: data.toUpperCase() };\n}",
+        "seedCode": "// Add your imports here\n\n// Create your GraphQLQueryResult interface below\n\n// Create your GraphQLMutationResult interface below\n\n// Create your GraphQLOperationStatus type below\n\n// Create your GraphQLResult<T> type below\n\n// Create your createQueryResult function below\n\n// Create your createMutationResult function below\n\nfunction createMutationResult<T>(data: T | null, error?: string): GraphQLResult<T> {\n  // Add error handling logic here\n  return { status: 'success', data: data as T };\n}",
+        "expectedOutcome": "The createMutationResult function will now properly handle error cases by returning an object with status 'error' and the error message when provided.",
+        "successCriteria": [
+          "The createMutationResult function returns an object with status 'error' and error property when an error string is provided."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure the function returns the correct object structure when an error is present. Check that you're using the 'error' property.",
+        "feedbackWrong": "The mutation helper doesn't yet handle errors correctly. Review the function logic to ensure it returns an error object when an error string is provided.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "createMutationResult",
+            "error",
+            "status",
+            "'error'",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 10",
+        "title": "Export all helpers and types for use",
+        "instruction": "Export all the interfaces, types, and helper functions you've created so they can be imported in other TypeScript modules.",
+        "hint": "Use the 'export' keyword before each declaration to make them available outside this file.",
+        "analogousExample": "// Exporting utilities\ninterface ApiResponse<T> {\n  data: T;\n  error?: string;\n}\n\ntype Status = 'loading' | 'success' | 'error';\n\nfunction createResponse<T>(data: T): ApiResponse<T> {\n  return { data };\n}\n\nexport interface ApiResponse<T>;\nexport type Status;\nexport { createResponse };",
+        "seedCode": "// Add your imports here\n\n// Create your GraphQLQueryResult interface below\n\n// Create your GraphQLMutationResult interface below\n\n// Create your GraphQLOperationStatus type below\n\n// Create your GraphQLResult<T> type below\n\n// Create your createQueryResult function below\n\n// Create your createMutationResult function below\n\nfunction createMutationResult<T>(data: T | null, error?: string): GraphQLResult<T> {\n  // Add error handling logic here\n  return { status: 'success', data: data as T };\n}\n\n// Export all helpers and types here",
+        "expectedOutcome": "All GraphQL helper types and functions are exported and ready to be imported in other modules.",
+        "successCriteria": [
+          "GraphQLQueryResult, GraphQLMutationResult, GraphQLOperationStatus, GraphQLResult<T>, createQueryResult, and createMutationResult are all exported."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've exported some items, but not all required helpers and types. Make sure to export GraphQLQueryResult, GraphQLMutationResult, GraphQLOperationStatus, GraphQLResult<T>, createQueryResult, and createMutationResult.",
+        "feedbackWrong": "The exports are missing or incorrect. Use the 'export' keyword before each interface, type, and function declaration to make them available for import elsewhere.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "export",
+            "GraphQLQueryResult",
+            "GraphQLMutationResult",
+            "GraphQLOperationStatus",
+            "GraphQLResult",
+            "createQueryResult",
+            "createMutationResult"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import TypeScript types and GraphQL result utilities",
+        "id": "step1"
+      },
+      {
+        "label": "Define the GraphQL query result interface",
+        "id": "step2"
+      },
+      {
+        "label": "Define the GraphQL mutation result interface",
+        "id": "step3"
+      },
+      {
+        "label": "Create a type for GraphQL operation status",
+        "id": "step4"
+      },
+      {
+        "label": "Define the base GraphQL result type",
+        "id": "step5"
+      },
+      {
+        "label": "Create the typed query result helper",
+        "id": "step6"
+      },
+      {
+        "label": "Create the typed mutation result helper",
+        "id": "step7"
+      },
+      {
+        "label": "Add error handling to the query helper",
+        "id": "step8"
+      },
+      {
+        "label": "Add error handling to the mutation helper",
+        "id": "step9"
+      },
+      {
+        "label": "Export all helpers and types for use",
+        "id": "step10"
+      }
+    ]
+  },
+  "source": "content"
+}

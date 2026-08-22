@@ -1,0 +1,350 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-node-78",
+    "track": "node",
+    "lessonNum": 78,
+    "title": "Build multi tenant context resolver middleware",
+    "shortName": "P78",
+    "intro": {
+      "tag": "LESSON #78",
+      "title": "Build multi tenant context resolver middleware",
+      "body": "In this lesson, you will build a middleware function for a Node.js application that resolves and attaches a tenant context to incoming HTTP requests, enabling multi-tenant support. You will learn the core concept of middleware by creating a function that processes requests before they reach your main route handlers. The main technologies involved are the Express.js framework and JavaScript functions for handling HTTP request and response objects. By the end, you will understand how to extract tenant information from requests and make it available throughout your application in a clean, reusable way.",
+      "usecase": "Multi-tenant context resolver middleware is essential in SaaS platforms where a single application serves multiple customers (tenants) with isolated data and configurations. For example, in a dashboard application like Salesforce or HubSpot, this middleware ensures each company sees only their own customer data, reports, and custom settings when users log in. Developers implement this pattern to securely route requests, apply tenant-specific configurations, and maintain data isolation without duplicating code. This approach allows platforms to scale efficiently while providing personalized experiences for each tenant."
+    },
+    "objectives": [
+      "Construct a middleware function that extracts tenant identifiers from incoming HTTP requests",
+      "Initialize a tenant context object with resolved tenant configuration and data",
+      "Integrate the tenant resolver middleware into an Express.js application pipeline",
+      "Manipulate request objects to attach tenant context for downstream handlers",
+      "Configure the middleware to handle missing or invalid tenant identifiers gracefully",
+      "Apply the tenant context in route handlers to demonstrate multi-tenant data isolation",
+      "Control middleware execution order to ensure tenant resolution occurs before business logic"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 10",
+        "title": "Import required Node.js modules",
+        "instruction": "Import the 'http' module for server creation and the 'url' module for parsing request URLs.",
+        "hint": "Use the require() function to import Node.js built-in modules. You'll need both modules for this middleware lesson.",
+        "analogousExample": "// Example: importing Node.js modules\nconst fs = require('fs');\nconst path = require('path');",
+        "seedCode": "// Import the required modules here",
+        "expectedOutcome": "The code will have both 'http' and 'url' modules imported using require().",
+        "successCriteria": [
+          "Both 'http' and 'url' modules are imported using require()."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but you need to import both modules. Make sure you're importing 'http' for server creation and 'url' for URL parsing.",
+        "feedbackWrong": "That's not quite right. You need to import both the 'http' and 'url' modules using require(). These are built-in Node.js modules needed for this middleware.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "require('http')",
+            "require('url')"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 10",
+        "title": "Create the multi-tenant context resolver middleware function",
+        "instruction": "Create a function called 'tenantResolver' that takes three parameters: request, response, and next callback.",
+        "hint": "Define a function with the name tenantResolver that accepts (req, res, next) as parameters.",
+        "analogousExample": "// Example: middleware function structure\nfunction exampleMiddleware(req, res, next) {\n  // middleware logic here\n}",
+        "seedCode": "// Import the required modules here\n\n// Create the tenantResolver middleware function here",
+        "expectedOutcome": "A function named tenantResolver is defined with the correct parameters.",
+        "successCriteria": [
+          "The tenantResolver function is created with req, res, and next parameters."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure the function is named exactly 'tenantResolver' and accepts all three parameters.",
+        "feedbackWrong": "The function isn't defined correctly. Check that you used the exact name 'tenantResolver' and included all three parameters.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "tenantResolver",
+            "req",
+            "res",
+            "next"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 10",
+        "title": "Extract the hostname from the incoming request",
+        "instruction": "Inside the tenantResolver middleware function, extract the 'host' header from the request object and store it in a variable called hostname.",
+        "hint": "In Node.js middleware, request headers are accessible via req.headers. Use req.headers.host to get the host header value.",
+        "analogousExample": "// Extracting a header value in middleware\nfunction extractUserAgent(req, res, next) {\n  const userAgent = req.headers['user-agent'];\n  console.log(userAgent);\n  next();\n}",
+        "seedCode": "// Import the required modules here\n\n// Create the tenantResolver middleware function here\nfunction tenantResolver(req, res, next) {\n  // Extract the host header from the request\n}",
+        "expectedOutcome": "The middleware function will have a hostname variable containing the value from the request's host header.",
+        "successCriteria": [
+          "The tenantResolver function contains a hostname variable assigned from req.headers.host."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're extracting the 'host' header specifically and storing it in a variable called hostname.",
+        "feedbackWrong": "The host header extraction is missing or incorrect. Remember to access req.headers.host and assign it to a hostname variable.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "hostname",
+            "req.headers.host",
+            "="
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 10",
+        "title": "Parse the hostname to extract the tenant identifier",
+        "instruction": "Inside the tenantResolver function, split the extracted hostname by dots and assign the first segment to a variable called tenantId.",
+        "hint": "Use the split() method on the hostname string with '.' as the separator, then access the first element of the resulting array.",
+        "analogousExample": "// Example: extracting subdomain from a hostname\nconst hostname = 'acme.example.com';\nconst parts = hostname.split('.');\nconst subdomain = parts[0]; // 'acme'",
+        "seedCode": "// Import the required modules here\n\n// Create the tenantResolver middleware function here\nfunction tenantResolver(req, res, next) {\n  // Extract the host header from the request\n  const hostname = req.headers.host;\n  // Split the hostname by dots and extract the first segment as the tenant identifier\n}",
+        "expectedOutcome": "The tenantResolver function will now have a tenantId variable containing the first part of the hostname (e.g., 'acme' from 'acme.example.com').",
+        "successCriteria": [
+          "The hostname is split using split('.') and the first segment is assigned to a variable named tenantId."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure you're splitting the hostname string and storing the first segment in a variable called tenantId.",
+        "feedbackWrong": "split the hostname by dots and extract the first segment as the tenant identifier.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "split",
+            "tenantId",
+            "hostname"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 10",
+        "title": "Validate the tenant identifier",
+        "instruction": "Inside the tenantResolver function, after extracting the tenant identifier, add validation to check if it exists and is not empty. If it's missing or empty, set it to a default value like 'default'.",
+        "hint": "You can use an if statement to check if the tenant identifier is truthy (exists and not empty). If not, assign a default string value to it.",
+        "analogousExample": "// Similar: validating a user input\nfunction validateUsername(username) {\n  if (!username) {\n    username = 'guest';\n  }\n  return username;\n}",
+        "seedCode": "// Import the required modules here\n\n// Create the tenantResolver middleware function here\nfunction tenantResolver(req, res, next) {\n  // Extract the host header from the request\n  const hostname = req.headers.host;\n  // Split the hostname by dots and extract the first segment as the tenant identifier\n  const tenantId = hostname.split('.')[0];\n  // Add validation here: if tenantId is missing or empty, set it to 'default'\n}",
+        "expectedOutcome": "The tenant identifier will be validated and assigned a default value if missing, ensuring the middleware can proceed without errors.",
+        "successCriteria": [
+          "The tenantResolver function includes validation that checks if tenantId exists and is not empty, and sets it to 'default' when invalid."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure to check both existence and non-emptiness of tenantId. Use an if statement with a logical NOT operator to handle both cases.",
+        "feedbackWrong": "The validation logic appears to be missing or incorrect. Remember to check if tenantId is falsy (undefined, null, or empty string) and assign 'default' in that case.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "if",
+            "tenantId",
+            "default"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 10",
+        "title": "Attach tenant context to the request object",
+        "instruction": "Inside the tenantResolver function, add the tenantId to the request object as a property named 'tenant'.",
+        "hint": "You can attach custom properties to the request object by assigning them directly, like req.propertyName = value.",
+        "analogousExample": "// Adding custom data to a request object\nfunction addUserToRequest(req, res, next) {\n  req.user = { id: 123, name: 'Alice' };\n  next();\n}",
+        "seedCode": "// Import the required modules here\n\n// Create the tenantResolver middleware function here\nfunction tenantResolver(req, res, next) {\n  // Extract the host header from the request\n  const hostname = req.headers.host;\n  // Split the hostname by dots and extract the first segment as the tenant identifier\n  const tenantId = hostname.split('.')[0];\n  // Add validation here: if tenantId is missing or empty, set it to 'default'\n  // Attach tenant context to the request object\n}",
+        "expectedOutcome": "The request object will have a 'tenant' property containing the tenant identifier, making it accessible to subsequent middleware or route handlers.",
+        "successCriteria": [
+          "The request object has a 'tenant' property set to the tenantId value."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're adding the tenantId to the request object as a property named 'tenant'.",
+        "feedbackWrong": "The tenant context wasn't properly attached. Remember to assign the tenantId to req.tenant.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "req.tenant",
+            "tenantId"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 10",
+        "title": "Create a basic HTTP server",
+        "instruction": "Create a basic HTTP server using the http.createServer method to test the middleware.",
+        "hint": "Use the http module's createServer method to create a server instance. You can pass your middleware as an argument to createServer.",
+        "analogousExample": "// Example: creating a basic HTTP server\nconst http = require('http');\nconst server = http.createServer((req, res) => {\n  res.end('Hello World');\n});",
+        "seedCode": "// Import the required modules here\n\n// Create the tenantResolver middleware function here\nfunction tenantResolver(req, res, next) {\n  // Extract the host header from the request\n  const hostname = req.headers.host;\n  // Split the hostname by dots and extract the first segment as the tenant identifier\n  const tenantId = hostname.split('.')[0];\n  // Add validation here: if tenantId is missing or empty, set it to 'default'\n  // Attach tenant context to the request object\n}\n\n// Create a basic HTTP server here",
+        "expectedOutcome": "A basic HTTP server instance is created using http.createServer.",
+        "successCriteria": [
+          "The server is created using http.createServer method."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're using http.createServer to create the server instance.",
+        "feedbackWrong": "The server wasn't created correctly. Remember to use http.createServer method.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "createServer",
+            "http"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 10",
+        "title": "Implement the server request handler with middleware",
+        "instruction": "Create a request handler function that calls the tenantResolver middleware before processing the request. Name this function 'requestHandler'.",
+        "hint": "Define a function that takes request and response parameters, calls tenantResolver with those parameters and a next callback, then sends a response with the tenant context.",
+        "analogousExample": "// Example: middleware integration in a request handler\nfunction requestHandler(req, res) {\n  // Call middleware first\n  someMiddleware(req, res, () => {\n    // Then process the request\n    res.end('Request processed');\n  });\n}",
+        "seedCode": "// Import the required modules here\n\n// Create the tenantResolver middleware function here\nfunction tenantResolver(req, res, next) {\n  // Extract the host header from the request\n  const hostname = req.headers.host;\n  // Split the hostname by dots and extract the first segment as the tenant identifier\n  const tenantId = hostname.split('.')[0];\n  // Add validation here: if tenantId is missing or empty, set it to 'default'\n  // Attach tenant context to the request object\n}\n\n// Create a basic HTTP server here\n\n// Create the request handler function here",
+        "expectedOutcome": "A requestHandler function is defined that integrates the tenantResolver middleware and sends a response containing the tenant context.",
+        "successCriteria": [
+          "The requestHandler function is defined, calls tenantResolver with req, res, and a next callback, and sends a response that includes the tenantId."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've defined a request handler, but make sure it calls tenantResolver with the correct parameters (req, res, next) and sends a response with the tenantId.",
+        "feedbackWrong": "The request handler is missing or doesn't properly integrate the middleware. Ensure you define a function that calls tenantResolver and sends a response.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "function requestHandler",
+            "tenantResolver",
+            "req",
+            "res",
+            "next",
+            "res.end",
+            "tenantId"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 10",
+        "title": "Add response logic that uses the tenant context",
+        "instruction": "In the request handler function, send a response that includes the tenant identifier from the request object's tenant context.",
+        "hint": "Access the tenant identifier from req.tenant and include it in the response body using res.end().",
+        "analogousExample": "// Example: sending a response with extracted data\nfunction handleRequest(req, res) {\n  const user = req.user;\n  res.end(`Hello ${user.name}`);\n}",
+        "seedCode": "// Import the required modules here\n\n// Create the tenantResolver middleware function here\nfunction tenantResolver(req, res, next) {\n  // Extract the host header from the request\n  const hostname = req.headers.host;\n  // Split the hostname by dots and extract the first segment as the tenant identifier\n  const tenantId = hostname.split('.')[0];\n  // Add validation here: if tenantId is missing or empty, set it to 'default'\n  // Attach tenant context to the request object\n}\n\n// Create a basic HTTP server here\n\n// Create the request handler function here\nfunction requestHandler(req, res) {\n  // Use the tenant context from req.tenant in the response\n}",
+        "expectedOutcome": "The request handler will respond with a message containing the tenant identifier, demonstrating how downstream handlers can access the tenant context.",
+        "successCriteria": [
+          "The request handler sends a response that includes the tenant identifier from req.tenant."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're accessing req.tenant and including it in the response body with res.end().",
+        "feedbackWrong": "The response logic doesn't yet use the tenant context. Check that you're accessing req.tenant and including it in the response.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "req.tenant",
+            "res.end",
+            "tenant"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 10",
+        "title": "Start the server and test the middleware",
+        "instruction": "Make the server listen on port 3000 and log a startup message to the console.",
+        "hint": "Use the server.listen() method with port 3000 and a callback function that logs a message.",
+        "analogousExample": "// Starting a basic HTTP server\nconst http = require('http');\nconst server = http.createServer((req, res) => {\n  res.end('Hello');\n});\nserver.listen(3000, () => {\n  console.log('Server running on port 3000');\n});",
+        "seedCode": "const http = require('http');\n\nfunction tenantResolver(req, res, next) {\n  const hostname = req.headers.host;\n  const tenantId = hostname.split('.')[0] || 'default';\n  req.tenant = tenantId;\n  next();\n}\n\nconst server = http.createServer((req, res) => {\n  tenantResolver(req, res, () => {\n    res.writeHead(200, { 'Content-Type': 'text/plain' });\n    res.end(`Tenant: ${req.tenant}`);\n  });\n});\n\n// Start the server here",
+        "expectedOutcome": "The server will be running and ready to handle requests with multi-tenant resolution.",
+        "successCriteria": [
+          "The server is configured to listen on port 3000 and logs a startup message when it starts."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the server, but make sure it logs a message when it starts listening.",
+        "feedbackWrong": "The server isn't properly configured to listen. Check that you're calling server.listen() with the correct port and callback.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "server.listen",
+            "3000",
+            "console.log"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import required Node.js modules",
+        "id": "step1"
+      },
+      {
+        "label": "Create the multi-tenant context resolver middleware function",
+        "id": "step2"
+      },
+      {
+        "label": "Extract the hostname from the incoming request",
+        "id": "step3"
+      },
+      {
+        "label": "Parse the hostname to extract the tenant identifier",
+        "id": "step4"
+      },
+      {
+        "label": "Validate the tenant identifier",
+        "id": "step5"
+      },
+      {
+        "label": "Attach tenant context to the request object",
+        "id": "step6"
+      },
+      {
+        "label": "Create a basic HTTP server",
+        "id": "step7"
+      },
+      {
+        "label": "Implement the server request handler with middleware",
+        "id": "step8"
+      },
+      {
+        "label": "Add response logic that uses the tenant context",
+        "id": "step9"
+      },
+      {
+        "label": "Start the server and test the middleware",
+        "id": "step10"
+      }
+    ]
+  },
+  "source": "content"
+}

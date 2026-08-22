@@ -1,0 +1,357 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-node-64",
+    "track": "node",
+    "lessonNum": 64,
+    "title": "Build pub sub bridge for realtime events",
+    "shortName": "P64",
+    "intro": {
+      "tag": "LESSON #64",
+      "title": "Build pub sub bridge for realtime events",
+      "body": "In this lesson, you will build a simple pub/sub (publish/subscribe) bridge in Node.js to handle real-time events. You'll learn how to create a central event emitter that allows different parts of an application to communicate asynchronously. The core programming concept involves using the EventEmitter class from Node.js's built-in events module to manage event listeners and triggers. You'll implement this by setting up a custom event emitter, subscribing to events, and publishing messages to notify subscribers. This project introduces you to event-driven architecture, a fundamental pattern for real-time applications like chat systems or live updates. By the end, you'll have a working bridge that demonstrates basic pub/sub functionality in JavaScript.",
+      "usecase": "In real applications, pub/sub bridges enable real-time features like live notifications in social media feeds, collaborative editing in tools like Google Docs, and live dashboards tracking metrics or IoT sensor data. Developers implement these patterns to handle chat message broadcasting, stock price updates in trading platforms, and multiplayer game state synchronization. This architecture allows decoupled components to react instantly to events without tight coupling, making systems more scalable and maintainable."
+    },
+    "objectives": [
+      "Construct a basic Node.js server to handle HTTP requests and WebSocket connections.",
+      "Implement a publish-subscribe pattern using a simple in-memory event bus.",
+      "Configure WebSocket connections to subscribe to specific event channels.",
+      "Integrate HTTP endpoints to publish events that broadcast to subscribed WebSocket clients.",
+      "Manipulate client connections to manage subscriptions and handle disconnections.",
+      "Initialize and control the flow of real-time messages between publishers and subscribers.",
+      "Apply error handling to manage connection failures and malformed messages."
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 10",
+        "title": "Import EventEmitter from events module",
+        "instruction": "Import the EventEmitter class from Node.js's built-in 'events' module.",
+        "hint": "Use the CommonJS require syntax to import the EventEmitter class from the 'events' module.",
+        "analogousExample": "// Importing a built-in module\nconst fs = require('fs');",
+        "seedCode": "// Import EventEmitter here\n",
+        "expectedOutcome": "The EventEmitter class is imported and ready to be used for creating event-driven functionality.",
+        "successCriteria": [
+          "EventEmitter is imported from the 'events' module using require()."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're importing EventEmitter specifically from the 'events' module using require().",
+        "feedbackWrong": "That's not quite right. You need to import the EventEmitter class from Node.js's 'events' module using require().",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "require",
+            "'events'",
+            "EventEmitter"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 10",
+        "title": "Create PubSubBridge class extending EventEmitter",
+        "instruction": "Define a PubSubBridge class that extends EventEmitter.",
+        "hint": "Use the class syntax with the extends keyword to inherit from EventEmitter.",
+        "analogousExample": "// Example: class extending another class\nclass CustomEmitter extends EventEmitter {\n  constructor() {\n    super();\n  }\n}",
+        "seedCode": "// Import EventEmitter here\n\n// Define PubSubBridge class here",
+        "expectedOutcome": "A PubSubBridge class is created that inherits from EventEmitter.",
+        "successCriteria": [
+          "PubSubBridge class is defined with extends EventEmitter."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure your class uses the extends keyword with EventEmitter.",
+        "feedbackWrong": "The PubSubBridge class isn't properly defined. It should extend EventEmitter using class syntax.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "class",
+            "PubSubBridge",
+            "extends",
+            "EventEmitter"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 10",
+        "title": "Initialize constructor with topics object",
+        "instruction": "Inside the PubSubBridge class, add a constructor method that initializes an empty object property called 'topics'.",
+        "hint": "Use the 'constructor()' method and set 'this.topics = {}' to create an empty object for tracking subscribers.",
+        "analogousExample": "// Example: constructor with initial state\nclass Storage {\n  constructor() {\n    this.items = {};\n  }\n}",
+        "seedCode": "const EventEmitter = require('events');\n\nclass PubSubBridge extends EventEmitter {\n  // Add constructor here\n}",
+        "expectedOutcome": "The PubSubBridge class will have a constructor that creates an empty topics object when instantiated.",
+        "successCriteria": [
+          "The constructor method is defined and initializes 'this.topics' as an empty object."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure your constructor method sets 'this.topics = {}' to create an empty object.",
+        "feedbackWrong": "The constructor should initialize 'this.topics' as an empty object. Check that you've added the constructor method correctly.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "constructor",
+            "this.topics",
+            "{}"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 10",
+        "title": "Create subscribe method",
+        "instruction": "Inside the PubSubBridge class, create a subscribe method that takes topic and callback parameters, stores the callback in the topics object, and sets up an event listener for that topic.",
+        "hint": "The method should add the callback to an array for the given topic in the topics object, then use this.on() to listen for events on that topic.",
+        "analogousExample": "// Similar: adding a listener method\nclass NotificationCenter {\n  constructor() {\n    this.listeners = {};\n  }\n  subscribe(event, callback) {\n    if (!this.listeners[event]) {\n      this.listeners[event] = [];\n    }\n    this.listeners[event].push(callback);\n    this.on(event, callback);\n  }\n}",
+        "seedCode": "const EventEmitter = require('events');\n\nclass PubSubBridge extends EventEmitter {\n  constructor() {\n    super();\n    this.topics = {};\n  }\n  \n  // Add subscribe method here\n}",
+        "expectedOutcome": "The PubSubBridge class now has a subscribe method that accepts topic and callback, stores the callback in the topics object, and sets up an event listener.",
+        "successCriteria": [
+          "A subscribe method is defined with topic and callback parameters, the callback is added to this.topics[topic], and this.on(topic, callback) is called."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure your subscribe method stores the callback in this.topics and also calls this.on() to set up the event listener.",
+        "feedbackWrong": "The subscribe method isn't implemented correctly. Check that it accepts topic and callback parameters, stores the callback in this.topics, and calls this.on().",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "subscribe",
+            "topic",
+            "callback",
+            "this.topics",
+            "this.on"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 10",
+        "title": "Create publish method",
+        "instruction": "Inside the PubSubBridge class, add a publish method that takes topic and data parameters, and emits an event with that data.",
+        "hint": "The publish method should call this.emit(topic, data) to broadcast the data to all subscribers of that topic.",
+        "analogousExample": "// Example: a method that emits an event\nclass Messenger {\n  sendMessage(channel, content) {\n    this.emit(channel, content);\n  }\n}",
+        "seedCode": "const EventEmitter = require('events');\n\nclass PubSubBridge extends EventEmitter {\n  constructor() {\n    super();\n    this.topics = {};\n  }\n  \n  // Add subscribe method here\n  \n  // Add publish method here\n}",
+        "expectedOutcome": "The PubSubBridge class will have a publish method that can emit events with data to subscribers.",
+        "successCriteria": [
+          "A publish method is added to the PubSubBridge class that accepts topic and data parameters and calls this.emit(topic, data)."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added a method, but make sure it's named 'publish', takes 'topic' and 'data' parameters, and calls this.emit(topic, data).",
+        "feedbackWrong": "The publish method is missing or incorrect. It should be a method inside the PubSubBridge class that emits events with the given topic and data.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "publish",
+            "topic",
+            "data",
+            "this.emit"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 10",
+        "title": "Create unsubscribe method",
+        "instruction": "Inside the PubSubBridge class, create an unsubscribe method that takes topic and callback parameters and removes the callback from the topic's listeners.",
+        "hint": "Check if the topic exists in this.topics, then filter out the callback from the array of listeners for that topic.",
+        "analogousExample": "// Similar: removing a function from an array\nfunction removeFromList(list, item) {\n  return list.filter(i => i !== item);\n}",
+        "seedCode": "const EventEmitter = require('events');\n\nclass PubSubBridge extends EventEmitter {\n  constructor() {\n    super();\n    this.topics = {};\n  }\n  \n  // Add subscribe method here\n  \n  // Add publish method here\n  \n  // Add unsubscribe method here\n}",
+        "expectedOutcome": "The PubSubBridge class will have an unsubscribe method that can remove specific callbacks from topics.",
+        "successCriteria": [
+          "The unsubscribe method is defined in the PubSubBridge class and correctly removes the callback from the topic's listeners array."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added a method, but check if it correctly filters the callback from the topic's listeners array.",
+        "feedbackWrong": "The unsubscribe method is missing or doesn't properly remove the callback. Ensure it filters the listeners array.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "unsubscribe",
+            "topic",
+            "callback",
+            "this.topics",
+            "filter"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 10",
+        "title": "Create instance of PubSubBridge",
+        "instruction": "Create an instance of the PubSubBridge class and assign it to a variable named 'bridge'.",
+        "hint": "Use the 'new' keyword followed by the class name to create an instance.",
+        "analogousExample": "// Creating an instance of a class\nconst myEmitter = new EventEmitter();",
+        "seedCode": "const EventEmitter = require('events');\n\nclass PubSubBridge extends EventEmitter {\n  constructor() {\n    super();\n    this.topics = {};\n  }\n  \n  // Add subscribe method here\n  \n  // Add publish method here\n  \n  // Add unsubscribe method here\n}\n\n// Create an instance of PubSubBridge here",
+        "expectedOutcome": "You should have a variable 'bridge' that holds an instance of the PubSubBridge class, ready to be used for pub-sub operations.",
+        "successCriteria": [
+          "A variable named 'bridge' is declared and assigned a new instance of PubSubBridge."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're using the 'new' keyword and the correct class name (PubSubBridge), and assigning the result to a variable named 'bridge'.",
+        "feedbackWrong": "The instance wasn't created correctly. Remember to use 'new PubSubBridge()' and assign it to a variable named 'bridge'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "bridge",
+            "new",
+            "PubSubBridge"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 10",
+        "title": "Create subscription callback functions",
+        "instruction": "Create two callback functions named 'logMessage' and 'alertMessage' that will handle published events. Each function should accept a 'data' parameter and log or alert the data.",
+        "hint": "Define these functions as regular JavaScript functions that take a parameter and perform an action with it.",
+        "analogousExample": "// Example callback functions\nfunction logMessage(data) {\n  console.log('Received:', data);\n}\n\nfunction alertMessage(data) {\n  alert('Alert: ' + data);\n}",
+        "seedCode": "const EventEmitter = require('events');\n\nclass PubSubBridge extends EventEmitter {\n  constructor() {\n    super();\n    this.topics = {};\n  }\n  \n  // Add subscribe method here\n  \n  // Add publish method here\n  \n  // Add unsubscribe method here\n}\n\n// Create an instance of PubSubBridge here\n\n// Create callback functions here",
+        "expectedOutcome": "Two callback functions are defined: 'logMessage' logs the data to console, and 'alertMessage' shows an alert with the data.",
+        "successCriteria": [
+          "The 'logMessage' and 'alertMessage' functions are defined, each accepting a 'data' parameter and performing the appropriate action."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've created at least one callback function, but make sure both 'logMessage' and 'alertMessage' are defined with their respective actions.",
+        "feedbackWrong": "The callback functions aren't defined correctly. Ensure you create both 'logMessage' and 'alertMessage' functions that accept a 'data' parameter.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "logMessage",
+            "alertMessage",
+            "function",
+            "data",
+            "console.log",
+            "alert"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 10",
+        "title": "Subscribe to topics with callbacks",
+        "instruction": "Use the subscribe method on your PubSubBridge instance to register the callback functions for the 'news' and 'weather' topics.",
+        "hint": "Call the subscribe method on your bridge instance, passing the topic name and the corresponding callback function as arguments.",
+        "analogousExample": "// Example of subscribing to a topic\nbridge.subscribe('news', handleNewsUpdate);",
+        "seedCode": "const EventEmitter = require('events');\n\nclass PubSubBridge extends EventEmitter {\n  constructor() {\n    super();\n    this.topics = {};\n  }\n  \n  subscribe(topic, callback) {\n    if (!this.topics[topic]) {\n      this.topics[topic] = [];\n    }\n    this.topics[topic].push(callback);\n  }\n  \n  publish(topic, data) {\n    if (this.topics[topic]) {\n      this.topics[topic].forEach(callback => callback(data));\n    }\n  }\n  \n  unsubscribe(topic, callback) {\n    if (this.topics[topic]) {\n      this.topics[topic] = this.topics[topic].filter(cb => cb !== callback);\n    }\n  }\n}\n\nconst bridge = new PubSubBridge();\n\nconst handleNewsUpdate = (data) => {\n  console.log(`News update: ${data}`);\n};\n\nconst handleWeatherUpdate = (data) => {\n  console.log(`Weather update: ${data}`);\n};\n\n// Subscribe to topics here",
+        "expectedOutcome": "The bridge instance will have registered subscriptions for both topics, ready to receive published messages.",
+        "successCriteria": [
+          "The subscribe method is called twice: once for 'news' with handleNewsUpdate, and once for 'weather' with handleWeatherUpdate."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've made progress, but need to subscribe to both topics. Make sure you call subscribe for 'news' and 'weather' with their respective callback functions.",
+        "feedbackWrong": "The subscriptions aren't set up correctly. Use the subscribe method on your bridge instance to register both callback functions for their respective topics.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "bridge.subscribe('news'",
+            "bridge.subscribe('weather'",
+            "handleNewsUpdate",
+            "handleWeatherUpdate"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 10",
+        "title": "Publish events to trigger callbacks",
+        "instruction": "Use the publish method to send data to the 'news' and 'weather' topics, which will trigger the subscribed callbacks.",
+        "hint": "Call bridge.publish('topic', 'data') with appropriate messages for each topic.",
+        "analogousExample": "// Similar: publishing to a topic\nbridge.publish('news', 'Breaking news: Node.js 20 released!');",
+        "seedCode": "const EventEmitter = require('events');\n\nclass PubSubBridge extends EventEmitter {\n  constructor() {\n    super();\n    this.topics = {};\n  }\n  \n  subscribe(topic, callback) {\n    if (!this.topics[topic]) {\n      this.topics[topic] = [];\n    }\n    this.topics[topic].push(callback);\n  }\n  \n  publish(topic, data) {\n    if (this.topics[topic]) {\n      this.topics[topic].forEach(callback => callback(data));\n    }\n  }\n  \n  unsubscribe(topic, callback) {\n    if (this.topics[topic]) {\n      this.topics[topic] = this.topics[topic].filter(cb => cb !== callback);\n    }\n  }\n}\n\nconst bridge = new PubSubBridge();\n\nconst handleNewsUpdate = (data) => {\n  console.log(`News update: ${data}`);\n};\n\nconst handleWeatherUpdate = (data) => {\n  console.log(`Weather update: ${data}`);\n};\n\nbridge.subscribe('news', handleNewsUpdate);\nbridge.subscribe('weather', handleWeatherUpdate);\n\n// Publish events here\n",
+        "expectedOutcome": "The console will log messages when the events are published, showing the pub-sub system working.",
+        "successCriteria": [
+          "Two publish calls are made: one for 'news' and one for 'weather' with appropriate data strings."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've published to one topic, but try adding a publish call for the other topic as well.",
+        "feedbackWrong": "use bridge.publish() with the correct topic names and data strings.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "bridge.publish('news'",
+            "bridge.publish('weather'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import EventEmitter from events module",
+        "id": "step1"
+      },
+      {
+        "label": "Create PubSubBridge class extending EventEmitter",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize constructor with topics object",
+        "id": "step3"
+      },
+      {
+        "label": "Create subscribe method",
+        "id": "step4"
+      },
+      {
+        "label": "Create publish method",
+        "id": "step5"
+      },
+      {
+        "label": "Create unsubscribe method",
+        "id": "step6"
+      },
+      {
+        "label": "Create instance of PubSubBridge",
+        "id": "step7"
+      },
+      {
+        "label": "Create subscription callback functions",
+        "id": "step8"
+      },
+      {
+        "label": "Subscribe to topics with callbacks",
+        "id": "step9"
+      },
+      {
+        "label": "Publish events to trigger callbacks",
+        "id": "step10"
+      }
+    ]
+  },
+  "source": "content"
+}

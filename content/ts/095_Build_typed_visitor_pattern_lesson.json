@@ -1,0 +1,415 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-ts-95",
+    "track": "ts",
+    "lessonNum": 95,
+    "title": "Build typed visitor pattern",
+    "shortName": "P95",
+    "intro": {
+      "tag": "LESSON #95",
+      "title": "Build typed visitor pattern",
+      "body": "In this lesson, you will build a simple, typed visitor pattern to process different shapes like circles and squares. You'll learn how to use TypeScript interfaces and classes to define a set of operations that can be applied to various object structures without modifying those objects. The main technologies involved are TypeScript's type system, interfaces for visitor contracts, and concrete visitor implementations. This pattern helps keep your code extensible and organized when adding new operations.",
+      "usecase": "The visitor pattern is essential in TypeScript applications that need to process complex object structures with different behaviors. You'll see this in document editors like VS Code that apply formatting operations to various AST nodes, or in e-commerce platforms that calculate different taxes and discounts for diverse product categories. It's also used in UI component libraries where components need to accept different rendering strategies, and in data visualization dashboards that apply distinct processing logic to various chart types while maintaining type safety."
+    },
+    "objectives": [
+      "Implement a visitor interface with typed methods for different element types",
+      "Construct concrete visitor classes that apply operations to specific element types",
+      "Configure element classes to accept visitor instances through an accept method",
+      "Initialize a visitor pattern structure with typed element collections",
+      "Manipulate element data by applying different visitor implementations",
+      "Integrate the visitor pattern into a TypeScript application with proper type safety",
+      "Control traversal logic by implementing visitor methods for each element type"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 11",
+        "title": "Define the base expression types",
+        "instruction": "Create a TypeScript interface named NumberExpression with a single property 'value' of type number.",
+        "hint": "Start by writing 'interface NumberExpression' followed by the property definition inside curly braces.",
+        "analogousExample": "// Example of a simple interface\ninterface Person {\n  name: string;\n  age: number;\n}",
+        "seedCode": "// Define your NumberExpression interface here\n",
+        "expectedOutcome": "You'll have a NumberExpression interface that can represent numeric values in our expression tree.",
+        "successCriteria": [
+          "The NumberExpression interface is defined with a 'value' property of type number."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your interface has exactly one property named 'value' with type 'number'.",
+        "feedbackWrong": "That doesn't look right. Remember to create an interface named NumberExpression with a 'value: number' property.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "interface",
+            "NumberExpression",
+            "value",
+            "number"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 11",
+        "title": "Create the Expression type union",
+        "instruction": "Create a union type called Expression that includes both NumberExpression and AdditionExpression.",
+        "hint": "Use the TypeScript union operator (|) to combine the two interface types into a single type.",
+        "analogousExample": "// Example: union type for shapes\ntype Shape = Circle | Square;",
+        "seedCode": "// Define your NumberExpression interface here\n\n// Create the Expression union type here",
+        "expectedOutcome": "A union type named Expression that can be either NumberExpression or AdditionExpression.",
+        "successCriteria": [
+          "Expression type is defined as a union of NumberExpression and AdditionExpression."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure you're using the union operator (|) to combine both NumberExpression and AdditionExpression into a single type called Expression.",
+        "feedbackWrong": "The Expression union type wasn't created correctly. Remember to use the TypeScript union syntax: type Expression = NumberExpression | AdditionExpression;",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "type",
+            "Expression",
+            "NumberExpression",
+            "AdditionExpression",
+            "|"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 11",
+        "title": "Define the Visitor interface",
+        "instruction": "Define a Visitor interface with two generic type parameters: T for the return type, and a visitNumber method that accepts a NumberExpression parameter, and a visitAddition method that accepts an AdditionExpression parameter.",
+        "hint": "Create an interface named Visitor with generic type T. Add two methods: visitNumber(expr: NumberExpression): T and visitAddition(expr: AdditionExpression): T.",
+        "analogousExample": "// Example: a generic interface for a shape visitor\ninterface ShapeVisitor<T> {\n  visitCircle(circle: Circle): T;\n  visitSquare(square: Square): T;\n}",
+        "seedCode": "// Define your NumberExpression interface here\ninterface NumberExpression {\n  value: number;\n}\n\ninterface AdditionExpression {\n  left: Expression;\n  right: Expression;\n}\n\n// Create the Expression union type here\ntype Expression = NumberExpression | AdditionExpression;\n\n// Define the Visitor interface here\n",
+        "expectedOutcome": "You will have a Visitor interface with generic type T and two visit methods, establishing the foundation for implementing the visitor pattern.",
+        "successCriteria": [
+          "A Visitor interface is defined with generic type T, a visitNumber method that accepts a NumberExpression, and a visitAddition method that accepts an AdditionExpression."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your Visitor interface includes both visitNumber and visitAddition methods with the correct parameter types (NumberExpression and AdditionExpression). Also ensure it has a generic type parameter T for the return type.",
+        "feedbackWrong": "The Visitor interface is not correctly defined. Remember to create an interface named Visitor with a generic type T, and define two methods: visitNumber(expr: NumberExpression): T and visitAddition(expr: AdditionExpression): T.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "interface",
+            "Visitor",
+            "<T>",
+            "visitNumber",
+            "NumberExpression",
+            "visitAddition",
+            "AdditionExpression"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 11",
+        "title": "Add accept methods to expression interfaces",
+        "instruction": "Add an accept method to the NumberExpression interface that accepts a Visitor parameter and returns a generic type.",
+        "hint": "The accept method should have a signature like accept(visitor: Visitor<T>): T where T is a generic type parameter.",
+        "analogousExample": "// Adding a method to an interface\ninterface Shape {\n  accept<T>(visitor: ShapeVisitor<T>): T;\n}",
+        "seedCode": "// Define your NumberExpression interface here\ninterface NumberExpression {\n  value: number;\n}\n\ninterface AdditionExpression {\n  left: Expression;\n  right: Expression;\n}\n\n// Create the Expression union type here\ntype Expression = NumberExpression | AdditionExpression;\n\n// Define the Visitor interface here",
+        "expectedOutcome": "The NumberExpression interface now has an accept method that can accept Visitor implementations.",
+        "successCriteria": [
+          "NumberExpression interface has an accept method",
+          "accept method accepts Visitor<T> parameter",
+          "accept method returns generic type T"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure the accept method has the correct signature: it should accept a Visitor<T> and return T.",
+        "feedbackWrong": "The NumberExpression interface should have an accept method. Try adding: accept<T>(visitor: Visitor<T>): T;",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "accept",
+            "Visitor",
+            "T",
+            ":",
+            "T"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 11",
+        "title": "Create the NumberExpression class implementation",
+        "instruction": "Create a class named NumberExpression that implements the NumberExpression interface. Include a constructor that takes a number value and stores it as a public property, and implement the accept method required by the interface.",
+        "hint": "The class should have a 'value' property and an 'accept' method that calls the visitor's visitNumber method with 'this'.",
+        "analogousExample": "// Similar: a class implementing an interface\nclass Person implements Human {\n  name: string;\n  constructor(name: string) {\n    this.name = name;\n  }\n  greet() {\n    console.log(`Hello, ${this.name}`);\n  }\n}",
+        "seedCode": "// Define your NumberExpression interface here\ninterface NumberExpression {\n  value: number;\n}\n\ninterface AdditionExpression {\n  left: Expression;\n  right: Expression;\n}\n\n// Create the Expression union type here\ntype Expression = NumberExpression | AdditionExpression;\n\n// Define the Visitor interface here\n\n// Create the NumberExpression class here",
+        "expectedOutcome": "A NumberExpression class is defined with a value property and accept method, implementing the NumberExpression interface.",
+        "successCriteria": [
+          "The NumberExpression class exists, implements the NumberExpression interface, has a constructor that sets a public 'value' property, and includes an 'accept' method that calls visitor.visitNumber(this)."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure your class implements the NumberExpression interface, has a constructor that sets the value property, and includes an accept method that calls visitor.visitNumber(this).",
+        "feedbackWrong": "The NumberExpression class is missing or incomplete. It should implement the NumberExpression interface with a value property and accept method.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "class",
+            "NumberExpression",
+            "implements",
+            "NumberExpression",
+            "constructor",
+            "value",
+            "accept",
+            "visitor.visitNumber(this)"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 11",
+        "title": "Create the AdditionExpression class implementation",
+        "instruction": "Create an AdditionExpression class that implements the AdditionExpression interface. Include left and right properties of type Expression, and an accept method that calls visitor.visitAdditionExpression with this.",
+        "hint": "Follow the same pattern as NumberExpression but with two child expressions. The accept method should delegate to the visitor's visitAdditionExpression method.",
+        "analogousExample": "// Similar: implementing an interface with a method\nclass AdditionExpression implements AdditionExpression {\n  left: Expression;\n  right: Expression;\n  \n  constructor(left: Expression, right: Expression) {\n    this.left = left;\n    this.right = right;\n  }\n  \n  accept(visitor: Visitor): void {\n    visitor.visitAdditionExpression(this);\n  }\n}",
+        "seedCode": "// Define your NumberExpression interface here\ninterface NumberExpression {\n  value: number;\n}\n\ninterface AdditionExpression {\n  left: Expression;\n  right: Expression;\n}\n\n// Create the Expression union type here\ntype Expression = NumberExpression | AdditionExpression;\n\n// Define the Visitor interface here\n\n// Create the NumberExpression class here\n\n// Create the AdditionExpression class here",
+        "expectedOutcome": "A class AdditionExpression that correctly implements the interface and provides the required accept method for the visitor pattern.",
+        "successCriteria": [
+          "AdditionExpression class exists, implements AdditionExpression interface, has left and right properties of type Expression, and has an accept method that calls visitor.visitAdditionExpression(this)."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure your class implements the AdditionExpression interface, has both left and right properties, and the accept method calls visitor.visitAdditionExpression(this).",
+        "feedbackWrong": "The AdditionExpression class is missing or incorrect. It should implement the interface with left/right properties and an accept method that delegates to the visitor.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "class",
+            "AdditionExpression",
+            "implements",
+            "AdditionExpression",
+            "left",
+            "Expression",
+            "right",
+            "Expression",
+            "accept",
+            "visitor.visitAdditionExpression"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 11",
+        "title": "Implement the EvaluatorVisitor class",
+        "instruction": "Create a class named EvaluatorVisitor that implements the Visitor interface. This class will evaluate expressions by returning their numeric values.",
+        "hint": "Define a class with the name EvaluatorVisitor and use the 'implements' keyword to implement the Visitor interface. You'll need to provide implementations for the visitNumber and visitAddition methods.",
+        "analogousExample": "// Example: implementing an interface in a class\ninterface Processor {\n  process(data: string): void;\n}\n\nclass DataProcessor implements Processor {\n  process(data: string) {\n    console.log(`Processing: ${data}`);\n  }\n}",
+        "seedCode": "// Define your NumberExpression interface here\ninterface NumberExpression {\n  value: number;\n}\n\ninterface AdditionExpression {\n  left: Expression;\n  right: Expression;\n}\n\n// Create the Expression union type here\ntype Expression = NumberExpression | AdditionExpression;\n\n// Define the Visitor interface here\n\n// Create the NumberExpression class here\n\n// Create the AdditionExpression class here\n\n// Create the EvaluatorVisitor class here",
+        "expectedOutcome": "A class named EvaluatorVisitor that implements the Visitor interface with method stubs for visitNumber and visitAddition.",
+        "successCriteria": [
+          "The EvaluatorVisitor class exists, implements the Visitor interface, and has visitNumber and visitAddition method signatures."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your EvaluatorVisitor class properly implements the Visitor interface with both required methods.",
+        "feedbackWrong": "The EvaluatorVisitor class is missing or doesn't properly implement the Visitor interface. Remember to use 'implements Visitor' and include both visitNumber and visitAddition methods.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "class",
+            "EvaluatorVisitor",
+            "implements",
+            "Visitor",
+            "visitNumber",
+            "visitAddition"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 11",
+        "title": "Implement the PrinterVisitor class",
+        "instruction": "Create a class named PrinterVisitor that implements the Visitor interface to generate string representations of expressions.",
+        "hint": "Define a class with the name PrinterVisitor that implements the Visitor interface. You'll need to provide implementations for the visitNumber and visitAddition methods, returning strings.",
+        "analogousExample": "// Example: Another visitor implementation\nclass AnotherVisitor implements Visitor {\n  visitNumber(expr: NumberExpression): string {\n    return `Number: ${expr.value}`;\n  }\n  visitAddition(expr: AdditionExpression): string {\n    return `Addition`;\n  }\n}",
+        "seedCode": "// Define your NumberExpression interface here\ninterface NumberExpression {\n  value: number;\n}\n\ninterface AdditionExpression {\n  left: Expression;\n  right: Expression;\n}\n\n// Create the Expression union type here\ntype Expression = NumberExpression | AdditionExpression;\n\n// Define the Visitor interface here\n\n// Create the NumberExpression class here\n\n// Create the AdditionExpression class here\n\n// Create the EvaluatorVisitor class here\n\n// Create the PrinterVisitor class here",
+        "expectedOutcome": "A PrinterVisitor class that implements the Visitor interface with methods that return strings.",
+        "successCriteria": [
+          "The PrinterVisitor class is defined, implements the Visitor interface, and has visitNumber and visitAddition methods that return strings."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your PrinterVisitor class properly implements the Visitor interface with both required methods that return strings.",
+        "feedbackWrong": "The PrinterVisitor class is missing or doesn't properly implement the Visitor interface. Check that you have a class named PrinterVisitor with visitNumber and visitAddition methods that return strings.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "class PrinterVisitor",
+            "implements Visitor",
+            "visitNumber",
+            "visitAddition",
+            "return",
+            "string"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 11",
+        "title": "Create sample expression tree",
+        "instruction": "Create a sample expression tree representing (1 + 2) + 3 using the NumberExpression and AdditionExpression classes.",
+        "hint": "Instantiate NumberExpression objects for the numbers 1, 2, and 3, then create nested AdditionExpression objects to represent the expression structure.",
+        "analogousExample": "// Example: building a simple expression tree\nconst one = new NumberExpression(1);\nconst two = new NumberExpression(2);\nconst three = new NumberExpression(3);\nconst simpleAdd = new AdditionExpression(one, two);\nconst complexAdd = new AdditionExpression(simpleAdd, three);",
+        "seedCode": "// Define your NumberExpression interface here\ninterface NumberExpression {\n  value: number;\n}\n\ninterface AdditionExpression {\n  left: Expression;\n  right: Expression;\n}\n\n// Create the Expression union type here\ntype Expression = NumberExpression | AdditionExpression;\n\n// Define the Visitor interface here\ninterface Visitor<T> {\n  visitNumber(expr: NumberExpression): T;\n  visitAddition(expr: AdditionExpression): T;\n}\n\n// Create the NumberExpression class here\nclass NumberExpression implements NumberExpression {\n  constructor(public value: number) {}\n\n  accept<T>(visitor: Visitor<T>): T {\n    return visitor.visitNumber(this);\n  }\n}\n\n// Create the AdditionExpression class here\nclass AdditionExpression implements AdditionExpression {\n  constructor(public left: Expression, public right: Expression) {}\n\n  accept<T>(visitor: Visitor<T>): T {\n    return visitor.visitAddition(this);\n  }\n}\n\n// Create the EvaluatorVisitor class here\nclass EvaluatorVisitor implements Visitor<number> {\n  visitNumber(expr: NumberExpression): number {\n    return expr.value;\n  }\n\n  visitAddition(expr: AdditionExpression): number {\n    return expr.left.accept(this) + expr.right.accept(this);\n  }\n}\n\n// Create the PrinterVisitor class here\nclass PrinterVisitor implements Visitor<string> {\n  visitNumber(expr: NumberExpression): string {\n    return expr.value.toString();\n  }\n\n  visitAddition(expr: AdditionExpression): string {\n    return `(${expr.left.accept(this)} + ${expr.right.accept(this)})`;\n  }\n}\n\n// Create sample expression tree here\n",
+        "expectedOutcome": "A sample expression tree is created with NumberExpression instances for 1, 2, and 3, and AdditionExpression instances representing (1 + 2) + 3.",
+        "successCriteria": [
+          "The code creates three NumberExpression objects and two AdditionExpression objects that correctly represent the expression (1 + 2) + 3."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but check that you have all three numbers (1, 2, 3) and that the addition expressions are nested correctly to represent (1 + 2) + 3.",
+        "feedbackWrong": "The sample expression tree isn't quite right. Remember to create NumberExpression instances for each number and nest AdditionExpression objects to match the mathematical expression.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "NumberExpression",
+            "AdditionExpression",
+            "1",
+            "2",
+            "3",
+            "new"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 11",
+        "title": "Test the visitor pattern implementation",
+        "instruction": "Create a sample expression tree using the NumberExpression and AdditionExpression classes,",
+        "hint": "Instantiate the expression classes to build a tree (e.g., 1 + (2 + 3)), then create visitor instances and call accept() on the root expression with each visitor.",
+        "analogousExample": "// Example: building and testing a simple expression\nconst expr = new AdditionExpression(\n  new NumberExpression(1),\n  new NumberExpression(2)\n);\nconst evaluator = new EvaluatorVisitor();\nconst result = expr.accept(evaluator); // Should evaluate to 3",
+        "seedCode": "// Define your NumberExpression interface here\ninterface NumberExpression {\n  value: number;\n}\n\ninterface AdditionExpression {\n  left: Expression;\n  right: Expression;\n}\n\n// Create the Expression union type here\ntype Expression = NumberExpression | AdditionExpression;\n\n// Define the Visitor interface here\ninterface Visitor<T> {\n  visitNumber(expr: NumberExpression): T;\n  visitAddition(expr: AdditionExpression): T;\n}\n\n// Create the NumberExpression class here\nclass NumberExpression implements NumberExpression {\n  constructor(public value: number) {}\n\n  accept<T>(visitor: Visitor<T>): T {\n    return visitor.visitNumber(this);\n  }\n}\n\n// Create the AdditionExpression class here\nclass AdditionExpression implements AdditionExpression {\n  constructor(public left: Expression, public right: Expression) {}\n\n  accept<T>(visitor: Visitor<T>): T {\n    return visitor.visitAddition(this);\n  }\n}\n\n// Create the EvaluatorVisitor class here\nclass EvaluatorVisitor implements Visitor<number> {\n  visitNumber(expr: NumberExpression): number {\n    return expr.value;\n  }\n\n  visitAddition(expr: AdditionExpression): number {\n    return expr.left.accept(this) + expr.right.accept(this);\n  }\n}\n\n// Create the PrinterVisitor class here\nclass PrinterVisitor implements Visitor<string> {\n  visitNumber(expr: NumberExpression): string {\n    return expr.value.toString();\n  }\n\n  visitAddition(expr: AdditionExpression): string {\n    return `(${expr.left.accept(this)} + ${expr.right.accept(this)})`;\n  }\n}\n\n// Create sample expression tree here\n// Build a sample expression (e.g., 1 + (2 + 3)), then test with visitors",
+        "expectedOutcome": "The code will create a sample expression tree and demonstrate the visitor pattern by evaluating its numeric value and printing its string representation.",
+        "successCriteria": [
+          "A sample expression tree is built using NumberExpression and AdditionExpression, and both EvaluatorVisitor and PrinterVisitor instances are used to test evaluation and printing."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've created some of the required elements. Make sure to build a complete expression tree and test it with both visitor types.",
+        "feedbackWrong": "The implementation doesn't match the requirements. Review the instruction to build a sample expression tree and test it with both EvaluatorVisitor and PrinterVisitor.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "NumberExpression",
+            "AdditionExpression",
+            "EvaluatorVisitor",
+            "PrinterVisitor",
+            "accept"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 11",
+        "title": "test it by creating instances of EvaluatorVis",
+        "instruction": "test it by creating instances of EvaluatorVisitor and PrinterVisitor to evaluate and print the expression.",
+        "hint": "Instantiate the expression classes to build a tree (e.g., 1 + (2 + 3)), then create visitor instances and call accept() on the root expression with each visitor.",
+        "analogousExample": "// Example: building and testing a simple expression\nconst expr = new AdditionExpression(\n  new NumberExpression(1),\n  new NumberExpression(2)\n);\nconst evaluator = new EvaluatorVisitor();\nconst result = expr.accept(evaluator); // Should evaluate to 3",
+        "seedCode": "// Define your NumberExpression interface here\ninterface NumberExpression {\n  value: number;\n}\n\ninterface AdditionExpression {\n  left: Expression;\n  right: Expression;\n}\n\n// Create the Expression union type here\ntype Expression = NumberExpression | AdditionExpression;\n\n// Define the Visitor interface here\ninterface Visitor<T> {\n  visitNumber(expr: NumberExpression): T;\n  visitAddition(expr: AdditionExpression): T;\n}\n\n// Create the NumberExpression class here\nclass NumberExpression implements NumberExpression {\n  constructor(public value: number) {}\n\n  accept<T>(visitor: Visitor<T>): T {\n    return visitor.visitNumber(this);\n  }\n}\n\n// Create the AdditionExpression class here\nclass AdditionExpression implements AdditionExpression {\n  constructor(public left: Expression, public right: Expression) {}\n\n  accept<T>(visitor: Visitor<T>): T {\n    return visitor.visitAddition(this);\n  }\n}\n\n// Create the EvaluatorVisitor class here\nclass EvaluatorVisitor implements Visitor<number> {\n  visitNumber(expr: NumberExpression): number {\n    return expr.value;\n  }\n\n  visitAddition(expr: AdditionExpression): number {\n    return expr.left.accept(this) + expr.right.accept(this);\n  }\n}\n\n// Create the PrinterVisitor class here\nclass PrinterVisitor implements Visitor<string> {\n  visitNumber(expr: NumberExpression): string {\n    return expr.value.toString();\n  }\n\n  visitAddition(expr: AdditionExpression): string {\n    return `(${expr.left.accept(this)} + ${expr.right.accept(this)})`;\n  }\n}\n\n// Create sample expression tree here\n// Build a sample expression (e.g., 1 + (2 + 3)), then test with visitors",
+        "expectedOutcome": "",
+        "successCriteria": [
+          "Complete the step as instructed."
+        ],
+        "feedbackCorrect": "Great! Step completed.",
+        "feedbackPartial": "Review the instruction and try again.",
+        "feedbackWrong": "Check the instruction and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "NumberExpression",
+            "AdditionExpression",
+            "EvaluatorVisitor",
+            "PrinterVisitor",
+            "accept"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Define the base expression types",
+        "id": "step1"
+      },
+      {
+        "label": "Create the Expression type union",
+        "id": "step2"
+      },
+      {
+        "label": "Define the Visitor interface",
+        "id": "step3"
+      },
+      {
+        "label": "Add accept methods to expression interfaces",
+        "id": "step4"
+      },
+      {
+        "label": "Create the NumberExpression class implementation",
+        "id": "step5"
+      },
+      {
+        "label": "Create the AdditionExpression class implementation",
+        "id": "step6"
+      },
+      {
+        "label": "Implement the EvaluatorVisitor class",
+        "id": "step7"
+      },
+      {
+        "label": "Implement the PrinterVisitor class",
+        "id": "step8"
+      },
+      {
+        "label": "Create sample expression tree",
+        "id": "step9"
+      },
+      {
+        "label": "Test the visitor pattern implementation",
+        "id": "step10"
+      },
+      {
+        "label": "test it by creating instances of EvaluatorVis",
+        "id": "step11"
+      }
+    ]
+  },
+  "source": "content"
+}

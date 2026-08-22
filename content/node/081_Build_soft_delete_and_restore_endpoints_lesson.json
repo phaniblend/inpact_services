@@ -1,0 +1,463 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-node-81",
+    "track": "node",
+    "lessonNum": 81,
+    "title": "Build soft delete and restore endpoints",
+    "shortName": "P81",
+    "intro": {
+      "tag": "LESSON #81",
+      "title": "Build soft delete and restore endpoints",
+      "body": "In this lesson, you will build two new API endpoints for a Node.js application: one to soft-delete a user and another to restore them. You'll learn how soft deletion works by adding a 'deletedAt' field to a user record instead of permanently removing it from the database. The core programming concept involves using conditional logic and database updates to mark records as deleted or active. You'll use Express.js for routing, a database model (like Mongoose for MongoDB), and HTTP methods like PATCH to implement these endpoints. By the end, you'll understand how to safely manage data visibility while preserving it for potential recovery.",
+      "usecase": "Soft delete patterns are essential in modern applications where data preservation is critical, such as e-commerce platforms where customers might accidentally delete orders and need restoration capabilities. In admin dashboards for content management systems, moderators can 'archive' inappropriate posts instead of permanent deletion, maintaining audit trails while cleaning up public views. Customer relationship management (CRM) tools use soft deletes when sales representatives remove contacts, allowing recovery if those contacts become relevant again later. This approach provides safety nets in user-facing applications while maintaining data integrity for backend reporting and analytics."
+    },
+    "objectives": [
+      "Implement a soft delete mechanism by updating the database schema with a 'deletedAt' timestamp field",
+      "Configure API endpoints to handle soft delete requests without permanently removing records",
+      "Construct restore endpoints that reinstate soft-deleted records by clearing the 'deletedAt' field",
+      "Apply conditional query logic to exclude soft-deleted records from standard GET requests",
+      "Integrate middleware to validate user permissions before processing soft delete or restore operations",
+      "Manipulate database queries to include soft-deleted records only when explicitly requested",
+      "Initialize and test both soft delete and restore endpoints using API testing tools"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 13",
+        "title": "Import required Node.js modules",
+        "instruction": "Import the Express framework and create an Express application instance.",
+        "hint": "Use the 'require' statement to import Express and assign it to a variable. Then create an app instance by calling the imported Express function.",
+        "analogousExample": "// Importing a module and creating an instance\nconst express = require('express');\nconst app = express();",
+        "seedCode": "// Import Express and create an app instance here",
+        "expectedOutcome": "You will have an Express app ready to define endpoints.",
+        "successCriteria": [
+          "Express is imported and an app instance is created."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure you've both imported Express and created the app instance.",
+        "feedbackWrong": "Check that you've used 'require' to import Express and called it to create the app instance.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "require('express')",
+            "express()",
+            "app"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 13",
+        "title": "Set up middleware for JSON parsing",
+        "instruction": "Add the express.json() middleware to your Express app to enable automatic parsing of JSON request bodies.",
+        "hint": "Use app.use() with express.json() as the argument to add this middleware.",
+        "analogousExample": "// Adding middleware to an Express app\nconst express = require('express');\nconst app = express();\napp.use(express.json());",
+        "seedCode": "const express = require('express');\nconst app = express();\n\n// Add JSON parsing middleware here",
+        "expectedOutcome": "Your Express app will now automatically parse JSON data from incoming requests and make it available in req.body.",
+        "successCriteria": [
+          "The app.use(express.json()) middleware is added to your Express application."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're using app.use() with express.json() as shown in the example.",
+        "feedbackWrong": "That doesn't look right. Remember to add the express.json() middleware using app.use().",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "app.use",
+            "express.json()"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 13",
+        "title": "Initialize in-memory data store",
+        "instruction": "Create an array named 'items' containing at least two objects, each with 'id', 'name', and 'isDeleted' properties. Initialize 'isDeleted' to false for all items.",
+        "hint": "Define a constant array with objects like { id: 1, name: 'Item 1', isDeleted: false }.",
+        "analogousExample": "// Example: simple data array\nconst books = [\n  { id: 1, title: 'Book A', isAvailable: true },\n  { id: 2, title: 'Book B', isAvailable: false }\n];",
+        "seedCode": "const express = require('express');\nconst app = express();\n\n// Add JSON parsing middleware here\n\n// Create your items array here",
+        "expectedOutcome": "An array 'items' is created with sample data, ready for soft delete operations.",
+        "successCriteria": [
+          "The 'items' array exists with at least two objects, each having 'id', 'name', and 'isDeleted' properties."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Ensure your array is named 'items' and each object has 'id', 'name', and 'isDeleted' properties.",
+        "feedbackWrong": "The data store wasn't created correctly. Check the array name and object properties.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "items",
+            "[",
+            "{",
+            "id",
+            "name",
+            "isDeleted",
+            "false"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 13",
+        "title": "Create GET endpoint to list active items",
+        "instruction": "Create a GET endpoint at '/items' that returns only items where isDeleted is false.",
+        "hint": "Use app.get() with the route '/items' and filter the items array to include only those with isDeleted === false.",
+        "analogousExample": "// Example GET endpoint returning filtered data\napp.get('/products', (req, res) => {\n  const activeProducts = products.filter(p => p.isActive === true);\n  res.json(activeProducts);\n});",
+        "seedCode": "const express = require('express');\nconst app = express();\n\n// Add JSON parsing middleware here\n\n// Create your items array here\n\n// Create GET endpoint for active items here",
+        "expectedOutcome": "A GET endpoint that responds with a JSON array of items where isDeleted is false.",
+        "successCriteria": [
+          "The endpoint uses app.get('/items', handler), filters items based on isDeleted, and sends the filtered array as JSON."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure you're filtering the items array and returning only those with isDeleted === false.",
+        "feedbackWrong": "The endpoint isn't working as expected. Check that you're using app.get() with '/items', filtering the items array, and sending the result as JSON.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "app.get",
+            "'/items'",
+            "filter",
+            "isDeleted",
+            "res.json"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 13",
+        "title": "Create POST endpoint to add new items",
+        "instruction": "Create a POST endpoint at '/items' that accepts JSON data with a 'name' property, adds a new item to the items array with an id, the provided name, and isDeleted set to false,",
+        "hint": "Use app.post() to define the endpoint. Access the request body via req.body. Generate a unique id (e.g., using Date.now()). Push the new item object into the items array and send it back with res.json().",
+        "analogousExample": "// Example POST endpoint\napp.post('/tasks', (req, res) => {\n  const newTask = {\n    id: Date.now(),\n    title: req.body.title,\n    completed: false\n  };\n  tasks.push(newTask);\n  res.json(newTask);\n});",
+        "seedCode": "const express = require('express');\nconst app = express();\n\napp.use(express.json());\n\nlet items = [];\n\napp.get('/items', (req, res) => {\n  const activeItems = items.filter(item => !item.isDeleted);\n  res.json(activeItems);\n});\n\n// Create POST endpoint for adding new items here\n",
+        "expectedOutcome": "A POST endpoint is added that successfully creates new items with the correct structure and default isDeleted: false.",
+        "successCriteria": [
+          "The POST endpoint at '/items' is defined, creates items with id, name from req.body, and isDeleted: false, and returns the created item."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the endpoint, but check that it includes all required properties: id, name from req.body, and isDeleted: false, and returns the created item.",
+        "feedbackWrong": "The POST endpoint is missing or incorrect. Ensure you use app.post(), handle the request body, create the item object with all properties, and return it.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "app.post",
+            "'/items'",
+            "req.body",
+            "isDeleted: false",
+            "res.json"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 13",
+        "title": "returns the created item",
+        "instruction": "returns the created item.",
+        "hint": "Use app.post() to define the endpoint. Access the request body via req.body. Generate a unique id (e.g., using Date.now()). Push the new item object into the items array and send it back with res.json().",
+        "analogousExample": "// Example POST endpoint\napp.post('/tasks', (req, res) => {\n  const newTask = {\n    id: Date.now(),\n    title: req.body.title,\n    completed: false\n  };\n  tasks.push(newTask);\n  res.json(newTask);\n});",
+        "seedCode": "const express = require('express');\nconst app = express();\n\napp.use(express.json());\n\nlet items = [];\n\napp.get('/items', (req, res) => {\n  const activeItems = items.filter(item => !item.isDeleted);\n  res.json(activeItems);\n});\n\n// Create POST endpoint for adding new items here\n",
+        "expectedOutcome": "",
+        "successCriteria": [
+          "Complete the step as instructed."
+        ],
+        "feedbackCorrect": "Great! Step completed.",
+        "feedbackPartial": "Review the instruction and try again.",
+        "feedbackWrong": "Check the instruction and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "app.post",
+            "'/items'",
+            "req.body",
+            "isDeleted: false",
+            "res.json"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 13",
+        "title": "Create GET endpoint for single item details",
+        "instruction": "Create a GET endpoint at '/items/:id' that finds an item by its ID from the items array, regardless of its isDeleted status.",
+        "hint": "Use req.params.id to get the ID from the URL, then use items.find() to locate the item. Return the item if found, or a 404 status with a message if not found.",
+        "analogousExample": "// Similar: endpoint to get a specific user\napp.get('/users/:id', (req, res) => {\n  const user = users.find(u => u.id === parseInt(req.params.id));\n  if (user) {\n    res.json(user);\n  } else {\n    res.status(404).json({ message: 'User not found' });\n  }\n});",
+        "seedCode": "const express = require('express');\nconst app = express();\n\napp.use(express.json());\n\nlet items = [];\n\napp.get('/items', (req, res) => {\n  const activeItems = items.filter(item => !item.isDeleted);\n  res.json(activeItems);\n});\n\n// Create POST endpoint for adding new items here\n\n// Create GET endpoint for single item details here",
+        "expectedOutcome": "The endpoint should retrieve a specific item by ID, returning the full item object (including isDeleted) if found, or a 404 error if not found.",
+        "successCriteria": [
+          "A GET endpoint at '/items/:id' is implemented that uses req.params.id, items.find(), and returns the item or a 404 status."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure to handle both cases: returning the found item with res.json() and sending a 404 status with a message if the item isn't found.",
+        "feedbackWrong": "The endpoint isn't working as expected. Check that you're using req.params.id to get the ID, searching the items array with find(), and properly handling both success and error responses.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "app.get(\"/items/:id\"",
+            "req.params.id",
+            "items.find",
+            "res.json",
+            "res.status(404)"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 13",
+        "title": "Create PUT endpoint to update items",
+        "instruction": "Create a PUT endpoint at '/items/:id' that updates an item's properties while preserving its isDeleted state. The endpoint should find the item by ID, update its title and description from the request body, and respond with the updated item.",
+        "hint": "Use app.put() with the route '/items/:id'. Find the item by ID using items.findIndex(). Update only the title and description properties, keeping isDeleted unchanged.",
+        "analogousExample": "// Similar: update endpoint for a resource\napp.put('/books/:id', (req, res) => {\n  const id = parseInt(req.params.id);\n  const index = books.findIndex(book => book.id === id);\n  if (index === -1) return res.status(404).json({ error: 'Book not found' });\n  books[index] = { ...books[index], ...req.body };\n  res.json(books[index]);\n});",
+        "seedCode": "const express = require('express');\nconst app = express();\n\napp.use(express.json());\n\nlet items = [];\n\napp.get('/items', (req, res) => {\n  const activeItems = items.filter(item => !item.isDeleted);\n  res.json(activeItems);\n});\n\n// Create POST endpoint for adding new items here\n\n// Create GET endpoint for single item details here\n\n// Create PUT endpoint to update items here",
+        "expectedOutcome": "The PUT endpoint should allow updating an existing item's title and description while keeping its isDeleted state intact.",
+        "successCriteria": [
+          "A PUT endpoint at '/items/:id' is implemented that finds the item by ID, updates its title and description from req.body, and responds with the updated item."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your endpoint properly handles the ID parameter and updates only the title and description fields.",
+        "feedbackWrong": "The PUT endpoint isn't implemented correctly. Check that you're using app.put(), finding the item by ID, and updating the correct properties.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "app.put",
+            "'/items/:id'",
+            "findIndex",
+            "req.params.id",
+            "req.body",
+            "res.json"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 13",
+        "title": "Define soft delete handler function",
+        "instruction": "Create a function named softDeleteItem that finds an item by ID in the items array and sets its isDeleted property to true.",
+        "hint": "The function should take an id parameter, find the item with that id, and if found, set item.isDeleted = true.",
+        "analogousExample": "// Similar: a function that marks an item as completed\nfunction markCompleted(id) {\n  const item = items.find(item => item.id === id);\n  if (item) {\n    item.completed = true;\n  }\n}",
+        "seedCode": "const express = require('express');\nconst app = express();\n\napp.use(express.json());\n\nlet items = [];\n\napp.get('/items', (req, res) => {\n  const activeItems = items.filter(item => !item.isDeleted);\n  res.json(activeItems);\n});\n\n// Create POST endpoint for adding new items here\n\n// Create GET endpoint for single item details here\n\n// Create PUT endpoint to update items here\n\n// Define soft delete handler function here",
+        "expectedOutcome": "A function named softDeleteItem is created that can mark items as deleted by setting isDeleted to true.",
+        "successCriteria": [
+          "The softDeleteItem function is defined, takes an id parameter, finds the item by id, and sets item.isDeleted = true."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure the function finds the item by id and sets isDeleted to true. Check the function name and logic.",
+        "feedbackWrong": "The soft delete handler function is not correctly defined. Ensure you create a function named softDeleteItem that takes an id, finds the item, and sets isDeleted to true.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "softDeleteItem",
+            "id",
+            "find",
+            "isDeleted",
+            "true"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 13",
+        "title": "Create DELETE endpoint for soft deletion",
+        "instruction": "Create a DELETE endpoint at '/items/:id' that calls the soft delete handler function to mark an item as deleted instead of removing it from the array.",
+        "hint": "Use app.delete() with the route parameter ':id' and call the soft delete handler function inside the callback.",
+        "analogousExample": "// Example DELETE endpoint\napp.delete('/items/:id', (req, res) => {\n  const id = parseInt(req.params.id);\n  // Call handler to soft delete\n  const result = softDeleteItem(id);\n  if (result) {\n    res.json({ message: 'Item soft deleted' });\n  } else {\n    res.status(404).json({ error: 'Item not found' });\n  }\n});",
+        "seedCode": "const express = require('express');\nconst app = express();\n\napp.use(express.json());\n\nlet items = [];\n\napp.get('/items', (req, res) => {\n  const activeItems = items.filter(item => !item.isDeleted);\n  res.json(activeItems);\n});\n\n// Create POST endpoint for adding new items here\n\n// Create GET endpoint for single item details here\n\n// Create PUT endpoint to update items here\n\n// Define soft delete handler function here\n\n// Create DELETE endpoint for soft deletion here",
+        "expectedOutcome": "The DELETE endpoint will be implemented, allowing items to be soft deleted by marking them as deleted without removing them from the array.",
+        "successCriteria": [
+          "A DELETE endpoint at '/items/:id' is created that calls the soft delete handler function and returns appropriate responses."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the DELETE endpoint, but make sure to call the soft delete handler function and handle both success and error responses.",
+        "feedbackWrong": "The DELETE endpoint is missing or incorrect. Ensure you use app.delete() with the correct route and call the soft delete handler.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "app.delete",
+            "'/items/:id'",
+            "softDeleteItem"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 13",
+        "title": "Define restore handler function",
+        "instruction": "Create a function named restoreItem that takes an id parameter, finds the item with that id in the items array, and if it exists and is soft-deleted (isDeleted is true), sets its isDeleted property to false.",
+        "hint": "The function should find the item by id, check if it exists and is deleted, then update its isDeleted property. You can use findIndex or find to locate the item.",
+        "analogousExample": "// Example: a function that restores an item\nfunction restoreItem(id) {\n  const itemIndex = items.findIndex(item => item.id === id);\n  if (itemIndex !== -1 && items[itemIndex].isDeleted) {\n    items[itemIndex].isDeleted = false;\n  }\n}",
+        "seedCode": "const express = require('express');\nconst app = express();\n\napp.use(express.json());\n\nlet items = [];\n\napp.get('/items', (req, res) => {\n  const activeItems = items.filter(item => !item.isDeleted);\n  res.json(activeItems);\n});\n\n// Create POST endpoint for adding new items here\n\n// Create GET endpoint for single item details here\n\n// Create PUT endpoint to update items here\n\n// Define soft delete handler function here\n\n// Create DELETE endpoint for soft deletion here\n\n// Define restore handler function here\nfunction restoreItem(id) {\n  // Find the item by id and restore it if it's soft-deleted\n}",
+        "expectedOutcome": "A restoreItem function is defined that can locate a soft-deleted item by id and restore it by setting isDeleted to false.",
+        "successCriteria": [
+          "The restoreItem function is defined, takes an id parameter, finds the item in the items array, checks if it's soft-deleted, and updates its isDeleted property to false."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started defining the restoreItem function, but it's missing some logic. Make sure it finds the item by id, checks if it's soft-deleted, and updates the isDeleted property.",
+        "feedbackWrong": "The restoreItem function is not defined correctly. It should take an id parameter, find the item in the items array, and restore it if it's soft-deleted.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "restoreItem",
+            "id",
+            "items",
+            "find",
+            "isDeleted",
+            "false"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step12",
+        "type": "question",
+        "phase": "Step 12 of 13",
+        "title": "Create POST endpoint to restore items",
+        "instruction": "Create a POST endpoint at '/items/:id/restore' that calls the restoreItem handler function and sends appropriate responses.",
+        "hint": "Use app.post() with the route path, extract the id from req.params, call restoreItem(id), and send a JSON response.",
+        "analogousExample": "// Similar: POST endpoint for restoring a resource\napp.post('/items/:id/restore', (req, res) => {\n  const { id } = req.params;\n  const result = restoreItem(id);\n  if (result) {\n    res.json({ message: 'Item restored', item: result });\n  } else {\n    res.status(404).json({ error: 'Item not found or not deleted' });\n  }\n});",
+        "seedCode": "const express = require('express');\nconst app = express();\n\napp.use(express.json());\n\nlet items = [];\n\napp.get('/items', (req, res) => {\n  const activeItems = items.filter(item => !item.isDeleted);\n  res.json(activeItems);\n});\n\n// Create POST endpoint for adding new items here\n\n// Create GET endpoint for single item details here\n\n// Create PUT endpoint to update items here\n\n// Define soft delete handler function here\n\n// Create DELETE endpoint for soft deletion here\n\n// Define restore handler function here\nfunction restoreItem(id) {\n  // Find the item by id and restore it if it's soft-deleted\n}\n\n// Create POST endpoint to restore items here",
+        "expectedOutcome": "A POST endpoint is added that handles item restoration requests.",
+        "successCriteria": [
+          "The endpoint is defined with app.post('/items/:id/restore', ...), calls restoreItem(id), and returns appropriate JSON responses."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure the endpoint uses POST, calls restoreItem, and handles both success and error responses.",
+        "feedbackWrong": "The endpoint is missing or incorrect. Review the instruction to create a POST endpoint at '/items/:id/restore' that uses the restoreItem function.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "app.post",
+            "'/items/:id/restore'",
+            "restoreItem",
+            "res.json",
+            "req.params"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step13",
+        "type": "question",
+        "phase": "Step 13 of 13",
+        "title": "Start the Express server",
+        "instruction": "Start the Express server by calling app.listen() on port 3000 and log a startup message to the console.",
+        "hint": "Use app.listen(3000, () => { console.log('Server running on port 3000'); }) to start the server and display a confirmation message.",
+        "analogousExample": "// Starting a basic server\nconst express = require('express');\nconst app = express();\napp.listen(3000, () => {\n  console.log('Server started on port 3000');\n});",
+        "seedCode": "const express = require('express');\nconst app = express();\n\napp.use(express.json());\n\nlet items = [];\n\napp.get('/items', (req, res) => {\n  const activeItems = items.filter(item => !item.isDeleted);\n  res.json(activeItems);\n});\n\n// Create POST endpoint for adding new items here\n\n// Create GET endpoint for single item details here\n\n// Create PUT endpoint to update items here\n\n// Define soft delete handler function here\n\n// Create DELETE endpoint for soft deletion here\n\n// Define restore handler function here\nfunction restoreItem(id) {\n  // Find the item by id and restore it if it's soft-deleted\n}\n\n// Create POST endpoint to restore items here\n\n// Start the server here\n",
+        "expectedOutcome": "The server will be running and accessible at http://localhost:3000, with all endpoints ready to handle requests.",
+        "successCriteria": [
+          "The app.listen() method is called with port 3000 and a callback that logs a startup message."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure you're calling app.listen() with both the port number and a callback function that logs a message.",
+        "feedbackWrong": "The server isn't started correctly. You need to call app.listen() with port 3000 and provide a callback to log a startup message.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "app.listen",
+            "3000",
+            "console.log",
+            "Server"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import required Node.js modules",
+        "id": "step1"
+      },
+      {
+        "label": "Set up middleware for JSON parsing",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize in-memory data store",
+        "id": "step3"
+      },
+      {
+        "label": "Create GET endpoint to list active items",
+        "id": "step4"
+      },
+      {
+        "label": "Create POST endpoint to add new items",
+        "id": "step5"
+      },
+      {
+        "label": "returns the created item",
+        "id": "step6"
+      },
+      {
+        "label": "Create GET endpoint for single item details",
+        "id": "step7"
+      },
+      {
+        "label": "Create PUT endpoint to update items",
+        "id": "step8"
+      },
+      {
+        "label": "Define soft delete handler function",
+        "id": "step9"
+      },
+      {
+        "label": "Create DELETE endpoint for soft deletion",
+        "id": "step10"
+      },
+      {
+        "label": "Define restore handler function",
+        "id": "step11"
+      },
+      {
+        "label": "Create POST endpoint to restore items",
+        "id": "step12"
+      },
+      {
+        "label": "Start the Express server",
+        "id": "step13"
+      }
+    ]
+  },
+  "source": "content"
+}

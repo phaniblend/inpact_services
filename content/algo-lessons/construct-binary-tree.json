@@ -1,0 +1,895 @@
+{
+  "id": "construct-binary-tree",
+  "title": "Construct Binary Tree from Preorder and Inorder",
+  "pattern": "tree",
+  "difficulty": "medium",
+  "language": "javascript",
+  "status": "draft",
+  "flow": [
+    {
+      "stepId": "title",
+      "mentorSays": "At the end of this lesson, you will be able to:\n\n1. Understand what Construct Binary Tree from Preorder and Inorder asks for\n2. Use recursion to build the tree from traversal arrays\n3. Find root in inorder to split left/right subtrees\n4. Build left and right subtrees recursively\n5. Implement the solution step by step in your chosen language",
+      "action": "continue",
+      "next": "lesson-illustration"
+    },
+    {
+      "stepId": "lesson-illustration",
+      "mentorSays": "Perfect! Now let's understand what the Construct Binary Tree lesson is asking.\n\n**Lesson Definition:**\nGiven two integer arrays `preorder` and `inorder` where preorder is the preorder traversal of a binary tree and inorder is the inorder traversal of the same tree, construct and return the binary tree.\n\n**Key Observations:**\n- Preorder: root, left, right (first element is always the root)\n- Inorder: left, root, right (root splits left and right subtrees)\n- We use root from preorder to find position in inorder\n- Everything left of root in inorder is left subtree\n- Everything right of root in inorder is right subtree\n- We recurse on left and right subtrees\n\n**Example 1:** \npreorder = [3,9,20,15,7]\ninorder = [9,3,15,20,7]\n\nStep 1: Root = 3 (first in preorder)\nStep 2: Find 3 in inorder: [9] (left), 3 (root), [15,20,7] (right)\nStep 3: Recurse on left: preorder=[9], inorder=[9]\nStep 4: Recurse on right: preorder=[20,15,7], inorder=[15,20,7]\n\nResult:\n    3\n   / \\\n  9  20\n    /  \\\n   15   7\n\n**Example 2:**\npreorder = [-1]\ninorder = [-1]\n\nResult:\n  -1\n\n**Step-by-step trace for Example 1 (Recursive approach):**\n\npreorder = [3,9,20,15,7]\ninorder = [9,3,15,20,7]\n\n- **buildTree([3,9,20,15,7], [9,3,15,20,7])**:\n  - Root = 3 (first in preorder)\n  - Find 3 in inorder at index 1\n  - Left subtree: inorder[0:1] = [9], preorder[1:2] = [9]\n  - Right subtree: inorder[2:5] = [15,20,7], preorder[2:5] = [20,15,7]\n  - Create node(3)\n  - node.left = buildTree([9], [9])\n  - node.right = buildTree([20,15,7], [15,20,7])\n  - Return node(3)\n\n- **buildTree([9], [9])**:\n  - Root = 9\n  - Find 9 in inorder at index 0\n  - Left subtree: [] (empty)\n  - Right subtree: [] (empty)\n  - Create node(9)\n  - node.left = null\n  - node.right = null\n  - Return node(9)\n\n- **buildTree([20,15,7], [15,20,7])**:\n  - Root = 20 (first in preorder)\n  - Find 20 in inorder at index 1\n  - Left subtree: inorder[0:1] = [15], preorder[1:2] = [15]\n  - Right subtree: inorder[2:3] = [7], preorder[2:3] = [7]\n  - Create node(20)\n  - node.left = buildTree([15], [15])\n  - node.right = buildTree([7], [7])\n  - Return node(20)\n\n**Key Insight:**\n- Preorder gives us the root (first element)\n- Inorder tells us what's left and right of the root\n- We use the root's position in inorder to split arrays\n- Recurse on left and right subtrees\n\n**What makes this tricky:**\n1. Understanding preorder vs inorder traversal\n2. Finding root position in inorder array\n3. Correctly splitting arrays for left/right subtrees\n4. Handling edge cases (empty arrays, single node)\n\n**Common pitfalls:**\n- Incorrect array slicing (off-by-one errors)\n- Not finding root in inorder correctly\n- Mixing up preorder and inorder\n- Not handling empty arrays (base case)",
+      "example": "Example 1:\npreorder=[3,9,20,15,7], inorder=[9,3,15,20,7]\nResult:\n    3\n   / \\\n  9  20\n    /  \\\n   15   7\n\nExample 2:\npreorder=[-1], inorder=[-1]\nResult: -1",
+      "action": "continue",
+      "next": "thinking-challenge"
+    },
+    {
+      "stepId": "thinking-challenge",
+      "mentorSays": "Now that you understand what the lesson wants, here's the real question:\n\nHow would YOU construct a binary tree from preorder and inorder traversals?\n\nThink about it for a moment. What approach feels natural to you?",
+      "choices": [
+        {
+          "label": "Use recursion - find root in inorder, split arrays, recurse",
+          "next": "explore-recursive"
+        },
+        {
+          "label": "Use iterative approach with stack",
+          "next": "explore-iterative"
+        },
+        {
+          "label": "Build tree level by level",
+          "next": "explore-level-order"
+        }
+      ]
+    },
+    {
+      "stepId": "explore-iterative",
+      "mentorSays": "That's a creative approach! You're thinking: \"I'll use an iterative approach with a stack.\"\n\nThis is possible but complex. The recursive approach is much more natural and easier to understand:\n- Preorder naturally gives us roots\n- Inorder naturally splits left/right\n- Recursion handles the tree structure elegantly\n\nLet's learn the recursive approach!",
+      "action": "continue",
+      "next": "explore-recursive"
+    },
+    {
+      "stepId": "explore-level-order",
+      "mentorSays": "That's an interesting approach! You're thinking: \"I'll build the tree level by level.\"\n\nHowever, preorder and inorder don't directly give us level information. The recursive approach is more natural:\n- Preorder gives us roots at each level\n- Inorder tells us what's left/right\n- Recursion builds the tree top-down\n\nLet's learn the recursive approach!",
+      "action": "continue",
+      "next": "explore-recursive"
+    },
+    {
+      "stepId": "explore-recursive",
+      "mentorSays": "Excellent choice! Recursion is the optimal solution. Here's the core idea:\n\n**The Algorithm:**\n1. **Base case**: If arrays are empty, return null\n2. **Get root**: First element of preorder is the root\n3. **Find root in inorder**: Search for root value in inorder array\n4. **Split arrays**: \n   - Left subtree: inorder[0:rootIndex], preorder[1:1+rootIndex]\n   - Right subtree: inorder[rootIndex+1:], preorder[1+rootIndex:]\n5. **Recurse**: Build left and right subtrees recursively\n6. **Return**: Create node with root value and attach subtrees\n\n**Why it works**:\n- Preorder always gives us the root first\n- Inorder tells us what's left and right of the root\n- We split both arrays based on root position\n- Recurse on smaller subproblems\n\n**Key insight**: The number of elements in left subtree = rootIndex in inorder!\n\nLet's trace with preorder=[3,9,20,15,7], inorder=[9,3,15,20,7]:\n\n- **buildTree([3,9,20,15,7], [9,3,15,20,7])**:\n  - Root = 3, rootIndex in inorder = 1\n  - Left: inorder[0:1]=[9], preorder[1:2]=[9]\n  - Right: inorder[2:]=[15,20,7], preorder[2:]=[20,15,7]\n  - node(3).left = buildTree([9], [9])\n  - node(3).right = buildTree([20,15,7], [15,20,7])\n\nThis is O(n) time (with hash map for O(1) lookup) and O(n) space! Now let's code it step by step.",
+      "action": "continue",
+      "next": "language-selection"
+    },
+    {
+      "stepId": "language-selection",
+      "mentorSays": "Great! Now let's code this solution. Which programming language would you like to use?",
+      "choices": [
+        {
+          "label": "JavaScript",
+          "next": "variable-check-js"
+        },
+        {
+          "label": "Python",
+          "next": "variable-check-python"
+        },
+        {
+          "label": "Java",
+          "next": "variable-check-java"
+        },
+        {
+          "label": "C++",
+          "next": "variable-check-cpp"
+        },
+        {
+          "label": "TypeScript",
+          "next": "variable-check-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-check-js",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in JS?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-js"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-js",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'root' or 'rootIndex') and put data inside it.",
+      "example": "let root = preorder[0];  // Root value\nlet rootIndex = 0;  // Position in inorder",
+      "action": "continue",
+      "next": "function-check-js"
+    },
+    {
+      "stepId": "function-check-js",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in JS?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-js"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-js",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "function buildTree(preorder, inorder) {\n  // Returns the constructed binary tree\n  return null;\n}",
+      "action": "continue",
+      "next": "parameter-check-js"
+    },
+    {
+      "stepId": "parameter-check-js",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "recursion-check-js"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-js",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'function buildTree(preorder, inorder)', 'preorder' and 'inorder' are parameters.",
+      "example": "function buildTree(preorder, inorder) {\n  // Parameters receive preorder and inorder arrays\n}\n\n// Call: buildTree([3,9,20,15,7], [9,3,15,20,7])",
+      "action": "continue",
+      "next": "recursion-check-js"
+    },
+    {
+      "stepId": "recursion-check-js",
+      "mentorSays": "To solve this lesson, we'll use recursion. Do you know what recursion is?",
+      "choices": [
+        {
+          "label": "Yes, I know recursion",
+          "next": "tree-check-js"
+        },
+        {
+          "label": "No, explain recursion",
+          "next": "recursion-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "recursion-explanation-js",
+      "mentorSays": "Recursion is when a function calls itself. For tree lessons, we:\n1. Handle the current node\n2. Recursively solve for left subtree\n3. Recursively solve for right subtree\n\nFor this lesson: we build the root, then recursively build left and right subtrees.",
+      "example": "function buildTree(preorder, inorder) {\n  // Build root\n  let root = new TreeNode(preorder[0]);\n  \n  // Recursively build left subtree\n  root.left = buildTree(leftPreorder, leftInorder);\n  \n  // Recursively build right subtree\n  root.right = buildTree(rightPreorder, rightInorder);\n  \n  return root;\n}",
+      "action": "continue",
+      "next": "tree-check-js"
+    },
+    {
+      "stepId": "tree-check-js",
+      "mentorSays": "To solve this lesson, we'll work with binary trees. Do you know what a binary tree is in JS?",
+      "choices": [
+        {
+          "label": "Yes, I know binary trees",
+          "next": "coding-start-js"
+        },
+        {
+          "label": "No, explain binary trees",
+          "next": "tree-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "tree-explanation-js",
+      "mentorSays": "A binary tree is a data structure where each node has at most two children (left and right). Each node has a value.",
+      "example": "class TreeNode {\n  constructor(val) {\n    this.val = val;\n    this.left = null;\n    this.right = null;\n  }\n}",
+      "action": "continue",
+      "next": "coding-start-js"
+    },
+    {
+      "stepId": "coding-start-js",
+      "mentorSays": "Perfect! Let's implement the construct binary tree solution in JS. We'll create a function that takes preorder and inorder arrays and returns the constructed tree.",
+      "example": "function buildTree(preorder, inorder) {\n  \n}",
+      "action": "continue",
+      "next": "coding-base-case-js"
+    },
+    {
+      "stepId": "coding-base-case-js",
+      "mentorSays": "Add the base case: if preorder or inorder arrays are empty, return null.",
+      "example": "function buildTree(preorder, inorder) {\n  // Base case: empty arrays\n  if (preorder.length === 0 || inorder.length === 0) {\n    return null;\n  }\n  \n}",
+      "action": "continue",
+      "next": "coding-get-root-js"
+    },
+    {
+      "stepId": "coding-get-root-js",
+      "mentorSays": "Get the root value from the first element of preorder array.",
+      "example": "function buildTree(preorder, inorder) {\n  if (preorder.length === 0 || inorder.length === 0) {\n    return null;\n  }\n  \n  // Root is first element in preorder\n  let rootVal = preorder[0];\n  \n}",
+      "action": "continue",
+      "next": "coding-find-root-index-js"
+    },
+    {
+      "stepId": "coding-find-root-index-js",
+      "mentorSays": "Find the root's position in the inorder array. This tells us how many nodes are in the left subtree.",
+      "example": "function buildTree(preorder, inorder) {\n  if (preorder.length === 0 || inorder.length === 0) {\n    return null;\n  }\n  \n  let rootVal = preorder[0];\n  \n  // Find root position in inorder\n  let rootIndex = inorder.indexOf(rootVal);\n  \n}",
+      "action": "continue",
+      "next": "coding-split-arrays-js"
+    },
+    {
+      "stepId": "coding-split-arrays-js",
+      "mentorSays": "Split the inorder and preorder arrays into left and right subtrees. Left subtree has rootIndex elements, right subtree has the rest.",
+      "example": "function buildTree(preorder, inorder) {\n  if (preorder.length === 0 || inorder.length === 0) {\n    return null;\n  }\n  \n  let rootVal = preorder[0];\n  let rootIndex = inorder.indexOf(rootVal);\n  \n  // Split arrays\n  let leftInorder = inorder.slice(0, rootIndex);\n  let rightInorder = inorder.slice(rootIndex + 1);\n  let leftPreorder = preorder.slice(1, 1 + rootIndex);\n  let rightPreorder = preorder.slice(1 + rootIndex);\n  \n}",
+      "action": "continue",
+      "next": "coding-create-node-js"
+    },
+    {
+      "stepId": "coding-create-node-js",
+      "mentorSays": "Create a new tree node with the root value.",
+      "example": "function buildTree(preorder, inorder) {\n  if (preorder.length === 0 || inorder.length === 0) {\n    return null;\n  }\n  \n  let rootVal = preorder[0];\n  let rootIndex = inorder.indexOf(rootVal);\n  \n  let leftInorder = inorder.slice(0, rootIndex);\n  let rightInorder = inorder.slice(rootIndex + 1);\n  let leftPreorder = preorder.slice(1, 1 + rootIndex);\n  let rightPreorder = preorder.slice(1 + rootIndex);\n  \n  // Create root node\n  let root = new TreeNode(rootVal);\n  \n}",
+      "action": "continue",
+      "next": "coding-recurse-js"
+    },
+    {
+      "stepId": "coding-recurse-js",
+      "mentorSays": "Recursively build the left and right subtrees, then attach them to the root node and return the root.",
+      "example": "function buildTree(preorder, inorder) {\n  if (preorder.length === 0 || inorder.length === 0) {\n    return null;\n  }\n  \n  let rootVal = preorder[0];\n  let rootIndex = inorder.indexOf(rootVal);\n  \n  let leftInorder = inorder.slice(0, rootIndex);\n  let rightInorder = inorder.slice(rootIndex + 1);\n  let leftPreorder = preorder.slice(1, 1 + rootIndex);\n  let rightPreorder = preorder.slice(1 + rootIndex);\n  \n  let root = new TreeNode(rootVal);\n  \n  // Recursively build subtrees\n  root.left = buildTree(leftPreorder, leftInorder);\n  root.right = buildTree(rightPreorder, rightInorder);\n  \n  return root;\n}",
+      "action": "continue",
+      "next": "test-code-js"
+    },
+    {
+      "stepId": "test-code-js",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** preorder=[3,9,20,15,7], inorder=[9,3,15,20,7]\nExpected: Tree with root 3, left child 9, right child 20 (with children 15 and 7)\n\n**Test 2:** preorder=[-1], inorder=[-1]\nExpected: Single node with value -1\n\n**Test 3:** preorder=[1,2], inorder=[2,1]\nExpected: Tree with root 1, left child 2\n\n**Test 4:** preorder=[1,2], inorder=[1,2]\nExpected: Tree with root 1, right child 2\n\n**Test 5:** preorder=[], inorder=[]\nExpected: null\n\n**Test 6:** Verify the constructed tree has correct structure and values\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: preorder=[3,9,20,15,7], inorder=[9,3,15,20,7]\nResult:\n    3\n   / \\\n  9  20\n    /  \\\n   15   7",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-python",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in PYTHON?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-python"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-python",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'root' or 'rootIndex') and put data inside it.",
+      "example": "let root = preorder[0];  // Root value\nlet rootIndex = 0;  // Position in inorder",
+      "action": "continue",
+      "next": "function-check-python"
+    },
+    {
+      "stepId": "function-check-python",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in PYTHON?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-python"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-python",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "function buildTree(preorder, inorder) {\n  // Returns the constructed binary tree\n  return null;\n}",
+      "action": "continue",
+      "next": "parameter-check-python"
+    },
+    {
+      "stepId": "parameter-check-python",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "recursion-check-python"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-python",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'function buildTree(preorder, inorder)', 'preorder' and 'inorder' are parameters.",
+      "example": "function buildTree(preorder, inorder) {\n  // Parameters receive preorder and inorder arrays\n}\n\n// Call: buildTree([3,9,20,15,7], [9,3,15,20,7])",
+      "action": "continue",
+      "next": "recursion-check-python"
+    },
+    {
+      "stepId": "recursion-check-python",
+      "mentorSays": "To solve this lesson, we'll use recursion. Do you know what recursion is?",
+      "choices": [
+        {
+          "label": "Yes, I know recursion",
+          "next": "tree-check-python"
+        },
+        {
+          "label": "No, explain recursion",
+          "next": "recursion-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "recursion-explanation-python",
+      "mentorSays": "Recursion is when a function calls itself. For tree lessons, we:\n1. Handle the current node\n2. Recursively solve for left subtree\n3. Recursively solve for right subtree\n\nFor this lesson: we build the root, then recursively build left and right subtrees.",
+      "example": "function buildTree(preorder, inorder) {\n  // Build root\n  let root = new TreeNode(preorder[0]);\n  \n  // Recursively build left subtree\n  root.left = buildTree(leftPreorder, leftInorder);\n  \n  // Recursively build right subtree\n  root.right = buildTree(rightPreorder, rightInorder);\n  \n  return root;\n}",
+      "action": "continue",
+      "next": "tree-check-python"
+    },
+    {
+      "stepId": "tree-check-python",
+      "mentorSays": "To solve this lesson, we'll work with binary trees. Do you know what a binary tree is in PYTHON?",
+      "choices": [
+        {
+          "label": "Yes, I know binary trees",
+          "next": "coding-start-python"
+        },
+        {
+          "label": "No, explain binary trees",
+          "next": "tree-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "tree-explanation-python",
+      "mentorSays": "A binary tree is a data structure where each node has at most two children (left and right). Each node has a value.",
+      "example": "class TreeNode {\n  constructor(val) {\n    this.val = val;\n    this.left = null;\n    this.right = null;\n  }\n}",
+      "action": "continue",
+      "next": "coding-start-python"
+    },
+    {
+      "stepId": "coding-start-python",
+      "mentorSays": "Perfect! Let's implement the construct binary tree solution in PYTHON. We'll create a function that takes preorder and inorder arrays and returns the constructed tree.",
+      "example": "function buildTree(preorder, inorder) {\n  \n}",
+      "action": "continue",
+      "next": "coding-base-case-python"
+    },
+    {
+      "stepId": "coding-base-case-python",
+      "mentorSays": "Add the base case: if preorder or inorder arrays are empty, return null.",
+      "example": "function buildTree(preorder, inorder) {\n  // Base case: empty arrays\n  if (preorder.length === 0 || inorder.length === 0) {\n    return null;\n  }\n  \n}",
+      "action": "continue",
+      "next": "coding-get-root-python"
+    },
+    {
+      "stepId": "coding-get-root-python",
+      "mentorSays": "Get the root value from the first element of preorder array.",
+      "example": "function buildTree(preorder, inorder) {\n  if (preorder.length === 0 || inorder.length === 0) {\n    return null;\n  }\n  \n  // Root is first element in preorder\n  let rootVal = preorder[0];\n  \n}",
+      "action": "continue",
+      "next": "coding-find-root-index-python"
+    },
+    {
+      "stepId": "coding-find-root-index-python",
+      "mentorSays": "Find the root's position in the inorder array. This tells us how many nodes are in the left subtree.",
+      "example": "function buildTree(preorder, inorder) {\n  if (preorder.length === 0 || inorder.length === 0) {\n    return null;\n  }\n  \n  let rootVal = preorder[0];\n  \n  // Find root position in inorder\n  let rootIndex = inorder.indexOf(rootVal);\n  \n}",
+      "action": "continue",
+      "next": "coding-split-arrays-python"
+    },
+    {
+      "stepId": "coding-split-arrays-python",
+      "mentorSays": "Split the inorder and preorder arrays into left and right subtrees. Left subtree has rootIndex elements, right subtree has the rest.",
+      "example": "function buildTree(preorder, inorder) {\n  if (preorder.length === 0 || inorder.length === 0) {\n    return null;\n  }\n  \n  let rootVal = preorder[0];\n  let rootIndex = inorder.indexOf(rootVal);\n  \n  // Split arrays\n  let leftInorder = inorder.slice(0, rootIndex);\n  let rightInorder = inorder.slice(rootIndex + 1);\n  let leftPreorder = preorder.slice(1, 1 + rootIndex);\n  let rightPreorder = preorder.slice(1 + rootIndex);\n  \n}",
+      "action": "continue",
+      "next": "coding-create-node-python"
+    },
+    {
+      "stepId": "coding-create-node-python",
+      "mentorSays": "Create a new tree node with the root value.",
+      "example": "function buildTree(preorder, inorder) {\n  if (preorder.length === 0 || inorder.length === 0) {\n    return null;\n  }\n  \n  let rootVal = preorder[0];\n  let rootIndex = inorder.indexOf(rootVal);\n  \n  let leftInorder = inorder.slice(0, rootIndex);\n  let rightInorder = inorder.slice(rootIndex + 1);\n  let leftPreorder = preorder.slice(1, 1 + rootIndex);\n  let rightPreorder = preorder.slice(1 + rootIndex);\n  \n  // Create root node\n  let root = new TreeNode(rootVal);\n  \n}",
+      "action": "continue",
+      "next": "coding-recurse-python"
+    },
+    {
+      "stepId": "coding-recurse-python",
+      "mentorSays": "Recursively build the left and right subtrees, then attach them to the root node and return the root.",
+      "example": "function buildTree(preorder, inorder) {\n  if (preorder.length === 0 || inorder.length === 0) {\n    return null;\n  }\n  \n  let rootVal = preorder[0];\n  let rootIndex = inorder.indexOf(rootVal);\n  \n  let leftInorder = inorder.slice(0, rootIndex);\n  let rightInorder = inorder.slice(rootIndex + 1);\n  let leftPreorder = preorder.slice(1, 1 + rootIndex);\n  let rightPreorder = preorder.slice(1 + rootIndex);\n  \n  let root = new TreeNode(rootVal);\n  \n  // Recursively build subtrees\n  root.left = buildTree(leftPreorder, leftInorder);\n  root.right = buildTree(rightPreorder, rightInorder);\n  \n  return root;\n}",
+      "action": "continue",
+      "next": "test-code-python"
+    },
+    {
+      "stepId": "test-code-python",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** preorder=[3,9,20,15,7], inorder=[9,3,15,20,7]\nExpected: Tree with root 3, left child 9, right child 20 (with children 15 and 7)\n\n**Test 2:** preorder=[-1], inorder=[-1]\nExpected: Single node with value -1\n\n**Test 3:** preorder=[1,2], inorder=[2,1]\nExpected: Tree with root 1, left child 2\n\n**Test 4:** preorder=[1,2], inorder=[1,2]\nExpected: Tree with root 1, right child 2\n\n**Test 5:** preorder=[], inorder=[]\nExpected: null\n\n**Test 6:** Verify the constructed tree has correct structure and values\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: preorder=[3,9,20,15,7], inorder=[9,3,15,20,7]\nResult:\n    3\n   / \\\n  9  20\n    /  \\\n   15   7",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-java",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in JAVA?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-java"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-java",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'root' or 'rootIndex') and put data inside it.",
+      "example": "let root = preorder[0];  // Root value\nlet rootIndex = 0;  // Position in inorder",
+      "action": "continue",
+      "next": "function-check-java"
+    },
+    {
+      "stepId": "function-check-java",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in JAVA?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-java"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-java",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "function buildTree(preorder, inorder) {\n  // Returns the constructed binary tree\n  return null;\n}",
+      "action": "continue",
+      "next": "parameter-check-java"
+    },
+    {
+      "stepId": "parameter-check-java",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "recursion-check-java"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-java",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'function buildTree(preorder, inorder)', 'preorder' and 'inorder' are parameters.",
+      "example": "function buildTree(preorder, inorder) {\n  // Parameters receive preorder and inorder arrays\n}\n\n// Call: buildTree([3,9,20,15,7], [9,3,15,20,7])",
+      "action": "continue",
+      "next": "recursion-check-java"
+    },
+    {
+      "stepId": "recursion-check-java",
+      "mentorSays": "To solve this lesson, we'll use recursion. Do you know what recursion is?",
+      "choices": [
+        {
+          "label": "Yes, I know recursion",
+          "next": "tree-check-java"
+        },
+        {
+          "label": "No, explain recursion",
+          "next": "recursion-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "recursion-explanation-java",
+      "mentorSays": "Recursion is when a function calls itself. For tree lessons, we:\n1. Handle the current node\n2. Recursively solve for left subtree\n3. Recursively solve for right subtree\n\nFor this lesson: we build the root, then recursively build left and right subtrees.",
+      "example": "function buildTree(preorder, inorder) {\n  // Build root\n  let root = new TreeNode(preorder[0]);\n  \n  // Recursively build left subtree\n  root.left = buildTree(leftPreorder, leftInorder);\n  \n  // Recursively build right subtree\n  root.right = buildTree(rightPreorder, rightInorder);\n  \n  return root;\n}",
+      "action": "continue",
+      "next": "tree-check-java"
+    },
+    {
+      "stepId": "tree-check-java",
+      "mentorSays": "To solve this lesson, we'll work with binary trees. Do you know what a binary tree is in JAVA?",
+      "choices": [
+        {
+          "label": "Yes, I know binary trees",
+          "next": "coding-start-java"
+        },
+        {
+          "label": "No, explain binary trees",
+          "next": "tree-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "tree-explanation-java",
+      "mentorSays": "A binary tree is a data structure where each node has at most two children (left and right). Each node has a value.",
+      "example": "class TreeNode {\n  constructor(val) {\n    this.val = val;\n    this.left = null;\n    this.right = null;\n  }\n}",
+      "action": "continue",
+      "next": "coding-start-java"
+    },
+    {
+      "stepId": "coding-start-java",
+      "mentorSays": "Perfect! Let's implement the construct binary tree solution in JAVA. We'll create a function that takes preorder and inorder arrays and returns the constructed tree.",
+      "example": "function buildTree(preorder, inorder) {\n  \n}",
+      "action": "continue",
+      "next": "coding-base-case-java"
+    },
+    {
+      "stepId": "coding-base-case-java",
+      "mentorSays": "Add the base case: if preorder or inorder arrays are empty, return null.",
+      "example": "function buildTree(preorder, inorder) {\n  // Base case: empty arrays\n  if (preorder.length === 0 || inorder.length === 0) {\n    return null;\n  }\n  \n}",
+      "action": "continue",
+      "next": "coding-get-root-java"
+    },
+    {
+      "stepId": "coding-get-root-java",
+      "mentorSays": "Get the root value from the first element of preorder array.",
+      "example": "function buildTree(preorder, inorder) {\n  if (preorder.length === 0 || inorder.length === 0) {\n    return null;\n  }\n  \n  // Root is first element in preorder\n  let rootVal = preorder[0];\n  \n}",
+      "action": "continue",
+      "next": "coding-find-root-index-java"
+    },
+    {
+      "stepId": "coding-find-root-index-java",
+      "mentorSays": "Find the root's position in the inorder array. This tells us how many nodes are in the left subtree.",
+      "example": "function buildTree(preorder, inorder) {\n  if (preorder.length === 0 || inorder.length === 0) {\n    return null;\n  }\n  \n  let rootVal = preorder[0];\n  \n  // Find root position in inorder\n  let rootIndex = inorder.indexOf(rootVal);\n  \n}",
+      "action": "continue",
+      "next": "coding-split-arrays-java"
+    },
+    {
+      "stepId": "coding-split-arrays-java",
+      "mentorSays": "Split the inorder and preorder arrays into left and right subtrees. Left subtree has rootIndex elements, right subtree has the rest.",
+      "example": "function buildTree(preorder, inorder) {\n  if (preorder.length === 0 || inorder.length === 0) {\n    return null;\n  }\n  \n  let rootVal = preorder[0];\n  let rootIndex = inorder.indexOf(rootVal);\n  \n  // Split arrays\n  let leftInorder = inorder.slice(0, rootIndex);\n  let rightInorder = inorder.slice(rootIndex + 1);\n  let leftPreorder = preorder.slice(1, 1 + rootIndex);\n  let rightPreorder = preorder.slice(1 + rootIndex);\n  \n}",
+      "action": "continue",
+      "next": "coding-create-node-java"
+    },
+    {
+      "stepId": "coding-create-node-java",
+      "mentorSays": "Create a new tree node with the root value.",
+      "example": "function buildTree(preorder, inorder) {\n  if (preorder.length === 0 || inorder.length === 0) {\n    return null;\n  }\n  \n  let rootVal = preorder[0];\n  let rootIndex = inorder.indexOf(rootVal);\n  \n  let leftInorder = inorder.slice(0, rootIndex);\n  let rightInorder = inorder.slice(rootIndex + 1);\n  let leftPreorder = preorder.slice(1, 1 + rootIndex);\n  let rightPreorder = preorder.slice(1 + rootIndex);\n  \n  // Create root node\n  let root = new TreeNode(rootVal);\n  \n}",
+      "action": "continue",
+      "next": "coding-recurse-java"
+    },
+    {
+      "stepId": "coding-recurse-java",
+      "mentorSays": "Recursively build the left and right subtrees, then attach them to the root node and return the root.",
+      "example": "function buildTree(preorder, inorder) {\n  if (preorder.length === 0 || inorder.length === 0) {\n    return null;\n  }\n  \n  let rootVal = preorder[0];\n  let rootIndex = inorder.indexOf(rootVal);\n  \n  let leftInorder = inorder.slice(0, rootIndex);\n  let rightInorder = inorder.slice(rootIndex + 1);\n  let leftPreorder = preorder.slice(1, 1 + rootIndex);\n  let rightPreorder = preorder.slice(1 + rootIndex);\n  \n  let root = new TreeNode(rootVal);\n  \n  // Recursively build subtrees\n  root.left = buildTree(leftPreorder, leftInorder);\n  root.right = buildTree(rightPreorder, rightInorder);\n  \n  return root;\n}",
+      "action": "continue",
+      "next": "test-code-java"
+    },
+    {
+      "stepId": "test-code-java",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** preorder=[3,9,20,15,7], inorder=[9,3,15,20,7]\nExpected: Tree with root 3, left child 9, right child 20 (with children 15 and 7)\n\n**Test 2:** preorder=[-1], inorder=[-1]\nExpected: Single node with value -1\n\n**Test 3:** preorder=[1,2], inorder=[2,1]\nExpected: Tree with root 1, left child 2\n\n**Test 4:** preorder=[1,2], inorder=[1,2]\nExpected: Tree with root 1, right child 2\n\n**Test 5:** preorder=[], inorder=[]\nExpected: null\n\n**Test 6:** Verify the constructed tree has correct structure and values\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: preorder=[3,9,20,15,7], inorder=[9,3,15,20,7]\nResult:\n    3\n   / \\\n  9  20\n    /  \\\n   15   7",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-cpp",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in CPP?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-cpp"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-cpp",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'root' or 'rootIndex') and put data inside it.",
+      "example": "let root = preorder[0];  // Root value\nlet rootIndex = 0;  // Position in inorder",
+      "action": "continue",
+      "next": "function-check-cpp"
+    },
+    {
+      "stepId": "function-check-cpp",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in CPP?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-cpp"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-cpp",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "function buildTree(preorder, inorder) {\n  // Returns the constructed binary tree\n  return null;\n}",
+      "action": "continue",
+      "next": "parameter-check-cpp"
+    },
+    {
+      "stepId": "parameter-check-cpp",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "recursion-check-cpp"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-cpp",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'function buildTree(preorder, inorder)', 'preorder' and 'inorder' are parameters.",
+      "example": "function buildTree(preorder, inorder) {\n  // Parameters receive preorder and inorder arrays\n}\n\n// Call: buildTree([3,9,20,15,7], [9,3,15,20,7])",
+      "action": "continue",
+      "next": "recursion-check-cpp"
+    },
+    {
+      "stepId": "recursion-check-cpp",
+      "mentorSays": "To solve this lesson, we'll use recursion. Do you know what recursion is?",
+      "choices": [
+        {
+          "label": "Yes, I know recursion",
+          "next": "tree-check-cpp"
+        },
+        {
+          "label": "No, explain recursion",
+          "next": "recursion-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "recursion-explanation-cpp",
+      "mentorSays": "Recursion is when a function calls itself. For tree lessons, we:\n1. Handle the current node\n2. Recursively solve for left subtree\n3. Recursively solve for right subtree\n\nFor this lesson: we build the root, then recursively build left and right subtrees.",
+      "example": "function buildTree(preorder, inorder) {\n  // Build root\n  let root = new TreeNode(preorder[0]);\n  \n  // Recursively build left subtree\n  root.left = buildTree(leftPreorder, leftInorder);\n  \n  // Recursively build right subtree\n  root.right = buildTree(rightPreorder, rightInorder);\n  \n  return root;\n}",
+      "action": "continue",
+      "next": "tree-check-cpp"
+    },
+    {
+      "stepId": "tree-check-cpp",
+      "mentorSays": "To solve this lesson, we'll work with binary trees. Do you know what a binary tree is in CPP?",
+      "choices": [
+        {
+          "label": "Yes, I know binary trees",
+          "next": "coding-start-cpp"
+        },
+        {
+          "label": "No, explain binary trees",
+          "next": "tree-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "tree-explanation-cpp",
+      "mentorSays": "A binary tree is a data structure where each node has at most two children (left and right). Each node has a value.",
+      "example": "class TreeNode {\n  constructor(val) {\n    this.val = val;\n    this.left = null;\n    this.right = null;\n  }\n}",
+      "action": "continue",
+      "next": "coding-start-cpp"
+    },
+    {
+      "stepId": "coding-start-cpp",
+      "mentorSays": "Perfect! Let's implement the construct binary tree solution in CPP. We'll create a function that takes preorder and inorder arrays and returns the constructed tree.",
+      "example": "function buildTree(preorder, inorder) {\n  \n}",
+      "action": "continue",
+      "next": "coding-base-case-cpp"
+    },
+    {
+      "stepId": "coding-base-case-cpp",
+      "mentorSays": "Add the base case: if preorder or inorder arrays are empty, return null.",
+      "example": "function buildTree(preorder, inorder) {\n  // Base case: empty arrays\n  if (preorder.length === 0 || inorder.length === 0) {\n    return null;\n  }\n  \n}",
+      "action": "continue",
+      "next": "coding-get-root-cpp"
+    },
+    {
+      "stepId": "coding-get-root-cpp",
+      "mentorSays": "Get the root value from the first element of preorder array.",
+      "example": "function buildTree(preorder, inorder) {\n  if (preorder.length === 0 || inorder.length === 0) {\n    return null;\n  }\n  \n  // Root is first element in preorder\n  let rootVal = preorder[0];\n  \n}",
+      "action": "continue",
+      "next": "coding-find-root-index-cpp"
+    },
+    {
+      "stepId": "coding-find-root-index-cpp",
+      "mentorSays": "Find the root's position in the inorder array. This tells us how many nodes are in the left subtree.",
+      "example": "function buildTree(preorder, inorder) {\n  if (preorder.length === 0 || inorder.length === 0) {\n    return null;\n  }\n  \n  let rootVal = preorder[0];\n  \n  // Find root position in inorder\n  let rootIndex = inorder.indexOf(rootVal);\n  \n}",
+      "action": "continue",
+      "next": "coding-split-arrays-cpp"
+    },
+    {
+      "stepId": "coding-split-arrays-cpp",
+      "mentorSays": "Split the inorder and preorder arrays into left and right subtrees. Left subtree has rootIndex elements, right subtree has the rest.",
+      "example": "function buildTree(preorder, inorder) {\n  if (preorder.length === 0 || inorder.length === 0) {\n    return null;\n  }\n  \n  let rootVal = preorder[0];\n  let rootIndex = inorder.indexOf(rootVal);\n  \n  // Split arrays\n  let leftInorder = inorder.slice(0, rootIndex);\n  let rightInorder = inorder.slice(rootIndex + 1);\n  let leftPreorder = preorder.slice(1, 1 + rootIndex);\n  let rightPreorder = preorder.slice(1 + rootIndex);\n  \n}",
+      "action": "continue",
+      "next": "coding-create-node-cpp"
+    },
+    {
+      "stepId": "coding-create-node-cpp",
+      "mentorSays": "Create a new tree node with the root value.",
+      "example": "function buildTree(preorder, inorder) {\n  if (preorder.length === 0 || inorder.length === 0) {\n    return null;\n  }\n  \n  let rootVal = preorder[0];\n  let rootIndex = inorder.indexOf(rootVal);\n  \n  let leftInorder = inorder.slice(0, rootIndex);\n  let rightInorder = inorder.slice(rootIndex + 1);\n  let leftPreorder = preorder.slice(1, 1 + rootIndex);\n  let rightPreorder = preorder.slice(1 + rootIndex);\n  \n  // Create root node\n  let root = new TreeNode(rootVal);\n  \n}",
+      "action": "continue",
+      "next": "coding-recurse-cpp"
+    },
+    {
+      "stepId": "coding-recurse-cpp",
+      "mentorSays": "Recursively build the left and right subtrees, then attach them to the root node and return the root.",
+      "example": "function buildTree(preorder, inorder) {\n  if (preorder.length === 0 || inorder.length === 0) {\n    return null;\n  }\n  \n  let rootVal = preorder[0];\n  let rootIndex = inorder.indexOf(rootVal);\n  \n  let leftInorder = inorder.slice(0, rootIndex);\n  let rightInorder = inorder.slice(rootIndex + 1);\n  let leftPreorder = preorder.slice(1, 1 + rootIndex);\n  let rightPreorder = preorder.slice(1 + rootIndex);\n  \n  let root = new TreeNode(rootVal);\n  \n  // Recursively build subtrees\n  root.left = buildTree(leftPreorder, leftInorder);\n  root.right = buildTree(rightPreorder, rightInorder);\n  \n  return root;\n}",
+      "action": "continue",
+      "next": "test-code-cpp"
+    },
+    {
+      "stepId": "test-code-cpp",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** preorder=[3,9,20,15,7], inorder=[9,3,15,20,7]\nExpected: Tree with root 3, left child 9, right child 20 (with children 15 and 7)\n\n**Test 2:** preorder=[-1], inorder=[-1]\nExpected: Single node with value -1\n\n**Test 3:** preorder=[1,2], inorder=[2,1]\nExpected: Tree with root 1, left child 2\n\n**Test 4:** preorder=[1,2], inorder=[1,2]\nExpected: Tree with root 1, right child 2\n\n**Test 5:** preorder=[], inorder=[]\nExpected: null\n\n**Test 6:** Verify the constructed tree has correct structure and values\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: preorder=[3,9,20,15,7], inorder=[9,3,15,20,7]\nResult:\n    3\n   / \\\n  9  20\n    /  \\\n   15   7",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-ts",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in TS?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-ts"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-ts",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'root' or 'rootIndex') and put data inside it.",
+      "example": "let root = preorder[0];  // Root value\nlet rootIndex = 0;  // Position in inorder",
+      "action": "continue",
+      "next": "function-check-ts"
+    },
+    {
+      "stepId": "function-check-ts",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in TS?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-ts"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-ts",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "function buildTree(preorder, inorder) {\n  // Returns the constructed binary tree\n  return null;\n}",
+      "action": "continue",
+      "next": "parameter-check-ts"
+    },
+    {
+      "stepId": "parameter-check-ts",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "recursion-check-ts"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-ts",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'function buildTree(preorder, inorder)', 'preorder' and 'inorder' are parameters.",
+      "example": "function buildTree(preorder, inorder) {\n  // Parameters receive preorder and inorder arrays\n}\n\n// Call: buildTree([3,9,20,15,7], [9,3,15,20,7])",
+      "action": "continue",
+      "next": "recursion-check-ts"
+    },
+    {
+      "stepId": "recursion-check-ts",
+      "mentorSays": "To solve this lesson, we'll use recursion. Do you know what recursion is?",
+      "choices": [
+        {
+          "label": "Yes, I know recursion",
+          "next": "tree-check-ts"
+        },
+        {
+          "label": "No, explain recursion",
+          "next": "recursion-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "recursion-explanation-ts",
+      "mentorSays": "Recursion is when a function calls itself. For tree lessons, we:\n1. Handle the current node\n2. Recursively solve for left subtree\n3. Recursively solve for right subtree\n\nFor this lesson: we build the root, then recursively build left and right subtrees.",
+      "example": "function buildTree(preorder, inorder) {\n  // Build root\n  let root = new TreeNode(preorder[0]);\n  \n  // Recursively build left subtree\n  root.left = buildTree(leftPreorder, leftInorder);\n  \n  // Recursively build right subtree\n  root.right = buildTree(rightPreorder, rightInorder);\n  \n  return root;\n}",
+      "action": "continue",
+      "next": "tree-check-ts"
+    },
+    {
+      "stepId": "tree-check-ts",
+      "mentorSays": "To solve this lesson, we'll work with binary trees. Do you know what a binary tree is in TS?",
+      "choices": [
+        {
+          "label": "Yes, I know binary trees",
+          "next": "coding-start-ts"
+        },
+        {
+          "label": "No, explain binary trees",
+          "next": "tree-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "tree-explanation-ts",
+      "mentorSays": "A binary tree is a data structure where each node has at most two children (left and right). Each node has a value.",
+      "example": "class TreeNode {\n  constructor(val) {\n    this.val = val;\n    this.left = null;\n    this.right = null;\n  }\n}",
+      "action": "continue",
+      "next": "coding-start-ts"
+    },
+    {
+      "stepId": "coding-start-ts",
+      "mentorSays": "Perfect! Let's implement the construct binary tree solution in TS. We'll create a function that takes preorder and inorder arrays and returns the constructed tree.",
+      "example": "function buildTree(preorder, inorder) {\n  \n}",
+      "action": "continue",
+      "next": "coding-base-case-ts"
+    },
+    {
+      "stepId": "coding-base-case-ts",
+      "mentorSays": "Add the base case: if preorder or inorder arrays are empty, return null.",
+      "example": "function buildTree(preorder, inorder) {\n  // Base case: empty arrays\n  if (preorder.length === 0 || inorder.length === 0) {\n    return null;\n  }\n  \n}",
+      "action": "continue",
+      "next": "coding-get-root-ts"
+    },
+    {
+      "stepId": "coding-get-root-ts",
+      "mentorSays": "Get the root value from the first element of preorder array.",
+      "example": "function buildTree(preorder, inorder) {\n  if (preorder.length === 0 || inorder.length === 0) {\n    return null;\n  }\n  \n  // Root is first element in preorder\n  let rootVal = preorder[0];\n  \n}",
+      "action": "continue",
+      "next": "coding-find-root-index-ts"
+    },
+    {
+      "stepId": "coding-find-root-index-ts",
+      "mentorSays": "Find the root's position in the inorder array. This tells us how many nodes are in the left subtree.",
+      "example": "function buildTree(preorder, inorder) {\n  if (preorder.length === 0 || inorder.length === 0) {\n    return null;\n  }\n  \n  let rootVal = preorder[0];\n  \n  // Find root position in inorder\n  let rootIndex = inorder.indexOf(rootVal);\n  \n}",
+      "action": "continue",
+      "next": "coding-split-arrays-ts"
+    },
+    {
+      "stepId": "coding-split-arrays-ts",
+      "mentorSays": "Split the inorder and preorder arrays into left and right subtrees. Left subtree has rootIndex elements, right subtree has the rest.",
+      "example": "function buildTree(preorder, inorder) {\n  if (preorder.length === 0 || inorder.length === 0) {\n    return null;\n  }\n  \n  let rootVal = preorder[0];\n  let rootIndex = inorder.indexOf(rootVal);\n  \n  // Split arrays\n  let leftInorder = inorder.slice(0, rootIndex);\n  let rightInorder = inorder.slice(rootIndex + 1);\n  let leftPreorder = preorder.slice(1, 1 + rootIndex);\n  let rightPreorder = preorder.slice(1 + rootIndex);\n  \n}",
+      "action": "continue",
+      "next": "coding-create-node-ts"
+    },
+    {
+      "stepId": "coding-create-node-ts",
+      "mentorSays": "Create a new tree node with the root value.",
+      "example": "function buildTree(preorder, inorder) {\n  if (preorder.length === 0 || inorder.length === 0) {\n    return null;\n  }\n  \n  let rootVal = preorder[0];\n  let rootIndex = inorder.indexOf(rootVal);\n  \n  let leftInorder = inorder.slice(0, rootIndex);\n  let rightInorder = inorder.slice(rootIndex + 1);\n  let leftPreorder = preorder.slice(1, 1 + rootIndex);\n  let rightPreorder = preorder.slice(1 + rootIndex);\n  \n  // Create root node\n  let root = new TreeNode(rootVal);\n  \n}",
+      "action": "continue",
+      "next": "coding-recurse-ts"
+    },
+    {
+      "stepId": "coding-recurse-ts",
+      "mentorSays": "Recursively build the left and right subtrees, then attach them to the root node and return the root.",
+      "example": "function buildTree(preorder, inorder) {\n  if (preorder.length === 0 || inorder.length === 0) {\n    return null;\n  }\n  \n  let rootVal = preorder[0];\n  let rootIndex = inorder.indexOf(rootVal);\n  \n  let leftInorder = inorder.slice(0, rootIndex);\n  let rightInorder = inorder.slice(rootIndex + 1);\n  let leftPreorder = preorder.slice(1, 1 + rootIndex);\n  let rightPreorder = preorder.slice(1 + rootIndex);\n  \n  let root = new TreeNode(rootVal);\n  \n  // Recursively build subtrees\n  root.left = buildTree(leftPreorder, leftInorder);\n  root.right = buildTree(rightPreorder, rightInorder);\n  \n  return root;\n}",
+      "action": "continue",
+      "next": "test-code-ts"
+    },
+    {
+      "stepId": "test-code-ts",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** preorder=[3,9,20,15,7], inorder=[9,3,15,20,7]\nExpected: Tree with root 3, left child 9, right child 20 (with children 15 and 7)\n\n**Test 2:** preorder=[-1], inorder=[-1]\nExpected: Single node with value -1\n\n**Test 3:** preorder=[1,2], inorder=[2,1]\nExpected: Tree with root 1, left child 2\n\n**Test 4:** preorder=[1,2], inorder=[1,2]\nExpected: Tree with root 1, right child 2\n\n**Test 5:** preorder=[], inorder=[]\nExpected: null\n\n**Test 6:** Verify the constructed tree has correct structure and values\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: preorder=[3,9,20,15,7], inorder=[9,3,15,20,7]\nResult:\n    3\n   / \\\n  9  20\n    /  \\\n   15   7",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "final",
+      "mentorSays": "Well done! You've successfully implemented the Construct Binary Tree solution!\n\n**Time Complexity:** O(n)\n- We visit each node exactly once\n- Finding root in inorder: O(n) without hash map, O(1) with hash map\n- Array slicing: O(n) in worst case\n- Total: O(n^2) without optimization, O(n) with hash map\n\n**Space Complexity:** O(n)\n- The recursion stack uses O(h) space where h is height (O(n) worst case)\n- We create O(n) new tree nodes\n- Array slicing creates O(n) space for subarrays\n- Total: O(n) for recursion + O(n) for nodes + O(n) for arrays = O(n)\n\n**Key Takeaways:**\n1. **Preorder gives root**: First element is always the root\n2. **Inorder splits subtrees**: Root position tells us left/right split\n3. **Recursion**: Build root, then recursively build left and right subtrees\n4. **Array slicing**: Left subtree has rootIndex elements\n5. **Optimization**: Use hash map for O(1) root lookup instead of O(n) search\n\n**Common Mistakes to Avoid:**\n- Incorrect array slicing (off-by-one errors)\n- Not finding root in inorder correctly\n- Mixing up preorder and inorder arrays\n- Not handling empty arrays (base case)\n- Forgetting to create new TreeNode objects\n\n**Related Practice Lessons:**\n- Construct Binary Tree from Inorder and Postorder (LeetCode #106) - similar approach\n- Serialize and Deserialize Binary Tree (LeetCode #297) - convert tree to/from string\n- Validate Binary Search Tree (LeetCode #98) - check if tree is valid BST\n\nKeep practicing tree lessons - they're common in interviews!",
+      "action": "continue"
+    }
+  ]
+}

@@ -1,0 +1,290 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-js-104",
+    "track": "js",
+    "lessonNum": 104,
+    "title": "Build websocket reconnect manager",
+    "shortName": "P104",
+    "intro": {
+      "tag": "LESSON #104",
+      "title": "Build websocket reconnect manager",
+      "body": "In this lesson, you will build a WebSocket reconnect manager to handle dropped connections automatically. You will learn how to use JavaScript's WebSocket API to establish real-time communication with a server. The core programming concept involves managing state and event handlers to detect disconnections and trigger reconnection attempts. You'll work with timers, event listeners, and conditional logic to create a resilient connection that recovers from failures. This project introduces you to building reliable network applications in JavaScript.",
+      "usecase": "WebSocket reconnect managers are essential in real-time applications where persistent connections are critical. In live trading dashboards, they maintain price feed updates during network fluctuations. Chat applications like Slack use them to ensure message delivery when users switch networks. Collaborative editing tools like Google Docs implement reconnection logic to sync changes after temporary disconnections. Video conferencing platforms rely on these managers to restore streams when internet connectivity drops briefly."
+    },
+    "objectives": [
+      "Construct a WebSocket connection with configurable URL and protocols",
+      "Implement automatic reconnection logic with exponential backoff",
+      "Initialize state variables to track connection status and retry attempts",
+      "Bind event handlers for WebSocket open, message, error, and close events",
+      "Control reconnection behavior based on connection state and error types",
+      "Integrate reconnection management into a functional WebSocket client",
+      "Manipulate connection parameters to test different reconnection scenarios"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 8",
+        "title": "Import WebSocket API and create connection state variables",
+        "instruction": "Import the WebSocket API and create variables to track connection state, reconnect attempts, and WebSocket instance.",
+        "hint": "The WebSocket API is built into JavaScript, so you don't need to import it. Just declare variables to store the WebSocket instance, connection status, and reconnect count.",
+        "analogousExample": "// Example: declaring state variables for a connection\nlet connection = null;\nlet isConnected = false;\nlet reconnectCount = 0;",
+        "seedCode": "// Import the WebSocket API and create connection state variables\n\n// Declare variables for WebSocket instance, connection status, and reconnect attempts\n",
+        "expectedOutcome": "You'll have variables ready to manage WebSocket connection state.",
+        "successCriteria": [
+          "Variables for WebSocket instance, connection status, and reconnect attempts are declared."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure you've declared variables for the WebSocket instance, connection status, and reconnect attempts.",
+        "feedbackWrong": "declare variables to store the WebSocket instance, track whether we're connected, and count reconnect attempts.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "let",
+            "connection",
+            "isConnected",
+            "reconnectCount"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 8",
+        "title": "Create WebSocket connection function",
+        "instruction": "Create a function named 'connectWebSocket' that takes a URL parameter and initializes a new WebSocket connection.",
+        "hint": "Define a function that accepts a URL string and creates a new WebSocket instance with it.",
+        "analogousExample": "// Example: a function that creates a connection\nfunction connectToServer(url) {\n  const connection = new WebSocket(url);\n  return connection;\n}",
+        "seedCode": "// Import the WebSocket API and create connection state variables\n\n// Declare variables for WebSocket instance, connection status, and reconnect attempts\n\n// Create WebSocket connection function\nfunction connectWebSocket(url) {\n  // Initialize WebSocket connection here\n}",
+        "expectedOutcome": "A function named connectWebSocket is defined with a URL parameter and creates a WebSocket instance.",
+        "successCriteria": [
+          "The connectWebSocket function is created and accepts a URL parameter to initialize a WebSocket connection."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure your function is named 'connectWebSocket' and accepts a URL parameter.",
+        "feedbackWrong": "The function isn't quite right. Create a function named 'connectWebSocket' that takes a URL parameter.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "connectWebSocket",
+            "url",
+            "WebSocket"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 8",
+        "title": "Add WebSocket onopen event handler",
+        "instruction": "Inside the connectWebSocket function, add an onopen event handler to the WebSocket instance that updates the connection status when the connection opens successfully.",
+        "hint": "Assign a function to the ws.onopen property that sets a variable or logs a success message.",
+        "analogousExample": "// Example: Adding an event handler for successful connection\nfunction connectWebSocket(url) {\n  const ws = new WebSocket(url);\n  ws.onopen = function() {\n    console.log('WebSocket connected successfully');\n  };\n}",
+        "seedCode": "// Import the WebSocket API and create connection state variables\n\n// Declare variables for WebSocket instance, connection status, and reconnect attempts\n\n// Create WebSocket connection function\nfunction connectWebSocket(url) {\n  // Initialize WebSocket connection here\n  const ws = new WebSocket(url);\n  // Add onopen event handler here\n}",
+        "expectedOutcome": "The connectWebSocket function now includes an onopen handler that responds to successful WebSocket connections.",
+        "successCriteria": [
+          "The connectWebSocket function contains a WebSocket instance with an onopen event handler assigned."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you've assigned a function to the ws.onopen property inside the connectWebSocket function.",
+        "feedbackWrong": "The onopen event handler is missing or incorrectly placed. It should be inside the connectWebSocket function and assigned to the WebSocket instance.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "ws.onopen",
+            "function",
+            "url"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 8",
+        "title": "Create reconnect function with exponential backoff",
+        "instruction": "Create a function named reconnectWebSocket that takes a URL parameter and implements exponential backoff logic for reconnection attempts.",
+        "hint": "Define a function that calculates a delay that increases with each attempt (e.g., using Math.pow) and calls setTimeout to attempt reconnection after that delay.",
+        "analogousExample": "// Example: function with exponential backoff\nfunction reconnectService(url, attempt) {\n  const delay = Math.pow(2, attempt) * 1000;\n  setTimeout(() => {\n    console.log('Reconnecting to', url, 'after', delay, 'ms');\n    // Reconnection logic here\n  }, delay);\n}",
+        "seedCode": "// Import the WebSocket API and create connection state variables\n\n// Declare variables for WebSocket instance, connection status, and reconnect attempts\n\n// Create WebSocket connection function\nfunction connectWebSocket(url) {\n  // Initialize WebSocket connection here\n  const ws = new WebSocket(url);\n  // Add onopen event handler here\n  // Add onmessage event handler here\n  // Add onerror event handler here\n  // Add onclose event handler here\n}\n\n// Create reconnect function with exponential backoff\nfunction reconnectWebSocket(url) {\n  // Implement exponential backoff logic here\n}",
+        "expectedOutcome": "A reconnectWebSocket function is defined that will handle reconnection attempts with increasing delays.",
+        "successCriteria": [
+          "The reconnectWebSocket function is created with a URL parameter and contains logic for exponential backoff delay calculation."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've created the function, but make sure it includes the exponential backoff calculation (like using Math.pow) and a setTimeout call.",
+        "feedbackWrong": "The reconnectWebSocket function isn't properly defined. Create a function that takes a URL parameter and implements exponential backoff for reconnection attempts.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "reconnectWebSocket",
+            "url",
+            "Math.pow",
+            "setTimeout"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 8",
+        "title": "Add maximum reconnect attempts limit",
+        "instruction": "Inside the reconnectWebSocket function, add a variable to track the maximum reconnect attempts and check if the current attempt exceeds it before attempting to reconnect.",
+        "hint": "You can define a constant like maxReconnectAttempts and compare it with the current reconnect attempt count.",
+        "analogousExample": "// Example: limiting attempts in a retry function\nfunction retryWithLimit() {\n  const maxRetries = 5;\n  let retryCount = 0;\n  \n  if (retryCount >= maxRetries) {\n    console.log('Max retries reached');\n    return;\n  }\n  // Retry logic here\n}",
+        "seedCode": "// Import the WebSocket API and create connection state variables\n\n// Declare variables for WebSocket instance, connection status, and reconnect attempts\n\n// Create WebSocket connection function\nfunction connectWebSocket(url) {\n  // Initialize WebSocket connection here\n  const ws = new WebSocket(url);\n  // Add onopen event handler here\n  // Add onmessage event handler here\n  // Add onerror event handler here\n  // Add onclose event handler here\n}\n\n// Create reconnect function with exponential backoff\nfunction reconnectWebSocket(url) {\n  // Implement exponential backoff logic here\n  // Add maximum reconnect attempts limit here\n}",
+        "expectedOutcome": "The reconnectWebSocket function will include logic to prevent infinite reconnection attempts by checking against a maximum limit.",
+        "successCriteria": [
+          "The reconnectWebSocket function contains a maximum reconnect attempts constant and a conditional check to stop reconnection when the limit is reached."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you've defined a maximum attempts constant and added a conditional check before attempting to reconnect.",
+        "feedbackWrong": "The maximum reconnect attempts limit hasn't been properly implemented. Review the instruction and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "maxReconnectAttempts",
+            "if",
+            ">=",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 8",
+        "title": "Create connection manager object with public methods",
+        "instruction": "Create a connection manager object named 'websocketManager' that exposes three public methods: connect, disconnect, and send.",
+        "hint": "Define an object with methods that call your existing functions or handle WebSocket operations. The connect method should take a URL parameter.",
+        "analogousExample": "// Example: a simple object with methods\nconst calculator = {\n  add: function(a, b) { return a + b; },\n  subtract: function(a, b) { return a - b; }\n};",
+        "seedCode": "// Import the WebSocket API and create connection state variables\n\n// Declare variables for WebSocket instance, connection status, and reconnect attempts\n\n// Create WebSocket connection function\nfunction connectWebSocket(url) {\n  // Initialize WebSocket connection here\n  const ws = new WebSocket(url);\n  // Add onopen event handler here\n  // Add onmessage event handler here\n  // Add onerror event handler here\n  // Add onclose event handler here\n}\n\n// Create reconnect function with exponential backoff\nfunction reconnectWebSocket(url) {\n  // Implement exponential backoff logic here\n  // Add maximum reconnect attempts limit here\n}\n\n// Create connection manager object with public methods\nconst websocketManager = {\n  // Add connect, disconnect, and send methods here\n};",
+        "expectedOutcome": "A websocketManager object is created with three method placeholders.",
+        "successCriteria": [
+          "The websocketManager object exists and has connect, disconnect, and send methods defined."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've created an object, but it's missing some required methods. Make sure to include connect, disconnect, and send methods.",
+        "feedbackWrong": "The connection manager object wasn't created correctly. Create an object named 'websocketManager' with connect, disconnect, and send methods.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "websocketManager",
+            "connect",
+            "disconnect",
+            "send"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 8",
+        "title": "Test the WebSocket reconnect manager",
+        "instruction": "Add a test function that simulates connection loss and recovery by calling the websocketManager's connect method with a test WebSocket URL,",
+        "hint": "Create a function named testReconnectManager that calls websocketManager.connect with a dummy URL, then simulates a connection closure by calling ws.onclose manually.",
+        "analogousExample": "// Example: a test function for a module\nfunction testModule() {\n  const result = module.doSomething('test');\n  console.log('Test result:', result);\n}",
+        "seedCode": "// Import the WebSocket API and create connection state variables\n\n// Declare variables for WebSocket instance, connection status, and reconnect attempts\n\n// Create WebSocket connection function\nfunction connectWebSocket(url) {\n  // Initialize WebSocket connection here\n  const ws = new WebSocket(url);\n  // Add onopen event handler here\n  // Add onmessage event handler here\n  // Add onerror event handler here\n  // Add onclose event handler here\n}\n\n// Create reconnect function with exponential backoff\nfunction reconnectWebSocket(url) {\n  // Implement exponential backoff logic here\n  // Add maximum reconnect attempts limit here\n}\n\n// Create connection manager object with public methods\nconst websocketManager = {\n  // Add connect, disconnect, and send methods here\n};\n\n// Add test function here",
+        "expectedOutcome": "A test function is added that will allow you to verify the reconnect manager works by simulating a connection loss scenario.",
+        "successCriteria": [
+          "The testReconnectManager function is defined, calls websocketManager.connect with a test URL, and simulates triggering the onclose event."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the test function, but make sure it calls websocketManager.connect with a test URL and simulates the onclose event to trigger reconnection.",
+        "feedbackWrong": "The test function is missing or doesn't properly simulate connection loss and recovery. Ensure it calls websocketManager.connect and triggers the onclose event.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "testReconnectManager",
+            "websocketManager.connect",
+            "onclose"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 8",
+        "title": "manually triggering the onclose event to test",
+        "instruction": "manually triggering the onclose event to test reconnection.",
+        "hint": "Create a function named testReconnectManager that calls websocketManager.connect with a dummy URL, then simulates a connection closure by calling ws.onclose manually.",
+        "analogousExample": "// Example: a test function for a module\nfunction testModule() {\n  const result = module.doSomething('test');\n  console.log('Test result:', result);\n}",
+        "seedCode": "// Import the WebSocket API and create connection state variables\n\n// Declare variables for WebSocket instance, connection status, and reconnect attempts\n\n// Create WebSocket connection function\nfunction connectWebSocket(url) {\n  // Initialize WebSocket connection here\n  const ws = new WebSocket(url);\n  // Add onopen event handler here\n  // Add onmessage event handler here\n  // Add onerror event handler here\n  // Add onclose event handler here\n}\n\n// Create reconnect function with exponential backoff\nfunction reconnectWebSocket(url) {\n  // Implement exponential backoff logic here\n  // Add maximum reconnect attempts limit here\n}\n\n// Create connection manager object with public methods\nconst websocketManager = {\n  // Add connect, disconnect, and send methods here\n};\n\n// Add test function here",
+        "expectedOutcome": "",
+        "successCriteria": [
+          "Complete the step as instructed."
+        ],
+        "feedbackCorrect": "Great! Step completed.",
+        "feedbackPartial": "Review the instruction and try again.",
+        "feedbackWrong": "Check the instruction and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "testReconnectManager",
+            "websocketManager.connect",
+            "onclose"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import WebSocket API and create connection state variables",
+        "id": "step1"
+      },
+      {
+        "label": "Create WebSocket connection function",
+        "id": "step2"
+      },
+      {
+        "label": "Add WebSocket onopen event handler",
+        "id": "step3"
+      },
+      {
+        "label": "Create reconnect function with exponential backoff",
+        "id": "step4"
+      },
+      {
+        "label": "Add maximum reconnect attempts limit",
+        "id": "step5"
+      },
+      {
+        "label": "Create connection manager object with public methods",
+        "id": "step6"
+      },
+      {
+        "label": "Test the WebSocket reconnect manager",
+        "id": "step7"
+      },
+      {
+        "label": "manually triggering the onclose event to test",
+        "id": "step8"
+      }
+    ]
+  },
+  "source": "content"
+}

@@ -1,0 +1,465 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-mobile-angular-08",
+    "track": "mobile-angular",
+    "lessonNum": 8,
+    "title": "Photo Capture & Upload",
+    "shortName": "P08",
+    "intro": {
+      "tag": "LESSON #8",
+      "title": "Photo Capture & Upload",
+      "body": "In this lesson, you will build a mobile app that can take photos using the device's camera and upload them to a server. You will learn how to use the Capacitor Camera API to capture images and the Capacitor Filesystem API to read the photo data. The core programming concept involves using Promises to handle asynchronous operations like camera access and file reading. You will implement this in an Ionic Angular app, creating a service to manage the photo logic and a component with a button to trigger the capture and upload process.",
+      "usecase": "Photo capture and upload functionality is essential in mobile apps that require user-generated content, such as social media platforms like Instagram or Facebook where users post photos. In e-commerce apps like eBay or Facebook Marketplace, sellers use this feature to upload product images directly from their device camera. Customer service applications often allow users to attach photos of issues or documents for verification purposes. Healthcare apps might use photo capture for telemedicine consultations where patients share symptoms visually. Even note-taking apps like Evernote use this pattern to let users add photos to their notes for richer documentation."
+    },
+    "objectives": [
+      "Import the Camera plugin from @capacitor/camera to access device camera functionality.",
+      "Define a method to capture a photo using the Camera.getPhoto() method with specified options.",
+      "Implement error handling to catch and display camera operation failures.",
+      "Construct an interface to store captured photo data including webPath and format.",
+      "Use Angular's HttpClient to send HTTP POST requests to an upload endpoint.",
+      "Apply FormData to package captured photo files for multipart/form-data uploads.",
+      "Execute conditional logic to check camera permissions before attempting capture.",
+      "Control UI state with loading indicators during photo capture and upload operations.",
+      "Store captured photo references in component state for display and reuse.",
+      "Retrieve and display uploaded photo URLs from server responses.",
+      "Modify camera options to configure quality, allowEditing, and resultType parameters.",
+      "Invoke the upload method automatically after successful photo capture."
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 12",
+        "title": "Import Ionic Angular core components",
+        "instruction": "Import the Ionic UI components needed for building the photo capture interface. Import IonContent, IonHeader, IonToolbar, IonTitle, IonButton, IonGrid, IonRow, IonCol, and IonImg from '@ionic/angular/standalone'.",
+        "hint": "Use the import statement with the correct package path '@ionic/angular/standalone' and list all the components mentioned.",
+        "analogousExample": "// Example of importing Ionic components\nimport { IonButton, IonContent, IonHeader } from '@ionic/angular/standalone';",
+        "seedCode": {
+          "App.tsx": "// Import Ionic Angular core components here\n",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "The import statement for Ionic UI components is added, making them available for use in the component.",
+        "successCriteria": [
+          "The code includes a valid import statement from '@ionic/angular/standalone' with all the specified components."
+        ],
+        "feedbackCorrect": "Great! You've successfully imported the Ionic UI components needed for the photo capture interface.",
+        "feedbackPartial": "You've imported some components, but make sure to include all of them: IonContent, IonHeader, IonToolbar, IonTitle, IonButton, IonGrid, IonRow, IonCol, and IonImg from '@ionic/angular/standalone'.",
+        "feedbackWrong": "The import statement is missing or incorrect. You need to import IonContent, IonHeader, IonToolbar, IonTitle, IonButton, IonGrid, IonRow, IonCol, and IonImg from '@ionic/angular/standalone'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "IonContent",
+            "IonHeader",
+            "IonToolbar",
+            "IonTitle",
+            "IonButton",
+            "IonGrid",
+            "IonRow",
+            "IonCol",
+            "IonImg",
+            "'@ionic/angular/standalone'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 12",
+        "title": "Import Capacitor Camera plugin",
+        "instruction": "Import the Camera plugin and its types from the Capacitor camera package. Add an import statement for Camera, CameraResultType, and CameraSource from '@capacitor/camera'.",
+        "hint": "Use the standard ES6 import syntax to bring in the necessary symbols from the Capacitor camera package.",
+        "analogousExample": "// Example of importing from a Capacitor plugin\nimport { Camera, CameraResultType, CameraSource } from '@capacitor/camera';",
+        "seedCode": {
+          "App.tsx": "// Import Ionic Angular core components here\n\n// Import Capacitor Camera plugin here",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "The Camera plugin and its associated types are imported and available for use in the component.",
+        "successCriteria": [
+          "The code includes a valid import statement that imports Camera, CameraResultType, and CameraSource from '@capacitor/camera'."
+        ],
+        "feedbackCorrect": "Great! You've successfully imported the Camera plugin and its types. This gives you access to device camera functionality through Capacitor.",
+        "feedbackPartial": "You're on the right track, but check your import statement. Make sure you're importing Camera, CameraResultType, and CameraSource from '@capacitor/camera'.",
+        "feedbackWrong": "The import statement is missing or incorrect. You need to import Camera, CameraResultType, and CameraSource from '@capacitor/camera' to access camera functionality.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "Camera",
+            "CameraResultType",
+            "CameraSource",
+            "'@capacitor/camera'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 12",
+        "title": "Create the PhotoCaptureComponent",
+        "instruction": "Create a new Angular component class named PhotoCaptureComponent. Use the @Component decorator with the configuration: standalone: true, and an imports array containing the Ionic components you imported earlier.",
+        "hint": "Start with 'export class PhotoCaptureComponent {}' and add the @Component decorator above it. The decorator should have a selector, standalone: true, and imports: [IonButton, IonContent, IonHeader, IonTitle, IonToolbar].",
+        "analogousExample": "// Example of a standalone component in Angular\n@Component({\n  selector: 'app-example',\n  standalone: true,\n  imports: [IonButton, IonContent]\n})\nexport class ExampleComponent {\n  // Component logic will go here\n}",
+        "seedCode": {
+          "App.tsx": "import { Component } from '@angular/core';\nimport { IonButton, IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular/standalone';\nimport { Camera, CameraResultType } from '@capacitor/camera';\n\n// Create the PhotoCaptureComponent class with @Component decorator here",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "A PhotoCaptureComponent class is defined with the @Component decorator configured as a standalone component.",
+        "successCriteria": [
+          "The code should include: 1) @Component decorator with selector, standalone: true, and imports array, 2) export class PhotoCaptureComponent {}."
+        ],
+        "feedbackCorrect": "Great! You've successfully created the PhotoCaptureComponent as a standalone Angular component.",
+        "feedbackPartial": "You're on the right track, but check: Did you include the @Component decorator with standalone: true and the imports array?",
+        "feedbackWrong": "The component wasn't created correctly. Make sure to use the @Component decorator and export the class.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "@Component",
+            "PhotoCaptureComponent",
+            "standalone: true",
+            "imports"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 12",
+        "title": "Define component template structure",
+        "instruction": "Inside the PhotoCaptureComponent class, define the template property with a basic Ionic page structure. Include IonHeader, IonToolbar, IonTitle, and IonContent components.",
+        "hint": "Set the template property to a string containing the HTML structure with the Ionic components you imported.",
+        "analogousExample": "// Example of a component template with Ionic structure\ntemplate: `\n  <ion-header>\n    <ion-toolbar>\n      <ion-title>My App</ion-title>\n    </ion-toolbar>\n  </ion-header>\n  <ion-content>\n    <!-- Content will go here -->\n  </ion-content>\n`",
+        "seedCode": {
+          "App.tsx": "import { Component } from '@angular/core';\nimport { IonButton, IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular/standalone';\nimport { Camera, CameraResultType } from '@capacitor/camera';\n\n@Component({\n  selector: 'app-photo-capture',\n  standalone: true,\n  // Define the template property here\n})\nexport class PhotoCaptureComponent {\n  // Component logic will go here\n}",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "The component now has a basic Ionic page structure defined in its template, ready for adding content and functionality.",
+        "successCriteria": [
+          "The template property should be defined with IonHeader, IonToolbar, IonTitle, and IonContent components in a valid HTML structure."
+        ],
+        "feedbackCorrect": "Great! You've successfully defined the component template with the basic Ionic page structure. This provides the visual foundation for your photo capture app.",
+        "feedbackPartial": "You're on the right track, but the template might be missing some required Ionic components or the structure isn't quite complete. Make sure you have IonHeader, IonToolbar, IonTitle, and IonContent all included.",
+        "feedbackWrong": "The template structure doesn't match what's needed. Remember to define the template property with IonHeader, IonToolbar, IonTitle, and IonContent components in a proper HTML structure.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "template:",
+            "ion-header",
+            "ion-toolbar",
+            "ion-title",
+            "ion-content"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 12",
+        "title": "Initialize photo state property",
+        "instruction": "Inside the PhotoCaptureComponent class, add a property named 'photo' with type 'string | undefined' to store the captured photo data URL. Initialize it as undefined.",
+        "hint": "Add a class property declaration with the appropriate TypeScript type annotation.",
+        "analogousExample": "// Example of adding a typed property to an Angular component class\nexport class MyComponent {\n  // Property to store image data\n  imageUrl: string | undefined = undefined;\n}",
+        "seedCode": {
+          "App.tsx": "import { Component } from '@angular/core';\nimport { IonButton, IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular/standalone';\nimport { Camera, CameraResultType } from '@capacitor/camera';\n\n@Component({\n  selector: 'app-photo-capture',\n  standalone: true,\n  // Define the template property here\n})\nexport class PhotoCaptureComponent {\n  // Add photo property here\n}",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "The component now has a typed property to store captured photo data.",
+        "successCriteria": [
+          "The PhotoCaptureComponent class should contain a property named 'photo' with type 'string | undefined' initialized to undefined."
+        ],
+        "feedbackCorrect": "Great! You've successfully added a typed property to store photo data. This will be essential for displaying captured images.",
+        "feedbackPartial": "You're close! Make sure you've added a property named 'photo' with the correct type 'string | undefined' and initialized it to undefined.",
+        "feedbackWrong": "The component doesn't yet have the required property. Add a property named 'photo' with type 'string | undefined' and initialize it to undefined inside the PhotoCaptureComponent class.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "photo:",
+            "string | undefined",
+            "undefined"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 12",
+        "title": "Add capture button to template",
+        "instruction": "Inside the IonContent in your component template, add an IonButton with the text 'Take Photo'.",
+        "hint": "Use the IonButton component with a text label inside the button element.",
+        "analogousExample": "// Inside a component template\n<IonContent>\n  <IonButton>Take Photo</IonButton>\n</IonContent>",
+        "seedCode": {
+          "App.tsx": "import { Component } from '@angular/core';\nimport { IonButton, IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular/standalone';\nimport { Camera, CameraResultType } from '@capacitor/camera';\n\n@Component({\n  selector: 'app-photo-capture',\n  standalone: true,\n  template: `\n    <IonHeader>\n      <IonToolbar>\n        <IonTitle>Photo Capture</IonTitle>\n      </IonToolbar>\n    </IonHeader>\n    <IonContent>\n      <!-- Add IonButton here -->\n    </IonContent>\n  `\n})\nexport class PhotoCaptureComponent {\n  // Add photo property here\n}",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "The template will have a button with 'Take Photo' text inside the content area.",
+        "successCriteria": [
+          "The template contains an IonButton element with 'Take Photo' text inside the IonContent."
+        ],
+        "feedbackCorrect": "Great! You've added the capture button to the template.",
+        "feedbackPartial": "You're close. Make sure you've added an IonButton with the exact text 'Take Photo' inside the IonContent.",
+        "feedbackWrong": "The button wasn't added correctly. Check that you're using IonButton with the text 'Take Photo' inside the IonContent.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "IonButton",
+            "Take Photo",
+            "IonContent"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 12",
+        "title": "Define capturePhoto method",
+        "instruction": "In the PhotoCaptureComponent class, create an async method named capturePhoto that will handle photo capture.",
+        "hint": "Add a method inside the class using the async keyword and the method name capturePhoto.",
+        "analogousExample": "// Example of an async method in an Angular component class\nasync capturePhoto() {\n  // Method body will be added later\n}",
+        "seedCode": {
+          "App.tsx": "import { Component } from '@angular/core';\nimport { IonButton, IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular/standalone';\nimport { Camera, CameraResultType } from '@capacitor/camera';\n\n@Component({\n  selector: 'app-photo-capture',\n  standalone: true,\n  template: `\n    <IonHeader>\n      <IonToolbar>\n        <IonTitle>Photo Capture</IonTitle>\n      </IonToolbar>\n    </IonHeader>\n    <IonContent>\n      <!-- Add IonButton here -->\n    </IonContent>\n  `\n})\nexport class PhotoCaptureComponent {\n  // Add photo property here\n  \n  // Define capturePhoto method here\n}",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "The component class now has an empty async capturePhoto method ready for implementation.",
+        "successCriteria": [
+          "The method must be named capturePhoto, be async, and be defined inside the PhotoCaptureComponent class."
+        ],
+        "feedbackCorrect": "Great! You've successfully defined the capturePhoto method. This gives us a place to implement the photo capture logic in the next steps.",
+        "feedbackPartial": "You're close! Make sure the method is named exactly 'capturePhoto', uses the async keyword, and is defined inside the PhotoCaptureComponent class.",
+        "feedbackWrong": "The capturePhoto method wasn't properly defined. Check that you're adding an async method with the correct name inside the component class.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "capturePhoto",
+            "async"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 12",
+        "title": "Store captured photo data",
+        "instruction": "Inside the capturePhoto method, assign the dataUrl from the photo result to the component's photo property.",
+        "hint": "The Camera plugin returns a photo object with a dataUrl property. Use this.dataUrl = photo.dataUrl to store it.",
+        "analogousExample": "// Inside a component method that handles photo data\ncapturePhoto() {\n  // ... camera call returns photo object\n  const photo = { dataUrl: 'data:image/jpeg;base64,...' };\n  this.photo = photo.dataUrl;\n}",
+        "seedCode": {
+          "App.tsx": "import { Component } from '@angular/core';\nimport { IonButton, IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular/standalone';\nimport { Camera, CameraResultType } from '@capacitor/camera';\n\n@Component({\n  selector: 'app-photo-capture',\n  standalone: true,\n  template: `\n    <IonHeader>\n      <IonToolbar>\n        <IonTitle>Photo Capture</IonTitle>\n      </IonToolbar>\n    </IonHeader>\n    <IonContent>\n      <!-- Add IonButton here -->\n    </IonContent>\n  `\n})\nexport class PhotoCaptureComponent {\n  // Add photo property here\n  photo: string = '';\n  \n  // Define capturePhoto method here\n  async capturePhoto() {\n    const photo = await Camera.getPhoto({\n      quality: 90,\n      allowEditing: true,\n      resultType: CameraResultType.DataUrl\n    });\n    // Store captured photo data here\n  }\n}",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "The capturePhoto method now stores the photo's dataUrl in the component's photo property.",
+        "successCriteria": [
+          "The capturePhoto method must assign photo.dataUrl to this.photo."
+        ],
+        "feedbackCorrect": "Great! You've successfully stored the captured photo data in the component's state.",
+        "feedbackPartial": "You're close. Make sure you're assigning the dataUrl property from the photo result to the component's photo property.",
+        "feedbackWrong": "The photo data isn't being stored correctly. Check that you're assigning photo.dataUrl to this.photo inside the capturePhoto method.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "this.photo",
+            "photo.dataUrl",
+            "="
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 12",
+        "title": "Add photo display area",
+        "instruction": "Add IonGrid, IonRow, and IonCol components below the capture button in the template to create a grid layout for displaying the captured photo.",
+        "hint": "Import the grid components from '@ionic/angular/standalone' and add them to your template after the button.",
+        "analogousExample": "// Example of adding grid components to an Ionic Angular template\n<IonGrid>\n  <IonRow>\n    <IonCol>\n      <!-- Content goes here -->\n    </IonCol>\n  </IonRow>\n</IonGrid>",
+        "seedCode": {
+          "App.tsx": "import { Component } from '@angular/core';\nimport { IonButton, IonContent, IonHeader, IonTitle, IonToolbar, IonGrid, IonRow, IonCol } from '@ionic/angular/standalone';\nimport { Camera, CameraResultType } from '@capacitor/camera';\n\n@Component({\n  selector: 'app-photo-capture',\n  standalone: true,\n  template: `\n    <IonHeader>\n      <IonToolbar>\n        <IonTitle>Photo Capture</IonTitle>\n      </IonToolbar>\n    </IonHeader>\n    <IonContent>\n      <!-- Add IonButton here -->\n      <!-- Add IonGrid, IonRow, and IonCol components below -->\n    </IonContent>\n  `\n})\nexport class PhotoCaptureComponent {\n  // Add photo property here\n  photo: string = '';\n  \n  // Define capturePhoto method here\n  async capturePhoto() {\n    const photo = await Camera.getPhoto({\n      quality: 90,\n      allowEditing: true,\n      resultType: CameraResultType.DataUrl\n    });\n    // Store captured photo data here\n  }\n}",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "The template will have a grid structure ready to display the captured photo, but the photo won't be shown yet.",
+        "successCriteria": [
+          "IonGrid, IonRow, and IonCol components are added to the template after the button comment."
+        ],
+        "feedbackCorrect": "Great! You've successfully added the grid components to create a layout for displaying photos.",
+        "feedbackPartial": "You've added some grid components, but make sure to include all three: IonGrid, IonRow, and IonCol.",
+        "feedbackWrong": "The grid components weren't added correctly. Check that you've imported IonGrid, IonRow, and IonCol and added them to the template.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "IonGrid",
+            "IonRow",
+            "IonCol"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 12",
+        "title": "Display captured photo",
+        "instruction": "Inside the IonCol component in your template, add an IonImg component that displays the captured photo. Use Angular's *ngIf directive to only show the image when the 'photo' property has a value, and bind its 'src' attribute to the 'photo' property.",
+        "hint": "Use <IonImg *ngIf=\"photo\" [src]=\"photo\"></IonImg> inside the IonCol. Remember to import IonImg if needed.",
+        "analogousExample": "<!-- Example of conditional image display -->\n<IonCol>\n  <IonImg *ngIf=\"photo\" [src]=\"photo\"></IonImg>\n</IonCol>",
+        "seedCode": {
+          "App.tsx": "import { Component } from '@angular/core';\nimport { IonButton, IonContent, IonHeader, IonTitle, IonToolbar, IonGrid, IonRow, IonCol } from '@ionic/angular/standalone';\nimport { Camera, CameraResultType } from '@capacitor/camera';\n\n@Component({\n  selector: 'app-photo-capture',\n  standalone: true,\n  template: `\n    <IonHeader>\n      <IonToolbar>\n        <IonTitle>Photo Capture</IonTitle>\n      </IonToolbar>\n    </IonHeader>\n    <IonContent>\n      <IonButton expand=\"block\" (click)=\"capturePhoto()\">Capture Photo</IonButton>\n      <IonGrid>\n        <IonRow>\n          <IonCol>\n            <!-- Add IonImg here with *ngIf and [src] binding -->\n          </IonCol>\n        </IonRow>\n      </IonGrid>\n    </IonContent>\n  `\n})\nexport class PhotoCaptureComponent {\n  photo: string = '';\n  \n  async capturePhoto() {\n    const photo = await Camera.getPhoto({\n      quality: 90,\n      allowEditing: true,\n      resultType: CameraResultType.DataUrl\n    });\n    this.photo = photo.dataUrl;\n  }\n}",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "The template will include an IonImg component that conditionally displays the captured photo when the 'photo' property has a value.",
+        "successCriteria": [
+          "Add an IonImg element inside the IonCol with *ngIf=\"photo\" and [src]=\"photo\" attributes."
+        ],
+        "feedbackCorrect": "Perfect! You've successfully added conditional rendering for the captured photo using Ionic's IonImg component.",
+        "feedbackPartial": "You're on the right track, but make sure you've added both the *ngIf directive and the [src] binding to the IonImg element.",
+        "feedbackWrong": "The IonImg component isn't properly configured. Check that it has *ngIf=\"photo\" and [src]=\"photo\" attributes inside the IonCol.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "IonImg",
+            "*ngIf=\"photo\"",
+            "[src]=\"photo\""
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 12",
+        "title": "Add upload button",
+        "instruction": "Add a second IonButton component below the photo display grid in your template. The button should have the text 'Upload Photo' and be wired to an uploadPhoto method using Angular's event binding syntax.",
+        "hint": "Use the IonButton component with (click) event binding. Place it after the IonGrid closing tag.",
+        "analogousExample": "<!-- Inside an Angular template -->\n<IonButton expand=\"block\" (click)=\"uploadPhoto()\">Upload Photo</IonButton>",
+        "seedCode": {
+          "App.tsx": "import { Component } from '@angular/core';\nimport { IonButton, IonContent, IonHeader, IonTitle, IonToolbar, IonGrid, IonRow, IonCol } from '@ionic/angular/standalone';\nimport { Camera, CameraResultType } from '@capacitor/camera';\n\n@Component({\n  selector: 'app-photo-capture',\n  standalone: true,\n  template: `\n    <IonHeader>\n      <IonToolbar>\n        <IonTitle>Photo Capture</IonTitle>\n      </IonToolbar>\n    </IonHeader>\n    <IonContent>\n      <IonButton expand=\"block\" (click)=\"capturePhoto()\">Capture Photo</IonButton>\n      <IonGrid>\n        <IonRow>\n          <IonCol>\n            <!-- Add IonImg here with *ngIf and [src] binding -->\n          </IonCol>\n        </IonRow>\n      </IonGrid>\n      <!-- Add upload button here -->\n    </IonContent>\n  `\n})\nexport class PhotoCaptureComponent {\n  photo: string = '';\n  \n  async capturePhoto() {\n    const photo = await Camera.getPhoto({\n      quality: 90,\n      allowEditing: true,\n      resultType: CameraResultType.DataUrl\n    });\n    this.photo = photo.dataUrl;\n  }\n}",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "A second button labeled 'Upload Photo' appears below the photo grid, ready to trigger an upload action.",
+        "successCriteria": [
+          "The template contains an IonButton with text 'Upload Photo' and (click)=\"uploadPhoto()\" event binding, placed after the IonGrid."
+        ],
+        "feedbackCorrect": "Great! You've successfully added the upload button to the UI. The button is now ready to trigger the upload functionality.",
+        "feedbackPartial": "You've added a button, but it might be missing the correct text, event binding, or placement. Make sure it's an IonButton with 'Upload Photo' text, (click)=\"uploadPhoto()\", and placed after the IonGrid.",
+        "feedbackWrong": "The upload button is not correctly implemented. Check that you've added an IonButton component with the proper text and event binding syntax.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "IonButton",
+            "Upload Photo",
+            "(click)=\"uploadPhoto()\""
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step12",
+        "type": "question",
+        "phase": "Step 12 of 12",
+        "title": "Define uploadPhoto method stub",
+        "instruction": "Inside the PhotoCaptureComponent class, add an async method named uploadPhoto that logs the current photo data to the console.",
+        "hint": "Create an async method that uses console.log to output the photo property value.",
+        "analogousExample": "async uploadPhoto() {\n  console.log('Photo data:', this.photo);\n}",
+        "seedCode": {
+          "App.tsx": "import { Component } from '@angular/core';\nimport { IonButton, IonContent, IonHeader, IonTitle, IonToolbar, IonGrid, IonRow, IonCol } from '@ionic/angular/standalone';\nimport { Camera, CameraResultType } from '@capacitor/camera';\n\n@Component({\n  selector: 'app-photo-capture',\n  standalone: true,\n  template: `\n    <IonHeader>\n      <IonToolbar>\n        <IonTitle>Photo Capture</IonTitle>\n      </IonToolbar>\n    </IonHeader>\n    <IonContent>\n      <IonButton expand=\"block\" (click)=\"capturePhoto()\">Capture Photo</IonButton>\n      <IonGrid>\n        <IonRow>\n          <IonCol>\n            <!-- Add IonImg here with *ngIf and [src] binding -->\n          </IonCol>\n        </IonRow>\n      </IonGrid>\n      <!-- Add upload button here -->\n    </IonContent>\n  `\n})\nexport class PhotoCaptureComponent {\n  photo: string = '';\n  \n  async capturePhoto() {\n    const photo = await Camera.getPhoto({\n      quality: 90,\n      allowEditing: true,\n      resultType: CameraResultType.DataUrl\n    });\n    this.photo = photo.dataUrl;\n  }\n  \n  // Add uploadPhoto method here\n}",
+          "store.ts": "// store setup"
+        },
+        "expectedOutcome": "The component will have a method that logs the captured photo data when called, providing a foundation for future upload functionality.",
+        "successCriteria": [
+          "The method should be named uploadPhoto, be async, and log the photo property value to the console."
+        ],
+        "feedbackCorrect": "Great! You've successfully created the uploadPhoto method stub. This provides the foundation for implementing actual photo upload functionality in future lessons.",
+        "feedbackPartial": "You're close! Make sure your method is named uploadPhoto, marked as async, and logs the photo property value to the console.",
+        "feedbackWrong": "The uploadPhoto method wasn't properly defined. Check that you've created an async method named uploadPhoto that logs the photo data to the console.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "async",
+            "uploadPhoto",
+            "console.log",
+            "this.photo"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import Ionic Angular core components",
+        "id": "step1"
+      },
+      {
+        "label": "Import Capacitor Camera plugin",
+        "id": "step2"
+      },
+      {
+        "label": "Create the PhotoCaptureComponent",
+        "id": "step3"
+      },
+      {
+        "label": "Define component template structure",
+        "id": "step4"
+      },
+      {
+        "label": "Initialize photo state property",
+        "id": "step5"
+      },
+      {
+        "label": "Add capture button to template",
+        "id": "step6"
+      },
+      {
+        "label": "Define capturePhoto method",
+        "id": "step7"
+      },
+      {
+        "label": "Store captured photo data",
+        "id": "step8"
+      },
+      {
+        "label": "Add photo display area",
+        "id": "step9"
+      },
+      {
+        "label": "Display captured photo",
+        "id": "step10"
+      },
+      {
+        "label": "Add upload button",
+        "id": "step11"
+      },
+      {
+        "label": "Define uploadPhoto method stub",
+        "id": "step12"
+      }
+    ],
+    "answerShape": "multi-file"
+  },
+  "source": "content"
+}

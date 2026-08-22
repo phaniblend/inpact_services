@@ -1,0 +1,396 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-angular-54",
+    "track": "angular",
+    "lessonNum": 54,
+    "title": "Unnecessary Re-renders",
+    "shortName": "P54",
+    "intro": {
+      "tag": "LESSON #54",
+      "title": "Unnecessary Re-renders",
+      "body": "In this lesson, you will build a simple Angular counter application to understand and fix unnecessary re-renders. You will learn how Angular's change detection can cause components to re-render even when their data hasn't changed, which can hurt performance. The core concept involves using Angular's OnPush change detection strategy and pure pipes to control when updates occur. You'll work with components, templates, and lifecycle hooks to optimize your app.",
+      "usecase": "Unnecessary re-renders are a critical performance concern in real-world Angular applications, especially in data-intensive interfaces like financial dashboards or e-commerce product filters. For example, updating a single stock price in a live dashboard shouldn't cause the entire chart and table to re-render, as this would degrade the user experience with lag and high CPU usage. Similarly, in a large form with dependent fields, changing one input should not trigger re-evaluation of every other field's validation logic. By mastering techniques to prevent these wasteful updates, developers ensure their applications remain responsive and scalable under real user loads."
+    },
+    "objectives": [
+      "Identify components that trigger unnecessary re-renders in an Angular application",
+      "Apply the OnPush change detection strategy to optimize component rendering",
+      "Construct immutable data patterns to prevent unintended re-renders",
+      "Configure input property tracking to control when components update",
+      "Implement pure pipes to transform data without causing re-renders",
+      "Manipulate component lifecycle hooks to optimize change detection",
+      "Bind event handlers efficiently to minimize template re-evaluations"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 11",
+        "title": "Import Angular core modules and Component decorator",
+        "instruction": "Import Component from '@angular/core' and CommonModule from '@angular/common' to set up the foundation for your Angular component.",
+        "hint": "Use the import statement with the correct module paths. Both imports should be on separate lines.",
+        "analogousExample": "// Importing core Angular modules\nimport { Component } from '@angular/core';\nimport { CommonModule } from '@angular/common';",
+        "seedCode": "// Import Component from '@angular/core' and CommonModule from '@angular/common'",
+        "expectedOutcome": "The necessary Angular core modules are imported, enabling component creation and common directives.",
+        "successCriteria": [
+          "Component is imported from '@angular/core' and CommonModule is imported from '@angular/common'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you've imported both Component and CommonModule with the correct syntax and paths.",
+        "feedbackWrong": "The imports are missing or incorrect. Remember to import Component from '@angular/core' and CommonModule from '@angular/common'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "Component",
+            "'@angular/core'",
+            "CommonModule",
+            "'@angular/common'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 11",
+        "title": "Create the main component class with @Component decorator",
+        "instruction": "Create a class named AppComponent and decorate it with @Component, setting selector to 'app-root' and template to an empty string initially.",
+        "hint": "Use the @Component decorator above the class definition. The selector should be a string 'app-root' and template an empty string ''.",
+        "analogousExample": "// Example: basic component class\n@Component({\n  selector: 'app-example',\n  template: ''\n})\nexport class ExampleComponent {}",
+        "seedCode": "import { Component } from '@angular/core';\nimport { CommonModule } from '@angular/common';\n\n// Create AppComponent class with @Component decorator here",
+        "expectedOutcome": "The AppComponent class is defined with the @Component decorator configured as specified.",
+        "successCriteria": [
+          "AppComponent class exists, is decorated with @Component, has selector 'app-root' and template ''."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure the class is named AppComponent, uses the @Component decorator with selector 'app-root' and template ''.",
+        "feedbackWrong": "The component class isn't set up correctly. Check that you have the @Component decorator with the right configuration.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "@Component",
+            "AppComponent",
+            "selector",
+            "'app-root'",
+            "template",
+            "''"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 11",
+        "title": "Initialize component state with primitive values",
+        "instruction": "Inside the AppComponent class, add three properties: count as a number initialized to 0, name as a string initialized to 'Angular', and isActive as a boolean initialized to true.",
+        "hint": "Define these properties directly in the class body, using TypeScript type annotations and initial values.",
+        "analogousExample": "// Example: defining properties in a class\nclass ExampleComponent {\n  count: number = 0;\n  name: string = 'Example';\n  isActive: boolean = true;\n}",
+        "seedCode": "import { Component } from '@angular/core';\nimport { CommonModule } from '@angular/common';\n\n@Component({\n  selector: 'app-root',\n  standalone: true,\n  imports: [CommonModule],\n  template: ''\n})\nexport class AppComponent {\n  // Add count, name, and isActive properties here\n}",
+        "expectedOutcome": "The component class will have three typed properties with initial values that can be used in the template.",
+        "successCriteria": [
+          "AppComponent has count: number = 0, name: string = 'Angular', and isActive: boolean = true defined as properties."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added some properties, but make sure all three are present with correct types and initial values: count (number=0), name (string='Angular'), isActive (boolean=true).",
+        "feedbackWrong": "The component class doesn't have the required properties. Add count, name, and isActive with their specified types and initial values inside the AppComponent class.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "count: number = 0",
+            "name: string = 'Angular'",
+            "isActive: boolean = true"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 11",
+        "title": "Create a method to update the count state",
+        "instruction": "Inside the AppComponent class, add a method named incrementCount that increments the count property by 1.",
+        "hint": "Define a method with no parameters that uses this.count to access and modify the count property.",
+        "analogousExample": "// Example: a method that increments a counter\nincrementCounter() {\n  this.counter += 1;\n}",
+        "seedCode": "import { Component } from '@angular/core';\nimport { CommonModule } from '@angular/common';\n\n@Component({\n  selector: 'app-root',\n  standalone: true,\n  imports: [CommonModule],\n  template: ''\n})\nexport class AppComponent {\n  // Add count, name, and isActive properties here\n  \n  // Add incrementCount method here\n}",
+        "expectedOutcome": "The component will have a method that can be called to update the count state, demonstrating how state changes trigger re-renders.",
+        "successCriteria": [
+          "The AppComponent class contains a method named incrementCount that increments the count property by 1."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added a method, but check that it's named incrementCount and correctly increments the count property by 1 using this.count.",
+        "feedbackWrong": "The incrementCount method is missing or doesn't correctly update the count property. Make sure to add a method that increments this.count by 1.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "incrementCount",
+            "this.count",
+            "+=",
+            "1"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 11",
+        "title": "Create a method to update the name state",
+        "instruction": "In the AppComponent class, add a method named updateName that changes the name property to 'Updated Angular'.",
+        "hint": "Define a method inside the class with the updateName name. Inside the method, assign the new value to this.name.",
+        "analogousExample": "// Similar: a method that updates a property\nclass ExampleComponent {\n  title = 'Hello';\n  \n  updateTitle() {\n    this.title = 'Updated Title';\n  }\n}",
+        "seedCode": "import { Component } from '@angular/core';\nimport { CommonModule } from '@angular/common';\n\n@Component({\n  selector: 'app-root',\n  standalone: true,\n  imports: [CommonModule],\n  template: ''\n})\nexport class AppComponent {\n  // Add count, name, and isActive properties here\n  \n  // Add incrementCount method here\n  \n  // Add updateName method here\n}",
+        "expectedOutcome": "The component will have a method that updates the name state, demonstrating how different state updates can trigger re-renders.",
+        "successCriteria": [
+          "The AppComponent class contains an updateName method that sets this.name to 'Updated Angular'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added a method, but it might not be named correctly or might not update the name property to 'Updated Angular'. Check the method name and assignment.",
+        "feedbackWrong": "The updateName method is missing or doesn't correctly update the name property. Make sure to add a method named updateName that sets this.name = 'Updated Angular'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "updateName",
+            "this.name",
+            "=",
+            "'Updated Angular'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 11",
+        "title": "Add basic template structure with interpolation",
+        "instruction": "Update the component's template property to display the count, name, and isActive values using Angular interpolation syntax: {{count}}, {{name}}, and {{isActive}}.",
+        "hint": "In the @Component decorator, replace the empty template string with a template that shows the three state values. Use double curly braces for interpolation.",
+        "analogousExample": "// Example: displaying component properties in a template\n@Component({\n  template: '<p>Count: {{count}}</p><p>Name: {{name}}</p>'\n})\nexport class ExampleComponent {\n  count = 0;\n  name = 'Angular';\n}",
+        "seedCode": "import { Component } from '@angular/core';\nimport { CommonModule } from '@angular/common';\n\n@Component({\n  selector: 'app-root',\n  standalone: true,\n  imports: [CommonModule],\n  template: ''\n})\nexport class AppComponent {\n  // Add count, name, and isActive properties here\n  \n  // Add incrementCount method here\n  \n  // Add updateName method here\n}",
+        "expectedOutcome": "The component template will show the current values of count, name, and isActive using interpolation, demonstrating basic data binding.",
+        "successCriteria": [
+          "The template property contains interpolation expressions for count, name, and isActive."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're using the correct interpolation syntax {{ }} for all three values: count, name, and isActive.",
+        "feedbackWrong": "The template doesn't yet show the state values. Remember to use double curly braces {{ }} around the property names.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "template:",
+            "{{count}}",
+            "{{name}}",
+            "{{isActive}}"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 11",
+        "title": "Add buttons to trigger state updates",
+        "instruction": "Add two buttons to the template: one with a click event bound to incrementCount() labeled 'Increment Count', and another with a click event bound to updateName() labeled 'Update Name'.",
+        "hint": "Use Angular's event binding syntax (eventName)=\"handler()\" for the click events. Place the buttons inside the existing template.",
+        "analogousExample": "// Example: buttons with click handlers in Angular template\n<button (click)=\"increment()\">Increment</button>\n<button (click)=\"reset()\">Reset</button>",
+        "seedCode": "import { Component } from '@angular/core';\nimport { CommonModule } from '@angular/common';\n\n@Component({\n  selector: 'app-root',\n  standalone: true,\n  imports: [CommonModule],\n  template: ''\n})\nexport class AppComponent {\n  // Add count, name, and isActive properties here\n  \n  // Add incrementCount method here\n  \n  // Add updateName method here\n}",
+        "expectedOutcome": "The template will have two buttons that trigger the incrementCount and updateName methods when clicked.",
+        "successCriteria": [
+          "Two buttons are present in the template with correct (click) event bindings to incrementCount() and updateName(), and appropriate labels."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but check that both buttons have the correct (click) event bindings and labels.",
+        "feedbackWrong": "The buttons are missing or have incorrect event bindings. Make sure to use Angular's (click) syntax and bind to the correct methods.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "(click)=\"incrementCount()\"",
+            "(click)=\"updateName()\"",
+            "Increment Count",
+            "Update Name"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 11",
+        "title": "Add a console log to demonstrate re-renders",
+        "instruction": "Inside the AppComponent constructor, add a console.log() statement that logs 'Component rendered' to the console.",
+        "hint": "The constructor is a special method that runs when the component is first created. Add your console.log() statement inside the constructor body.",
+        "analogousExample": "// Similar: logging in a constructor\nconstructor() {\n  console.log('Component initialized');\n}",
+        "seedCode": "import { Component } from '@angular/core';\nimport { CommonModule } from '@angular/common';\n\n@Component({\n  selector: 'app-root',\n  standalone: true,\n  imports: [CommonModule],\n  template: ''\n})\nexport class AppComponent {\n  // Add count, name, and isActive properties here\n  \n  // Add incrementCount method here\n  \n  // Add updateName method here\n  \n  constructor() {\n    // Add console.log statement here\n  }\n}",
+        "expectedOutcome": "The component will log 'Component rendered' to the browser console when it first loads.",
+        "successCriteria": [
+          "The AppComponent constructor contains a console.log() statement that logs 'Component rendered'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure the console.log() statement is inside the constructor and logs exactly 'Component rendered'.",
+        "feedbackWrong": "The console.log() statement should be inside the AppComponent constructor and log 'Component rendered'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "constructor",
+            "console.log",
+            "'Component rendered'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 11",
+        "title": "Test the application and observe re-renders",
+        "instruction": "Run the application in your development environment,",
+        "hint": "Make sure your development server is running. Open the browser's developer tools console to see the log messages when you interact with the buttons.",
+        "analogousExample": "// Testing component behavior\n// 1. Run the app with 'ng serve'\n// 2. Open browser console\n// 3. Click buttons and observe console logs",
+        "seedCode": "import { Component } from '@angular/core';\nimport { CommonModule } from '@angular/common';\n\n@Component({\n  selector: 'app-root',\n  standalone: true,\n  imports: [CommonModule],\n  template: `\n    <h1>Unnecessary Re-renders Demo</h1>\n    <p>Count: {{ count }}</p>\n    <p>Name: {{ name }}</p>\n    <button (click)=\"incrementCount()\">Increment Count</button>\n    <button (click)=\"updateName()\">Update Name</button>\n  `\n})\nexport class AppComponent {\n  count = 0;\n  name = 'Initial';\n\n  incrementCount() {\n    this.count++;\n  }\n\n  updateName() {\n    this.name = 'Updated';\n  }\n\n  constructor() {\n    console.log('Component rendered');\n  }\n}",
+        "expectedOutcome": "When you click either button, the console will log 'Component rendered' each time, demonstrating that any state change triggers a complete component re-render.",
+        "successCriteria": [
+          "Application runs successfully, clicking either button logs 'Component rendered' to the console, and you can observe that both state changes trigger re-renders."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're observing the console output when clicking both buttons. Each click should log 'Component rendered' regardless of which state changed.",
+        "feedbackWrong": "Let's review: 1) Ensure your development server is running, 2) Open browser developer tools console, 3) Click both buttons and check if 'Component rendered' appears in the console each time.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "ng serve",
+            "console",
+            "Component rendered",
+            "click",
+            "re-render"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 11",
+        "title": "click both the 'Increment Count' and 'Update ",
+        "instruction": "click both the 'Increment Count' and 'Update Name' buttons. Observe the console output to see that each click logs 'Component rendered' regardless of which state property changed.",
+        "hint": "Make sure your development server is running. Open the browser's developer tools console to see the log messages when you interact with the buttons.",
+        "analogousExample": "// Testing component behavior\n// 1. Run the app with 'ng serve'\n// 2. Open browser console\n// 3. Click buttons and observe console logs",
+        "seedCode": "import { Component } from '@angular/core';\nimport { CommonModule } from '@angular/common';\n\n@Component({\n  selector: 'app-root',\n  standalone: true,\n  imports: [CommonModule],\n  template: `\n    <h1>Unnecessary Re-renders Demo</h1>\n    <p>Count: {{ count }}</p>\n    <p>Name: {{ name }}</p>\n    <button (click)=\"incrementCount()\">Increment Count</button>\n    <button (click)=\"updateName()\">Update Name</button>\n  `\n})\nexport class AppComponent {\n  count = 0;\n  name = 'Initial';\n\n  incrementCount() {\n    this.count++;\n  }\n\n  updateName() {\n    this.name = 'Updated';\n  }\n\n  constructor() {\n    console.log('Component rendered');\n  }\n}",
+        "expectedOutcome": "",
+        "successCriteria": [
+          "Complete the step as instructed."
+        ],
+        "feedbackCorrect": "Great! Step completed.",
+        "feedbackPartial": "Review the instruction and try again.",
+        "feedbackWrong": "Check the instruction and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "ng serve",
+            "console",
+            "Component rendered",
+            "click",
+            "re-render"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 11",
+        "title": "Analyze the unnecessary re-renders lesson",
+        "instruction": "Add a paragraph in the template that explains the performance issue: when clicking 'Update Name', the count display doesn't need to re-render, but Angular re-renders the entire component because all template bindings are re-evaluated.",
+        "hint": "Add a new <p> element with the explanation text inside the existing template. Place it after the buttons.",
+        "analogousExample": "// Adding explanatory text in template\n<p>When updating name, count display also re-renders unnecessarily.</p>",
+        "seedCode": "import { Component } from '@angular/core';\nimport { CommonModule } from '@angular/common';\n\n@Component({\n  selector: 'app-root',\n  standalone: true,\n  imports: [CommonModule],\n  template: `\n    <h1>Unnecessary Re-renders Demo</h1>\n    <p>Count: {{ count }}</p>\n    <p>Name: {{ name }}</p>\n    <button (click)=\"incrementCount()\">Increment Count</button>\n    <button (click)=\"updateName()\">Update Name</button>\n    \n  `\n})\nexport class AppComponent {\n  count = 0;\n  name = 'Initial';\n\n  incrementCount() {\n    this.count++;\n  }\n\n  updateName() {\n    this.name = 'Updated';\n  }\n\n  constructor() {\n    console.log('Component rendered');\n  }\n}",
+        "expectedOutcome": "The template now includes an explanation paragraph that clearly describes the unnecessary re-renders lesson when updating the name state.",
+        "successCriteria": [
+          "A paragraph element is added to the template that explains how updating the name causes unnecessary re-renders of the count display."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added some text, but make sure it clearly explains the performance issue: when clicking 'Update Name', the count display doesn't need to re-render, but Angular re-renders the entire component because all template bindings are re-evaluated.",
+        "feedbackWrong": "The explanation paragraph is missing or doesn't clearly describe the unnecessary re-renders lesson. Add a paragraph that explains how updating the name causes the entire component template to re-render, including the count display that hasn't changed.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<p>",
+            "Update Name",
+            "count",
+            "re-render",
+            "Angular",
+            "template",
+            "bindings"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import Angular core modules and Component decorator",
+        "id": "step1"
+      },
+      {
+        "label": "Create the main component class with @Component decorator",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize component state with primitive values",
+        "id": "step3"
+      },
+      {
+        "label": "Create a method to update the count state",
+        "id": "step4"
+      },
+      {
+        "label": "Create a method to update the name state",
+        "id": "step5"
+      },
+      {
+        "label": "Add basic template structure with interpolation",
+        "id": "step6"
+      },
+      {
+        "label": "Add buttons to trigger state updates",
+        "id": "step7"
+      },
+      {
+        "label": "Add a console log to demonstrate re-renders",
+        "id": "step8"
+      },
+      {
+        "label": "Test the application and observe re-renders",
+        "id": "step9"
+      },
+      {
+        "label": "click both the 'Increment Count' and 'Update ",
+        "id": "step10"
+      },
+      {
+        "label": "Analyze the unnecessary re-renders lesson",
+        "id": "step11"
+      }
+    ]
+  },
+  "source": "content"
+}

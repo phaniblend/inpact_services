@@ -1,0 +1,895 @@
+{
+  "id": "longest-substring-with-at-most-k",
+  "title": "Longest Substring with At Most K Distinct Characters",
+  "pattern": "sliding-window",
+  "difficulty": "medium",
+  "language": "javascript",
+  "status": "draft",
+  "flow": [
+    {
+      "stepId": "title",
+      "mentorSays": "At the end of this lesson, you will be able to:\n\n1. Understand what the Longest Substring with At Most K Distinct Characters lesson asks for\n2. Use a sliding window with hash map to track distinct characters\n3. Expand and shrink the window to maintain at most K distinct characters\n4. Implement the solution step by step in your chosen language",
+      "action": "continue",
+      "next": "lesson-illustration"
+    },
+    {
+      "stepId": "lesson-illustration",
+      "mentorSays": "Perfect! Now let's understand what the Longest Substring with At Most K Distinct Characters lesson is asking.\n\n**Lesson Definition:**\nGiven a string `s` and an integer `k`, return the length of the longest substring that contains at most `k` distinct characters.\n\n**Key Observations:**\n- We're finding the longest substring (not subarray)\n- \"At most K\" means we can have 1, 2, ..., or K distinct characters\n- Substrings must be contiguous\n- This is similar to Fruit Into Baskets, but with K instead of 2\n\n**Example 1:** s = \"eceba\", k = 2\n\nWe need to find the longest substring with at most 2 distinct characters.\n\nLet's check substrings:\n- \"ece\" → distinct = {e, c} = 2 ≤ 2 ✓, length = 3\n- \"eceb\" → distinct = {e, c, b} = 3 > 2 ✗\n- \"ceba\" → distinct = {c, e, b} = 3 > 2 ✗\n- \"eba\" → distinct = {e, b, a} = 3 > 2 ✗\n- \"ce\" → distinct = {c, e} = 2 ≤ 2 ✓, length = 2\n\nLongest: \"ece\" (length 3)\n\n**Example 2:** s = \"aa\", k = 1\n\nSubstrings:\n- \"aa\" → distinct = {a} = 1 ≤ 1 ✓, length = 2 ✓\n\nAnswer: 2\n\n**Example 3:** s = \"abaccc\", k = 2\n\nLet's find the longest substring with at most 2 distinct characters:\n- \"aba\" → distinct = {a, b} = 2 ≤ 2 ✓, length = 3\n- \"abac\" → distinct = {a, b, c} = 3 > 2 ✗\n- \"accc\" → distinct = {a, c} = 2 ≤ 2 ✓, length = 4 ✓\n\nAnswer: 4 (substring \"accc\")\n\n**Step-by-step trace for Example 1:**\n\ns = \"eceba\", k = 2\n\nWe'll use a sliding window approach:\n- **right = 0**: char = 'e', map = {e:1}, distinct = 1 ≤ 2 ✓, maxLen = 1\n- **right = 1**: char = 'c', map = {e:1, c:1}, distinct = 2 ≤ 2 ✓, maxLen = 2\n- **right = 2**: char = 'e', map = {e:2, c:1}, distinct = 2 ≤ 2 ✓, maxLen = 3\n- **right = 3**: char = 'b', map = {e:2, c:1, b:1}, distinct = 3 > 2 ✗, shrink left\n  - **left = 0**: remove 'e', map = {e:1, c:1, b:1}, distinct = 3 > 2, continue\n  - **left = 1**: remove 'c', map = {e:1, b:1}, distinct = 2 ≤ 2 ✓, maxLen = 3\n- **right = 4**: char = 'a', map = {e:1, b:1, a:1}, distinct = 3 > 2 ✗, shrink left\n  - **left = 2**: remove 'e', map = {b:1, a:1}, distinct = 2 ≤ 2 ✓, maxLen = 3\n\nAnswer: 3\n\n**What makes this tricky:**\n1. Understanding that \"at most K\" means we can have 1 to K distinct characters\n2. When we have K+1 distinct characters, we need to shrink from the left\n3. We need to track character frequencies, not just presence\n4. When a character's frequency reaches 0, remove it from the map\n\n**Common pitfalls:**\n- Not understanding that we need to track frequencies (not just characters)\n- Shrinking incorrectly when we have K+1 distinct characters\n- Not removing characters from the map when frequency reaches 0\n- Off-by-one errors when calculating window size",
+      "example": "Example 1:\ns = \"eceba\", k = 2\n\nLongest: \"ece\" → distinct = {e, c}\nAnswer: 3\n\nExample 2:\ns = \"aa\", k = 1\n\nLongest: \"aa\" → distinct = {a}\nAnswer: 2\n\nExample 3:\ns = \"abaccc\", k = 2\n\nLongest: \"accc\" → distinct = {a, c}\nAnswer: 4",
+      "action": "continue",
+      "next": "thinking-challenge"
+    },
+    {
+      "stepId": "thinking-challenge",
+      "mentorSays": "Now that you understand what the lesson wants, here's the real question:\n\nHow would YOU find the longest substring with at most K distinct characters?\n\nThink about it for a moment. What approach feels natural to you?",
+      "choices": [
+        {
+          "label": "Use a sliding window with hash map to track distinct characters",
+          "next": "explore-sliding-window"
+        },
+        {
+          "label": "Check all possible substrings and find the longest valid one",
+          "next": "explore-brute-force"
+        },
+        {
+          "label": "Use two pointers to track the K characters",
+          "next": "explore-two-pointers"
+        }
+      ]
+    },
+    {
+      "stepId": "explore-brute-force",
+      "mentorSays": "That's a straightforward approach! You're thinking: \"I'll check every possible substring and find which one is the longest with at most K distinct characters.\"\n\nFor s = \"eceba\", k = 2:\n- Check all substrings starting at index 0: \"e\", \"ec\", \"ece\", \"eceb\" (invalid)\n- Check all substrings starting at index 1: \"c\", \"ce\", \"ceb\" (invalid)\n- ... and so on\n\nThis works! However, it's O(n²) time because we check O(n²) substrings.\n\nThere's a more efficient O(n) approach using a sliding window. Would you like to learn that?",
+      "action": "continue",
+      "next": "explore-sliding-window"
+    },
+    {
+      "stepId": "explore-two-pointers",
+      "mentorSays": "Great thinking! Two pointers can work, but we need to track which characters are in the window, not just positions.\n\nActually, the sliding window approach with a hash map is cleaner because:\n- We need to know which characters are currently in the window\n- We need to know their frequencies (to know when to remove a character completely)\n- A hash map naturally tracks both character and frequency\n\nThere's an elegant O(n) approach using a sliding window with a hash map. Would you like to learn that?",
+      "action": "continue",
+      "next": "explore-sliding-window"
+    },
+    {
+      "stepId": "explore-sliding-window",
+      "mentorSays": "Excellent choice! The sliding window approach is both efficient and elegant. Here's the core idea:\n\n**The Algorithm:**\n1. **Use two pointers**: `left` and `right` to define the current window\n2. **Track characters**: Use a hash map to count characters in the current window\n3. **Expand**: Move `right` pointer to expand the window, add character to map\n4. **Check validity**: If we have more than K distinct characters, the window is invalid\n5. **Shrink**: If invalid, move `left` pointer to shrink the window, remove characters until we have ≤ K distinct\n6. **Update maxLen**: Track the maximum valid window size\n\n**Why it works**:\n- We maintain a window with at most K distinct characters\n- When we expand and get K+1 distinct characters, we shrink from the left\n- We remove characters until one character is completely gone (frequency becomes 0)\n- The maximum window size we've seen is our answer\n\n**Key insight**: When we have K+1 distinct characters, we need to remove characters from the left until we're back to K distinct. We do this by decrementing frequencies and removing characters when frequency reaches 0.\n\nLet's trace with s = \"eceba\", k = 2:\n\n- **right = 0**: char = 'e', map = {e:1}, distinct = 1 ≤ 2 ✓, maxLen = 1\n- **right = 1**: char = 'c', map = {e:1, c:1}, distinct = 2 ≤ 2 ✓, maxLen = 2\n- **right = 2**: char = 'e', map = {e:2, c:1}, distinct = 2 ≤ 2 ✓, maxLen = 3\n- **right = 3**: char = 'b', map = {e:2, c:1, b:1}, distinct = 3 > 2 ✗, shrink left\n  - **left = 0**: remove 'e', map = {e:1, c:1, b:1}, distinct = 3 > 2, continue\n  - **left = 1**: remove 'c', map = {e:1, b:1}, distinct = 2 ≤ 2 ✓, maxLen = 3\n- **right = 4**: char = 'a', map = {e:1, b:1, a:1}, distinct = 3 > 2 ✗, shrink left\n  - **left = 2**: remove 'e', map = {b:1, a:1}, distinct = 2 ≤ 2 ✓, maxLen = 3\n\nAnswer: 3\n\nThis is O(n) time and O(K) space (since we only track at most K+1 characters)! Now let's code it step by step.",
+      "action": "continue",
+      "next": "language-selection"
+    },
+    {
+      "stepId": "language-selection",
+      "mentorSays": "Great! Now let's code this solution. Which programming language would you like to use?",
+      "choices": [
+        {
+          "label": "JavaScript",
+          "next": "variable-check-js"
+        },
+        {
+          "label": "Python",
+          "next": "variable-check-python"
+        },
+        {
+          "label": "Java",
+          "next": "variable-check-java"
+        },
+        {
+          "label": "C++",
+          "next": "variable-check-cpp"
+        },
+        {
+          "label": "TypeScript",
+          "next": "variable-check-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-check-js",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-js"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-js",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'left' or 'freq') and put data inside it.\n\nFor example, 'let left = 0;' creates a variable that stores the number 0. Later, you can use that variable name to refer to it. We'll use variables to track the left pointer, the frequency map, and the maximum length.",
+      "example": "let left = 0;      // Left pointer\nlet maxLen = 0;   // Maximum length\n// Frequency map for characters",
+      "action": "continue",
+      "next": "function-check-js"
+    },
+    {
+      "stepId": "function-check-js",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-js"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-js",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.\n\nThink of it like a recipe: you provide ingredients (parameters), the function does the work, and gives you a result (return value).",
+      "example": "function lengthOfLongestSubstringKDistinct(s, k) {\n  // Returns maximum length\n  return 0;\n}",
+      "action": "continue",
+      "next": "parameter-check-js"
+    },
+    {
+      "stepId": "parameter-check-js",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "array-check-js"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-js",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'function lengthOfLongestSubstringKDistinct(s, k)', the 's' and 'k' are parameters - they're placeholders that will receive actual values when you call the function.",
+      "example": "function lengthOfLongestSubstringKDistinct(s, k) {\n  // Parameters receive values\n}\n\n// Call: lengthOfLongestSubstringKDistinct(\"eceba\", 2)",
+      "action": "continue",
+      "next": "array-check-js"
+    },
+    {
+      "stepId": "array-check-js",
+      "mentorSays": "To solve this lesson, we'll need to work with strings. Do you know what a string is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know strings",
+          "next": "loop-check-js"
+        },
+        {
+          "label": "No, explain strings",
+          "next": "array-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "array-explanation-js",
+      "mentorSays": "A string is a sequence of characters. Each character has a position number called an 'index'. String indices start counting from 0, not 1.\n\nFor example, s = \"eceba\" means:\n- s[0] = 'e' (first character)\n- s[1] = 'c' (second character)\n- etc.\n\nWe'll slide a window over this string to find the longest substring with at most K distinct characters.",
+      "example": "s = \"eceba\";\n\ns[0] = 'e'\ns[1] = 'c'\ns[2] = 'e'",
+      "action": "continue",
+      "next": "loop-check-js"
+    },
+    {
+      "stepId": "loop-check-js",
+      "mentorSays": "To solve this lesson, we'll need to use loops. Do you know what a loop is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know loops",
+          "next": "coding-start-js"
+        },
+        {
+          "label": "No, explain loops",
+          "next": "loop-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "loop-explanation-js",
+      "mentorSays": "A loop lets you repeat code multiple times. A 'for' loop in JavaScript runs code for each value in a sequence.\n\nFor example, 'for (let right = 0; right < s.length; right++)' means: run the code for each index from 0 to the length of the string. This lets us move our right pointer through the string.",
+      "example": "for (let right = 0; right < 5; right++) {\n  console.log(right);\n}\n\nThis prints: 0, 1, 2, 3, 4",
+      "action": "continue",
+      "next": "coding-start-js"
+    },
+    {
+      "stepId": "coding-start-js",
+      "mentorSays": "Perfect! Let's implement the longest substring with at most K distinct characters solution in JavaScript. We'll create a function that takes a string and k, and returns the maximum length.",
+      "example": "function lengthOfLongestSubstringKDistinct(s, k) {\n  \n}",
+      "action": "continue",
+      "next": "coding-init-js"
+    },
+    {
+      "stepId": "coding-init-js",
+      "mentorSays": "First, initialize variables: left pointer, frequency map to track characters, and maxLen to track the maximum length.",
+      "example": "function lengthOfLongestSubstringKDistinct(s, k) {\n  let left = 0;\n  let maxLen = 0;\n  const freq = {};  // Track frequency of each character\n  \n}",
+      "action": "continue",
+      "next": "coding-loop-js"
+    },
+    {
+      "stepId": "coding-loop-js",
+      "mentorSays": "Create a loop that moves the right pointer through the string. This will expand our window.",
+      "example": "function lengthOfLongestSubstringKDistinct(s, k) {\n  let left = 0;\n  let maxLen = 0;\n  const freq = {};\n  \n  for (let right = 0; right < s.length; right++) {\n    \n  }\n}",
+      "action": "continue",
+      "next": "coding-add-char-js"
+    },
+    {
+      "stepId": "coding-add-char-js",
+      "mentorSays": "Inside the loop, add the current character to our frequency map. This expands the window.",
+      "example": "function lengthOfLongestSubstringKDistinct(s, k) {\n  let left = 0;\n  let maxLen = 0;\n  const freq = {};\n  \n  for (let right = 0; right < s.length; right++) {\n    const char = s[right];\n    freq[char] = (freq[char] || 0) + 1;\n    \n  }\n}",
+      "action": "continue",
+      "next": "coding-shrink-js"
+    },
+    {
+      "stepId": "coding-shrink-js",
+      "mentorSays": "If we have more than K distinct characters, we need to shrink the window from the left. Remove characters until we're back to K distinct.",
+      "example": "function lengthOfLongestSubstringKDistinct(s, k) {\n  let left = 0;\n  let maxLen = 0;\n  const freq = {};\n  \n  for (let right = 0; right < s.length; right++) {\n    const char = s[right];\n    freq[char] = (freq[char] || 0) + 1;\n    \n    while (Object.keys(freq).length > k) {\n      const leftChar = s[left];\n      freq[leftChar]--;\n      if (freq[leftChar] === 0) {\n        delete freq[leftChar];\n      }\n      left++;\n    }\n    \n  }\n}",
+      "action": "continue",
+      "next": "coding-update-maxlen-js"
+    },
+    {
+      "stepId": "coding-update-maxlen-js",
+      "mentorSays": "After potentially shrinking, update maxLen with the current window size. The window now has at most K distinct characters.",
+      "example": "function lengthOfLongestSubstringKDistinct(s, k) {\n  let left = 0;\n  let maxLen = 0;\n  const freq = {};\n  \n  for (let right = 0; right < s.length; right++) {\n    const char = s[right];\n    freq[char] = (freq[char] || 0) + 1;\n    \n    while (Object.keys(freq).length > k) {\n      const leftChar = s[left];\n      freq[leftChar]--;\n      if (freq[leftChar] === 0) {\n        delete freq[leftChar];\n      }\n      left++;\n    }\n    \n    maxLen = Math.max(maxLen, right - left + 1);\n  }\n}",
+      "action": "continue",
+      "next": "coding-return-js"
+    },
+    {
+      "stepId": "coding-return-js",
+      "mentorSays": "Finally, return maxLen, which contains the maximum length of substring with at most K distinct characters.",
+      "example": "function lengthOfLongestSubstringKDistinct(s, k) {\n  let left = 0;\n  let maxLen = 0;\n  const freq = {};\n  \n  for (let right = 0; right < s.length; right++) {\n    const char = s[right];\n    freq[char] = (freq[char] || 0) + 1;\n    \n    while (Object.keys(freq).length > k) {\n      const leftChar = s[left];\n      freq[leftChar]--;\n      if (freq[leftChar] === 0) {\n        delete freq[leftChar];\n      }\n      left++;\n    }\n    \n    maxLen = Math.max(maxLen, right - left + 1);\n  }\n  \n  return maxLen;\n}",
+      "action": "continue",
+      "next": "test-code-js"
+    },
+    {
+      "stepId": "test-code-js",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** s = \"eceba\", k = 2\nExpected: 3 (substring \"ece\")\n\n**Test 2:** s = \"aa\", k = 1\nExpected: 2 (substring \"aa\")\n\n**Test 3:** s = \"abaccc\", k = 2\nExpected: 4 (substring \"accc\")\n\n**Test 4:** s = \"abcabcbb\", k = 3\nExpected: 6 (substring \"abcabc\")\n\n**Test 5:** s = \"a\", k = 1\nExpected: 1 (single character)\n\n**Test 6:** s = \"abcdef\", k = 3\nExpected: 3 (substring \"abc\" or \"def\")\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: \"eceba\", 2 → 3\nTest 2: \"aa\", 1 → 2\nTest 3: \"abaccc\", 2 → 4\nTest 4: \"abcabcbb\", 3 → 6\nTest 5: \"a\", 1 → 1\nTest 6: \"abcdef\", 3 → 3",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-python",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-python"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-python",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'left' or 'freq') and put data inside it.\n\nFor example, ' left = 0;' creates a variable that stores the number 0. Later, you can use that variable name to refer to it. We'll use variables to track the left pointer, the frequency map, and the maximum length.",
+      "example": " left = 0;      // Left pointer\n maxLen = 0;   // Maximum length\n// Frequency map for characters",
+      "action": "continue",
+      "next": "function-check-python"
+    },
+    {
+      "stepId": "function-check-python",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-python"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-python",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.\n\nThink of it like a recipe: you provide ingredients (parameters), the function does the work, and gives you a result (return value).",
+      "example": "def lengthOfLongestSubstringKDistinct(s, k) {\n  // Returns maximum length\n  return 0;\n}",
+      "action": "continue",
+      "next": "parameter-check-python"
+    },
+    {
+      "stepId": "parameter-check-python",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "array-check-python"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-python",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'def lengthOfLongestSubstringKDistinct(s, k)', the 's' and 'k' are parameters - they're placeholders that will receive actual values when you call the function.",
+      "example": "def lengthOfLongestSubstringKDistinct(s, k) {\n  // Parameters receive values\n}\n\n// Call: lengthOfLongestSubstringKDistinct(\"eceba\", 2)",
+      "action": "continue",
+      "next": "array-check-python"
+    },
+    {
+      "stepId": "array-check-python",
+      "mentorSays": "To solve this lesson, we'll need to work with strings. Do you know what a string is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know strings",
+          "next": "loop-check-python"
+        },
+        {
+          "label": "No, explain strings",
+          "next": "array-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "array-explanation-python",
+      "mentorSays": "A string is a sequence of characters. Each character has a position number called an 'index'. String indices start counting from 0, not 1.\n\nFor example, s = \"eceba\" means:\n- s[0] = 'e' (first character)\n- s[1] = 'c' (second character)\n- etc.\n\nWe'll slide a window over this string to find the longest substring with at most K distinct characters.",
+      "example": "s = \"eceba\";\n\ns[0] = 'e'\ns[1] = 'c'\ns[2] = 'e'",
+      "action": "continue",
+      "next": "loop-check-python"
+    },
+    {
+      "stepId": "loop-check-python",
+      "mentorSays": "To solve this lesson, we'll need to use loops. Do you know what a loop is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know loops",
+          "next": "coding-start-python"
+        },
+        {
+          "label": "No, explain loops",
+          "next": "loop-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "loop-explanation-python",
+      "mentorSays": "A loop lets you repeat code multiple times. A 'for' loop in Python runs code for each value in a sequence.\n\nFor example, 'for (let right = 0; right < s.length; right++)' means: run the code for each index from 0 to the length of the string. This lets us move our right pointer through the string.",
+      "example": "for (let right = 0; right < 5; right++) {\n  console.log(right);\n}\n\nThis prints: 0, 1, 2, 3, 4",
+      "action": "continue",
+      "next": "coding-start-python"
+    },
+    {
+      "stepId": "coding-start-python",
+      "mentorSays": "Perfect! Let's implement the solution in Python.",
+      "example": "def lengthOfLongestSubstringKDistinct(s, k):\n    pass",
+      "action": "continue",
+      "next": "coding-init-python"
+    },
+    {
+      "stepId": "coding-init-python",
+      "mentorSays": "First, initialize variables.",
+      "example": "def lengthOfLongestSubstringKDistinct(s, k):\n    left = 0\n    max_len = 0\n    freq = {}  # Track frequency of each character",
+      "action": "continue",
+      "next": "coding-loop-python"
+    },
+    {
+      "stepId": "coding-loop-python",
+      "mentorSays": "Create a loop that moves the right pointer.",
+      "example": "def lengthOfLongestSubstringKDistinct(s, k):\n    left = 0\n    max_len = 0\n    freq = {}\n    \n    for right in range(len(s)):\n        pass",
+      "action": "continue",
+      "next": "coding-add-char-python"
+    },
+    {
+      "stepId": "coding-add-char-python",
+      "mentorSays": "Add the current character to the frequency map.",
+      "example": "def lengthOfLongestSubstringKDistinct(s, k):\n    left = 0\n    max_len = 0\n    freq = {}\n    \n    for right in range(len(s)):\n        char = s[right]\n        freq[char] = freq.get(char, 0) + 1",
+      "action": "continue",
+      "next": "coding-shrink-python"
+    },
+    {
+      "stepId": "coding-shrink-python",
+      "mentorSays": "Shrink the window if we have more than K distinct characters.",
+      "example": "def lengthOfLongestSubstringKDistinct(s, k):\n    left = 0\n    max_len = 0\n    freq = {}\n    \n    for right in range(len(s)):\n        char = s[right]\n        freq[char] = freq.get(char, 0) + 1\n        \n        while len(freq) > k:\n            left_char = s[left]\n            freq[left_char] -= 1\n            if freq[left_char] == 0:\n                del freq[left_char]\n            left += 1",
+      "action": "continue",
+      "next": "coding-update-maxlen-python"
+    },
+    {
+      "stepId": "coding-update-maxlen-python",
+      "mentorSays": "Update max_len with the current window size.",
+      "example": "def lengthOfLongestSubstringKDistinct(s, k):\n    left = 0\n    max_len = 0\n    freq = {}\n    \n    for right in range(len(s)):\n        char = s[right]\n        freq[char] = freq.get(char, 0) + 1\n        \n        while len(freq) > k:\n            left_char = s[left]\n            freq[left_char] -= 1\n            if freq[left_char] == 0:\n                del freq[left_char]\n            left += 1\n        \n        max_len = max(max_len, right - left + 1)",
+      "action": "continue",
+      "next": "coding-return-python"
+    },
+    {
+      "stepId": "coding-return-python",
+      "mentorSays": "Return max_len.",
+      "example": "def lengthOfLongestSubstringKDistinct(s, k):\n    left = 0\n    max_len = 0\n    freq = {}\n    \n    for right in range(len(s)):\n        char = s[right]\n        freq[char] = freq.get(char, 0) + 1\n        \n        while len(freq) > k:\n            left_char = s[left]\n            freq[left_char] -= 1\n            if freq[left_char] == 0:\n                del freq[left_char]\n            left += 1\n        \n        max_len = max(max_len, right - left + 1)\n    \n    return max_len",
+      "action": "continue",
+      "next": "test-code-python"
+    },
+    {
+      "stepId": "test-code-python",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** s = \"eceba\", k = 2\nExpected: 3 (substring \"ece\")\n\n**Test 2:** s = \"aa\", k = 1\nExpected: 2 (substring \"aa\")\n\n**Test 3:** s = \"abaccc\", k = 2\nExpected: 4 (substring \"accc\")\n\n**Test 4:** s = \"abcabcbb\", k = 3\nExpected: 6 (substring \"abcabc\")\n\n**Test 5:** s = \"a\", k = 1\nExpected: 1 (single character)\n\n**Test 6:** s = \"abcdef\", k = 3\nExpected: 3 (substring \"abc\" or \"def\")\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: \"eceba\", 2 → 3\nTest 2: \"aa\", 1 → 2\nTest 3: \"abaccc\", 2 → 4\nTest 4: \"abcabcbb\", 3 → 6\nTest 5: \"a\", 1 → 1\nTest 6: \"abcdef\", 3 → 3",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-java",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-java"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-java",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'left' or 'freq') and put data inside it.\n\nFor example, 'int left = 0;' creates a variable that stores the number 0. Later, you can use that variable name to refer to it. We'll use variables to track the left pointer, the frequency map, and the maximum length.",
+      "example": "int left = 0;      // Left pointer\nint maxLen = 0;   // Maximum length\n// Frequency map for characters",
+      "action": "continue",
+      "next": "function-check-java"
+    },
+    {
+      "stepId": "function-check-java",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-java"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-java",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.\n\nThink of it like a recipe: you provide ingredients (parameters), the function does the work, and gives you a result (return value).",
+      "example": "public int lengthOfLongestSubstringKDistinct(s, k) {\n  // Returns maximum length\n  return 0;\n}",
+      "action": "continue",
+      "next": "parameter-check-java"
+    },
+    {
+      "stepId": "parameter-check-java",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "array-check-java"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-java",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'public int lengthOfLongestSubstringKDistinct(s, k)', the 's' and 'k' are parameters - they're placeholders that will receive actual values when you call the function.",
+      "example": "public int lengthOfLongestSubstringKDistinct(s, k) {\n  // Parameters receive values\n}\n\n// Call: lengthOfLongestSubstringKDistinct(\"eceba\", 2)",
+      "action": "continue",
+      "next": "array-check-java"
+    },
+    {
+      "stepId": "array-check-java",
+      "mentorSays": "To solve this lesson, we'll need to work with strings. Do you know what a string is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know strings",
+          "next": "loop-check-java"
+        },
+        {
+          "label": "No, explain strings",
+          "next": "array-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "array-explanation-java",
+      "mentorSays": "A string is a sequence of characters. Each character has a position number called an 'index'. String indices start counting from 0, not 1.\n\nFor example, s = \"eceba\" means:\n- s[0] = 'e' (first character)\n- s[1] = 'c' (second character)\n- etc.\n\nWe'll slide a window over this string to find the longest substring with at most K distinct characters.",
+      "example": "s = \"eceba\";\n\ns[0] = 'e'\ns[1] = 'c'\ns[2] = 'e'",
+      "action": "continue",
+      "next": "loop-check-java"
+    },
+    {
+      "stepId": "loop-check-java",
+      "mentorSays": "To solve this lesson, we'll need to use loops. Do you know what a loop is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know loops",
+          "next": "coding-start-java"
+        },
+        {
+          "label": "No, explain loops",
+          "next": "loop-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "loop-explanation-java",
+      "mentorSays": "A loop lets you repeat code multiple times. A 'for' loop in Java runs code for each value in a sequence.\n\nFor example, 'for (let right = 0; right < s.length; right++)' means: run the code for each index from 0 to the length of the string. This lets us move our right pointer through the string.",
+      "example": "for (let right = 0; right < 5; right++) {\n  console.log(right);\n}\n\nThis prints: 0, 1, 2, 3, 4",
+      "action": "continue",
+      "next": "coding-start-java"
+    },
+    {
+      "stepId": "coding-start-java",
+      "mentorSays": "Perfect! Let's implement the solution in Java.",
+      "example": "// Java implementation",
+      "action": "continue",
+      "next": "coding-init-java"
+    },
+    {
+      "stepId": "coding-init-java",
+      "mentorSays": "Initialize variables.",
+      "example": "// Java implementation",
+      "action": "continue",
+      "next": "coding-loop-java"
+    },
+    {
+      "stepId": "coding-loop-java",
+      "mentorSays": "Create a loop.",
+      "example": "// Java implementation",
+      "action": "continue",
+      "next": "coding-add-char-java"
+    },
+    {
+      "stepId": "coding-add-char-java",
+      "mentorSays": "Add character to map.",
+      "example": "// Java implementation",
+      "action": "continue",
+      "next": "coding-shrink-java"
+    },
+    {
+      "stepId": "coding-shrink-java",
+      "mentorSays": "Shrink window if needed.",
+      "example": "// Java implementation",
+      "action": "continue",
+      "next": "coding-update-maxlen-java"
+    },
+    {
+      "stepId": "coding-update-maxlen-java",
+      "mentorSays": "Update maxLen.",
+      "example": "// Java implementation",
+      "action": "continue",
+      "next": "coding-return-java"
+    },
+    {
+      "stepId": "coding-return-java",
+      "mentorSays": "Return maxLen.",
+      "example": "// Java implementation",
+      "action": "continue",
+      "next": "test-code-java"
+    },
+    {
+      "stepId": "test-code-java",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** s = \"eceba\", k = 2\nExpected: 3 (substring \"ece\")\n\n**Test 2:** s = \"aa\", k = 1\nExpected: 2 (substring \"aa\")\n\n**Test 3:** s = \"abaccc\", k = 2\nExpected: 4 (substring \"accc\")\n\n**Test 4:** s = \"abcabcbb\", k = 3\nExpected: 6 (substring \"abcabc\")\n\n**Test 5:** s = \"a\", k = 1\nExpected: 1 (single character)\n\n**Test 6:** s = \"abcdef\", k = 3\nExpected: 3 (substring \"abc\" or \"def\")\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: \"eceba\", 2 → 3\nTest 2: \"aa\", 1 → 2\nTest 3: \"abaccc\", 2 → 4\nTest 4: \"abcabcbb\", 3 → 6\nTest 5: \"a\", 1 → 1\nTest 6: \"abcdef\", 3 → 3",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-cpp",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-cpp"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-cpp",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'left' or 'freq') and put data inside it.\n\nFor example, 'int left = 0;' creates a variable that stores the number 0. Later, you can use that variable name to refer to it. We'll use variables to track the left pointer, the frequency map, and the maximum length.",
+      "example": "int left = 0;      // Left pointer\nint maxLen = 0;   // Maximum length\n// Frequency map for characters",
+      "action": "continue",
+      "next": "function-check-cpp"
+    },
+    {
+      "stepId": "function-check-cpp",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-cpp"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-cpp",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.\n\nThink of it like a recipe: you provide ingredients (parameters), the function does the work, and gives you a result (return value).",
+      "example": "int lengthOfLongestSubstringKDistinct(s, k) {\n  // Returns maximum length\n  return 0;\n}",
+      "action": "continue",
+      "next": "parameter-check-cpp"
+    },
+    {
+      "stepId": "parameter-check-cpp",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "array-check-cpp"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-cpp",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'int lengthOfLongestSubstringKDistinct(s, k)', the 's' and 'k' are parameters - they're placeholders that will receive actual values when you call the function.",
+      "example": "int lengthOfLongestSubstringKDistinct(s, k) {\n  // Parameters receive values\n}\n\n// Call: lengthOfLongestSubstringKDistinct(\"eceba\", 2)",
+      "action": "continue",
+      "next": "array-check-cpp"
+    },
+    {
+      "stepId": "array-check-cpp",
+      "mentorSays": "To solve this lesson, we'll need to work with strings. Do you know what a string is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know strings",
+          "next": "loop-check-cpp"
+        },
+        {
+          "label": "No, explain strings",
+          "next": "array-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "array-explanation-cpp",
+      "mentorSays": "A string is a sequence of characters. Each character has a position number called an 'index'. String indices start counting from 0, not 1.\n\nFor example, s = \"eceba\" means:\n- s[0] = 'e' (first character)\n- s[1] = 'c' (second character)\n- etc.\n\nWe'll slide a window over this string to find the longest substring with at most K distinct characters.",
+      "example": "s = \"eceba\";\n\ns[0] = 'e'\ns[1] = 'c'\ns[2] = 'e'",
+      "action": "continue",
+      "next": "loop-check-cpp"
+    },
+    {
+      "stepId": "loop-check-cpp",
+      "mentorSays": "To solve this lesson, we'll need to use loops. Do you know what a loop is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know loops",
+          "next": "coding-start-cpp"
+        },
+        {
+          "label": "No, explain loops",
+          "next": "loop-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "loop-explanation-cpp",
+      "mentorSays": "A loop lets you repeat code multiple times. A 'for' loop in C++ runs code for each value in a sequence.\n\nFor example, 'for (let right = 0; right < s.length; right++)' means: run the code for each index from 0 to the length of the string. This lets us move our right pointer through the string.",
+      "example": "for (let right = 0; right < 5; right++) {\n  console.log(right);\n}\n\nThis prints: 0, 1, 2, 3, 4",
+      "action": "continue",
+      "next": "coding-start-cpp"
+    },
+    {
+      "stepId": "coding-start-cpp",
+      "mentorSays": "Perfect! Let's implement the solution in C++.",
+      "example": "// C++ implementation",
+      "action": "continue",
+      "next": "coding-init-cpp"
+    },
+    {
+      "stepId": "coding-init-cpp",
+      "mentorSays": "Initialize variables.",
+      "example": "// C++ implementation",
+      "action": "continue",
+      "next": "coding-loop-cpp"
+    },
+    {
+      "stepId": "coding-loop-cpp",
+      "mentorSays": "Create a loop.",
+      "example": "// C++ implementation",
+      "action": "continue",
+      "next": "coding-add-char-cpp"
+    },
+    {
+      "stepId": "coding-add-char-cpp",
+      "mentorSays": "Add character to map.",
+      "example": "// C++ implementation",
+      "action": "continue",
+      "next": "coding-shrink-cpp"
+    },
+    {
+      "stepId": "coding-shrink-cpp",
+      "mentorSays": "Shrink window if needed.",
+      "example": "// C++ implementation",
+      "action": "continue",
+      "next": "coding-update-maxlen-cpp"
+    },
+    {
+      "stepId": "coding-update-maxlen-cpp",
+      "mentorSays": "Update maxLen.",
+      "example": "// C++ implementation",
+      "action": "continue",
+      "next": "coding-return-cpp"
+    },
+    {
+      "stepId": "coding-return-cpp",
+      "mentorSays": "Return maxLen.",
+      "example": "// C++ implementation",
+      "action": "continue",
+      "next": "test-code-cpp"
+    },
+    {
+      "stepId": "test-code-cpp",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** s = \"eceba\", k = 2\nExpected: 3 (substring \"ece\")\n\n**Test 2:** s = \"aa\", k = 1\nExpected: 2 (substring \"aa\")\n\n**Test 3:** s = \"abaccc\", k = 2\nExpected: 4 (substring \"accc\")\n\n**Test 4:** s = \"abcabcbb\", k = 3\nExpected: 6 (substring \"abcabc\")\n\n**Test 5:** s = \"a\", k = 1\nExpected: 1 (single character)\n\n**Test 6:** s = \"abcdef\", k = 3\nExpected: 3 (substring \"abc\" or \"def\")\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: \"eceba\", 2 → 3\nTest 2: \"aa\", 1 → 2\nTest 3: \"abaccc\", 2 → 4\nTest 4: \"abcabcbb\", 3 → 6\nTest 5: \"a\", 1 → 1\nTest 6: \"abcdef\", 3 → 3",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-ts",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-ts"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-ts",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'left' or 'freq') and put data inside it.\n\nFor example, 'let left = 0;' creates a variable that stores the number 0. Later, you can use that variable name to refer to it. We'll use variables to track the left pointer, the frequency map, and the maximum length.",
+      "example": "let left = 0;      // Left pointer\nlet maxLen = 0;   // Maximum length\n// Frequency map for characters",
+      "action": "continue",
+      "next": "function-check-ts"
+    },
+    {
+      "stepId": "function-check-ts",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-ts"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-ts",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.\n\nThink of it like a recipe: you provide ingredients (parameters), the function does the work, and gives you a result (return value).",
+      "example": "function lengthOfLongestSubstringKDistinct(s, k) {\n  // Returns maximum length\n  return 0;\n}",
+      "action": "continue",
+      "next": "parameter-check-ts"
+    },
+    {
+      "stepId": "parameter-check-ts",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "array-check-ts"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-ts",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'function lengthOfLongestSubstringKDistinct(s, k)', the 's' and 'k' are parameters - they're placeholders that will receive actual values when you call the function.",
+      "example": "function lengthOfLongestSubstringKDistinct(s, k) {\n  // Parameters receive values\n}\n\n// Call: lengthOfLongestSubstringKDistinct(\"eceba\", 2)",
+      "action": "continue",
+      "next": "array-check-ts"
+    },
+    {
+      "stepId": "array-check-ts",
+      "mentorSays": "To solve this lesson, we'll need to work with strings. Do you know what a string is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know strings",
+          "next": "loop-check-ts"
+        },
+        {
+          "label": "No, explain strings",
+          "next": "array-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "array-explanation-ts",
+      "mentorSays": "A string is a sequence of characters. Each character has a position number called an 'index'. String indices start counting from 0, not 1.\n\nFor example, s = \"eceba\" means:\n- s[0] = 'e' (first character)\n- s[1] = 'c' (second character)\n- etc.\n\nWe'll slide a window over this string to find the longest substring with at most K distinct characters.",
+      "example": "s = \"eceba\";\n\ns[0] = 'e'\ns[1] = 'c'\ns[2] = 'e'",
+      "action": "continue",
+      "next": "loop-check-ts"
+    },
+    {
+      "stepId": "loop-check-ts",
+      "mentorSays": "To solve this lesson, we'll need to use loops. Do you know what a loop is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know loops",
+          "next": "coding-start-ts"
+        },
+        {
+          "label": "No, explain loops",
+          "next": "loop-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "loop-explanation-ts",
+      "mentorSays": "A loop lets you repeat code multiple times. A 'for' loop in TypeScript runs code for each value in a sequence.\n\nFor example, 'for (let right = 0; right < s.length; right++)' means: run the code for each index from 0 to the length of the string. This lets us move our right pointer through the string.",
+      "example": "for (let right = 0; right < 5; right++) {\n  console.log(right);\n}\n\nThis prints: 0, 1, 2, 3, 4",
+      "action": "continue",
+      "next": "coding-start-ts"
+    },
+    {
+      "stepId": "coding-start-ts",
+      "mentorSays": "Perfect! Let's implement the solution in TypeScript.",
+      "example": "// TypeScript implementation",
+      "action": "continue",
+      "next": "coding-init-ts"
+    },
+    {
+      "stepId": "coding-init-ts",
+      "mentorSays": "Initialize variables.",
+      "example": "// TypeScript implementation",
+      "action": "continue",
+      "next": "coding-loop-ts"
+    },
+    {
+      "stepId": "coding-loop-ts",
+      "mentorSays": "Create a loop.",
+      "example": "// TypeScript implementation",
+      "action": "continue",
+      "next": "coding-add-char-ts"
+    },
+    {
+      "stepId": "coding-add-char-ts",
+      "mentorSays": "Add character to map.",
+      "example": "// TypeScript implementation",
+      "action": "continue",
+      "next": "coding-shrink-ts"
+    },
+    {
+      "stepId": "coding-shrink-ts",
+      "mentorSays": "Shrink window if needed.",
+      "example": "// TypeScript implementation",
+      "action": "continue",
+      "next": "coding-update-maxlen-ts"
+    },
+    {
+      "stepId": "coding-update-maxlen-ts",
+      "mentorSays": "Update maxLen.",
+      "example": "// TypeScript implementation",
+      "action": "continue",
+      "next": "coding-return-ts"
+    },
+    {
+      "stepId": "coding-return-ts",
+      "mentorSays": "Return maxLen.",
+      "example": "// TypeScript implementation",
+      "action": "continue",
+      "next": "test-code-ts"
+    },
+    {
+      "stepId": "test-code-ts",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** s = \"eceba\", k = 2\nExpected: 3 (substring \"ece\")\n\n**Test 2:** s = \"aa\", k = 1\nExpected: 2 (substring \"aa\")\n\n**Test 3:** s = \"abaccc\", k = 2\nExpected: 4 (substring \"accc\")\n\n**Test 4:** s = \"abcabcbb\", k = 3\nExpected: 6 (substring \"abcabc\")\n\n**Test 5:** s = \"a\", k = 1\nExpected: 1 (single character)\n\n**Test 6:** s = \"abcdef\", k = 3\nExpected: 3 (substring \"abc\" or \"def\")\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: \"eceba\", 2 → 3\nTest 2: \"aa\", 1 → 2\nTest 3: \"abaccc\", 2 → 4\nTest 4: \"abcabcbb\", 3 → 6\nTest 5: \"a\", 1 → 1\nTest 6: \"abcdef\", 3 → 3",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "final",
+      "mentorSays": "🎉 Well done! You've successfully implemented the Longest Substring with At Most K Distinct Characters solution!\n\n**Time Complexity:** O(n)\n- We iterate through the string once with the right pointer\n- Each character is added and removed from the window at most once\n- Even though we have a nested while loop, each character is processed at most twice (once when added, once when removed)\n\n**Space Complexity:** O(K)\n- We only use a hash map that stores at most K+1 distinct characters (since we shrink when we have K+1)\n- In the worst case, we store K+1 key-value pairs\n\n**Key Takeaways:**\n1. **Sliding window with hash map**: Use a hash map to track distinct characters and their frequencies in the current window\n2. **Shrink when invalid**: When we have more than K distinct characters, shrink from the left until we're back to K distinct\n3. **Remove characters completely**: When a character's frequency reaches 0, remove it from the map (not just set to 0)\n4. **Track maximum**: Update the maximum window size after ensuring the window is valid\n5. **Generalization**: This pattern generalizes to \"at most K distinct values\" - works for arrays, strings, etc.\n\n**Related Practice Lessons:**\n- Fruit Into Baskets (LeetCode #904) - same pattern with K=2\n- Longest Substring Without Repeating Characters (LeetCode #3) - K = all unique\n- Minimum Window Substring (LeetCode #76)\n\nKeep practicing sliding window lessons - they're a powerful technique for string and array lessons!",
+      "action": "continue"
+    }
+  ]
+}

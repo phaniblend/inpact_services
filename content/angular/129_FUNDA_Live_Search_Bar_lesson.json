@@ -1,0 +1,367 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-angular-funda-01",
+    "track": "angular",
+    "lessonNum": 134,
+    "title": "FUNDA — Live Search Bar",
+    "shortName": "FUNDA01",
+    "intro": {
+      "tag": "LESSON #134",
+      "title": "FUNDA — Live Search Bar",
+      "body": "In this lesson you will build a Live Search Bar component that queries a REST API as the user types, debouncing keystrokes to avoid flooding the network and automatically cancelling stale requests when a newer query arrives. You will wire a text input to an Observable pipeline using RxJS operators, render results with the async pipe, and handle both loading and error states inline. The finished widget performs like the search bars in GitHub, Notion, or VS Code's command palette — responsive, efficient, and resilient to fast typing.",
+      "usecase": "Search-as-you-type is one of the most common UX patterns in modern web applications — used in e-commerce product search, admin user lookups, HR directory search, and code editors. Getting it right means understanding request cancellation, debounce timing, and graceful degradation when the API is slow. These are the exact patterns you will be asked about in senior Angular interviews when they ask \"how does your search component handle race conditions?\""
+    },
+    "objectives": [
+      "Wire a reactive text input to an Observable using fromEvent or a FormControl valueChanges stream",
+      "Apply debounceTime and distinctUntilChanged to throttle API calls without losing keystrokes",
+      "Use switchMap to cancel in-flight HTTP requests when a new search term arrives",
+      "Handle errors inside the inner observable so the outer stream stays alive across network failures",
+      "Render asynchronous results and loading state using the async pipe with no manual subscribe/unsubscribe",
+      "Apply ChangeDetectionStrategy.OnPush to ensure the component only re-renders when results arrive",
+      "Write a unit test that verifies debounce behaviour using RxJS marble testing with TestScheduler"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 11",
+        "title": "Import Component from @angular/core",
+        "instruction": "Import Component from '@angular/core'. Add a @Component decorator on your class with standalone: true, a selector, and a template or templateUrl.",
+        "hint": "The file should show the import keyword, the symbol Component, and the path @angular/core.",
+        "analogousExample": "// Importing a decorator from a framework package (different stack — illustration only)\nimport { useState } from 'react';",
+        "seedCode": "// FUNDA — Live Search Bar\n// Step 1: import Component and add @Component here\n",
+        "expectedOutcome": "Component is imported from the Angular core package and the class is decorated with @Component including standalone: true.",
+        "successCriteria": [
+          "Code demonstrates: import, Component, @angular/core"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Add an import from the Angular core package for Component and decorate your class with @Component.",
+        "feedbackWrong": "Import Component from '@angular/core' and use the @Component decorator on your class.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "Component",
+            "@angular/core"
+          ],
+          "partialThreshold": 0.4,
+          "correctThreshold": 0.65
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 11",
+        "title": "FormControl and ReactiveFormsModule",
+        "instruction": "Import FormControl and ReactiveFormsModule from '@angular/forms'. Register ReactiveFormsModule in your component imports array so the template can use formControlName or bind to a FormControl.",
+        "hint": "Both symbols come from the Angular forms package; the module must be listed in the component imports for standalone components.",
+        "analogousExample": "// Importing two named exports from one package (illustration — not Angular forms)\nimport { ref, computed } from 'vue';",
+        "seedCode": "// FUNDA — Live Search Bar\n// Step 2: import FormControl and ReactiveFormsModule\n",
+        "expectedOutcome": "FormControl and ReactiveFormsModule are brought in from the forms package and ReactiveFormsModule is registered on the component.",
+        "successCriteria": [
+          "Code demonstrates: FormControl, ReactiveFormsModule"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Import FormControl and ReactiveFormsModule from '@angular/forms' and add ReactiveFormsModule to the component imports.",
+        "feedbackWrong": "Bring in FormControl and ReactiveFormsModule from the forms package and wire ReactiveFormsModule into @Component imports.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "FormControl",
+            "ReactiveFormsModule"
+          ],
+          "partialThreshold": 0.4,
+          "correctThreshold": 0.65
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 11",
+        "title": "debounceTime and distinctUntilChanged",
+        "instruction": "Import debounceTime and distinctUntilChanged from RxJS (rxjs/operators or rxjs, depending on your setup). Plan to chain them in a pipe on the search text stream.",
+        "hint": "They run after valueChanges or another Observable; order matters for debouncing and skipping duplicates.",
+        "analogousExample": "// Chaining operators on a stream (illustration)\n// stream.pipe(opA(), opB())",
+        "seedCode": "// FUNDA — Live Search Bar\n// Step 3: import debounceTime and distinctUntilChanged\n",
+        "expectedOutcome": "Both operators are imported and ready to use in a pipe.",
+        "successCriteria": [
+          "Code demonstrates: debounceTime, distinctUntilChanged"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Import debounceTime and distinctUntilChanged from the RxJS operator entry your project uses.",
+        "feedbackWrong": "Add imports for debounceTime and distinctUntilChanged and use them in a pipe on the input stream.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "debounceTime",
+            "distinctUntilChanged"
+          ],
+          "partialThreshold": 0.4,
+          "correctThreshold": 0.65
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 11",
+        "title": "HttpClient and switchMap",
+        "instruction": "Import HttpClient from '@angular/common/http' and switchMap from your RxJS operators entry. Obtain HttpClient with inject() or the constructor,",
+        "hint": "HttpClient lives in the common/http package; switchMap comes from the RxJS operators you already use elsewhere.",
+        "analogousExample": "// Fetching then flattening (illustration — not your exact API)\n// getClient().pipe(switchMap(id => fetchById(id)))",
+        "seedCode": "// FUNDA — Live Search Bar\n// Step 4: import HttpClient and switchMap\n",
+        "expectedOutcome": "HttpClient and switchMap are imported; HttpClient is available for GET/POST and switchMap follows debounce in the pipeline.",
+        "successCriteria": [
+          "Code demonstrates: switchMap, HttpClient"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Import HttpClient from the Angular HTTP package and switchMap from RxJS operators, then combine them in the search pipeline.",
+        "feedbackWrong": "Wire HttpClient and switchMap into the observable chain for the search term.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "switchMap",
+            "HttpClient"
+          ],
+          "partialThreshold": 0.4,
+          "correctThreshold": 0.65
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 11",
+        "title": "chain switchMap after debounce so a new searc",
+        "instruction": "chain switchMap after debounce so a new search cancels the previous HTTP request.",
+        "hint": "HttpClient lives in the common/http package; switchMap comes from the RxJS operators you already use elsewhere.",
+        "analogousExample": "// Fetching then flattening (illustration — not your exact API)\n// getClient().pipe(switchMap(id => fetchById(id)))",
+        "seedCode": "// FUNDA — Live Search Bar\n// Step 4: import HttpClient and switchMap\n",
+        "expectedOutcome": "",
+        "successCriteria": [
+          "Complete the step as instructed."
+        ],
+        "feedbackCorrect": "Great! Step completed.",
+        "feedbackPartial": "Review the instruction and try again.",
+        "feedbackWrong": "Check the instruction and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "switchMap",
+            "HttpClient"
+          ],
+          "partialThreshold": 0.4,
+          "correctThreshold": 0.65
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 11",
+        "title": "async pipe in the template",
+        "instruction": "In the template, bind your results Observable with the async pipe. Import AsyncPipe or the module that provides it if your standalone component needs an explicit import.",
+        "hint": "The template should show the async pipe next to an Observable, not only TypeScript subscriptions.",
+        "analogousExample": "{{!-- Unwrapping async data in another template language (illustration) --}}\n{{!-- {{ await promise }} is not Angular; use | async in Angular --}}",
+        "seedCode": "// FUNDA — Live Search Bar\n// Step 5: use | async in the template\n",
+        "expectedOutcome": "The template uses the async pipe with an Observable-backed value.",
+        "successCriteria": [
+          "Code demonstrates: async, pipe"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Use the async pipe in the template on your results stream.",
+        "feedbackWrong": "Expose the Observable in the template with the async pipe.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "async",
+            "pipe"
+          ],
+          "partialThreshold": 0.4,
+          "correctThreshold": 0.65
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 11",
+        "title": "ChangeDetectionStrategy.OnPush",
+        "instruction": "Import ChangeDetectionStrategy from '@angular/core' and set changeDetection to ChangeDetectionStrategy.OnPush inside your @Component metadata.",
+        "hint": "OnPush sits alongside selector, standalone, and template in the decorator object.",
+        "analogousExample": "// Opting into a cheaper update strategy (illustration)\n// memo(() => ...) in another framework",
+        "seedCode": "// FUNDA — Live Search Bar\n// Step 6: set OnPush change detection\n",
+        "expectedOutcome": "The component uses OnPush change detection.",
+        "successCriteria": [
+          "Code demonstrates: ChangeDetectionStrategy, OnPush"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Import ChangeDetectionStrategy and assign changeDetection: ChangeDetectionStrategy.OnPush in @Component.",
+        "feedbackWrong": "Set the component to use OnPush via ChangeDetectionStrategy.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "ChangeDetectionStrategy",
+            "OnPush"
+          ],
+          "partialThreshold": 0.4,
+          "correctThreshold": 0.65
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 11",
+        "title": "catchError and of",
+        "instruction": "Import catchError and of from 'rxjs'. In your pipe, recover from failed HTTP calls with a fallback so the outer stream keeps emitting.",
+        "hint": "of supplies a safe fallback value; catchError intercepts errors from the inner observable.",
+        "analogousExample": "// try / catch as a mental model (illustration)\n// try { } catch (e) { return defaultValue; }",
+        "seedCode": "// FUNDA — Live Search Bar\n// Step 7: import catchError and of\n",
+        "expectedOutcome": "Errors are handled with catchError and of without killing the main stream.",
+        "successCriteria": [
+          "Code demonstrates: catchError, of"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Import catchError and of from rxjs and handle errors inside pipe().",
+        "feedbackWrong": "Use catchError with a fallback from of so one bad response does not tear down the stream.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "catchError",
+            "of"
+          ],
+          "partialThreshold": 0.4,
+          "correctThreshold": 0.65
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 11",
+        "title": "takeUntilDestroyed",
+        "instruction": "Import takeUntilDestroyed from '@angular/core/rxjs-interop'. If you subscribe in the class, pass DestroyRef so the subscription ends when the component is destroyed.",
+        "hint": "Useful when you use subscribe for side effects instead of relying only on the async pipe.",
+        "analogousExample": "// Auto-cleanup pattern (illustration)\n// const stop = onUnsubscribe(() => sub.unsubscribe())",
+        "seedCode": "// FUNDA — Live Search Bar\n// Step 8: import takeUntilDestroyed\n",
+        "expectedOutcome": "takeUntilDestroyed is imported and used for safe teardown of subscriptions.",
+        "successCriteria": [
+          "Code demonstrates: takeUntilDestroyed"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Import takeUntilDestroyed from the Angular rxjs-interop entry and wire DestroyRef if needed.",
+        "feedbackWrong": "Bring in takeUntilDestroyed and tie subscriptions to component destruction.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "takeUntilDestroyed"
+          ],
+          "partialThreshold": 0.4,
+          "correctThreshold": 0.65
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 11",
+        "title": "trackBy on *ngFor",
+        "instruction": "Add a trackBy function on the class and reference it from *ngFor so list rows stay stable when the data updates.",
+        "hint": "Return a stable id from each item, such as item.id.",
+        "analogousExample": "// Stable keys in a list (illustration)\n// items.map(item => <Row key={item.id} />)",
+        "seedCode": "// FUNDA — Live Search Bar\n// Step 9: add trackBy for *ngFor\n",
+        "expectedOutcome": "A trackBy function is defined and used with *ngFor.",
+        "successCriteria": [
+          "Code demonstrates: trackBy"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Define a trackBy method and pass it into the *ngFor directive.",
+        "feedbackWrong": "Use trackBy with *ngFor for the search results list.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "trackBy"
+          ],
+          "partialThreshold": 0.4,
+          "correctThreshold": 0.65
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 11",
+        "title": "TestScheduler marble test",
+        "instruction": "Import TestScheduler from 'rxjs/testing' and use it with marble diagrams, or use cold from your test helper package if that is how your project tests observables. Write a test that shows debounce delays emissions.",
+        "hint": "Marbles use symbols for values and spacing for time.",
+        "analogousExample": "// Testing async timing elsewhere (illustration)\n// jest.useFakeTimers(); jest.advanceTimersByTime(300);",
+        "seedCode": "// FUNDA — Live Search Bar\n// Step 10: TestScheduler / marble test imports\n",
+        "expectedOutcome": "The test file imports marble or TestScheduler helpers appropriate for RxJS tests.",
+        "successCriteria": [
+          "Code demonstrates: TestScheduler, cold"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Import TestScheduler from rxjs/testing and/or cold from your marble helper.",
+        "feedbackWrong": "Show imports for TestScheduler and cold (or the equivalent in your test stack).",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "TestScheduler",
+            "cold"
+          ],
+          "partialThreshold": 0.4,
+          "correctThreshold": 0.65
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import Component from @angular/core",
+        "id": "step1"
+      },
+      {
+        "label": "FormControl and ReactiveFormsModule",
+        "id": "step2"
+      },
+      {
+        "label": "debounceTime and distinctUntilChanged",
+        "id": "step3"
+      },
+      {
+        "label": "HttpClient and switchMap",
+        "id": "step4"
+      },
+      {
+        "label": "chain switchMap after debounce so a new searc",
+        "id": "step5"
+      },
+      {
+        "label": "async pipe in the template",
+        "id": "step6"
+      },
+      {
+        "label": "ChangeDetectionStrategy.OnPush",
+        "id": "step7"
+      },
+      {
+        "label": "catchError and of",
+        "id": "step8"
+      },
+      {
+        "label": "takeUntilDestroyed",
+        "id": "step9"
+      },
+      {
+        "label": "trackBy on *ngFor",
+        "id": "step10"
+      },
+      {
+        "label": "TestScheduler marble test",
+        "id": "step11"
+      }
+    ]
+  },
+  "source": "content"
+}

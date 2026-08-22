@@ -1,0 +1,353 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-algorithms-105",
+    "track": "algorithms",
+    "lessonNum": 105,
+    "title": "Longest Increasing Subsequence",
+    "shortName": "P105",
+    "intro": {
+      "tag": "LESSON #105",
+      "title": "Longest Increasing Subsequence",
+      "body": "In this lesson, you will build a JavaScript function to find the length of the longest increasing subsequence in an array of numbers. You will learn the core concept of dynamic programming, which involves breaking the lesson into smaller subproblems and storing their solutions to avoid redundant calculations. The main technologies involved are JavaScript arrays, loops, and conditional logic. By the end, you will understand how to apply this algorithm to efficiently solve a common sequence analysis lesson.",
+      "usecase": "The Longest Increasing Subsequence algorithm is used in real-world applications like version control systems to identify the longest sequence of compatible software updates, ensuring system stability during incremental deployments. In e-commerce platforms, it helps optimize inventory management by finding the longest sequence of products with increasing demand trends for strategic stocking. Financial applications use it to analyze stock price trends, identifying the longest period of consistent growth for investment decisions. This pattern also appears in DNA sequence analysis in bioinformatics to find conserved genetic patterns across species."
+    },
+    "objectives": [
+      "Construct a brute-force approach to identify all possible increasing subsequences in an array",
+      "Implement a dynamic programming solution to calculate the length of the longest increasing subsequence",
+      "Initialize and manipulate a DP array to store intermediate results for subsequence lengths",
+      "Apply the algorithm to solve the LIS lesson on given input arrays",
+      "Configure the solution to handle edge cases such as empty arrays and single-element arrays",
+      "Integrate the DP approach into a complete function that returns the correct LIS length",
+      "Control the iteration logic to compare elements and update the DP array accordingly"
+    ],
+    "steps": [
+      {
+        "type": "reasoning",
+        "id": "step1",
+        "phase": "Step 1 of 15",
+        "title": "Introduction",
+        "content": {
+          "body": "Finding the longest increasing subsequence is a classic challenge where we need to track the best chain of increasing numbers. Today, we'll learn how to solve this efficiently by remembering what we've already seen. You'll implement a clever approach using a lookup structure to avoid re-scanning.",
+          "title": "Introduction"
+        }
+      },
+      {
+        "type": "reasoning",
+        "id": "step2",
+        "phase": "Step 2 of 15",
+        "title": "What you'll learn",
+        "content": {
+          "body": "1. Explain why a brute-force check of all subsequences is inefficient.\n2. Apply the concept of remembering seen values to build increasing sequences.\n3. Implement the Longest Increasing Subsequence algorithm using a single pass and a lookup structure.\n4. Identify what to store as keys and values in your lookup.\n5. Determine when to check the structure versus when to add to it.",
+          "title": "What you'll learn"
+        }
+      },
+      {
+        "type": "discovery",
+        "id": "step3",
+        "phase": "Step 3 of 15",
+        "title": "Try it",
+        "content": {
+          "body": "Let's start small. Look at this array:",
+          "title": "Try it",
+          "prompt": "What's the longest increasing subsequence? (Just count the length)",
+          "exampleArray": [
+            3,
+            1,
+            4
+          ],
+          "successMessage": "Good! The longest increasing subsequence here is length 2 (like [1,4] or [3,4])."
+        }
+      },
+      {
+        "type": "discovery",
+        "id": "step4",
+        "phase": "Step 4 of 15",
+        "title": "Try a bigger array",
+        "content": {
+          "body": "(No content)",
+          "title": "Try a bigger array",
+          "prompt": "Now find the longest increasing subsequence length:",
+          "exampleArray": [
+            10,
+            9,
+            2,
+            5,
+            3,
+            7
+          ],
+          "successMessage": "Well done! The length is 3 (from [2,5,7] or [2,3,7]). You likely checked many combinations."
+        }
+      },
+      {
+        "type": "discovery",
+        "id": "step5",
+        "phase": "Step 5 of 15",
+        "title": "One more",
+        "content": {
+          "body": "(No content)",
+          "title": "One more",
+          "prompt": "Find the longest increasing subsequence length:",
+          "exampleArray": [
+            0,
+            8,
+            4,
+            12,
+            2,
+            10,
+            6,
+            14,
+            1,
+            9
+          ],
+          "successMessage": "Great! The length is 4 (e.g., [0,4,6,9]). Checking all possible subsequences manually is getting tedious."
+        }
+      },
+      {
+        "type": "reflection",
+        "id": "step6",
+        "phase": "Step 6 of 15",
+        "title": "What you did",
+        "content": {
+          "body": "What you just did was a form of brute force: you mentally explored different subsequences, trying to find the longest chain where numbers increase. For small arrays, this works, but it doesn't scale well.",
+          "title": "What you did"
+        }
+      },
+      {
+        "type": "scale-problem",
+        "id": "step7",
+        "phase": "Step 7 of 15",
+        "title": "Why it gets hard",
+        "content": {
+          "body": "When the array has hundreds or thousands of numbers, checking every possible subsequence becomes impossibly slow. We need a method that remembers useful information as we go, so we don't have to re-scan everything. Can't figure out how? Click 'Show me' on the next step.",
+          "title": "Why it gets hard"
+        }
+      },
+      {
+        "type": "concept-bridge",
+        "id": "step8",
+        "phase": "Step 8 of 15",
+        "title": "Key idea",
+        "content": {
+          "body": "The core idea is to remember what we have already seen in a way that helps us build longer sequences efficiently. Instead of checking all past combinations repeatedly, we'll maintain a lookup structure (like an array or Map) that tracks the smallest possible tail for each increasing subsequence length we've found so far. This lets us quickly determine where a new number fits.",
+          "title": "Key idea",
+          "visualMetaphor": "Think of it like a notebook where we write down the best candidate for the last number of each possible sequence length. When we see a new number, we check our notebook to see if it can extend an existing sequence or start a better one."
+        }
+      },
+      {
+        "type": "reveal-idea",
+        "id": "step9",
+        "phase": "Step 9 of 15",
+        "title": "The approach",
+        "content": {
+          "body": "We'll walk through the array once, using a helper array to remember the smallest tail value for each subsequence length we've built. For each new number, we check our helper array to find where it fits (using binary search for efficiency), then update our notebook. The length of our helper array at the end is our answer.",
+          "title": "The approach",
+          "showMeFirst": true,
+          "illustratedExample": "Walkthrough with [3,1,4]:\n1. Start with helper array = [].\n2. See 3 → no sequences yet, add to helper: [3].\n3. See 1 → check helper: 1 is smaller than 3, so it becomes the better tail for length 1. Update helper: [1].\n4. See 4 → check helper: 4 is greater than 1, so it can extend the sequence. Add to helper: [1,4].\n5. Helper length = 2, which is our answer."
+        }
+      },
+      {
+        "type": "flow-explainer",
+        "id": "step10",
+        "phase": "Step 10 of 15",
+        "title": "Steps",
+        "content": {
+          "body": "1. Create an empty array `tails` to store the smallest tail for each subsequence length.\n2. For each number in the input array:\n   a. Use binary search on `tails` to find the position where this number fits (first element ≥ number).\n   b. If found, replace that position with the current number (it's a better, smaller tail).\n   c. If not found (number is greater than all tails), append it to `tails` (we've extended the longest sequence).\n3. The length of `tails` is the length of the longest increasing subsequence.",
+          "title": "Steps"
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 15",
+        "title": "Set up the function and helper array",
+        "instruction": "Create a function `lengthOfLIS` that takes an array `nums`. Inside, initialize an empty array called `tails`. This will be our lookup structure to remember the best tail for each sequence length.",
+        "hint": "Just declare the function and the empty array. No logic yet.",
+        "analogousExample": "",
+        "seedCode": "function lengthOfLIS(nums) {\n  // Step 1: Initialize the helper array\n  \n}",
+        "expectedOutcome": "The function should be defined with an empty `tails` array.",
+        "successCriteria": [],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you've declared `tails` as an empty array inside the function.",
+        "feedbackWrong": "Let's start simple. Create the function and an empty array called `tails` inside it.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "tails",
+            "[]"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step12",
+        "type": "question",
+        "phase": "Step 12 of 15",
+        "title": "Loop through the numbers",
+        "instruction": "Now, add a loop to iterate through each number in `nums`. For now, just log the number to see we're processing each one.",
+        "hint": "Use a `for...of` loop or a standard `for` loop. Console.log the current number.",
+        "analogousExample": "",
+        "seedCode": "function lengthOfLIS(nums) {\n  const tails = [];\n  \n  // Step 2: Loop through each number\n  \n  \n  return tails.length;\n}",
+        "expectedOutcome": "The loop should iterate through `nums` and log each number.",
+        "successCriteria": [],
+        "feedbackCorrect": "Great! You're now processing each number one by one.",
+        "feedbackPartial": "Almost. Ensure you're looping through `nums` and logging the current number.",
+        "feedbackWrong": "Add a loop that goes through each element in `nums` and logs it.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "for",
+            "nums",
+            "console.log"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step13",
+        "type": "question",
+        "phase": "Step 13 of 15",
+        "title": "Find where the number fits",
+        "instruction": "Inside the loop, we need to find where the current number fits in `tails`. Use binary search to find the first index in `tails` where the value is greater than or equal to the current number. Implement this search with `left` and `right` pointers. If the number is greater than all tails, `left` will equal `tails.length`.",
+        "hint": "Initialize `left = 0` and `right = tails.length`. While `left < right`, compute `mid` and compare `tails[mid]` with the current number.",
+        "analogousExample": "",
+        "seedCode": "function lengthOfLIS(nums) {\n  const tails = [];\n  \n  for (const num of nums) {\n    console.log(num);\n    \n    // Step 3: Binary search to find insertion point\n    let left = 0;\n    let right = tails.length;\n    while (left < right) {\n      const mid = Math.floor((left + right) / 2);\n      if (tails[mid] < num) {\n        left = mid + 1;\n      } else {\n        right = mid;\n      }\n    }\n    \n  }\n  \n  return tails.length;\n}",
+        "expectedOutcome": "The binary search correctly computes `left` as the index where `num` should be placed.",
+        "successCriteria": [],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Check your binary search logic. Ensure `left` updates when `tails[mid] < num`, and `right` updates otherwise.",
+        "feedbackWrong": "Implement binary search with `left` and `right` pointers to find the first position where `tails[index] >= num`.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "left",
+            "right",
+            "mid",
+            "tails[mid]",
+            "num"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step14",
+        "type": "question",
+        "phase": "Step 14 of 15",
+        "title": "Update the lookup structure",
+        "instruction": "After finding `left`, update `tails`. If `left === tails.length`, it means `num` is greater than all tails, so append it. Otherwise, replace `tails[left]` with `num`. This maintains our notebook of best tails.",
+        "hint": "Use an `if` statement to check if `left` equals the length, then push; else, assign.",
+        "analogousExample": "",
+        "seedCode": "function lengthOfLIS(nums) {\n  const tails = [];\n  \n  for (const num of nums) {\n    let left = 0;\n    let right = tails.length;\n    while (left < right) {\n      const mid = Math.floor((left + right) / 2);\n      if (tails[mid] < num) {\n        left = mid + 1;\n      } else {\n        right = mid;\n      }\n    }\n    \n    // Step 4: Update tails based on left\n    if (left === tails.length) {\n      tails.push(num);\n    } else {\n      tails[left] = num;\n    }\n  }\n  \n  return tails.length;\n}",
+        "expectedOutcome": "The function correctly updates `tails` and returns the length of the longest increasing subsequence.",
+        "successCriteria": [],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Almost there. Ensure you're correctly pushing when `left` is at the end, and replacing otherwise.",
+        "feedbackWrong": "Update `tails`: if `left` is equal to the current length, push `num`; otherwise, set `tails[left] = num`.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "left === tails.length",
+            "push",
+            "tails[left] = num"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "type": "complete",
+        "id": "step15",
+        "phase": "Step 15 of 15",
+        "title": "Done",
+        "content": {
+          "body": "Congratulations! You've implemented the Longest Increasing Subsequence algorithm. Remember: the key was using a lookup structure (`tails`) to remember the smallest tail for each subsequence length. This allowed us to avoid re-scanning and solve the lesson in O(n log n) time. Keep in mind: we store the actual tail values as keys in our array, and the indices represent lengths. We check the structure for each new number to see where it fits, then add or update accordingly. This 'remember what we've seen' pattern is powerful for many array-hashmap challenges.",
+          "title": "Done"
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Introduction",
+        "id": "step1"
+      },
+      {
+        "label": "What you'll learn",
+        "id": "step2"
+      },
+      {
+        "label": "Try it",
+        "id": "step3"
+      },
+      {
+        "label": "Try a bigger array",
+        "id": "step4"
+      },
+      {
+        "label": "One more",
+        "id": "step5"
+      },
+      {
+        "label": "What you did",
+        "id": "step6"
+      },
+      {
+        "label": "Why it gets hard",
+        "id": "step7"
+      },
+      {
+        "label": "Key idea",
+        "id": "step8"
+      },
+      {
+        "label": "The approach",
+        "id": "step9"
+      },
+      {
+        "label": "Steps",
+        "id": "step10"
+      },
+      {
+        "label": "Set up the function and helper array",
+        "id": "step11"
+      },
+      {
+        "label": "Loop through the numbers",
+        "id": "step12"
+      },
+      {
+        "label": "Find where the number fits",
+        "id": "step13"
+      },
+      {
+        "label": "Update the lookup structure",
+        "id": "step14"
+      },
+      {
+        "label": "Done",
+        "id": "step15"
+      }
+    ],
+    "algorithmFamily": "array-hashmap",
+    "familyTeachingProfile": {
+      "mentalModel": "Remember what we have already seen",
+      "conceptBridge": "Show the learner how to use a lookup structure (e.g. object or Map) to remember seen values and avoid re-scanning.",
+      "visualMetaphor": "A notebook where we write down what we've seen and check it in one step.",
+      "commonConfusions": [
+        "What do we store as key vs value?",
+        "When do we check the structure vs add to it?"
+      ]
+    }
+  },
+  "source": "content"
+}

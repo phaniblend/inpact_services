@@ -1,0 +1,369 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-vue-07",
+    "track": "vue",
+    "lessonNum": 7,
+    "title": "useEffect & Side Effects",
+    "shortName": "P07",
+    "intro": {
+      "tag": "LESSON #7",
+      "title": "useEffect & Side Effects",
+      "body": "In this lesson, you will build a simple Vue app that displays a live clock updating every second. You will learn how to use Vue's `watchEffect` to handle side effects, which are operations like timers, data fetching, or DOM updates that happen outside the normal component rendering flow. The main technologies involved are Vue's Composition API, `watchEffect`, and JavaScript's `setInterval` and `clearInterval` functions. By the end, you'll understand how to manage side effects in Vue components to keep your UI responsive and synchronized with external changes.",
+      "usecase": "In real Vue applications, side effect management is essential for features like live dashboard updates that fetch new data when filters change, form validation that triggers API calls on input, and shopping carts that sync with localStorage. Developers use these patterns when building notification systems that show alerts based on state changes, or modals that fetch content when opened. Understanding when and how to handle side effects helps create responsive interfaces that react appropriately to user interactions and data updates."
+    },
+    "objectives": [
+      "Initialize reactive state variables to track side effect dependencies",
+      "Implement the onMounted hook to execute code after component rendering",
+      "Apply the watch function to monitor reactive data changes and trigger side effects",
+      "Configure the onUnmounted hook to clean up resources when components are destroyed",
+      "Construct computed properties that derive values from reactive state for side effect logic",
+      "Integrate lifecycle hooks to manage side effects across different component stages",
+      "Manipulate DOM elements directly within side effect functions when necessary"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 10",
+        "title": "Import Vue and lifecycle hooks",
+        "instruction": "Import Vue and the onMounted, onUpdated, and onUnmounted lifecycle hooks from 'vue'.",
+        "hint": "Use the import statement to bring in Vue and the specific lifecycle hooks you'll need for this lesson.",
+        "analogousExample": "// Example: importing from a module\nimport { ref, computed } from 'vue'",
+        "seedCode": "// Import Vue and the lifecycle hooks here",
+        "expectedOutcome": "You'll have the necessary imports to start working with Vue lifecycle hooks.",
+        "successCriteria": [
+          "Vue, onMounted, onUpdated, and onUnmounted are imported from 'vue'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close, but make sure you're importing all the required items: Vue, onMounted, onUpdated, and onUnmounted from 'vue'.",
+        "feedbackWrong": "That doesn't look right. You need to import Vue and the three lifecycle hooks from 'vue'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "Vue",
+            "onMounted",
+            "onUpdated",
+            "onUnmounted",
+            "'vue'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 10",
+        "title": "Create the main Vue component",
+        "instruction": "Create a Vue component named 'SideEffectDemo' using the script setup syntax.",
+        "hint": "Use the <script setup> tag to define a Vue component. You can start with an empty template for now.",
+        "analogousExample": "// Example of a Vue component with script setup\n<script setup>\n// Component logic will go here\n</script>\n\n<template>\n  <div>\n    <!-- Template content will go here -->\n  </div>\n</template>",
+        "seedCode": "<script setup>\n// Import Vue and the lifecycle hooks here\n</script>\n\n<template>\n  <div>\n    <!-- Component content will go here -->\n  </div>\n</template>",
+        "expectedOutcome": "You'll have a basic Vue component structure with script setup ready for adding side effect logic.",
+        "successCriteria": [
+          "The component is named 'SideEffectDemo' and uses <script setup> syntax with a template section."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're using the <script setup> syntax and have both script and template sections.",
+        "feedbackWrong": "Check that you've created a Vue component with the correct structure. Remember to use <script setup> and include a template.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<script setup>",
+            "</script>",
+            "<template>",
+            "</template>",
+            "SideEffectDemo"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 10",
+        "title": "Initialize reactive state with ref",
+        "instruction": "Inside the <script setup> section, declare a reactive state variable named 'count' using ref and initialize it with the value 0.",
+        "hint": "Use the ref function imported from Vue to create a reactive reference. The syntax is: const count = ref(0);",
+        "analogousExample": "// Creating a reactive variable\nconst message = ref('Hello');",
+        "seedCode": "<script setup>\n// Import Vue and the lifecycle hooks here\nimport { ref } from 'vue';\n\n// Initialize reactive state here\n</script>\n\n<template>\n  <div>\n    <!-- Component content will go here -->\n  </div>\n</template>",
+        "expectedOutcome": "A reactive count variable is created with an initial value of 0, ready to be used in the template.",
+        "successCriteria": [
+          "The code includes 'const count = ref(0);' inside the <script setup> section."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're using the ref function correctly. Check that you've written 'const count = ref(0);' inside the <script setup> section.",
+        "feedbackWrong": "use the ref function from Vue to create a reactive variable. The syntax should be: const count = ref(0);",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "const",
+            "count",
+            "=",
+            "ref",
+            "(",
+            "0",
+            ")",
+            ";"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 10",
+        "title": "Initialize reactive state for side effect tracking",
+        "instruction": "Initialize a reactive message variable using ref with an initial value of 'No side effect yet' inside the <script setup> section.",
+        "hint": "Use the ref function you imported earlier to create a new reactive reference. Place it after your existing state declaration.",
+        "analogousExample": "// Example: creating a reactive message\nconst message = ref('Initial message');",
+        "seedCode": "<script setup>\n// Import Vue and the lifecycle hooks here\nimport { ref } from 'vue';\n\n// Initialize reactive state here\nconst count = ref(0);\n// Initialize message variable here\n</script>\n\n<template>\n  <div>\n    <!-- Component content will go here -->\n  </div>\n</template>",
+        "expectedOutcome": "You'll have a reactive message variable ready to track side effect status.",
+        "successCriteria": [
+          "A message variable is declared with ref and initialized to 'No side effect yet'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're using ref() and setting the initial value to 'No side effect yet'.",
+        "feedbackWrong": "Initialize a message variable using ref with 'No side effect yet' as the initial value.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "message",
+            "ref",
+            "'No side effect yet'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 10",
+        "title": "Define a handler to update state",
+        "instruction": "Define a function named increment that increases the count value by 1.",
+        "hint": "Create a function that modifies the reactive count variable using .value.",
+        "analogousExample": "// Example: a function that updates a reactive variable\nfunction increaseScore() {\n  score.value += 1;\n}",
+        "seedCode": "<script setup>\n// Import Vue and the lifecycle hooks here\nimport { ref } from 'vue';\n\n// Initialize reactive state here\nconst count = ref(0);\n// Initialize message variable here\n\n// Define increment function here\n</script>\n\n<template>\n  <div>\n    <!-- Component content will go here -->\n  </div>\n</template>",
+        "expectedOutcome": "A function named increment is defined that modifies the count reactive state.",
+        "successCriteria": [
+          "The increment function is defined and increases count.value by 1."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You defined a function, but make sure it correctly increases count.value by 1.",
+        "feedbackWrong": "The increment function is not defined correctly. Check that it modifies count.value.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "increment",
+            "count.value",
+            "+=",
+            "1"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 10",
+        "title": "Use onMounted for initial side effect",
+        "instruction": "Import the onMounted lifecycle hook from 'vue' and use it to set the message state to 'Component mounted!' when the component first loads.",
+        "hint": "Import onMounted alongside ref, then call onMounted with a callback function that updates message.value.",
+        "analogousExample": "// Example: using onMounted\nimport { ref, onMounted } from 'vue';\n\nconst message = ref('');\nonMounted(() => {\n  message.value = 'Component mounted!';\n});",
+        "seedCode": "<script setup>\n// Import Vue and the lifecycle hooks here\nimport { ref } from 'vue';\n\n// Initialize reactive state here\nconst count = ref(0);\n// Initialize message variable here\nconst message = ref('');\n\n// Define increment function here\nconst increment = () => {\n  count.value++;\n};\n\n// Use onMounted to update message when component mounts\n</script>\n\n<template>\n  <div>\n    <!-- Component content will go here -->\n  </div>\n</template>",
+        "expectedOutcome": "The onMounted hook is imported and used to update the message state when the component mounts.",
+        "successCriteria": [
+          "onMounted is imported from 'vue' and called with a function that sets message.value to 'Component mounted!'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you've imported onMounted and called it with a function that updates message.value.",
+        "feedbackWrong": "The onMounted hook isn't set up correctly. Import it from 'vue' and use it to update message when the component mounts.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "onMounted",
+            "'vue'",
+            "onMounted(",
+            "message.value",
+            "'Component mounted!'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 10",
+        "title": "Use onUpdated for reactive updates",
+        "instruction": "Import the onUpdated lifecycle hook from 'vue' and use it to update the message whenever the count changes.",
+        "hint": "You'll need to add onUpdated to your import statement and call it with a callback function that updates message.value.",
+        "analogousExample": "// Import and use onUpdated\nimport { onUpdated } from 'vue';\n\nonUpdated(() => {\n  console.log('Component updated!');\n});",
+        "seedCode": "<script setup>\n// Import Vue and the lifecycle hooks here\nimport { ref } from 'vue';\n\n// Initialize reactive state here\nconst count = ref(0);\n// Initialize message variable here\nconst message = ref('');\n\n// Define increment function here\nconst increment = () => {\n  count.value++;\n};\n\n// Use onMounted to update message when component mounts\n</script>\n\n<template>\n  <div>\n    <!-- Component content will go here -->\n  </div>\n</template>",
+        "expectedOutcome": "The onUpdated hook will execute whenever reactive state changes, allowing you to perform side effects in response to updates.",
+        "successCriteria": [
+          "onUpdated is imported from 'vue' and used with a callback that updates message.value based on count.value."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure you've both imported onUpdated and called it with a callback function.",
+        "feedbackWrong": "The onUpdated hook isn't properly set up. Check that you've imported it and used it correctly.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "onUpdated",
+            "from",
+            "'vue'",
+            "onUpdated",
+            "(",
+            ")",
+            "message",
+            "value"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 10",
+        "title": "Use onUnmounted for cleanup",
+        "instruction": "Import the onUnmounted hook from 'vue' and use it to log a cleanup message when the component is destroyed.",
+        "hint": "Add onUnmounted to your existing import statement, then call onUnmounted with a function that logs a message.",
+        "analogousExample": "// Import and use onUnmounted\nimport { onUnmounted } from 'vue';\nonUnmounted(() => {\n  console.log('Component unmounted - cleanup');\n});",
+        "seedCode": "<script setup>\n// Import Vue and the lifecycle hooks here\nimport { ref } from 'vue';\n\n// Initialize reactive state here\nconst count = ref(0);\n// Initialize message variable here\nconst message = ref('');\n\n// Define increment function here\nconst increment = () => {\n  count.value++;\n};\n\n// Use onMounted to update message when component mounts\n</script>\n\n<template>\n  <div>\n    <!-- Component content will go here -->\n  </div>\n</template>",
+        "expectedOutcome": "The onUnmounted hook is imported and used to log a cleanup message when the component is destroyed.",
+        "successCriteria": [
+          "onUnmounted is imported from 'vue' and called with a function that logs a message."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you've both imported onUnmounted and called it with a function that logs a message.",
+        "feedbackWrong": "Check that you've imported onUnmounted from 'vue' and used it to log a cleanup message.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "onUnmounted",
+            "import",
+            "'vue'",
+            "log",
+            "cleanup"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 10",
+        "title": "Create the template structure",
+        "instruction": "Inside the template, create a div container with a class of 'container' to wrap the component's content.",
+        "hint": "Add a div element with the class attribute set to 'container' inside the template section.",
+        "analogousExample": "<!-- Example: basic template structure -->\n<template>\n  <div class=\"wrapper\">\n    <!-- Content goes here -->\n  </div>\n</template>",
+        "seedCode": "<script setup>\n// Import Vue and the lifecycle hooks here\nimport { ref } from 'vue';\n\n// Initialize reactive state here\nconst count = ref(0);\n// Initialize message variable here\nconst message = ref('');\n\n// Define increment function here\nconst increment = () => {\n  count.value++;\n};\n\n// Use onMounted to update message when component mounts\n</script>\n\n<template>\n  <div class=\"container\">\n    <!-- Component content will go here -->\n  </div>\n</template>",
+        "expectedOutcome": "The template now has a div container with a class attribute, ready to hold the UI elements.",
+        "successCriteria": [
+          "A div element with class=\"container\" exists inside the template tags."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you've added a div with class=\"container\" inside the template.",
+        "feedbackWrong": "The template structure isn't quite right. Add a div element with class=\"container\" inside the template tags.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<div",
+            "class=\"container\""
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 10",
+        "title": "Add UI elements and wire events",
+        "instruction": "Inside the template, add a paragraph to display the current count value, a paragraph to display the message value, and a button that calls the increment function when clicked.",
+        "hint": "Use double curly braces {{ }} to display reactive values in the template. Add a @click directive to the button to call your increment function.",
+        "analogousExample": "// Displaying reactive values and wiring events\n<template>\n  <div>\n    <p>Count: {{ count }}</p>\n    <p>Message: {{ message }}</p>\n    <button @click=\"increment\">Increment</button>\n  </div>\n</template>",
+        "seedCode": "<script setup>\n// Import Vue and the lifecycle hooks here\nimport { ref } from 'vue';\n\n// Initialize reactive state here\nconst count = ref(0);\n// Initialize message variable here\nconst message = ref('');\n\n// Define increment function here\nconst increment = () => {\n  count.value++;\n};\n\n// Use onMounted to update message when component mounts\n</script>\n\n<template>\n  <div class=\"container\">\n    <!-- Add paragraph to display count -->\n    <!-- Add paragraph to display message -->\n    <!-- Add button to trigger increment -->\n  </div>\n</template>",
+        "expectedOutcome": "The UI will display the current count and message values, and clicking the button will increment the count.",
+        "successCriteria": [
+          "Template contains a paragraph showing count value, a paragraph showing message value, and a button with @click=\"increment\"."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure you have both paragraphs displaying the count and message values, and that the button has the @click directive calling the increment function.",
+        "feedbackWrong": "The template doesn't yet have the required elements. Add a paragraph for count, a paragraph for message, and a button with @click=\"increment\".",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "{{ count }}",
+            "{{ message }}",
+            "@click=\"increment\""
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import Vue and lifecycle hooks",
+        "id": "step1"
+      },
+      {
+        "label": "Create the main Vue component",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize reactive state with ref",
+        "id": "step3"
+      },
+      {
+        "label": "Initialize reactive state for side effect tracking",
+        "id": "step4"
+      },
+      {
+        "label": "Define a handler to update state",
+        "id": "step5"
+      },
+      {
+        "label": "Use onMounted for initial side effect",
+        "id": "step6"
+      },
+      {
+        "label": "Use onUpdated for reactive updates",
+        "id": "step7"
+      },
+      {
+        "label": "Use onUnmounted for cleanup",
+        "id": "step8"
+      },
+      {
+        "label": "Create the template structure",
+        "id": "step9"
+      },
+      {
+        "label": "Add UI elements and wire events",
+        "id": "step10"
+      }
+    ]
+  },
+  "source": "content"
+}

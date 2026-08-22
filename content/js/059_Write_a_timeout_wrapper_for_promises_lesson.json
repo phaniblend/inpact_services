@@ -1,0 +1,358 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-js-59",
+    "track": "js",
+    "lessonNum": 59,
+    "title": "Write a timeout wrapper for promises",
+    "shortName": "P59",
+    "intro": {
+      "tag": "LESSON #59",
+      "title": "Write a timeout wrapper for promises",
+      "body": "In this lesson, you will build a function that wraps a promise to add a timeout, ensuring it either resolves with the original promise's result or rejects if it takes too long. You'll learn how to use JavaScript promises, the setTimeout function, and the Promise.race method to handle asynchronous operations with time limits. The main constructs involved are creating promises, managing timeouts, and combining promises to control execution flow. This is a practical skill for making your code more robust by preventing indefinite waiting in network requests or other async tasks.",
+      "usecase": "In real applications, network requests can hang indefinitely when servers are slow or unresponsive. A timeout wrapper for promises is essential for creating responsive user interfaces like search autocomplete fields, dashboard data fetches, and payment processing forms. For example, when users search in an e-commerce site, you want to show 'Request timed out' after 5 seconds rather than leaving them waiting forever. This pattern also prevents memory leaks in long-running operations and improves overall application reliability."
+    },
+    "objectives": [
+      "Construct a function that accepts a promise and a timeout duration as parameters",
+      "Initialize a timeout promise that rejects after the specified duration",
+      "Integrate Promise.race() to compete the original promise against the timeout promise",
+      "Manipulate the race outcome to return the original promise's value or throw a timeout error",
+      "Apply the timeout wrapper to a sample asynchronous operation",
+      "Control the timeout behavior by adjusting the duration parameter",
+      "Implement error handling to catch and distinguish timeout errors from other promise rejections"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 10",
+        "title": "Import the required Promise APIs",
+        "instruction": "Create a new JavaScript file and recognize that Promise is a global object available without imports.",
+        "hint": "In JavaScript, Promise is built into the language and doesn't need to be imported from any module.",
+        "analogousExample": "// Promise is globally available\nconsole.log(Promise); // This works without imports",
+        "seedCode": "// No imports needed - Promise is a global object\n\n// Your code will go here",
+        "expectedOutcome": "You'll understand that Promise is a built-in JavaScript object that doesn't require explicit imports.",
+        "successCriteria": [
+          "The code recognizes that Promise is available globally without any import statements."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Remember that in JavaScript, Promise is built into the language and available globally.",
+        "feedbackWrong": "Let's clarify: Promise is a built-in JavaScript object that doesn't need to be imported. It's available globally in any JavaScript environment.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "Promise"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 10",
+        "title": "Define the timeoutWrapper function structure",
+        "instruction": "Create a function named timeoutWrapper that takes two parameters: promise and timeoutMs. The function should return a new Promise.",
+        "hint": "You can use either a function declaration or arrow function syntax. The function signature should be (promise, timeoutMs).",
+        "analogousExample": "// Example: a function that takes parameters and returns a Promise\nfunction fetchWithRetry(url, retries) {\n  return new Promise((resolve, reject) => {\n    // Implementation\n  });\n}",
+        "seedCode": "// No imports needed - Promise is a global object\n\n// Create your timeoutWrapper function here\n\n// Your code will go here",
+        "expectedOutcome": "A timeoutWrapper function is defined with the correct parameters and returns a Promise.",
+        "successCriteria": [
+          "The timeoutWrapper function is defined with two parameters (promise, timeoutMs) and returns a new Promise."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure your function takes two parameters (promise and timeoutMs) and returns a new Promise.",
+        "feedbackWrong": "The function definition doesn't match the requirements. It should be named timeoutWrapper, take two parameters (promise, timeoutMs), and return a new Promise.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "timeoutWrapper",
+            "promise",
+            "timeoutMs",
+            "return",
+            "Promise"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 10",
+        "title": "Create the timeout promise",
+        "instruction": "Inside your timeoutWrapper function, create a new promise called timeoutPromise that uses setTimeout to reject with an error after timeoutMs milliseconds.",
+        "hint": "Use new Promise((resolve, reject) => { ... }) and inside it, call setTimeout(() => { reject(new Error(...)) }, timeoutMs).",
+        "analogousExample": "// Creating a promise that rejects after a delay\nconst timeoutPromise = new Promise((resolve, reject) => {\n  setTimeout(() => {\n    reject(new Error('Operation timed out'));\n  }, 2000);\n});",
+        "seedCode": "// No imports needed - Promise is a global object\n\n// Create your timeoutWrapper function here\nfunction timeoutWrapper(promise, timeoutMs) {\n  // Create timeoutPromise here\n  const timeoutPromise = new Promise((resolve, reject) => {\n    setTimeout(() => {\n      reject(new Error('Operation timed out'));\n    }, timeoutMs);\n  });\n}\n\n// Your code will go here",
+        "expectedOutcome": "The timeoutWrapper function now contains a timeoutPromise variable that creates a promise rejecting after the specified timeout.",
+        "successCriteria": [
+          "A timeoutPromise variable is declared inside timeoutWrapper, using new Promise and setTimeout to reject with an Error after timeoutMs."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure you're creating a new Promise that rejects with an Error inside setTimeout, and the timeout is set to timeoutMs.",
+        "feedbackWrong": "The timeout promise isn't set up correctly. Remember to create a new Promise that rejects with an Error after timeoutMs milliseconds using setTimeout.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "timeoutPromise",
+            "new Promise",
+            "setTimeout",
+            "reject",
+            "Error",
+            "timeoutMs"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 10",
+        "title": "Use Promise.race to combine promises",
+        "instruction": "Inside your timeoutWrapper function, return Promise.race() with the original promise and timeoutPromise as arguments.",
+        "hint": "Promise.race() takes an array of promises and returns a new promise that settles with the result of the first promise that settles.",
+        "analogousExample": "// Example: racing two promises\nfunction racePromises(promise1, promise2) {\n  return Promise.race([promise1, promise2]);\n}",
+        "seedCode": "// No imports needed - Promise is a global object\n\n// Create your timeoutWrapper function here\nfunction timeoutWrapper(promise, timeoutMs) {\n  // Create timeoutPromise here\n  const timeoutPromise = new Promise((resolve, reject) => {\n    setTimeout(() => {\n      reject(new Error('Operation timed out'));\n    }, timeoutMs);\n  });\n  \n  // Return Promise.race with both promises\n}",
+        "expectedOutcome": "The timeoutWrapper function now returns Promise.race() with both the original promise and the timeout promise, allowing whichever settles first to determine the outcome.",
+        "successCriteria": [
+          "The timeoutWrapper function returns Promise.race() with the original promise and timeoutPromise as arguments."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure you're returning Promise.race() with both the original promise and timeoutPromise as arguments inside the timeoutWrapper function.",
+        "feedbackWrong": "The timeoutWrapper function should return Promise.race() with the original promise and timeoutPromise as arguments. Check that you're using the correct syntax for Promise.race().",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "return",
+            "Promise.race",
+            "promise",
+            "timeoutPromise"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 10",
+        "title": "Create a sample promise for testing",
+        "instruction": "Create a function called delayedResolve that returns a promise resolving after a specified delay.",
+        "hint": "The function should take a delay in milliseconds and return a new Promise that resolves after that delay using setTimeout.",
+        "analogousExample": "// Example: a function that returns a delayed promise\nfunction delayedResolve(delayMs) {\n  return new Promise((resolve) => {\n    setTimeout(() => {\n      resolve('Resolved after ' + delayMs + 'ms');\n    }, delayMs);\n  });\n}",
+        "seedCode": "// No imports needed - Promise is a global object\n\n// Create your timeoutWrapper function here\nfunction timeoutWrapper(promise, timeoutMs) {\n  // Create timeoutPromise here\n  const timeoutPromise = new Promise((resolve, reject) => {\n    setTimeout(() => {\n      reject(new Error('Operation timed out'));\n    }, timeoutMs);\n  });\n  \n  // Return Promise.race with both promises\n}\n\n// Create the delayedResolve function below",
+        "expectedOutcome": "A function named delayedResolve that returns a promise resolving after a given delay.",
+        "successCriteria": [
+          "The delayedResolve function is defined, takes a delay parameter, and returns a Promise that resolves after that delay."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure delayedResolve takes a delay parameter and returns a Promise that resolves after that delay.",
+        "feedbackWrong": "The delayedResolve function is not yet defined correctly. It should take a delay and return a Promise that resolves after that delay.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "delayedResolve",
+            "Promise",
+            "setTimeout",
+            "resolve"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 10",
+        "title": "Test the timeoutWrapper with a fast promise",
+        "instruction": "Call timeoutWrapper with a promise that resolves quickly (e.g., 500ms) and a longer timeout (e.g., 1000ms),",
+        "hint": "Use the delayedResolve function to create a promise that resolves after 500ms, then pass it to timeoutWrapper with a 1000ms timeout. Chain a .then() to log the resolved value.",
+        "analogousExample": "// Testing a function with a fast operation\nfunction testFastOperation() {\n  const fastPromise = new Promise(resolve => setTimeout(() => resolve('fast done'), 300));\n  const result = fastPromise.then(value => console.log('Result:', value));\n}",
+        "seedCode": "// No imports needed - Promise is a global object\n\n// Create your timeoutWrapper function here\nfunction timeoutWrapper(promise, timeoutMs) {\n  // Create timeoutPromise here\n  const timeoutPromise = new Promise((resolve, reject) => {\n    setTimeout(() => {\n      reject(new Error('Operation timed out'));\n    }, timeoutMs);\n  });\n  \n  // Return Promise.race with both promises\n}\n\n// Create the delayedResolve function below\nfunction delayedResolve(value, delay) {\n  return new Promise(resolve => {\n    setTimeout(() => resolve(value), delay);\n  });\n}\n\n// Test timeoutWrapper with a fast promise here",
+        "expectedOutcome": "The code should create a fast promise (500ms) and pass it to timeoutWrapper with a longer timeout (1000ms), then log the resolved value when it succeeds before the timeout.",
+        "successCriteria": [
+          "timeoutWrapper is called with a promise that resolves in 500ms and a 1000ms timeout, and the result is logged using .then()."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're calling timeoutWrapper with a promise that resolves in 500ms and a timeout of 1000ms, and logging the result.",
+        "feedbackWrong": "Check your implementation. You need to call timeoutWrapper with a promise that resolves quickly (500ms) and a longer timeout (1000ms), then log the result.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "timeoutWrapper",
+            "delayedResolve",
+            "500",
+            "1000",
+            ".then",
+            "console.log"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 10",
+        "title": "log the result",
+        "instruction": "log the result.",
+        "hint": "Use the delayedResolve function to create a promise that resolves after 500ms, then pass it to timeoutWrapper with a 1000ms timeout. Chain a .then() to log the resolved value.",
+        "analogousExample": "// Testing a function with a fast operation\nfunction testFastOperation() {\n  const fastPromise = new Promise(resolve => setTimeout(() => resolve('fast done'), 300));\n  const result = fastPromise.then(value => console.log('Result:', value));\n}",
+        "seedCode": "// No imports needed - Promise is a global object\n\n// Create your timeoutWrapper function here\nfunction timeoutWrapper(promise, timeoutMs) {\n  // Create timeoutPromise here\n  const timeoutPromise = new Promise((resolve, reject) => {\n    setTimeout(() => {\n      reject(new Error('Operation timed out'));\n    }, timeoutMs);\n  });\n  \n  // Return Promise.race with both promises\n}\n\n// Create the delayedResolve function below\nfunction delayedResolve(value, delay) {\n  return new Promise(resolve => {\n    setTimeout(() => resolve(value), delay);\n  });\n}\n\n// Test timeoutWrapper with a fast promise here",
+        "expectedOutcome": "",
+        "successCriteria": [
+          "Complete the step as instructed."
+        ],
+        "feedbackCorrect": "Great! Step completed.",
+        "feedbackPartial": "Review the instruction and try again.",
+        "feedbackWrong": "Check the instruction and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "timeoutWrapper",
+            "delayedResolve",
+            "500",
+            "1000",
+            ".then",
+            "console.log"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 10",
+        "title": "Add error handling for the original promise",
+        "instruction": "Test the timeoutWrapper function with a promise that rejects before the timeout to verify error propagation. Create a new test case below the existing tests.",
+        "hint": "Create a new promise that rejects after a short delay, then call timeoutWrapper with it and a longer timeout. Use .catch() to handle the rejection.",
+        "analogousExample": "// Example: testing error handling\nconst failingPromise = new Promise((resolve, reject) => {\n  setTimeout(() => reject(new Error('Original promise failed')), 100);\n});\n\ntimeoutWrapper(failingPromise, 500)\n  .catch(error => {\n    console.log('Caught error:', error.message);\n  });",
+        "seedCode": "// No imports needed - Promise is a global object\n\n// Create your timeoutWrapper function here\nfunction timeoutWrapper(promise, timeoutMs) {\n  // Create timeoutPromise here\n  const timeoutPromise = new Promise((resolve, reject) => {\n    setTimeout(() => {\n      reject(new Error('Operation timed out'));\n    }, timeoutMs);\n  });\n  \n  // Return Promise.race with both promises\n}\n\n// Create the delayedResolve function below\nfunction delayedResolve(value, delay) {\n  return new Promise(resolve => {\n    setTimeout(() => resolve(value), delay);\n  });\n}\n\n// Test timeoutWrapper with a fast promise here\n\n// Test timeoutWrapper with a slow promise here\n\n// Test timeoutWrapper with a rejecting promise here",
+        "expectedOutcome": "The timeoutWrapper should correctly propagate errors from the original promise when it rejects before the timeout.",
+        "successCriteria": [
+          "A new test case is added that creates a promise that rejects before the timeout, calls timeoutWrapper with it, and handles the rejection with .catch()"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added some test code, but make sure you're creating a promise that rejects (not resolves) and calling timeoutWrapper with it.",
+        "feedbackWrong": "The test case for error handling isn't complete. Create a promise that rejects after a short delay, then test it with timeoutWrapper using a longer timeout.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "new Promise",
+            "reject",
+            "timeoutWrapper",
+            "catch"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 10",
+        "title": "Create a reusable test function",
+        "instruction": "Create a function called runTests that contains all three test cases and calls them sequentially.",
+        "hint": "Define a function named runTests that calls timeoutWrapper with each test case and logs the results.",
+        "analogousExample": "// Example of a test runner function\nfunction runTests() {\n  console.log('Running test 1...');\n  // Test case 1\n  console.log('Running test 2...');\n  // Test case 2\n  console.log('Running test 3...');\n  // Test case 3\n}",
+        "seedCode": "// No imports needed - Promise is a global object\n\n// Create your timeoutWrapper function here\nfunction timeoutWrapper(promise, timeoutMs) {\n  // Create timeoutPromise here\n  const timeoutPromise = new Promise((resolve, reject) => {\n    setTimeout(() => {\n      reject(new Error('Operation timed out'));\n    }, timeoutMs);\n  });\n  \n  // Return Promise.race with both promises\n  return Promise.race([promise, timeoutPromise]);\n}\n\n// Create the delayedResolve function below\nfunction delayedResolve(value, delay) {\n  return new Promise(resolve => {\n    setTimeout(() => resolve(value), delay);\n  });\n}\n\n// Test timeoutWrapper with a fast promise here\n// Test timeoutWrapper with a slow promise here\n// Test timeoutWrapper with a rejecting promise here\n\n// Create the runTests function here",
+        "expectedOutcome": "A reusable test function that organizes all test cases and can be called to run them.",
+        "successCriteria": [
+          "A function named runTests is defined and contains calls to all three test cases."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure your runTests function contains all three test cases.",
+        "feedbackWrong": "Try creating a function called runTests that calls each test case sequentially.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "function runTests",
+            "timeoutWrapper",
+            "delayedResolve"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 10",
+        "title": "Execute the test function",
+        "instruction": "Call the runTests function to execute all test cases and observe the console output.",
+        "hint": "Simply write runTests(); at the end of your code to invoke the function.",
+        "analogousExample": "// Calling a function to run tests\nrunTests();",
+        "seedCode": "// No imports needed - Promise is a global object\n\n// Create your timeoutWrapper function here\nfunction timeoutWrapper(promise, timeoutMs) {\n  // Create timeoutPromise here\n  const timeoutPromise = new Promise((resolve, reject) => {\n    setTimeout(() => {\n      reject(new Error('Operation timed out'));\n    }, timeoutMs);\n  });\n  \n  // Return Promise.race with both promises\n  return Promise.race([promise, timeoutPromise]);\n}\n\n// Create the delayedResolve function below\nfunction delayedResolve(value, delay) {\n  return new Promise(resolve => {\n    setTimeout(() => resolve(value), delay);\n  });\n}\n\n// Test timeoutWrapper with a fast promise here\n// Test timeoutWrapper with a slow promise here\n// Test timeoutWrapper with a rejecting promise here\n\n// Create the runTests function here\n\n// Call runTests to execute all tests",
+        "expectedOutcome": "After calling runTests(), you should see console output showing the results of all test cases: a fast promise resolving, a slow promise timing out, and a rejecting promise handling errors.",
+        "successCriteria": [
+          "runTests() is called at the end of the code, executing all test scenarios."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close, but the runTests function isn't being called. Make sure to add runTests(); at the end of your code to execute the tests.",
+        "feedbackWrong": "The runTests function isn't being called. Add runTests(); at the end of your code to execute all test cases and see the console output.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "runTests()"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import the required Promise APIs",
+        "id": "step1"
+      },
+      {
+        "label": "Define the timeoutWrapper function structure",
+        "id": "step2"
+      },
+      {
+        "label": "Create the timeout promise",
+        "id": "step3"
+      },
+      {
+        "label": "Use Promise.race to combine promises",
+        "id": "step4"
+      },
+      {
+        "label": "Create a sample promise for testing",
+        "id": "step5"
+      },
+      {
+        "label": "Test the timeoutWrapper with a fast promise",
+        "id": "step6"
+      },
+      {
+        "label": "log the result",
+        "id": "step7"
+      },
+      {
+        "label": "Add error handling for the original promise",
+        "id": "step8"
+      },
+      {
+        "label": "Create a reusable test function",
+        "id": "step9"
+      },
+      {
+        "label": "Execute the test function",
+        "id": "step10"
+      }
+    ]
+  },
+  "source": "content"
+}

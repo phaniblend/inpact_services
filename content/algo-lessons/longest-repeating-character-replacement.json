@@ -1,0 +1,932 @@
+{
+  "id": "longest-repeating-character-replacement",
+  "title": "Longest Repeating Character Replacement",
+  "pattern": "sliding-window",
+  "difficulty": "medium",
+  "language": "javascript",
+  "status": "draft",
+  "flow": [
+    {
+      "stepId": "title",
+      "mentorSays": "At the end of this lesson, you will be able to:\n\n1. Understand what the Longest Repeating Character Replacement lesson asks for\n2. Use a sliding window with character frequency tracking\n3. Determine when a window is valid using the replacement formula\n4. Expand and shrink the window to find the longest valid substring\n5. Implement the solution step by step in your chosen language",
+      "action": "continue",
+      "next": "lesson-illustration"
+    },
+    {
+      "stepId": "lesson-illustration",
+      "mentorSays": "Perfect! Now let's understand what the Longest Repeating Character Replacement lesson is asking.\n\n**Lesson Definition:**\nGiven a string `s` and an integer `k`, find the length of the longest substring containing the same letter after replacing at most `k` characters.\n\n**Key Insight:**\nFor a window to be valid, we need: `windowSize - maxFrequency <= k`\nThis means: the number of characters we need to replace (windowSize - maxFrequency) must be ≤ k\n\n**Example 1:** s = \"ABAB\", k = 2\n\nWe can replace at most 2 characters to make all characters the same.\n\nLet's explore:\n- Substring \"ABAB\": We have 2 A's and 2 B's. To make all A's: replace 2 B's → need 2 replacements (≤ 2) ✓\n- Substring \"ABAB\" (all): Replace 2 B's with A's → \"AAAA\" (length 4) ✓\n- Or replace 2 A's with B's → \"BBBB\" (length 4) ✓\n\nAnswer: 4 (entire string can be made uniform with 2 replacements)\n\n**Example 2:** s = \"AABABBA\", k = 1\n\nWe can replace at most 1 character.\n\nLet's check different substrings:\n- \"AAB\" (indices 0-2): 2 A's, 1 B. Replace 1 B → \"AAA\" (length 3) ✓\n- \"AABA\" (indices 0-3): 3 A's, 1 B. Replace 1 B → \"AAAA\" (length 4) ✓\n- \"ABAB\" (indices 1-4): 2 A's, 2 B's. Need 2 replacements (1 B) → invalid (need 2, but k=1)\n- \"BABB\" (indices 2-5): 1 A, 3 B's. Replace 1 A → \"BBBB\" (length 4) ✓\n- \"ABBA\" (indices 1-4): 2 A's, 2 B's. Need 2 replacements → invalid\n\nMaximum length: 4 (from \"AABA\" or \"BABB\")\n\n**Step-by-step trace for Example 2:**\n\ns = \"AABABBA\", k = 1\n\nWe'll use a sliding window approach:\n- **Window [0-0]**: \"A\", maxFreq = 1, windowSize = 1, replacements = 1-1 = 0 ≤ 1 ✓, maxLen = 1\n- **Window [0-1]**: \"AA\", maxFreq = 2, windowSize = 2, replacements = 2-2 = 0 ≤ 1 ✓, maxLen = 2\n- **Window [0-2]**: \"AAB\", maxFreq = 2, windowSize = 3, replacements = 3-2 = 1 ≤ 1 ✓, maxLen = 3\n- **Window [0-3]**: \"AABA\", maxFreq = 3, windowSize = 4, replacements = 4-3 = 1 ≤ 1 ✓, maxLen = 4\n- **Window [0-4]**: \"AABAB\", maxFreq = 3, windowSize = 5, replacements = 5-3 = 2 > 1 ✗, shrink left\n- **Window [1-4]**: \"ABAB\", maxFreq = 2, windowSize = 4, replacements = 4-2 = 2 > 1 ✗, shrink left\n- **Window [2-4]**: \"BAB\", maxFreq = 2, windowSize = 3, replacements = 3-2 = 1 ≤ 1 ✓, maxLen = 4\n- **Window [2-5]**: \"BABB\", maxFreq = 3, windowSize = 4, replacements = 4-3 = 1 ≤ 1 ✓, maxLen = 4\n- **Window [2-6]**: \"BABBA\", maxFreq = 3, windowSize = 5, replacements = 5-3 = 2 > 1 ✗, shrink left\n\n**What makes this tricky:**\n1. The formula: `windowSize - maxFrequency <= k` determines if a window is valid\n2. We need to track the maximum frequency of any character in the current window\n3. When the window becomes invalid, we shrink it by moving the left pointer\n4. We only update maxFrequency when we add characters (optimization: we can be lazy about updating it)\n\n**Common pitfalls:**\n- Not understanding that we need to track max frequency in the current window\n- Trying to update maxFrequency when shrinking (we don't need to - it can only decrease or stay same)\n- Not realizing that we can keep maxFrequency \"stale\" - it's okay if it's slightly outdated\n- Off-by-one errors when calculating window size",
+      "example": "Example 1:\ns = \"ABAB\", k = 2\n\nEntire string: 2 A's, 2 B's\nReplace 2 B's → \"AAAA\" (length 4) ✓\nOr replace 2 A's → \"BBBB\" (length 4) ✓\n\nAnswer: 4\n\nExample 2:\ns = \"AABABBA\", k = 1\n\nValid substrings:\n\"AABA\" (indices 0-3): 3 A's, 1 B → replace 1 B → length 4 ✓\n\"BABB\" (indices 2-5): 1 A, 3 B's → replace 1 A → length 4 ✓\n\nAnswer: 4",
+      "action": "continue",
+      "next": "thinking-challenge"
+    },
+    {
+      "stepId": "thinking-challenge",
+      "mentorSays": "Now that you understand what the lesson wants, here's the real question:\n\nHow would YOU find the longest substring after replacing at most k characters?\n\nThink about it for a moment. What approach feels natural to you?",
+      "choices": [
+        {
+          "label": "Use a sliding window with frequency tracking, expand and shrink based on validity",
+          "next": "explore-sliding-window"
+        },
+        {
+          "label": "Check all possible substrings, count characters and calculate replacements needed",
+          "next": "explore-brute-force"
+        },
+        {
+          "label": "Use dynamic programming to track valid substrings",
+          "next": "explore-dp"
+        }
+      ]
+    },
+    {
+      "stepId": "explore-brute-force",
+      "mentorSays": "That's a straightforward approach! You're thinking: \"I'll check every possible substring and see how many replacements are needed.\"\n\nFor s = \"AABABBA\", k = 1:\n- Check \"AA\": 2 A's, 0 B's → 0 replacements needed ✓\n- Check \"AAB\": 2 A's, 1 B → 1 replacement needed ✓\n- Check \"AABA\": 3 A's, 1 B → 1 replacement needed ✓\n- Check \"AABAB\": 3 A's, 2 B's → 2 replacements needed ✗\n- ... and so on\n\nThis works! However, it's O(n²) time because we check O(n²) substrings, and for each we count characters O(n), giving us O(n³) total.\n\nThere's a more efficient O(n) approach using a sliding window. Would you like to learn that?",
+      "action": "continue",
+      "next": "explore-sliding-window"
+    },
+    {
+      "stepId": "explore-dp",
+      "mentorSays": "That's creative thinking! Dynamic programming could work, but it's more complex than needed.\n\nFor this lesson, we don't need to track overlapping subproblems in the traditional DP sense. The sliding window approach is simpler and more efficient.\n\nThere's a cleaner O(n) approach using a sliding window with frequency tracking. Would you like to learn that?",
+      "action": "continue",
+      "next": "explore-sliding-window"
+    },
+    {
+      "stepId": "explore-sliding-window",
+      "mentorSays": "Excellent choice! The sliding window approach is both efficient and elegant. Here's the core idea:\n\n**The Algorithm:**\n1. **Key insight**: A window is valid if `windowSize - maxFrequency <= k`\n   - This means: the number of characters we need to replace (windowSize - maxFrequency) must be ≤ k\n2. **Use two pointers**: `left` and `right` to define the current window\n3. **Track frequency**: Use a hash map/array to count character frequencies in the current window\n4. **Track maxFrequency**: The maximum frequency of any character in the current window\n5. **Expand**: Move `right` pointer to expand the window\n6. **Check validity**: If `(right - left + 1) - maxFrequency > k`, the window is invalid\n7. **Shrink**: If invalid, move `left` pointer to shrink the window\n8. **Update maxLen**: Track the maximum valid window size\n\n**Why it works**:\n- We maintain a valid window where we can replace at most k characters\n- When we expand and the window becomes invalid, we shrink it\n- The maximum window size we've seen is our answer\n\n**Important optimization**: We can keep `maxFrequency` slightly \"stale\" (not update it when shrinking). Why? Because:\n- When we shrink, maxFrequency can only decrease or stay the same\n- We only care if `windowSize - maxFrequency > k`\n- If the window was invalid before shrinking, it might become valid after\n- We update maxFrequency when we add characters (expand), which is when it can increase\n\nLet's trace with s = \"AABABBA\", k = 1:\n\n- **right = 0**: char = 'A', freq['A'] = 1, maxFreq = 1, window = [0-0], size = 1, 1-1=0 ≤ 1 ✓, maxLen = 1\n- **right = 1**: char = 'A', freq['A'] = 2, maxFreq = 2, window = [0-1], size = 2, 2-2=0 ≤ 1 ✓, maxLen = 2\n- **right = 2**: char = 'B', freq['B'] = 1, maxFreq = 2, window = [0-2], size = 3, 3-2=1 ≤ 1 ✓, maxLen = 3\n- **right = 3**: char = 'A', freq['A'] = 3, maxFreq = 3, window = [0-3], size = 4, 4-3=1 ≤ 1 ✓, maxLen = 4\n- **right = 4**: char = 'B', freq['B'] = 2, maxFreq = 3, window = [0-4], size = 5, 5-3=2 > 1 ✗, shrink left\n  - **left = 1**: freq['A'] = 2, window = [1-4], size = 4, 4-2=2 > 1 ✗, shrink left\n  - **left = 2**: freq['A'] = 1, window = [2-4], size = 3, 3-2=1 ≤ 1 ✓, maxLen = 4\n- **right = 5**: char = 'B', freq['B'] = 3, maxFreq = 3, window = [2-5], size = 4, 4-3=1 ≤ 1 ✓, maxLen = 4\n- **right = 6**: char = 'A', freq['A'] = 2, maxFreq = 3, window = [2-6], size = 5, 5-3=2 > 1 ✗, shrink left\n\nAnswer: 4\n\nThis is O(n) time and O(1) space (since we only track 26 characters)! Now let's code it step by step.",
+      "action": "continue",
+      "next": "language-selection"
+    },
+    {
+      "stepId": "language-selection",
+      "mentorSays": "Great! Now let's code this solution. Which programming language would you like to use?",
+      "choices": [
+        {
+          "label": "JavaScript",
+          "next": "variable-check-js"
+        },
+        {
+          "label": "Python",
+          "next": "variable-check-python"
+        },
+        {
+          "label": "Java",
+          "next": "variable-check-java"
+        },
+        {
+          "label": "C++",
+          "next": "variable-check-cpp"
+        },
+        {
+          "label": "TypeScript",
+          "next": "variable-check-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-check-js",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-js"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-js",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'left' or 'maxFreq') and put data inside it.\n\nFor example, 'let left = 0;' creates a variable that stores the number 0. Later, you can use that variable name to refer to it.",
+      "example": "let left = 0;\nlet maxFreq = 0;\nlet freq = {};\n\nNow these variables store values\nWe can use them to track our sliding window",
+      "action": "continue",
+      "next": "function-check-js"
+    },
+    {
+      "stepId": "function-check-js",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-js"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-js",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.\n\nThink of it like a recipe: you provide ingredients (parameters), the function does the work, and gives you a result (return value).",
+      "example": "function add(a, b) {\n  return a + b;\n}\n\nadd(3, 5) returns 8\nadd(10, 20) returns 30",
+      "action": "continue",
+      "next": "parameter-check-js"
+    },
+    {
+      "stepId": "parameter-check-js",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "array-check-js"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-js",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'function characterReplacement(s, k)', the 's' and 'k' are parameters - they're placeholders that will receive actual values when you call the function.\n\nWhen you call 'characterReplacement(\"ABAB\", 2)', the string and number go into the parameters.",
+      "example": "function characterReplacement(s, k) {\n  // 's' and 'k' are parameters\n}\n\n// When we call it:\ncharacterReplacement(\"ABAB\", 2);\n// The string and number go into the parameters",
+      "action": "continue",
+      "next": "array-check-js"
+    },
+    {
+      "stepId": "array-check-js",
+      "mentorSays": "To solve this lesson, we'll need to work with strings and objects (hash maps). Do you know what a string is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know strings",
+          "next": "loop-check-js"
+        },
+        {
+          "label": "No, explain strings",
+          "next": "array-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "array-explanation-js",
+      "mentorSays": "A string is a sequence of characters. Each character has a position number called an 'index'. String indices start counting from 0, not 1.\n\nFor example, s = \"ABAB\" means:\n- s[0] = 'A' (first character, index 0)\n- s[1] = 'B' (second character, index 1)\n- s[2] = 'A' (third character, index 2)\n- s[3] = 'B' (fourth character, index 3)\n\nWe'll also use an object (hash map) to count character frequencies:\n- freq['A'] = 2 means we've seen 'A' twice\n- freq['B'] = 2 means we've seen 'B' twice",
+      "example": "let s = \"ABAB\";\n\ns[0] = 'A'\ns[1] = 'B'\ns[2] = 'A'\ns[3] = 'B'\n\nlet freq = {};\nfreq['A'] = 2;\nfreq['B'] = 2;",
+      "action": "continue",
+      "next": "loop-check-js"
+    },
+    {
+      "stepId": "loop-check-js",
+      "mentorSays": "To solve this lesson, we'll need to use loops. Do you know what a loop is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know loops",
+          "next": "coding-start-js"
+        },
+        {
+          "label": "No, explain loops",
+          "next": "loop-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "loop-explanation-js",
+      "mentorSays": "A loop lets you repeat code multiple times. A 'for' loop runs code for each item in a sequence.\n\nFor example, 'for (let right = 0; right < s.length; right++)' means: start at 0, keep going while right is less than the string length, and add 1 to right each time.",
+      "example": "for (let right = 0; right < 3; right++) {\n  console.log(right);\n}\n\nThis prints: 0, 1, 2",
+      "action": "continue",
+      "next": "coding-start-js"
+    },
+    {
+      "stepId": "coding-start-js",
+      "mentorSays": "Perfect! Let's implement the character replacement solution in JavaScript. We'll create a function that takes a string and k, and returns the length of the longest valid substring.",
+      "example": "function characterReplacement(s, k) {\n  \n}",
+      "action": "continue",
+      "next": "coding-init-vars-js"
+    },
+    {
+      "stepId": "coding-init-vars-js",
+      "mentorSays": "First, let's initialize our variables: left pointer, max frequency, max length, and a frequency map to track character counts.",
+      "example": "function characterReplacement(s, k) {\n  let left = 0;\n  let maxFreq = 0;\n  let maxLen = 0;\n  const freq = {};\n}",
+      "action": "continue",
+      "next": "coding-outer-loop-js"
+    },
+    {
+      "stepId": "coding-outer-loop-js",
+      "mentorSays": "Now, create a loop that moves the right pointer through the string. This will expand our window.",
+      "example": "function characterReplacement(s, k) {\n  let left = 0;\n  let maxFreq = 0;\n  let maxLen = 0;\n  const freq = {};\n  \n  // Expand window by moving right pointer\n  for (let right = 0; right < s.length; right++) {\n    \n  }\n}",
+      "action": "continue",
+      "next": "coding-update-freq-js"
+    },
+    {
+      "stepId": "coding-update-freq-js",
+      "mentorSays": "Inside the loop, update the frequency of the current character and update maxFreq if this character's frequency is now the highest.",
+      "example": "function characterReplacement(s, k) {\n  let left = 0;\n  let maxFreq = 0;\n  let maxLen = 0;\n  const freq = {};\n  \n  for (let right = 0; right < s.length; right++) {\n    const char = s[right];\n    \n    // Update frequency\n    freq[char] = (freq[char] || 0) + 1;\n    \n    // Update maxFreq if this character is now most frequent\n    maxFreq = Math.max(maxFreq, freq[char]);\n  }\n}",
+      "action": "continue",
+      "next": "coding-check-validity-js"
+    },
+    {
+      "stepId": "coding-check-validity-js",
+      "mentorSays": "Now, check if the current window is valid. Calculate window size and check if replacements needed (windowSize - maxFreq) exceeds k.",
+      "example": "function characterReplacement(s, k) {\n  let left = 0;\n  let maxFreq = 0;\n  let maxLen = 0;\n  const freq = {};\n  \n  for (let right = 0; right < s.length; right++) {\n    const char = s[right];\n    freq[char] = (freq[char] || 0) + 1;\n    maxFreq = Math.max(maxFreq, freq[char]);\n    \n    // Check if window is valid\n    const windowSize = right - left + 1;\n    const replacementsNeeded = windowSize - maxFreq;\n    \n    if (replacementsNeeded > k) {\n      // Window is invalid, need to shrink\n    }\n  }\n}",
+      "action": "continue",
+      "next": "coding-shrink-window-js"
+    },
+    {
+      "stepId": "coding-shrink-window-js",
+      "mentorSays": "If the window is invalid, shrink it by moving the left pointer and decreasing the frequency of the character we're removing.",
+      "example": "function characterReplacement(s, k) {\n  let left = 0;\n  let maxFreq = 0;\n  let maxLen = 0;\n  const freq = {};\n  \n  for (let right = 0; right < s.length; right++) {\n    const char = s[right];\n    freq[char] = (freq[char] || 0) + 1;\n    maxFreq = Math.max(maxFreq, freq[char]);\n    \n    const windowSize = right - left + 1;\n    const replacementsNeeded = windowSize - maxFreq;\n    \n    if (replacementsNeeded > k) {\n      // Shrink window: remove leftmost character\n      freq[s[left]]--;\n      left++;\n    }\n  }\n}",
+      "action": "continue",
+      "next": "coding-update-maxlen-js"
+    },
+    {
+      "stepId": "coding-update-maxlen-js",
+      "mentorSays": "After potentially shrinking, update maxLen with the current window size. The window is now valid (or we just made it valid by shrinking).",
+      "example": "function characterReplacement(s, k) {\n  let left = 0;\n  let maxFreq = 0;\n  let maxLen = 0;\n  const freq = {};\n  \n  for (let right = 0; right < s.length; right++) {\n    const char = s[right];\n    freq[char] = (freq[char] || 0) + 1;\n    maxFreq = Math.max(maxFreq, freq[char]);\n    \n    const windowSize = right - left + 1;\n    const replacementsNeeded = windowSize - maxFreq;\n    \n    if (replacementsNeeded > k) {\n      freq[s[left]]--;\n      left++;\n    }\n    \n    // Update maxLen with current window size\n    maxLen = Math.max(maxLen, right - left + 1);\n  }\n}",
+      "action": "continue",
+      "next": "coding-return-js"
+    },
+    {
+      "stepId": "coding-return-js",
+      "mentorSays": "Finally, return maxLen.",
+      "example": "function characterReplacement(s, k) {\n  let left = 0;\n  let maxFreq = 0;\n  let maxLen = 0;\n  const freq = {};\n  \n  for (let right = 0; right < s.length; right++) {\n    const char = s[right];\n    freq[char] = (freq[char] || 0) + 1;\n    maxFreq = Math.max(maxFreq, freq[char]);\n    \n    const windowSize = right - left + 1;\n    const replacementsNeeded = windowSize - maxFreq;\n    \n    if (replacementsNeeded > k) {\n      freq[s[left]]--;\n      left++;\n    }\n    \n    maxLen = Math.max(maxLen, right - left + 1);\n  }\n  \n  return maxLen;\n}",
+      "action": "continue",
+      "next": "test-code-js"
+    },
+    {
+      "stepId": "test-code-js",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** s = \"ABAB\", k = 2\nExpected: 4 (entire string can be made uniform)\n\n**Test 2:** s = \"AABABBA\", k = 1\nExpected: 4 (from \"AABA\" or \"BABB\")\n\n**Test 3:** s = \"AAAA\", k = 0\nExpected: 4 (already uniform, no replacements needed)\n\n**Test 4:** s = \"ABBB\", k = 2\nExpected: 4 (replace 1 A with B)\n\n**Test 5:** s = \"ABCDEF\", k = 1\nExpected: 2 (can make \"AA\" or \"BB\", etc.)\n\n**Test 6:** s = \"A\", k = 1\nExpected: 1 (single character)\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: \"ABAB\", k=2 → 4\nTest 2: \"AABABBA\", k=1 → 4\nTest 3: \"AAAA\", k=0 → 4\nTest 4: \"ABBB\", k=2 → 4\nTest 5: \"ABCDEF\", k=1 → 2\nTest 6: \"A\", k=1 → 1",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-python",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-python"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-python",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'left' or 'max_freq') and put data inside it.\n\nFor example, 'left = 0' creates a variable that stores the number 0. Later, you can use that variable name to refer to it.",
+      "example": "left = 0\nmax_freq = 0\nmax_len = 0\nfreq = {}\n\nNow these variables store values\nWe can use them to track our sliding window",
+      "action": "continue",
+      "next": "function-check-python"
+    },
+    {
+      "stepId": "function-check-python",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-python"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-python",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.\n\nThink of it like a recipe: you provide ingredients (parameters), the function does the work, and gives you a result (return value).",
+      "example": "def add(a, b):\n    return a + b\n\nadd(3, 5) returns 8\nadd(10, 20) returns 30",
+      "action": "continue",
+      "next": "parameter-check-python"
+    },
+    {
+      "stepId": "parameter-check-python",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "array-check-python"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-python",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'def character_replacement(s, k):', the 's' and 'k' are parameters - they're placeholders that will receive actual values when you call the function.\n\nWhen you call 'character_replacement(\"ABAB\", 2)', the string and number go into the parameters.",
+      "example": "def character_replacement(s, k):\n  # 's' and 'k' are parameters\n\n# When we call it:\ncharacter_replacement(\"ABAB\", 2)\n# The string and number go into the parameters",
+      "action": "continue",
+      "next": "array-check-python"
+    },
+    {
+      "stepId": "array-check-python",
+      "mentorSays": "To solve this lesson, we'll need to work with strings and dictionaries (hash maps). Do you know what a string is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know strings",
+          "next": "loop-check-python"
+        },
+        {
+          "label": "No, explain strings",
+          "next": "array-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "array-explanation-python",
+      "mentorSays": "A string is a sequence of characters. Each character has a position number called an 'index'. String indices start counting from 0, not 1.\n\nFor example, s = \"ABAB\" means:\n- s[0] = 'A' (first character, index 0)\n- s[1] = 'B' (second character, index 1)\n- s[2] = 'A' (third character, index 2)\n- s[3] = 'B' (fourth character, index 3)\n\nWe'll also use a dictionary to count character frequencies:\n- freq['A'] = 2 means we've seen 'A' twice\n- freq['B'] = 2 means we've seen 'B' twice",
+      "example": "s = \"ABAB\"\n\ns[0] = 'A'\ns[1] = 'B'\ns[2] = 'A'\ns[3] = 'B'\n\nfreq = {}\nfreq['A'] = 2\nfreq['B'] = 2",
+      "action": "continue",
+      "next": "loop-check-python"
+    },
+    {
+      "stepId": "loop-check-python",
+      "mentorSays": "To solve this lesson, we'll need to use loops. Do you know what a loop is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know loops",
+          "next": "coding-start-python"
+        },
+        {
+          "label": "No, explain loops",
+          "next": "loop-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "loop-explanation-python",
+      "mentorSays": "A loop lets you repeat code multiple times. A 'for' loop in Python runs code for each item in a sequence.\n\nFor example, 'for right in range(len(s)):' means: run the code for each index from 0 to the length of the string.",
+      "example": "for right in range(3):\n    print(right)\n\nThis prints: 0, 1, 2",
+      "action": "continue",
+      "next": "coding-start-python"
+    },
+    {
+      "stepId": "coding-start-python",
+      "mentorSays": "Perfect! Let's implement the character replacement solution in Python. We'll create a function that takes a string and k, and returns the length of the longest valid substring.",
+      "example": "def character_replacement(s, k):\n    \n    pass",
+      "action": "continue",
+      "next": "coding-init-vars-python"
+    },
+    {
+      "stepId": "coding-init-vars-python",
+      "mentorSays": "First, let's initialize our variables: left pointer, max frequency, max length, and a frequency dictionary to track character counts.",
+      "example": "def character_replacement(s, k):\n    left = 0\n    max_freq = 0\n    max_len = 0\n    freq = {}\n    \n    pass",
+      "action": "continue",
+      "next": "coding-outer-loop-python"
+    },
+    {
+      "stepId": "coding-outer-loop-python",
+      "mentorSays": "Now, create a loop that moves the right pointer through the string. This will expand our window.",
+      "example": "def character_replacement(s, k):\n    left = 0\n    max_freq = 0\n    max_len = 0\n    freq = {}\n    \n    # Expand window by moving right pointer\n    for right in range(len(s)):\n        \n        pass",
+      "action": "continue",
+      "next": "coding-update-freq-python"
+    },
+    {
+      "stepId": "coding-update-freq-python",
+      "mentorSays": "Inside the loop, update the frequency of the current character and update max_freq if this character's frequency is now the highest.",
+      "example": "def character_replacement(s, k):\n    left = 0\n    max_freq = 0\n    max_len = 0\n    freq = {}\n    \n    for right in range(len(s)):\n        char = s[right]\n        \n        # Update frequency\n        freq[char] = freq.get(char, 0) + 1\n        \n        # Update max_freq if this character is now most frequent\n        max_freq = max(max_freq, freq[char])\n        \n        pass",
+      "action": "continue",
+      "next": "coding-check-validity-python"
+    },
+    {
+      "stepId": "coding-check-validity-python",
+      "mentorSays": "Now, check if the current window is valid. Calculate window size and check if replacements needed (windowSize - max_freq) exceeds k.",
+      "example": "def character_replacement(s, k):\n    left = 0\n    max_freq = 0\n    max_len = 0\n    freq = {}\n    \n    for right in range(len(s)):\n        char = s[right]\n        freq[char] = freq.get(char, 0) + 1\n        max_freq = max(max_freq, freq[char])\n        \n        # Check if window is valid\n        window_size = right - left + 1\n        replacements_needed = window_size - max_freq\n        \n        if replacements_needed > k:\n            # Window is invalid, need to shrink\n            pass\n        \n        pass",
+      "action": "continue",
+      "next": "coding-shrink-window-python"
+    },
+    {
+      "stepId": "coding-shrink-window-python",
+      "mentorSays": "If the window is invalid, shrink it by moving the left pointer and decreasing the frequency of the character we're removing.",
+      "example": "def character_replacement(s, k):\n    left = 0\n    max_freq = 0\n    max_len = 0\n    freq = {}\n    \n    for right in range(len(s)):\n        char = s[right]\n        freq[char] = freq.get(char, 0) + 1\n        max_freq = max(max_freq, freq[char])\n        \n        window_size = right - left + 1\n        replacements_needed = window_size - max_freq\n        \n        if replacements_needed > k:\n            # Shrink window: remove leftmost character\n            freq[s[left]] -= 1\n            left += 1\n        \n        pass",
+      "action": "continue",
+      "next": "coding-update-maxlen-python"
+    },
+    {
+      "stepId": "coding-update-maxlen-python",
+      "mentorSays": "After potentially shrinking, update max_len with the current window size. The window is now valid (or we just made it valid by shrinking).",
+      "example": "def character_replacement(s, k):\n    left = 0\n    max_freq = 0\n    max_len = 0\n    freq = {}\n    \n    for right in range(len(s)):\n        char = s[right]\n        freq[char] = freq.get(char, 0) + 1\n        max_freq = max(max_freq, freq[char])\n        \n        window_size = right - left + 1\n        replacements_needed = window_size - max_freq\n        \n        if replacements_needed > k:\n            freq[s[left]] -= 1\n            left += 1\n        \n        # Update max_len with current window size\n        max_len = max(max_len, right - left + 1)\n        \n        pass",
+      "action": "continue",
+      "next": "coding-return-python"
+    },
+    {
+      "stepId": "coding-return-python",
+      "mentorSays": "Finally, return max_len.",
+      "example": "def character_replacement(s, k):\n    left = 0\n    max_freq = 0\n    max_len = 0\n    freq = {}\n    \n    for right in range(len(s)):\n        char = s[right]\n        freq[char] = freq.get(char, 0) + 1\n        max_freq = max(max_freq, freq[char])\n        \n        window_size = right - left + 1\n        replacements_needed = window_size - max_freq\n        \n        if replacements_needed > k:\n            freq[s[left]] -= 1\n            left += 1\n        \n        max_len = max(max_len, right - left + 1)\n    \n    return max_len",
+      "action": "continue",
+      "next": "test-code-python"
+    },
+    {
+      "stepId": "test-code-python",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** s = \"ABAB\", k = 2\nExpected: 4 (entire string can be made uniform)\n\n**Test 2:** s = \"AABABBA\", k = 1\nExpected: 4 (from \"AABA\" or \"BABB\")\n\n**Test 3:** s = \"AAAA\", k = 0\nExpected: 4 (already uniform, no replacements needed)\n\n**Test 4:** s = \"ABBB\", k = 2\nExpected: 4 (replace 1 A with B)\n\n**Test 5:** s = \"ABCDEF\", k = 1\nExpected: 2 (can make \"AA\" or \"BB\", etc.)\n\n**Test 6:** s = \"A\", k = 1\nExpected: 1 (single character)\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: \"ABAB\", k=2 → 4\nTest 2: \"AABABBA\", k=1 → 4\nTest 3: \"AAAA\", k=0 → 4\nTest 4: \"ABBB\", k=2 → 4\nTest 5: \"ABCDEF\", k=1 → 2\nTest 6: \"A\", k=1 → 1",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-java",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-java"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-java",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'left' or 'maxFreq') and put data inside it.\n\nFor example, 'int left = 0;' creates a variable that stores the number 0. Later, you can use that variable name to refer to it.",
+      "example": "int left = 0;\nint maxFreq = 0;\nint maxLen = 0;\nMap<Character, Integer> freq = new HashMap<>();\n\nNow these variables store values\nWe can use them to track our sliding window",
+      "action": "continue",
+      "next": "function-check-java"
+    },
+    {
+      "stepId": "function-check-java",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a method is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know methods",
+          "next": "parameter-check-java"
+        },
+        {
+          "label": "No, explain methods",
+          "next": "function-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-java",
+      "mentorSays": "A method (Java's version of a function) is a reusable block of code. You give it inputs (called parameters), and it can return an output.\n\nThink of it like a recipe: you provide ingredients (parameters), the method does the work, and gives you a result (return value).",
+      "example": "public int add(int a, int b) {\n    return a + b;\n}\n\nadd(3, 5) returns 8\nadd(10, 20) returns 30",
+      "action": "continue",
+      "next": "parameter-check-java"
+    },
+    {
+      "stepId": "parameter-check-java",
+      "mentorSays": "When we write a method, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "array-check-java"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-java",
+      "mentorSays": "Parameters are like variables that receive values when you call the method. When you write 'public int characterReplacement(String s, int k)', the 's' and 'k' are parameters - they're placeholders that will receive actual values when you call the method.\n\nWhen you call 'characterReplacement(\"ABAB\", 2)', the string and number go into the parameters.",
+      "example": "public int characterReplacement(String s, int k) {\n  // 's' and 'k' are parameters\n}\n\n// When we call it:\ncharacterReplacement(\"ABAB\", 2);\n// The string and number go into the parameters",
+      "action": "continue",
+      "next": "array-check-java"
+    },
+    {
+      "stepId": "array-check-java",
+      "mentorSays": "To solve this lesson, we'll need to work with strings and hash maps. Do you know what a String is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know Strings",
+          "next": "loop-check-java"
+        },
+        {
+          "label": "No, explain Strings",
+          "next": "array-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "array-explanation-java",
+      "mentorSays": "A String is a sequence of characters. Each character has a position number called an 'index'. String indices start counting from 0, not 1.\n\nFor example, String s = \"ABAB\" means:\n- s.charAt(0) = 'A' (first character, index 0)\n- s.charAt(1) = 'B' (second character, index 1)\n- s.charAt(2) = 'A' (third character, index 2)\n- s.charAt(3) = 'B' (fourth character, index 3)\n\nWe'll also use a HashMap to count character frequencies:\n- freq.put('A', 2) means we've seen 'A' twice\n- freq.put('B', 2) means we've seen 'B' twice",
+      "example": "String s = \"ABAB\";\n\ns.charAt(0) = 'A'\ns.charAt(1) = 'B'\ns.charAt(2) = 'A'\ns.charAt(3) = 'B'\n\nMap<Character, Integer> freq = new HashMap<>();\nfreq.put('A', 2);\nfreq.put('B', 2);",
+      "action": "continue",
+      "next": "loop-check-java"
+    },
+    {
+      "stepId": "loop-check-java",
+      "mentorSays": "To solve this lesson, we'll need to use loops. Do you know what a loop is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know loops",
+          "next": "coding-start-java"
+        },
+        {
+          "label": "No, explain loops",
+          "next": "loop-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "loop-explanation-java",
+      "mentorSays": "A loop lets you repeat code multiple times. A 'for' loop runs code for each item in a sequence.\n\nFor example, 'for (int right = 0; right < s.length(); right++)' means: start at 0, keep going while right is less than the string length, and add 1 to right each time.",
+      "example": "for (int right = 0; right < 3; right++) {\n    System.out.println(right);\n}\n\nThis prints: 0, 1, 2",
+      "action": "continue",
+      "next": "coding-start-java"
+    },
+    {
+      "stepId": "coding-start-java",
+      "mentorSays": "Perfect! Let's implement the character replacement solution in Java. We'll create a method that takes a string and k, and returns the length of the longest valid substring.",
+      "example": "public int characterReplacement(String s, int k) {\n    \n}",
+      "action": "continue",
+      "next": "coding-init-vars-java"
+    },
+    {
+      "stepId": "coding-init-vars-java",
+      "mentorSays": "First, let's initialize our variables: left pointer, max frequency, max length, and a frequency map to track character counts.",
+      "example": "public int characterReplacement(String s, int k) {\n    int left = 0;\n    int maxFreq = 0;\n    int maxLen = 0;\n    Map<Character, Integer> freq = new HashMap<>();\n}",
+      "action": "continue",
+      "next": "coding-outer-loop-java"
+    },
+    {
+      "stepId": "coding-outer-loop-java",
+      "mentorSays": "Now, create a loop that moves the right pointer through the string. This will expand our window.",
+      "example": "public int characterReplacement(String s, int k) {\n    int left = 0;\n    int maxFreq = 0;\n    int maxLen = 0;\n    Map<Character, Integer> freq = new HashMap<>();\n    \n    // Expand window by moving right pointer\n    for (int right = 0; right < s.length(); right++) {\n        \n    }\n}",
+      "action": "continue",
+      "next": "coding-update-freq-java"
+    },
+    {
+      "stepId": "coding-update-freq-java",
+      "mentorSays": "Inside the loop, update the frequency of the current character and update maxFreq if this character's frequency is now the highest.",
+      "example": "public int characterReplacement(String s, int k) {\n    int left = 0;\n    int maxFreq = 0;\n    int maxLen = 0;\n    Map<Character, Integer> freq = new HashMap<>();\n    \n    for (int right = 0; right < s.length(); right++) {\n        char c = s.charAt(right);\n        \n        // Update frequency\n        freq.put(c, freq.getOrDefault(c, 0) + 1);\n        \n        // Update maxFreq if this character is now most frequent\n        maxFreq = Math.max(maxFreq, freq.get(c));\n    }\n}",
+      "action": "continue",
+      "next": "coding-check-validity-java"
+    },
+    {
+      "stepId": "coding-check-validity-java",
+      "mentorSays": "Now, check if the current window is valid. Calculate window size and check if replacements needed (windowSize - maxFreq) exceeds k.",
+      "example": "public int characterReplacement(String s, int k) {\n    int left = 0;\n    int maxFreq = 0;\n    int maxLen = 0;\n    Map<Character, Integer> freq = new HashMap<>();\n    \n    for (int right = 0; right < s.length(); right++) {\n        char c = s.charAt(right);\n        freq.put(c, freq.getOrDefault(c, 0) + 1);\n        maxFreq = Math.max(maxFreq, freq.get(c));\n        \n        // Check if window is valid\n        int windowSize = right - left + 1;\n        int replacementsNeeded = windowSize - maxFreq;\n        \n        if (replacementsNeeded > k) {\n            // Window is invalid, need to shrink\n        }\n    }\n}",
+      "action": "continue",
+      "next": "coding-shrink-window-java"
+    },
+    {
+      "stepId": "coding-shrink-window-java",
+      "mentorSays": "If the window is invalid, shrink it by moving the left pointer and decreasing the frequency of the character we're removing.",
+      "example": "public int characterReplacement(String s, int k) {\n    int left = 0;\n    int maxFreq = 0;\n    int maxLen = 0;\n    Map<Character, Integer> freq = new HashMap<>();\n    \n    for (int right = 0; right < s.length(); right++) {\n        char c = s.charAt(right);\n        freq.put(c, freq.getOrDefault(c, 0) + 1);\n        maxFreq = Math.max(maxFreq, freq.get(c));\n        \n        int windowSize = right - left + 1;\n        int replacementsNeeded = windowSize - maxFreq;\n        \n        if (replacementsNeeded > k) {\n            // Shrink window: remove leftmost character\n            freq.put(s.charAt(left), freq.get(s.charAt(left)) - 1);\n            left++;\n        }\n    }\n}",
+      "action": "continue",
+      "next": "coding-update-maxlen-java"
+    },
+    {
+      "stepId": "coding-update-maxlen-java",
+      "mentorSays": "After potentially shrinking, update maxLen with the current window size. The window is now valid (or we just made it valid by shrinking).",
+      "example": "public int characterReplacement(String s, int k) {\n    int left = 0;\n    int maxFreq = 0;\n    int maxLen = 0;\n    Map<Character, Integer> freq = new HashMap<>();\n    \n    for (int right = 0; right < s.length(); right++) {\n        char c = s.charAt(right);\n        freq.put(c, freq.getOrDefault(c, 0) + 1);\n        maxFreq = Math.max(maxFreq, freq.get(c));\n        \n        int windowSize = right - left + 1;\n        int replacementsNeeded = windowSize - maxFreq;\n        \n        if (replacementsNeeded > k) {\n            freq.put(s.charAt(left), freq.get(s.charAt(left)) - 1);\n            left++;\n        }\n        \n        // Update maxLen with current window size\n        maxLen = Math.max(maxLen, right - left + 1);\n    }\n}",
+      "action": "continue",
+      "next": "coding-return-java"
+    },
+    {
+      "stepId": "coding-return-java",
+      "mentorSays": "Finally, return maxLen.",
+      "example": "public int characterReplacement(String s, int k) {\n    int left = 0;\n    int maxFreq = 0;\n    int maxLen = 0;\n    Map<Character, Integer> freq = new HashMap<>();\n    \n    for (int right = 0; right < s.length(); right++) {\n        char c = s.charAt(right);\n        freq.put(c, freq.getOrDefault(c, 0) + 1);\n        maxFreq = Math.max(maxFreq, freq.get(c));\n        \n        int windowSize = right - left + 1;\n        int replacementsNeeded = windowSize - maxFreq;\n        \n        if (replacementsNeeded > k) {\n            freq.put(s.charAt(left), freq.get(s.charAt(left)) - 1);\n            left++;\n        }\n        \n        maxLen = Math.max(maxLen, right - left + 1);\n    }\n    \n    return maxLen;\n}",
+      "action": "continue",
+      "next": "test-code-java"
+    },
+    {
+      "stepId": "test-code-java",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** s = \"ABAB\", k = 2\nExpected: 4 (entire string can be made uniform)\n\n**Test 2:** s = \"AABABBA\", k = 1\nExpected: 4 (from \"AABA\" or \"BABB\")\n\n**Test 3:** s = \"AAAA\", k = 0\nExpected: 4 (already uniform, no replacements needed)\n\n**Test 4:** s = \"ABBB\", k = 2\nExpected: 4 (replace 1 A with B)\n\n**Test 5:** s = \"ABCDEF\", k = 1\nExpected: 2 (can make \"AA\" or \"BB\", etc.)\n\n**Test 6:** s = \"A\", k = 1\nExpected: 1 (single character)\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: \"ABAB\", k=2 → 4\nTest 2: \"AABABBA\", k=1 → 4\nTest 3: \"AAAA\", k=0 → 4\nTest 4: \"ABBB\", k=2 → 4\nTest 5: \"ABCDEF\", k=1 → 2\nTest 6: \"A\", k=1 → 1",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-cpp",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-cpp"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-cpp",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'left' or 'maxFreq') and put data inside it.\n\nFor example, 'int left = 0;' creates a variable that stores the number 0. Later, you can use that variable name to refer to it.",
+      "example": "int left = 0;\nint maxFreq = 0;\nint maxLen = 0;\nunordered_map<char, int> freq;\n\nNow these variables store values\nWe can use them to track our sliding window",
+      "action": "continue",
+      "next": "function-check-cpp"
+    },
+    {
+      "stepId": "function-check-cpp",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-cpp"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-cpp",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.\n\nThink of it like a recipe: you provide ingredients (parameters), the function does the work, and gives you a result (return value).",
+      "example": "int add(int a, int b) {\n    return a + b;\n}\n\nadd(3, 5) returns 8\nadd(10, 20) returns 30",
+      "action": "continue",
+      "next": "parameter-check-cpp"
+    },
+    {
+      "stepId": "parameter-check-cpp",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "array-check-cpp"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-cpp",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'int characterReplacement(string& s, int k)', the 's' and 'k' are parameters - they're placeholders that will receive actual values when you call the function.\n\nWhen you call 'characterReplacement(\"ABAB\", 2)', the string and number go into the parameters.",
+      "example": "int characterReplacement(string& s, int k) {\n  // 's' and 'k' are parameters\n}\n\n// When we call it:\ncharacterReplacement(\"ABAB\", 2);\n// The string and number go into the parameters",
+      "action": "continue",
+      "next": "array-check-cpp"
+    },
+    {
+      "stepId": "array-check-cpp",
+      "mentorSays": "To solve this lesson, we'll need to work with strings and hash maps. Do you know what a string is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know strings",
+          "next": "loop-check-cpp"
+        },
+        {
+          "label": "No, explain strings",
+          "next": "array-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "array-explanation-cpp",
+      "mentorSays": "A string is a sequence of characters. Each character has a position number called an 'index'. String indices start counting from 0, not 1.\n\nFor example, string s = \"ABAB\" means:\n- s[0] = 'A' (first character, index 0)\n- s[1] = 'B' (second character, index 1)\n- s[2] = 'A' (third character, index 2)\n- s[3] = 'B' (fourth character, index 3)\n\nWe'll also use an unordered_map to count character frequencies:\n- freq['A'] = 2 means we've seen 'A' twice\n- freq['B'] = 2 means we've seen 'B' twice",
+      "example": "string s = \"ABAB\";\n\ns[0] = 'A'\ns[1] = 'B'\ns[2] = 'A'\ns[3] = 'B'\n\nunordered_map<char, int> freq;\nfreq['A'] = 2;\nfreq['B'] = 2;",
+      "action": "continue",
+      "next": "loop-check-cpp"
+    },
+    {
+      "stepId": "loop-check-cpp",
+      "mentorSays": "To solve this lesson, we'll need to use loops. Do you know what a loop is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know loops",
+          "next": "coding-start-cpp"
+        },
+        {
+          "label": "No, explain loops",
+          "next": "loop-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "loop-explanation-cpp",
+      "mentorSays": "A loop lets you repeat code multiple times. A 'for' loop runs code for each item in a sequence.\n\nFor example, 'for (int right = 0; right < s.size(); right++)' means: start at 0, keep going while right is less than the string size, and add 1 to right each time.",
+      "example": "for (int right = 0; right < 3; right++) {\n    cout << right << endl;\n}\n\nThis prints: 0, 1, 2",
+      "action": "continue",
+      "next": "coding-start-cpp"
+    },
+    {
+      "stepId": "coding-start-cpp",
+      "mentorSays": "Perfect! Let's implement the character replacement solution in C++. We'll create a function that takes a string and k, and returns the length of the longest valid substring.",
+      "example": "int characterReplacement(string& s, int k) {\n    \n}",
+      "action": "continue",
+      "next": "coding-init-vars-cpp"
+    },
+    {
+      "stepId": "coding-init-vars-cpp",
+      "mentorSays": "First, let's initialize our variables: left pointer, max frequency, max length, and a frequency map to track character counts.",
+      "example": "int characterReplacement(string& s, int k) {\n    int left = 0;\n    int maxFreq = 0;\n    int maxLen = 0;\n    unordered_map<char, int> freq;\n}",
+      "action": "continue",
+      "next": "coding-outer-loop-cpp"
+    },
+    {
+      "stepId": "coding-outer-loop-cpp",
+      "mentorSays": "Now, create a loop that moves the right pointer through the string. This will expand our window.",
+      "example": "int characterReplacement(string& s, int k) {\n    int left = 0;\n    int maxFreq = 0;\n    int maxLen = 0;\n    unordered_map<char, int> freq;\n    \n    // Expand window by moving right pointer\n    for (int right = 0; right < s.size(); right++) {\n        \n    }\n}",
+      "action": "continue",
+      "next": "coding-update-freq-cpp"
+    },
+    {
+      "stepId": "coding-update-freq-cpp",
+      "mentorSays": "Inside the loop, update the frequency of the current character and update maxFreq if this character's frequency is now the highest.",
+      "example": "int characterReplacement(string& s, int k) {\n    int left = 0;\n    int maxFreq = 0;\n    int maxLen = 0;\n    unordered_map<char, int> freq;\n    \n    for (int right = 0; right < s.size(); right++) {\n        char c = s[right];\n        \n        // Update frequency\n        freq[c]++;\n        \n        // Update maxFreq if this character is now most frequent\n        maxFreq = max(maxFreq, freq[c]);\n    }\n}",
+      "action": "continue",
+      "next": "coding-check-validity-cpp"
+    },
+    {
+      "stepId": "coding-check-validity-cpp",
+      "mentorSays": "Now, check if the current window is valid. Calculate window size and check if replacements needed (windowSize - maxFreq) exceeds k.",
+      "example": "int characterReplacement(string& s, int k) {\n    int left = 0;\n    int maxFreq = 0;\n    int maxLen = 0;\n    unordered_map<char, int> freq;\n    \n    for (int right = 0; right < s.size(); right++) {\n        char c = s[right];\n        freq[c]++;\n        maxFreq = max(maxFreq, freq[c]);\n        \n        // Check if window is valid\n        int windowSize = right - left + 1;\n        int replacementsNeeded = windowSize - maxFreq;\n        \n        if (replacementsNeeded > k) {\n            // Window is invalid, need to shrink\n        }\n    }\n}",
+      "action": "continue",
+      "next": "coding-shrink-window-cpp"
+    },
+    {
+      "stepId": "coding-shrink-window-cpp",
+      "mentorSays": "If the window is invalid, shrink it by moving the left pointer and decreasing the frequency of the character we're removing.",
+      "example": "int characterReplacement(string& s, int k) {\n    int left = 0;\n    int maxFreq = 0;\n    int maxLen = 0;\n    unordered_map<char, int> freq;\n    \n    for (int right = 0; right < s.size(); right++) {\n        char c = s[right];\n        freq[c]++;\n        maxFreq = max(maxFreq, freq[c]);\n        \n        int windowSize = right - left + 1;\n        int replacementsNeeded = windowSize - maxFreq;\n        \n        if (replacementsNeeded > k) {\n            // Shrink window: remove leftmost character\n            freq[s[left]]--;\n            left++;\n        }\n    }\n}",
+      "action": "continue",
+      "next": "coding-update-maxlen-cpp"
+    },
+    {
+      "stepId": "coding-update-maxlen-cpp",
+      "mentorSays": "After potentially shrinking, update maxLen with the current window size. The window is now valid (or we just made it valid by shrinking).",
+      "example": "int characterReplacement(string& s, int k) {\n    int left = 0;\n    int maxFreq = 0;\n    int maxLen = 0;\n    unordered_map<char, int> freq;\n    \n    for (int right = 0; right < s.size(); right++) {\n        char c = s[right];\n        freq[c]++;\n        maxFreq = max(maxFreq, freq[c]);\n        \n        int windowSize = right - left + 1;\n        int replacementsNeeded = windowSize - maxFreq;\n        \n        if (replacementsNeeded > k) {\n            freq[s[left]]--;\n            left++;\n        }\n        \n        // Update maxLen with current window size\n        maxLen = max(maxLen, right - left + 1);\n    }\n}",
+      "action": "continue",
+      "next": "coding-return-cpp"
+    },
+    {
+      "stepId": "coding-return-cpp",
+      "mentorSays": "Finally, return maxLen.",
+      "example": "int characterReplacement(string& s, int k) {\n    int left = 0;\n    int maxFreq = 0;\n    int maxLen = 0;\n    unordered_map<char, int> freq;\n    \n    for (int right = 0; right < s.size(); right++) {\n        char c = s[right];\n        freq[c]++;\n        maxFreq = max(maxFreq, freq[c]);\n        \n        int windowSize = right - left + 1;\n        int replacementsNeeded = windowSize - maxFreq;\n        \n        if (replacementsNeeded > k) {\n            freq[s[left]]--;\n            left++;\n        }\n        \n        maxLen = max(maxLen, right - left + 1);\n    }\n    \n    return maxLen;\n}",
+      "action": "continue",
+      "next": "test-code-cpp"
+    },
+    {
+      "stepId": "test-code-cpp",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** s = \"ABAB\", k = 2\nExpected: 4 (entire string can be made uniform)\n\n**Test 2:** s = \"AABABBA\", k = 1\nExpected: 4 (from \"AABA\" or \"BABB\")\n\n**Test 3:** s = \"AAAA\", k = 0\nExpected: 4 (already uniform, no replacements needed)\n\n**Test 4:** s = \"ABBB\", k = 2\nExpected: 4 (replace 1 A with B)\n\n**Test 5:** s = \"ABCDEF\", k = 1\nExpected: 2 (can make \"AA\" or \"BB\", etc.)\n\n**Test 6:** s = \"A\", k = 1\nExpected: 1 (single character)\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: \"ABAB\", k=2 → 4\nTest 2: \"AABABBA\", k=1 → 4\nTest 3: \"AAAA\", k=0 → 4\nTest 4: \"ABBB\", k=2 → 4\nTest 5: \"ABCDEF\", k=1 → 2\nTest 6: \"A\", k=1 → 1",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-ts",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-ts"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-ts",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'left' or 'maxFreq') and put data inside it.\n\nFor example, 'let left: number = 0;' creates a variable that stores the number 0. Later, you can use that variable name to refer to it.",
+      "example": "let left: number = 0;\nlet maxFreq: number = 0;\nlet maxLen: number = 0;\nconst freq: { [key: string]: number } = {};\n\nNow these variables store values\nWe can use them to track our sliding window",
+      "action": "continue",
+      "next": "function-check-ts"
+    },
+    {
+      "stepId": "function-check-ts",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "parameter-check-ts"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-ts",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.\n\nThink of it like a recipe: you provide ingredients (parameters), the function does the work, and gives you a result (return value).",
+      "example": "function add(a: number, b: number): number {\n  return a + b;\n}\n\nadd(3, 5) returns 8\nadd(10, 20) returns 30",
+      "action": "continue",
+      "next": "parameter-check-ts"
+    },
+    {
+      "stepId": "parameter-check-ts",
+      "mentorSays": "When we write a function, we can give it inputs. These inputs are called 'parameters'. Do you know what parameters are?",
+      "choices": [
+        {
+          "label": "Yes, I know parameters",
+          "next": "array-check-ts"
+        },
+        {
+          "label": "No, explain parameters",
+          "next": "parameter-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "parameter-explanation-ts",
+      "mentorSays": "Parameters are like variables that receive values when you call the function. When you write 'function characterReplacement(s: string, k: number): number', the 's' and 'k' are parameters - they're placeholders that will receive actual values when you call the function.\n\nWhen you call 'characterReplacement(\"ABAB\", 2)', the string and number go into the parameters.",
+      "example": "function characterReplacement(s: string, k: number): number {\n  // 's' and 'k' are parameters\n}\n\n// When we call it:\ncharacterReplacement(\"ABAB\", 2);\n// The string and number go into the parameters",
+      "action": "continue",
+      "next": "array-check-ts"
+    },
+    {
+      "stepId": "array-check-ts",
+      "mentorSays": "To solve this lesson, we'll need to work with strings and objects (hash maps). Do you know what a string is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know strings",
+          "next": "loop-check-ts"
+        },
+        {
+          "label": "No, explain strings",
+          "next": "array-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "array-explanation-ts",
+      "mentorSays": "A string is a sequence of characters. Each character has a position number called an 'index'. String indices start counting from 0, not 1.\n\nFor example, let s: string = \"ABAB\" means:\n- s[0] = 'A' (first character, index 0)\n- s[1] = 'B' (second character, index 1)\n- s[2] = 'A' (third character, index 2)\n- s[3] = 'B' (fourth character, index 3)\n\nWe'll also use an object to count character frequencies:\n- freq['A'] = 2 means we've seen 'A' twice\n- freq['B'] = 2 means we've seen 'B' twice",
+      "example": "let s: string = \"ABAB\";\n\ns[0] = 'A'\ns[1] = 'B'\ns[2] = 'A'\ns[3] = 'B'\n\nconst freq: { [key: string]: number } = {};\nfreq['A'] = 2;\nfreq['B'] = 2;",
+      "action": "continue",
+      "next": "loop-check-ts"
+    },
+    {
+      "stepId": "loop-check-ts",
+      "mentorSays": "To solve this lesson, we'll need to use loops. Do you know what a loop is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know loops",
+          "next": "coding-start-ts"
+        },
+        {
+          "label": "No, explain loops",
+          "next": "loop-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "loop-explanation-ts",
+      "mentorSays": "A loop lets you repeat code multiple times. A 'for' loop runs code for each item in a sequence.\n\nFor example, 'for (let right = 0; right < s.length; right++)' means: start at 0, keep going while right is less than the string length, and add 1 to right each time.",
+      "example": "for (let right = 0; right < 3; right++) {\n  console.log(right);\n}\n\nThis prints: 0, 1, 2",
+      "action": "continue",
+      "next": "coding-start-ts"
+    },
+    {
+      "stepId": "coding-start-ts",
+      "mentorSays": "Perfect! Let's implement the character replacement solution in TypeScript. We'll create a function that takes a string and k, and returns the length of the longest valid substring.",
+      "example": "function characterReplacement(s: string, k: number): number {\n  \n}",
+      "action": "continue",
+      "next": "coding-init-vars-ts"
+    },
+    {
+      "stepId": "coding-init-vars-ts",
+      "mentorSays": "First, let's initialize our variables: left pointer, max frequency, max length, and a frequency map to track character counts.",
+      "example": "function characterReplacement(s: string, k: number): number {\n  let left: number = 0;\n  let maxFreq: number = 0;\n  let maxLen: number = 0;\n  const freq: { [key: string]: number } = {};\n}",
+      "action": "continue",
+      "next": "coding-outer-loop-ts"
+    },
+    {
+      "stepId": "coding-outer-loop-ts",
+      "mentorSays": "Now, create a loop that moves the right pointer through the string. This will expand our window.",
+      "example": "function characterReplacement(s: string, k: number): number {\n  let left: number = 0;\n  let maxFreq: number = 0;\n  let maxLen: number = 0;\n  const freq: { [key: string]: number } = {};\n  \n  // Expand window by moving right pointer\n  for (let right = 0; right < s.length; right++) {\n    \n  }\n}",
+      "action": "continue",
+      "next": "coding-update-freq-ts"
+    },
+    {
+      "stepId": "coding-update-freq-ts",
+      "mentorSays": "Inside the loop, update the frequency of the current character and update maxFreq if this character's frequency is now the highest.",
+      "example": "function characterReplacement(s: string, k: number): number {\n  let left: number = 0;\n  let maxFreq: number = 0;\n  let maxLen: number = 0;\n  const freq: { [key: string]: number } = {};\n  \n  for (let right = 0; right < s.length; right++) {\n    const char = s[right];\n    \n    // Update frequency\n    freq[char] = (freq[char] || 0) + 1;\n    \n    // Update maxFreq if this character is now most frequent\n    maxFreq = Math.max(maxFreq, freq[char]);\n  }\n}",
+      "action": "continue",
+      "next": "coding-check-validity-ts"
+    },
+    {
+      "stepId": "coding-check-validity-ts",
+      "mentorSays": "Now, check if the current window is valid. Calculate window size and check if replacements needed (windowSize - maxFreq) exceeds k.",
+      "example": "function characterReplacement(s: string, k: number): number {\n  let left: number = 0;\n  let maxFreq: number = 0;\n  let maxLen: number = 0;\n  const freq: { [key: string]: number } = {};\n  \n  for (let right = 0; right < s.length; right++) {\n    const char = s[right];\n    freq[char] = (freq[char] || 0) + 1;\n    maxFreq = Math.max(maxFreq, freq[char]);\n    \n    // Check if window is valid\n    const windowSize = right - left + 1;\n    const replacementsNeeded = windowSize - maxFreq;\n    \n    if (replacementsNeeded > k) {\n      // Window is invalid, need to shrink\n    }\n  }\n}",
+      "action": "continue",
+      "next": "coding-shrink-window-ts"
+    },
+    {
+      "stepId": "coding-shrink-window-ts",
+      "mentorSays": "If the window is invalid, shrink it by moving the left pointer and decreasing the frequency of the character we're removing.",
+      "example": "function characterReplacement(s: string, k: number): number {\n  let left: number = 0;\n  let maxFreq: number = 0;\n  let maxLen: number = 0;\n  const freq: { [key: string]: number } = {};\n  \n  for (let right = 0; right < s.length; right++) {\n    const char = s[right];\n    freq[char] = (freq[char] || 0) + 1;\n    maxFreq = Math.max(maxFreq, freq[char]);\n    \n    const windowSize = right - left + 1;\n    const replacementsNeeded = windowSize - maxFreq;\n    \n    if (replacementsNeeded > k) {\n      // Shrink window: remove leftmost character\n      freq[s[left]]--;\n      left++;\n    }\n  }\n}",
+      "action": "continue",
+      "next": "coding-update-maxlen-ts"
+    },
+    {
+      "stepId": "coding-update-maxlen-ts",
+      "mentorSays": "After potentially shrinking, update maxLen with the current window size. The window is now valid (or we just made it valid by shrinking).",
+      "example": "function characterReplacement(s: string, k: number): number {\n  let left: number = 0;\n  let maxFreq: number = 0;\n  let maxLen: number = 0;\n  const freq: { [key: string]: number } = {};\n  \n  for (let right = 0; right < s.length; right++) {\n    const char = s[right];\n    freq[char] = (freq[char] || 0) + 1;\n    maxFreq = Math.max(maxFreq, freq[char]);\n    \n    const windowSize = right - left + 1;\n    const replacementsNeeded = windowSize - maxFreq;\n    \n    if (replacementsNeeded > k) {\n      freq[s[left]]--;\n      left++;\n    }\n    \n    // Update maxLen with current window size\n    maxLen = Math.max(maxLen, right - left + 1);\n  }\n}",
+      "action": "continue",
+      "next": "coding-return-ts"
+    },
+    {
+      "stepId": "coding-return-ts",
+      "mentorSays": "Finally, return maxLen.",
+      "example": "function characterReplacement(s: string, k: number): number {\n  let left: number = 0;\n  let maxFreq: number = 0;\n  let maxLen: number = 0;\n  const freq: { [key: string]: number } = {};\n  \n  for (let right = 0; right < s.length; right++) {\n    const char = s[right];\n    freq[char] = (freq[char] || 0) + 1;\n    maxFreq = Math.max(maxFreq, freq[char]);\n    \n    const windowSize = right - left + 1;\n    const replacementsNeeded = windowSize - maxFreq;\n    \n    if (replacementsNeeded > k) {\n      freq[s[left]]--;\n      left++;\n    }\n    \n    maxLen = Math.max(maxLen, right - left + 1);\n  }\n  \n  return maxLen;\n}",
+      "action": "continue",
+      "next": "test-code-ts"
+    },
+    {
+      "stepId": "test-code-ts",
+      "mentorSays": "Perfect! Now test your code with multiple test cases:\n\n**Test 1:** s = \"ABAB\", k = 2\nExpected: 4 (entire string can be made uniform)\n\n**Test 2:** s = \"AABABBA\", k = 1\nExpected: 4 (from \"AABA\" or \"BABB\")\n\n**Test 3:** s = \"AAAA\", k = 0\nExpected: 4 (already uniform, no replacements needed)\n\n**Test 4:** s = \"ABBB\", k = 2\nExpected: 4 (replace 1 A with B)\n\n**Test 5:** s = \"ABCDEF\", k = 1\nExpected: 2 (can make \"AA\" or \"BB\", etc.)\n\n**Test 6:** s = \"A\", k = 1\nExpected: 1 (single character)\n\nTry these in your IDE or code editor!",
+      "example": "Test 1: \"ABAB\", k=2 → 4\nTest 2: \"AABABBA\", k=1 → 4\nTest 3: \"AAAA\", k=0 → 4\nTest 4: \"ABBB\", k=2 → 4\nTest 5: \"ABCDEF\", k=1 → 2\nTest 6: \"A\", k=1 → 1",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "final",
+      "mentorSays": "🎉 Well done! You've learned to think through the Longest Repeating Character Replacement lesson. You understand what the lesson asks for, how to use a sliding window with frequency tracking, and how to determine when a window is valid using the formula `windowSize - maxFrequency <= k`.\n\n**Key Takeaways:**\n1. **The Formula**: A window is valid if `windowSize - maxFrequency <= k`. This tells us how many characters we need to replace.\n2. **Sliding Window Pattern**: Expand the window by moving the right pointer, and shrink when it becomes invalid by moving the left pointer.\n3. **Frequency Tracking**: Use a hash map to count character frequencies in the current window.\n4. **Optimization**: We can keep maxFrequency slightly \"stale\" - we only update it when expanding (adding characters), not when shrinking.\n\n**Time Complexity**: O(n) - we traverse the string once with two pointers\n**Space Complexity**: O(1) - we only track at most 26 characters (for uppercase letters) or 52 (for both cases), which is constant\n\n**What to practice next:**\n- Longest Substring Without Repeating Characters (similar sliding window pattern)\n- Minimum Window Substring (more complex sliding window)\n\nThis kind of thinking—using sliding windows with frequency tracking—is essential for solving many string lessons. Keep practicing!",
+      "action": "continue"
+    }
+  ]
+}
+
+

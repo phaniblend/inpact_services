@@ -1,0 +1,438 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-algorithms-13",
+    "track": "algorithms",
+    "lessonNum": 13,
+    "title": "Product of Array Except Self",
+    "shortName": "P13",
+    "intro": {
+      "tag": "LESSON #13",
+      "title": "Product of Array Except Self",
+      "body": "In this lesson, you will build a function that calculates the product of all elements in an array except for the element at each index. You will learn the core concept of using prefix and suffix products to solve this lesson efficiently without using division. The main technologies involved are JavaScript arrays, loops, and basic arithmetic operations. This approach helps you understand how to optimize algorithms by avoiding nested loops and reducing time complexity. By the end, you will have a working solution that handles arrays of any size.",
+      "usecase": "The 'Product of Array Except Self' algorithm is essential in data visualization dashboards where you need to calculate derived metrics. For example, in a financial analytics panel showing monthly revenue, you might need to compute running totals or percentage contributions where each value depends on all others. This pattern also appears in recommendation systems where item scores are adjusted based on surrounding context, or in image processing filters where pixel values are normalized relative to neighboring pixels. Mastering this algorithm helps developers efficiently handle complex data transformations in real-time interfaces."
+    },
+    "objectives": [
+      "Implement a brute-force solution to calculate the product of array elements except self",
+      "Construct prefix and suffix arrays to optimize the product calculation",
+      "Manipulate array indices to compute products without using division",
+      "Initialize and update running product variables during array traversal",
+      "Integrate prefix and suffix calculations into a single pass algorithm",
+      "Apply the optimized solution to handle edge cases like zeros in the array",
+      "Configure the algorithm to return the result array with correct products"
+    ],
+    "steps": [
+      {
+        "type": "reasoning",
+        "id": "step1",
+        "phase": "Step 1 of 18",
+        "title": "Welcome",
+        "content": {
+          "body": "Imagine you're at a party and want to know everyone's name except your own. How would you quickly find out? In this lesson, we'll learn how to calculate the product of all numbers in an array except the one at each position. This is a clever array lesson that teaches us to use what we've already seen.",
+          "title": "Welcome"
+        }
+      },
+      {
+        "type": "reasoning",
+        "id": "step2",
+        "phase": "Step 2 of 18",
+        "title": "What you'll learn",
+        "content": {
+          "body": "• Apply the 'remember what we have already seen' mental model to solve array lessons\n• Implement a solution using prefix and suffix products\n• Explain why we store products as values in our calculation\n• Build the final result array step by step",
+          "title": "What you'll learn"
+        }
+      },
+      {
+        "type": "discovery",
+        "id": "step3",
+        "phase": "Step 3 of 18",
+        "title": "Try it",
+        "content": {
+          "body": "(No content)",
+          "title": "Try it",
+          "prompt": "For array [1, 2, 3], what's the product of all numbers except the first element?",
+          "exampleArray": [
+            1,
+            2,
+            3
+          ],
+          "successMessage": "Correct! For position 0 (value 1), the product of other numbers is 2 × 3 = 6."
+        }
+      },
+      {
+        "type": "discovery",
+        "id": "step4",
+        "phase": "Step 4 of 18",
+        "title": "Try a bigger array",
+        "content": {
+          "body": "(No content)",
+          "title": "Try a bigger array",
+          "prompt": "For array [2, 3, 4, 5], what's the product except the element at index 2 (value 4)?",
+          "exampleArray": [
+            2,
+            3,
+            4,
+            5
+          ],
+          "successMessage": "Well done! 2 × 3 × 5 = 30. You multiplied all numbers except the one at position 2."
+        }
+      },
+      {
+        "type": "discovery",
+        "id": "step5",
+        "phase": "Step 5 of 18",
+        "title": "One more",
+        "content": {
+          "body": "(No content)",
+          "title": "One more",
+          "prompt": "For array [1, 2, 3, 4], calculate products for ALL positions except self. What pattern do you notice?",
+          "exampleArray": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "successMessage": "Great observation! Position 0: 2×3×4=24, Position 1: 1×3×4=12, Position 2: 1×2×4=8, Position 3: 1×2×3=6. Each product uses numbers from both sides of the current position."
+        }
+      },
+      {
+        "type": "reflection",
+        "id": "step6",
+        "phase": "Step 6 of 18",
+        "title": "What you did",
+        "content": {
+          "body": "What you just did was calculate each product separately by multiplying all other numbers. For position i, you looked at all elements before i and all elements after i. This approach would require re-scanning the array for each position.",
+          "title": "What you did"
+        }
+      },
+      {
+        "type": "scale-problem",
+        "id": "step7",
+        "phase": "Step 7 of 18",
+        "title": "Why it gets hard",
+        "content": {
+          "body": "When the array has 10,000 numbers, calculating each product from scratch would be extremely slow. We'd be doing the same multiplications over and over. We need a smarter method that remembers what we've already calculated. Can't figure it out? Click Show me on the next step.",
+          "title": "Why it gets hard"
+        }
+      },
+      {
+        "type": "concept-bridge",
+        "id": "step8",
+        "phase": "Step 8 of 18",
+        "title": "Key idea",
+        "content": {
+          "body": "The secret is to remember what we've already seen. Instead of recalculating everything for each position, we can store running products as we move through the array. Think of it like keeping a notebook where we write down the product of all numbers to the left of our current position, and another notebook for products to the right.",
+          "title": "Key idea",
+          "visualMetaphor": "A notebook where we write down what we've seen and check it in one step."
+        }
+      },
+      {
+        "type": "reveal-idea",
+        "id": "step9",
+        "phase": "Step 9 of 18",
+        "title": "The approach",
+        "content": {
+          "body": "We'll use two passes through the array. First pass: calculate running products from left to right (prefix). Second pass: calculate running products from right to left (suffix), combining with what we stored from the first pass.",
+          "title": "The approach",
+          "showMeFirst": true,
+          "illustratedExample": "Walkthrough with [1, 2, 3, 4]:\nLeft pass: result = [1, 1×1=1, 1×2=2, 2×3=6] (products of left elements)\nRight pass: suffix = 1, result[3] = 6×1=6, suffix = 1×4=4, result[2] = 2×4=8, suffix = 4×3=12, result[1] = 1×12=12, suffix = 12×2=24, result[0] = 1×24=24\nFinal: [24, 12, 8, 6]"
+        }
+      },
+      {
+        "type": "flow-explainer",
+        "id": "step10",
+        "phase": "Step 10 of 18",
+        "title": "Steps",
+        "content": {
+          "body": "1. Create result array filled with 1s (neutral value for multiplication)\n2. First pass (left to right): store running product of all elements to the left of current position\n3. Second pass (right to left): multiply running product of all elements to the right with what's already in result\n4. Return the final result array",
+          "title": "Steps"
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 18",
+        "title": "Initialize the result array",
+        "instruction": "Create a function productExceptSelf that takes nums array. Initialize a result array with the same length as nums, filled with 1s.",
+        "hint": "Use Array(n).fill(1) to create an array of length n with all values set to 1.",
+        "analogousExample": "",
+        "seedCode": "function productExceptSelf(nums) {\n  // Your code here\n}",
+        "expectedOutcome": "result array initialized with 1s",
+        "successCriteria": [],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Remember to make the array the same length as nums and fill it with 1s.",
+        "feedbackWrong": "Let's start with creating an array. Use Array(nums.length).fill(1) to initialize it properly.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "Array",
+            "fill",
+            "1"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step12",
+        "type": "question",
+        "phase": "Step 12 of 18",
+        "title": "Calculate left products",
+        "instruction": "Add a variable leftProduct initialized to 1. Loop through nums from left to right (use for loop). For each position i, set result[i] = leftProduct,",
+        "hint": "The leftProduct tracks the product of all elements to the left of current position.",
+        "analogousExample": "",
+        "seedCode": "function productExceptSelf(nums) {\n  const result = Array(nums.length).fill(1);\n  // Your code here\n}",
+        "expectedOutcome": "result stores products of left elements",
+        "successCriteria": [],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Good start. Remember to update leftProduct after setting result[i], and multiply it by nums[i].",
+        "feedbackWrong": "Think about it: for each position, we want the product of everything to the left. Store that in result[i], then include current nums[i] in leftProduct for the next position.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "leftProduct",
+            "for",
+            "result[i]",
+            "*="
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step13",
+        "type": "question",
+        "phase": "Step 13 of 18",
+        "title": "update leftProduct *= nums[i]",
+        "instruction": "update leftProduct *= nums[i].",
+        "hint": "The leftProduct tracks the product of all elements to the left of current position.",
+        "analogousExample": "",
+        "seedCode": "function productExceptSelf(nums) {\n  const result = Array(nums.length).fill(1);\n  // Your code here\n}",
+        "expectedOutcome": "",
+        "successCriteria": [
+          "Complete the step as instructed."
+        ],
+        "feedbackCorrect": "Great! Step completed.",
+        "feedbackPartial": "Review the instruction and try again.",
+        "feedbackWrong": "Check the instruction and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "leftProduct",
+            "for",
+            "result[i]",
+            "*="
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step14",
+        "type": "question",
+        "phase": "Step 14 of 18",
+        "title": "Calculate right products",
+        "instruction": "Add a variable rightProduct initialized to 1. Loop through nums from right to left (start at nums.length-1). For each position i, multiply result[i] by rightProduct,",
+        "hint": "We're combining the left products (already in result) with right products as we move backward.",
+        "analogousExample": "",
+        "seedCode": "function productExceptSelf(nums) {\n  const result = Array(nums.length).fill(1);\n  let leftProduct = 1;\n  for (let i = 0; i < nums.length; i++) {\n    result[i] = leftProduct;\n    leftProduct *= nums[i];\n  }\n  // Your code here\n}",
+        "expectedOutcome": "result combines left and right products",
+        "successCriteria": [],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Almost there. Remember to multiply result[i] by rightProduct first, then update rightProduct with nums[i].",
+        "feedbackWrong": "We need to go backward through the array. Start i at nums.length-1 and decrement. Multiply what's already in result[i] by rightProduct, then include nums[i] in rightProduct.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "rightProduct",
+            "for",
+            "result[i]",
+            "*=",
+            "i--"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step15",
+        "type": "question",
+        "phase": "Step 15 of 18",
+        "title": "update rightProduct *= nums[i]",
+        "instruction": "update rightProduct *= nums[i].",
+        "hint": "We're combining the left products (already in result) with right products as we move backward.",
+        "analogousExample": "",
+        "seedCode": "function productExceptSelf(nums) {\n  const result = Array(nums.length).fill(1);\n  let leftProduct = 1;\n  for (let i = 0; i < nums.length; i++) {\n    result[i] = leftProduct;\n    leftProduct *= nums[i];\n  }\n  // Your code here\n}",
+        "expectedOutcome": "",
+        "successCriteria": [
+          "Complete the step as instructed."
+        ],
+        "feedbackCorrect": "Great! Step completed.",
+        "feedbackPartial": "Review the instruction and try again.",
+        "feedbackWrong": "Check the instruction and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "rightProduct",
+            "for",
+            "result[i]",
+            "*=",
+            "i--"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step16",
+        "type": "question",
+        "phase": "Step 16 of 18",
+        "title": "Return the result",
+        "instruction": "After both loops, return the result array.",
+        "hint": "Simply add 'return result;' at the end of your function.",
+        "analogousExample": "",
+        "seedCode": "function productExceptSelf(nums) {\n  const result = Array(nums.length).fill(1);\n  let leftProduct = 1;\n  for (let i = 0; i < nums.length; i++) {\n    result[i] = leftProduct;\n    leftProduct *= nums[i];\n  }\n  let rightProduct = 1;\n  for (let i = nums.length - 1; i >= 0; i--) {\n    result[i] *= rightProduct;\n    rightProduct *= nums[i];\n  }\n  // Your code here\n}",
+        "expectedOutcome": "function returns the final result array",
+        "successCriteria": [],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're almost done. Just need to return the result array.",
+        "feedbackWrong": "Don't forget to return the result array at the end of your function.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "return",
+            "result"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step17",
+        "type": "question",
+        "phase": "Step 17 of 18",
+        "title": "Test with example",
+        "instruction": "Test your function with nums = [1, 2, 3, 4]. What does it return?",
+        "hint": "Call your function and log the result, or trace through the logic manually.",
+        "analogousExample": "",
+        "seedCode": "function productExceptSelf(nums) {\n  const result = Array(nums.length).fill(1);\n  let leftProduct = 1;\n  for (let i = 0; i < nums.length; i++) {\n    result[i] = leftProduct;\n    leftProduct *= nums[i];\n  }\n  let rightProduct = 1;\n  for (let i = nums.length - 1; i >= 0; i--) {\n    result[i] *= rightProduct;\n    rightProduct *= nums[i];\n  }\n  return result;\n}\n\n// Test it here",
+        "expectedOutcome": "[24, 12, 8, 6]",
+        "successCriteria": [],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "Check your calculations. Remember: left pass then right pass, combining products.",
+        "feedbackWrong": "Let's trace it: For [1,2,3,4], result should be [2×3×4, 1×3×4, 1×2×4, 1×2×3] = [24,12,8,6].",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "[24, 12, 8, 6]"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "type": "complete",
+        "id": "step18",
+        "phase": "Step 18 of 18",
+        "title": "Done",
+        "content": {
+          "body": "Congratulations! You've implemented an efficient solution to 'Product of Array Except Self'. Remember: we used the 'remember what we have already seen' approach by storing running products in two passes. This avoids O(n²) time complexity and gives us O(n) time with O(1) extra space (excluding the result array). The key insight was to separate the lesson into left products and right products, then combine them.",
+          "title": "Done"
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Welcome",
+        "id": "step1"
+      },
+      {
+        "label": "What you'll learn",
+        "id": "step2"
+      },
+      {
+        "label": "Try it",
+        "id": "step3"
+      },
+      {
+        "label": "Try a bigger array",
+        "id": "step4"
+      },
+      {
+        "label": "One more",
+        "id": "step5"
+      },
+      {
+        "label": "What you did",
+        "id": "step6"
+      },
+      {
+        "label": "Why it gets hard",
+        "id": "step7"
+      },
+      {
+        "label": "Key idea",
+        "id": "step8"
+      },
+      {
+        "label": "The approach",
+        "id": "step9"
+      },
+      {
+        "label": "Steps",
+        "id": "step10"
+      },
+      {
+        "label": "Initialize the result array",
+        "id": "step11"
+      },
+      {
+        "label": "Calculate left products",
+        "id": "step12"
+      },
+      {
+        "label": "update leftProduct *= nums[i]",
+        "id": "step13"
+      },
+      {
+        "label": "Calculate right products",
+        "id": "step14"
+      },
+      {
+        "label": "update rightProduct *= nums[i]",
+        "id": "step15"
+      },
+      {
+        "label": "Return the result",
+        "id": "step16"
+      },
+      {
+        "label": "Test with example",
+        "id": "step17"
+      },
+      {
+        "label": "Done",
+        "id": "step18"
+      }
+    ],
+    "algorithmFamily": "array-hashmap",
+    "familyTeachingProfile": {
+      "mentalModel": "Remember what we have already seen",
+      "conceptBridge": "Show the learner how to use a lookup structure (e.g. object or Map) to remember seen values and avoid re-scanning.",
+      "visualMetaphor": "A notebook where we write down what we've seen and check it in one step.",
+      "commonConfusions": [
+        "What do we store as key vs value?",
+        "When do we check the structure vs add to it?"
+      ]
+    }
+  },
+  "source": "content"
+}

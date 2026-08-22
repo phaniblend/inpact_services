@@ -1,0 +1,1178 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-react-ts-120",
+    "track": "react-ts",
+    "lessonNum": 120,
+    "title": "Creating RTK Endpoints (from zero)",
+    "shortName": "RTK ENDPOINTS",
+    "intro": {
+      "tag": "LESSON #120",
+      "title": "Creating RTK Endpoints — React + TypeScript",
+      "body": "You will build a working data layer from scratch — no prior Redux Toolkit, RTK Query, React, or TypeScript experience assumed. Step by step you will: connect fetchBaseQuery to the free JSONPlaceholder API, write TypeScript interfaces that lock in your response shapes, register query endpoints for a post list and a single post, add a mutation endpoint that POSTs to the API and invalidates the cache, wire it all into a Redux store, wrap the app with Provider, and drive three real UI states — loading, error, and success — entirely from hook return values. You leave with a working mental model you can operate: createApi → typed endpoints → auto-generated hooks → UI.",
+      "usecase": "Every production app — ecommerce catalog, analytics dashboard, social feed — needs the same four things RTK Query handles for you: typed HTTP calls, automatic caching, cache invalidation after writes, and predictable loading UX. JSONPlaceholder gives you a live API to practice against without keys, billing, or backend setup, so every pattern you apply here transfers directly to real backends on day one."
+    },
+    "objectives": [
+      "Create an empty API slice using createApi with fetchBaseQuery typed to a base URL and an empty endpoints object so the design pattern is reusable, and async data is handled with an explicit and safe data shape.",
+      "Inject a typed query endpoint into an existing API slice using the injectEndpoints method so the learner can explain both the mechanism and the visible result.",
+      "Establish the endpoint's query function typed as (arg: ArgType) => string | FetchArgs to build the request URL so the contract is explicit and incorrect usage is caught early.",
+      "Export the injected endpoint's auto-generated typed hook and consume it in a feature component so the learner can explain both the mechanism and the visible result."
+    ],
+    "steps": [
+      {
+        "id": "s02",
+        "type": "question",
+        "phase": "Step 1 of 31",
+        "title": "Import React in App.tsx",
+        "instruction": "In **App.tsx**, add: `import React from 'react';` at the top. React must be in scope for JSX in many setups.",
+        "hint": "`import React from 'react'`",
+        "analogousExample": "import React from 'react';",
+        "seedCode": {
+          "App.tsx": "import React from 'react';\n\n// Main UI — App.tsx\n// You will connect the Redux store and render data here.\n",
+          "store.ts": "// Redux store — connects RTK Query middleware + reducer\n",
+          "api.ts": "// RTK Query API slice for JSONPlaceholder (free test API — typicode.com)\n// You will build endpoints in this file step by step.\n"
+        },
+        "expectedOutcome": "App.tsx imports React.",
+        "successCriteria": [
+          "The file contains an import of React from 'react'."
+        ],
+        "feedbackCorrect": "✅ React import is in place.",
+        "feedbackPartial": "Add `import React from 'react';` at the top of App.tsx.",
+        "feedbackWrong": "Import React from the 'react' package in App.tsx.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "React",
+            "react"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "s03",
+        "type": "question",
+        "phase": "Step 2 of 31",
+        "title": "Import createApi and fetchBaseQuery in api.ts",
+        "instruction": "In **api.ts**, import `createApi` and `fetchBaseQuery` from `'@reduxjs/toolkit/query/react'`. These two functions are the foundation of RTK Query in React.",
+        "hint": "Exact path: `@reduxjs/toolkit/query/react` (includes React hooks integration).",
+        "analogousExample": "import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';",
+        "seedCode": {
+          "App.tsx": "import React from 'react';\n\n// Next: the API slice will live in api.ts\n",
+          "store.ts": "// Redux store — connects RTK Query middleware + reducer\n",
+          "api.ts": "import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';\n\n// Define types and createApi below\n"
+        },
+        "expectedOutcome": "api.ts imports RTK Query core helpers.",
+        "successCriteria": [
+          "createApi and fetchBaseQuery appear in an import from @reduxjs/toolkit/query/react."
+        ],
+        "feedbackCorrect": "✅ RTK Query imports look good.",
+        "feedbackPartial": "Import both symbols from '@reduxjs/toolkit/query/react'.",
+        "feedbackWrong": "Add the createApi and fetchBaseQuery import in api.ts.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "createApi",
+            "fetchBaseQuery",
+            "@reduxjs/toolkit/query/react"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "s04",
+        "type": "question",
+        "phase": "Step 3 of 31",
+        "title": "Define the Post interface",
+        "instruction": "In **api.ts**, export an `interface Post` with `id: number`, `userId: number`, `title: string`, and `body: string`. This matches a typical `/posts` object from JSONPlaceholder.",
+        "hint": "Field names and types must match what the API returns so TypeScript can trust your data.",
+        "analogousExample": "export interface Post { id: number; userId: number; title: string; body: string }",
+        "seedCode": {
+          "App.tsx": "import React from 'react';\n\n// Next: the API slice will live in api.ts\n",
+          "store.ts": "// Redux store — connects RTK Query middleware + reducer\n",
+          "api.ts": "import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';\n\n// Define a Post type matching JSONPlaceholder /posts\nexport interface Post {\n  id: number;\n  userId: number;\n  title: string;\n  body: string;\n}\n\n// Next: call createApi\n"
+        },
+        "expectedOutcome": "Post is typed for later endpoints.",
+        "successCriteria": [
+          "interface Post",
+          "id",
+          "title",
+          "body"
+        ],
+        "feedbackCorrect": "✅ Post shape is defined.",
+        "feedbackPartial": "Declare all four fields with the correct primitive types.",
+        "feedbackWrong": "Export interface Post with id, userId, title, body in api.ts.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "interface",
+            "Post",
+            "id:",
+            "title:",
+            "body:"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "s05",
+        "type": "question",
+        "phase": "Step 4 of 31",
+        "title": "Create the API with createApi",
+        "instruction": "In **api.ts**, export a `const` assigned to `createApi({})` (empty object for now). Use any clear name you like — canonical seeds use `jsonPlaceholderApi`. Next steps add `reducerPath`, `baseQuery`, and `endpoints`.",
+        "hint": "Example: `export const postsApi = createApi({ });` — the important part is calling and exporting `createApi`.",
+        "analogousExample": "export const postsApi = createApi({ });",
+        "seedCode": {
+          "App.tsx": "import React from 'react';\n\n// Next: the API slice will live in api.ts\n",
+          "store.ts": "// Redux store — connects RTK Query middleware + reducer\n",
+          "api.ts": "import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';\n\nexport interface Post {\n  id: number;\n  userId: number;\n  title: string;\n  body: string;\n}\n\n// Create the API object — add reducerPath + baseQuery + endpoints next\nexport const jsonPlaceholderApi = createApi({\n});\n"
+        },
+        "expectedOutcome": "createApi is called and the result is exported as a named const.",
+        "successCriteria": [
+          "createApi is called and exported as a named const."
+        ],
+        "feedbackCorrect": "✅ createApi is set up.",
+        "feedbackPartial": "Call `createApi` with an empty `{}` and `export` the result as a `const`.",
+        "feedbackWrong": "Call createApi with an empty object and export the API instance from api.ts.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "createApi",
+            "export",
+            "const"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "s06",
+        "type": "question",
+        "phase": "Step 5 of 31",
+        "title": "Set reducerPath",
+        "instruction": "Inside `createApi`, add `reducerPath: '…'` using a **string literal** of your choice (often the same text as your API const so the Redux state key is easy to spot). It must be unique in the store.",
+        "hint": "Example: `reducerPath: 'postsApi'` if your const is `postsApi`.",
+        "analogousExample": "reducerPath: 'jsonPlaceholderApi',",
+        "seedCode": {
+          "App.tsx": "import React from 'react';\n\n// Next: the API slice will live in api.ts\n",
+          "store.ts": "// Redux store — connects RTK Query middleware + reducer\n",
+          "api.ts": "import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';\n\nexport interface Post {\n  id: number;\n  userId: number;\n  title: string;\n  body: string;\n}\n\nexport const jsonPlaceholderApi = createApi({\n  reducerPath: 'jsonPlaceholderApi',\n});\n"
+        },
+        "expectedOutcome": "reducerPath is configured with a string literal.",
+        "successCriteria": [
+          "reducerPath appears inside the createApi options with a quoted string value."
+        ],
+        "feedbackCorrect": "✅ reducerPath is set.",
+        "feedbackPartial": "Add `reducerPath: 'yourKey'` inside the createApi config object.",
+        "feedbackWrong": "Add reducerPath with a string literal inside createApi in api.ts.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "reducerPath",
+            "'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "s07",
+        "type": "question",
+        "phase": "Step 6 of 31",
+        "title": "Add baseQuery with JSONPlaceholder baseUrl",
+        "instruction": "Add `baseQuery: fetchBaseQuery({ baseUrl: 'https://jsonplaceholder.typicode.com' })` inside `createApi`. Every relative path in your endpoints will be appended to this base URL.",
+        "hint": "JSONPlaceholder is free and requires no API key — ideal for learning.",
+        "analogousExample": "baseQuery: fetchBaseQuery({ baseUrl: 'https://jsonplaceholder.typicode.com' }),",
+        "seedCode": {
+          "App.tsx": "import React from 'react';\n\n// Next: the API slice will live in api.ts\n",
+          "store.ts": "// Redux store — connects RTK Query middleware + reducer\n",
+          "api.ts": "import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';\n\nexport interface Post {\n  id: number;\n  userId: number;\n  title: string;\n  body: string;\n}\n\nexport const jsonPlaceholderApi = createApi({\n  reducerPath: 'jsonPlaceholderApi',\n  baseQuery: fetchBaseQuery({ baseUrl: 'https://jsonplaceholder.typicode.com' }),\n});\n"
+        },
+        "expectedOutcome": "Requests will target JSONPlaceholder.",
+        "successCriteria": [
+          "baseQuery",
+          "fetchBaseQuery",
+          "jsonplaceholder.typicode.com"
+        ],
+        "feedbackCorrect": "✅ base URL is wired.",
+        "feedbackPartial": "Use fetchBaseQuery with the typicode base URL.",
+        "feedbackWrong": "Add baseQuery with fetchBaseQuery pointing at https://jsonplaceholder.typicode.com",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "baseQuery",
+            "fetchBaseQuery",
+            "jsonplaceholder"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "s08",
+        "type": "question",
+        "phase": "Step 7 of 31",
+        "title": "Add an empty endpoints builder",
+        "instruction": "Add `endpoints: (builder) => ({})` to `createApi`. The `builder` object is how you register **query** (read) and **mutation** (write) endpoints.",
+        "hint": "Returning `{}` is valid — you will add keys like `getPosts` next.",
+        "analogousExample": "endpoints: (builder) => ({\n}),",
+        "seedCode": {
+          "App.tsx": "import React from 'react';\n\n// Next: the API slice will live in api.ts\n",
+          "store.ts": "// Redux store — connects RTK Query middleware + reducer\n",
+          "api.ts": "import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';\n\nexport interface Post {\n  id: number;\n  userId: number;\n  title: string;\n  body: string;\n}\n\nexport const jsonPlaceholderApi = createApi({\n  reducerPath: 'jsonPlaceholderApi',\n  baseQuery: fetchBaseQuery({ baseUrl: 'https://jsonplaceholder.typicode.com' }),\n  endpoints: (builder) => ({\n    // add endpoints here\n  }),\n});\n"
+        },
+        "expectedOutcome": "endpoints function is ready for routes.",
+        "successCriteria": [
+          "endpoints",
+          "builder"
+        ],
+        "feedbackCorrect": "✅ Endpoints shell is ready.",
+        "feedbackPartial": "Add endpoints as a function of builder returning an object.",
+        "feedbackWrong": "Define endpoints: (builder) => ({ }) in createApi.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "endpoints",
+            "builder"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "s09",
+        "type": "question",
+        "phase": "Step 8 of 31",
+        "title": "Add getPosts query (shape only)",
+        "instruction": "Inside the endpoints object, add `getPosts: builder.query({ query: () => '/posts' })`. This says: “GET /posts relative to baseUrl”. Skip TypeScript generics for one step so the shape is clear.",
+        "hint": "The hook name will be `useGetPostsQuery` — derived from `getPosts`.",
+        "analogousExample": "getPosts: builder.query({ query: () => '/posts' }),",
+        "seedCode": {
+          "App.tsx": "import React from 'react';\n\n// Next: the API slice will live in api.ts\n",
+          "store.ts": "// Redux store — connects RTK Query middleware + reducer\n",
+          "api.ts": "import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';\n\nexport interface Post {\n  id: number;\n  userId: number;\n  title: string;\n  body: string;\n}\n\nexport const jsonPlaceholderApi = createApi({\n  reducerPath: 'jsonPlaceholderApi',\n  baseQuery: fetchBaseQuery({ baseUrl: 'https://jsonplaceholder.typicode.com' }),\n  endpoints: (builder) => ({\n    getPosts: builder.query({\n      query: () => '/posts',\n    }),\n  }),\n});\n"
+        },
+        "expectedOutcome": "A list endpoint exists.",
+        "successCriteria": [
+          "getPosts",
+          "builder.query",
+          "/posts"
+        ],
+        "feedbackCorrect": "✅ List endpoint shape is correct.",
+        "feedbackPartial": "Add getPosts with builder.query and query returning '/posts'.",
+        "feedbackWrong": "Register getPosts with builder.query in endpoints.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "getPosts",
+            "builder.query",
+            "/posts"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "s10",
+        "type": "question",
+        "phase": "Step 9 of 31",
+        "title": "Type getPosts as Post[]",
+        "instruction": "Change the call to `builder.query<Post[], void>({ ... })` so TypeScript knows the response is an array of `Post` and the hook takes no argument (`void`).",
+        "hint": "Post[] = many posts; void = useGetPostsQuery() with no id parameter.",
+        "analogousExample": "getPosts: builder.query<Post[], void>({ query: () => '/posts' }),",
+        "seedCode": {
+          "App.tsx": "import React from 'react';\n\n// Next: the API slice will live in api.ts\n",
+          "store.ts": "// Redux store — connects RTK Query middleware + reducer\n",
+          "api.ts": "import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';\n\nexport interface Post {\n  id: number;\n  userId: number;\n  title: string;\n  body: string;\n}\n\nexport const jsonPlaceholderApi = createApi({\n  reducerPath: 'jsonPlaceholderApi',\n  baseQuery: fetchBaseQuery({ baseUrl: 'https://jsonplaceholder.typicode.com' }),\n  endpoints: (builder) => ({\n    getPosts: builder.query<Post[], void>({\n      query: () => '/posts',\n    }),\n  }),\n});\n"
+        },
+        "expectedOutcome": "getPosts is fully typed.",
+        "successCriteria": [
+          "Post[]",
+          "void",
+          "builder.query"
+        ],
+        "feedbackCorrect": "✅ Generics are in place.",
+        "feedbackPartial": "Add <Post[], void> after builder.query.",
+        "feedbackWrong": "Use builder.query<Post[], void> for getPosts.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "Post[]",
+            "void",
+            "getPosts"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "s11",
+        "type": "question",
+        "phase": "Step 10 of 31",
+        "title": "Add getPost query (single post by id)",
+        "instruction": "Add `getPost: builder.query<Post, number>({ query: (postId) => `/posts/${postId}` })` so one post can be loaded by numeric id. JSONPlaceholder supports `GET /posts/:id`.",
+        "hint": "The second generic is the argument type — here a number id.",
+        "analogousExample": "getPost: builder.query<Post, number>({ query: (id) => `/posts/${id}` }),",
+        "seedCode": {
+          "App.tsx": "import React from 'react';\n\n// Next: the API slice will live in api.ts\n",
+          "store.ts": "// Redux store — connects RTK Query middleware + reducer\n",
+          "api.ts": "import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';\n\nexport interface Post {\n  id: number;\n  userId: number;\n  title: string;\n  body: string;\n}\n\nexport const jsonPlaceholderApi = createApi({\n  reducerPath: 'jsonPlaceholderApi',\n  baseQuery: fetchBaseQuery({ baseUrl: 'https://jsonplaceholder.typicode.com' }),\n  endpoints: (builder) => ({\n    getPosts: builder.query<Post[], void>({\n      query: () => '/posts',\n    }),\n    // Add getPost endpoint next (takes a numeric id)\n  }),\n});\n"
+        },
+        "expectedOutcome": "Detail endpoint exists.",
+        "successCriteria": [
+          "getPost",
+          "builder.query",
+          "Post",
+          "number",
+          "/posts/"
+        ],
+        "feedbackCorrect": "✅ Detail endpoint added.",
+        "feedbackPartial": "Use builder.query<Post, number> with a template path.",
+        "feedbackWrong": "Add getPost with Post and number generics in api.ts.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "getPost",
+            "number",
+            "postId",
+            "query"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "s12",
+        "type": "question",
+        "phase": "Step 11 of 31",
+        "title": "Declare tagTypes for cache invalidation",
+        "instruction": "At the top level of `createApi` (next to `reducerPath`), add `tagTypes: ['Post']`. Tags are labels RTK Query uses to know which cached data to refresh after a mutation.",
+        "hint": "We use one tag string `'Post'` for all post-related data in this lesson.",
+        "analogousExample": "tagTypes: ['Post'],",
+        "seedCode": {
+          "App.tsx": "import React from 'react';\n\n// Next: the API slice will live in api.ts\n",
+          "store.ts": "// Redux store — connects RTK Query middleware + reducer\n",
+          "api.ts": "import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';\n\nexport interface Post {\n  id: number;\n  userId: number;\n  title: string;\n  body: string;\n}\n\nexport const jsonPlaceholderApi = createApi({\n  reducerPath: 'jsonPlaceholderApi',\n  baseQuery: fetchBaseQuery({ baseUrl: 'https://jsonplaceholder.typicode.com' }),\n  endpoints: (builder) => ({\n    getPosts: builder.query<Post[], void>({\n      query: () => '/posts',\n    }),\n    getPost: builder.query<Post, number>({\n      query: (postId) => `/posts/${postId}`,\n    }),\n  }),\n});\n"
+        },
+        "expectedOutcome": "Tag types are registered.",
+        "successCriteria": [
+          "tagTypes",
+          "Post"
+        ],
+        "feedbackCorrect": "✅ tagTypes configured.",
+        "feedbackPartial": "Add tagTypes array with 'Post'.",
+        "feedbackWrong": "Declare tagTypes: ['Post'] in createApi.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "tagTypes",
+            "Post"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "s13",
+        "type": "question",
+        "phase": "Step 12 of 31",
+        "title": "Add providesTags to list and detail queries",
+        "instruction": "On both `getPosts` and `getPost` endpoint configs, add `providesTags: ['Post']` (same array on each). That marks cached results as belonging to the `Post` tag family.",
+        "hint": "When a mutation invalidates `Post`, both list and detail can refetch.",
+        "analogousExample": "providesTags: ['Post'],",
+        "seedCode": {
+          "App.tsx": "import React from 'react';\n\n// Next: the API slice will live in api.ts\n",
+          "store.ts": "// Redux store — connects RTK Query middleware + reducer\n",
+          "api.ts": "import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';\n\nexport interface Post {\n  id: number;\n  userId: number;\n  title: string;\n  body: string;\n}\n\nexport const jsonPlaceholderApi = createApi({\n  reducerPath: 'jsonPlaceholderApi',\n  baseQuery: fetchBaseQuery({ baseUrl: 'https://jsonplaceholder.typicode.com' }),\n  tagTypes: ['Post'],\n  endpoints: (builder) => ({\n    getPosts: builder.query<Post[], void>({\n      query: () => '/posts',\n    }),\n    getPost: builder.query<Post, number>({\n      query: (postId) => `/posts/${postId}`,\n    }),\n  }),\n});\n"
+        },
+        "expectedOutcome": "Queries declare cache tags.",
+        "successCriteria": [
+          "providesTags",
+          "Post"
+        ],
+        "feedbackCorrect": "✅ providesTags added.",
+        "feedbackPartial": "Add providesTags: ['Post'] inside getPosts and getPost options.",
+        "feedbackWrong": "Set providesTags on both query endpoints.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "providesTags",
+            "getPosts",
+            "getPost"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "s14",
+        "type": "question",
+        "phase": "Step 13 of 31",
+        "title": "Add NewPost type and addPost mutation",
+        "instruction": "Export `type NewPost = Pick<Post, 'title' | 'body' | 'userId'>`. Add `addPost: builder.mutation<Post, NewPost>({ query: (body) => ({ url: '/posts', method: 'POST', body, headers: { 'Content-type': 'application/json; charset=UTF-8' } }), invalidatesTags: ['Post'] })`. JSONPlaceholder accepts POST and returns a fake created post.",
+        "hint": "mutation = changing server data; invalidatesTags refreshes list data after add.",
+        "analogousExample": "invalidatesTags: ['Post'],",
+        "seedCode": {
+          "App.tsx": "import React from 'react';\n\n// Next: the API slice will live in api.ts\n",
+          "store.ts": "// Redux store — connects RTK Query middleware + reducer\n",
+          "api.ts": "import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';\n\nexport interface Post {\n  id: number;\n  userId: number;\n  title: string;\n  body: string;\n}\n\nexport const jsonPlaceholderApi = createApi({\n  reducerPath: 'jsonPlaceholderApi',\n  baseQuery: fetchBaseQuery({ baseUrl: 'https://jsonplaceholder.typicode.com' }),\n  tagTypes: ['Post'],\n  endpoints: (builder) => ({\n    getPosts: builder.query<Post[], void>({\n      query: () => '/posts',\n      providesTags: ['Post'],\n    }),\n    getPost: builder.query<Post, number>({\n      query: (postId) => `/posts/${postId}`,\n      providesTags: ['Post'],\n    }),\n  }),\n});\n"
+        },
+        "expectedOutcome": "A create endpoint exists and invalidates Post data.",
+        "successCriteria": [
+          "addPost",
+          "builder.mutation",
+          "POST",
+          "invalidatesTags"
+        ],
+        "feedbackCorrect": "✅ Mutation endpoint added.",
+        "feedbackPartial": "Use builder.mutation with method POST and invalidatesTags.",
+        "feedbackWrong": "Define addPost mutation with invalidatesTags: ['Post'].",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "addPost",
+            "mutation",
+            "POST",
+            "invalidatesTags"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "s15",
+        "type": "question",
+        "phase": "Step 14 of 31",
+        "title": "Export generated hooks",
+        "instruction": "After `createApi`, export hooks: `export const { useGetPostsQuery, useGetPostQuery, useAddPostMutation } = <yourApiConst>;` — use the **same** const you exported for your API. Hook names are auto-generated from your endpoint keys.",
+        "hint": "Hook prefix is `use`, suffix is `Query` or `Mutation`.",
+        "analogousExample": "export const { useGetPostsQuery, useGetPostQuery, useAddPostMutation } = jsonPlaceholderApi;",
+        "seedCode": {
+          "App.tsx": "import React from 'react';\n\n// Next: the API slice will live in api.ts\n",
+          "store.ts": "// Redux store — connects RTK Query middleware + reducer\n",
+          "api.ts": "import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';\n\nexport interface Post {\n  id: number;\n  userId: number;\n  title: string;\n  body: string;\n}\n\nexport type NewPost = Pick<Post, 'title' | 'body' | 'userId'>;\n\nexport const jsonPlaceholderApi = createApi({\n  reducerPath: 'jsonPlaceholderApi',\n  baseQuery: fetchBaseQuery({ baseUrl: 'https://jsonplaceholder.typicode.com' }),\n  tagTypes: ['Post'],\n  endpoints: (builder) => ({\n    getPosts: builder.query<Post[], void>({\n      query: () => '/posts',\n      providesTags: ['Post'],\n    }),\n    getPost: builder.query<Post, number>({\n      query: (postId) => `/posts/${postId}`,\n      providesTags: ['Post'],\n    }),\n    addPost: builder.mutation<Post, NewPost>({\n      query: (body) => ({\n        url: '/posts',\n        method: 'POST',\n        body,\n        headers: { 'Content-type': 'application/json; charset=UTF-8' },\n      }),\n      invalidatesTags: ['Post'],\n    }),\n  }),\n});\n\nexport const {\n  useGetPostsQuery,\n  useGetPostQuery,\n  useAddPostMutation,\n} = jsonPlaceholderApi;\n"
+        },
+        "expectedOutcome": "Components can import hooks from api.ts.",
+        "successCriteria": [
+          "useGetPostsQuery",
+          "useGetPostQuery",
+          "useAddPostMutation",
+          "export"
+        ],
+        "feedbackCorrect": "✅ Hooks exported.",
+        "feedbackPartial": "Destructure the three hooks from your exported API object.",
+        "feedbackWrong": "Export useGetPostsQuery, useGetPostQuery, and useAddPostMutation from your API instance.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "useGetPostsQuery",
+            "useGetPostQuery",
+            "useAddPostMutation",
+            "export"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "s16",
+        "type": "question",
+        "phase": "Step 15 of 31",
+        "title": "Import configureStore in store.ts",
+        "instruction": "In **store.ts**, add `import { configureStore } from '@reduxjs/toolkit';` and import **your** API instance from `'./api'` using the name you exported in api.ts (e.g. `import { postsApi } from './api';`).",
+        "hint": "The store must see the same symbol you exported from api.ts.",
+        "analogousExample": "import { configureStore } from '@reduxjs/toolkit';\nimport { jsonPlaceholderApi } from './api';",
+        "seedCode": {
+          "App.tsx": "import React from 'react';\n\n// Next: the API slice will live in api.ts\n",
+          "store.ts": "import { configureStore } from '@reduxjs/toolkit';\nimport { jsonPlaceholderApi } from './api';\n\n// Call configureStore next\n",
+          "api.ts": "import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';\n\nexport interface Post {\n  id: number;\n  userId: number;\n  title: string;\n  body: string;\n}\n\nexport type NewPost = Pick<Post, 'title' | 'body' | 'userId'>;\n\nexport const jsonPlaceholderApi = createApi({\n  reducerPath: 'jsonPlaceholderApi',\n  baseQuery: fetchBaseQuery({ baseUrl: 'https://jsonplaceholder.typicode.com' }),\n  tagTypes: ['Post'],\n  endpoints: (builder) => ({\n    getPosts: builder.query<Post[], void>({\n      query: () => '/posts',\n      providesTags: ['Post'],\n    }),\n    getPost: builder.query<Post, number>({\n      query: (postId) => `/posts/${postId}`,\n      providesTags: ['Post'],\n    }),\n    addPost: builder.mutation<Post, NewPost>({\n      query: (body) => ({\n        url: '/posts',\n        method: 'POST',\n        body,\n        headers: { 'Content-type': 'application/json; charset=UTF-8' },\n      }),\n      invalidatesTags: ['Post'],\n    }),\n  }),\n});\n\nexport const {\n  useGetPostsQuery,\n  useGetPostQuery,\n  useAddPostMutation,\n} = jsonPlaceholderApi;\n"
+        },
+        "expectedOutcome": "store.ts imports configureStore and the API module.",
+        "successCriteria": [
+          "configureStore",
+          "./api",
+          "from"
+        ],
+        "feedbackCorrect": "✅ Store imports ready.",
+        "feedbackPartial": "Import configureStore from '@reduxjs/toolkit' and your API from './api'.",
+        "feedbackWrong": "Add configureStore and an import from ./api at the top of store.ts.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "configureStore",
+            "./api"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "s17",
+        "type": "question",
+        "phase": "Step 16 of 31",
+        "title": "Create the store with reducer and middleware",
+        "instruction": "Export `store` from **store.ts** with `configureStore`: put your API’s reducer under `[yourApi.reducerPath]` and `.concat(yourApi.middleware)` on the default middleware. Use the **same** API const you imported from `./api`.",
+        "hint": "Never forget `.concat(api.middleware)` — without it, RTK Query cannot run requests.",
+        "analogousExample": "[jsonPlaceholderApi.reducerPath]: jsonPlaceholderApi.reducer",
+        "seedCode": {
+          "App.tsx": "import React from 'react';\n\n// Next: the API slice will live in api.ts\n",
+          "store.ts": "import { configureStore } from '@reduxjs/toolkit';\nimport { jsonPlaceholderApi } from './api';\n\nexport const store = configureStore({\n  reducer: {\n    [jsonPlaceholderApi.reducerPath]: jsonPlaceholderApi.reducer,\n  },\n  middleware: (getDefaultMiddleware) =>\n    getDefaultMiddleware().concat(jsonPlaceholderApi.middleware),\n});\n",
+          "api.ts": "import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';\n\nexport interface Post {\n  id: number;\n  userId: number;\n  title: string;\n  body: string;\n}\n\nexport type NewPost = Pick<Post, 'title' | 'body' | 'userId'>;\n\nexport const jsonPlaceholderApi = createApi({\n  reducerPath: 'jsonPlaceholderApi',\n  baseQuery: fetchBaseQuery({ baseUrl: 'https://jsonplaceholder.typicode.com' }),\n  tagTypes: ['Post'],\n  endpoints: (builder) => ({\n    getPosts: builder.query<Post[], void>({\n      query: () => '/posts',\n      providesTags: ['Post'],\n    }),\n    getPost: builder.query<Post, number>({\n      query: (postId) => `/posts/${postId}`,\n      providesTags: ['Post'],\n    }),\n    addPost: builder.mutation<Post, NewPost>({\n      query: (body) => ({\n        url: '/posts',\n        method: 'POST',\n        body,\n        headers: { 'Content-type': 'application/json; charset=UTF-8' },\n      }),\n      invalidatesTags: ['Post'],\n    }),\n  }),\n});\n\nexport const {\n  useGetPostsQuery,\n  useGetPostQuery,\n  useAddPostMutation,\n} = jsonPlaceholderApi;\n"
+        },
+        "expectedOutcome": "Redux store serves RTK Query.",
+        "successCriteria": [
+          "configureStore",
+          "reducer",
+          "middleware",
+          "concat"
+        ],
+        "feedbackCorrect": "✅ Store is configured.",
+        "feedbackPartial": "Wire `[api.reducerPath]: api.reducer` and concat `api.middleware`.",
+        "feedbackWrong": "Use configureStore with your API reducer and middleware.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "configureStore",
+            "reducer",
+            "middleware",
+            "concat"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "s18",
+        "type": "question",
+        "phase": "Step 17 of 31",
+        "title": "Wrap UI with Provider in App.tsx",
+        "instruction": "In **App.tsx**, import `Provider` from `'react-redux'`, import `store` from `'./store'`, and export a default `Root` component that renders `<Provider store={store}><App /></Provider>`. Keep a simple `App` inner component that returns a heading for now.",
+        "hint": "Provider makes the Redux store available to hooks like `useGetPostsQuery`.",
+        "analogousExample": "<Provider store={store}>",
+        "seedCode": {
+          "App.tsx": "import React from 'react';\nimport { Provider } from 'react-redux';\nimport { store } from './store';\n\nconst App = () => {\n  return (\n    <div>\n      <h1>JSONPlaceholder posts</h1>\n      <p>We will fetch open data from jsonplaceholder.typicode.com</p>\n    </div>\n  );\n};\n\nexport default function Root() {\n  return (\n    <Provider store={store}>\n      <App />\n    </Provider>\n  );\n}\n",
+          "store.ts": "import { configureStore } from '@reduxjs/toolkit';\nimport { jsonPlaceholderApi } from './api';\n\nexport const store = configureStore({\n  reducer: {\n    [jsonPlaceholderApi.reducerPath]: jsonPlaceholderApi.reducer,\n  },\n  middleware: (getDefaultMiddleware) =>\n    getDefaultMiddleware().concat(jsonPlaceholderApi.middleware),\n});\n",
+          "api.ts": "import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';\n\nexport interface Post {\n  id: number;\n  userId: number;\n  title: string;\n  body: string;\n}\n\nexport type NewPost = Pick<Post, 'title' | 'body' | 'userId'>;\n\nexport const jsonPlaceholderApi = createApi({\n  reducerPath: 'jsonPlaceholderApi',\n  baseQuery: fetchBaseQuery({ baseUrl: 'https://jsonplaceholder.typicode.com' }),\n  tagTypes: ['Post'],\n  endpoints: (builder) => ({\n    getPosts: builder.query<Post[], void>({\n      query: () => '/posts',\n      providesTags: ['Post'],\n    }),\n    getPost: builder.query<Post, number>({\n      query: (postId) => `/posts/${postId}`,\n      providesTags: ['Post'],\n    }),\n    addPost: builder.mutation<Post, NewPost>({\n      query: (body) => ({\n        url: '/posts',\n        method: 'POST',\n        body,\n        headers: { 'Content-type': 'application/json; charset=UTF-8' },\n      }),\n      invalidatesTags: ['Post'],\n    }),\n  }),\n});\n\nexport const {\n  useGetPostsQuery,\n  useGetPostQuery,\n  useAddPostMutation,\n} = jsonPlaceholderApi;\n"
+        },
+        "expectedOutcome": "The tree is wrapped with Provider.",
+        "successCriteria": [
+          "Provider",
+          "store",
+          "react-redux"
+        ],
+        "feedbackCorrect": "✅ Provider wiring done.",
+        "feedbackPartial": "Import Provider and store; wrap your app JSX.",
+        "feedbackWrong": "Use Provider with store={store} around App.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "Provider",
+            "store",
+            "react-redux"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "s19",
+        "type": "question",
+        "phase": "Step 18 of 31",
+        "title": "Call useGetPostsQuery inside App",
+        "instruction": "Inside the inner `App` component, import `useGetPostsQuery` from `'./api'`, call it, and destructure `data`, `isLoading`, `error`, and `refetch`.",
+        "hint": "Hooks that use RTK Query must run inside a component under Provider.",
+        "analogousExample": "const { data, isLoading, error, refetch } = useGetPostsQuery();",
+        "seedCode": {
+          "App.tsx": "import React from 'react';\nimport { Provider } from 'react-redux';\nimport { store } from './store';\nimport { useGetPostsQuery } from './api';\n\nconst App = () => {\n  const { data, isLoading, error, refetch } = useGetPostsQuery();\n  return (\n    <div>\n      <h1>JSONPlaceholder posts</h1>\n      <p>Free API: jsonplaceholder.typicode.com</p>\n      {/* loading / error / list next */}\n    </div>\n  );\n};\n\nexport default function Root() {\n  return (\n    <Provider store={store}>\n      <App />\n    </Provider>\n  );\n}\n",
+          "store.ts": "import { configureStore } from '@reduxjs/toolkit';\nimport { jsonPlaceholderApi } from './api';\n\nexport const store = configureStore({\n  reducer: {\n    [jsonPlaceholderApi.reducerPath]: jsonPlaceholderApi.reducer,\n  },\n  middleware: (getDefaultMiddleware) =>\n    getDefaultMiddleware().concat(jsonPlaceholderApi.middleware),\n});\n",
+          "api.ts": "import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';\n\nexport interface Post {\n  id: number;\n  userId: number;\n  title: string;\n  body: string;\n}\n\nexport type NewPost = Pick<Post, 'title' | 'body' | 'userId'>;\n\nexport const jsonPlaceholderApi = createApi({\n  reducerPath: 'jsonPlaceholderApi',\n  baseQuery: fetchBaseQuery({ baseUrl: 'https://jsonplaceholder.typicode.com' }),\n  tagTypes: ['Post'],\n  endpoints: (builder) => ({\n    getPosts: builder.query<Post[], void>({\n      query: () => '/posts',\n      providesTags: ['Post'],\n    }),\n    getPost: builder.query<Post, number>({\n      query: (postId) => `/posts/${postId}`,\n      providesTags: ['Post'],\n    }),\n    addPost: builder.mutation<Post, NewPost>({\n      query: (body) => ({\n        url: '/posts',\n        method: 'POST',\n        body,\n        headers: { 'Content-type': 'application/json; charset=UTF-8' },\n      }),\n      invalidatesTags: ['Post'],\n    }),\n  }),\n});\n\nexport const {\n  useGetPostsQuery,\n  useGetPostQuery,\n  useAddPostMutation,\n} = jsonPlaceholderApi;\n"
+        },
+        "expectedOutcome": "List query hook runs in the component.",
+        "successCriteria": [
+          "useGetPostsQuery",
+          "isLoading",
+          "data",
+          "error"
+        ],
+        "feedbackCorrect": "✅ Hook is called.",
+        "feedbackPartial": "Destructure data, isLoading, error, refetch from useGetPostsQuery().",
+        "feedbackWrong": "Call useGetPostsQuery in App and destructure the result.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "useGetPostsQuery",
+            "data",
+            "isLoading",
+            "error"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "s20",
+        "type": "question",
+        "phase": "Step 19 of 31",
+        "title": "Show loading state",
+        "instruction": "While `isLoading` is true, render a short message such as `<p>Loading…</p>`.",
+        "hint": "Conditional render: `{isLoading && <p>Loading…</p>}`.",
+        "analogousExample": "{isLoading && <p>Loading…</p>}",
+        "seedCode": {
+          "App.tsx": "import React from 'react';\nimport { Provider } from 'react-redux';\nimport { store } from './store';\nimport { useGetPostsQuery } from './api';\n\nconst App = () => {\n  const { data, isLoading, error, refetch } = useGetPostsQuery();\n  return (\n    <div>\n      <h1>JSONPlaceholder posts</h1>\n      {isLoading && <p>Loading…</p>}\n      <p>Free API: jsonplaceholder.typicode.com</p>\n    </div>\n  );\n};\n\nexport default function Root() {\n  return (\n    <Provider store={store}>\n      <App />\n    </Provider>\n  );\n}\n",
+          "store.ts": "import { configureStore } from '@reduxjs/toolkit';\nimport { jsonPlaceholderApi } from './api';\n\nexport const store = configureStore({\n  reducer: {\n    [jsonPlaceholderApi.reducerPath]: jsonPlaceholderApi.reducer,\n  },\n  middleware: (getDefaultMiddleware) =>\n    getDefaultMiddleware().concat(jsonPlaceholderApi.middleware),\n});\n",
+          "api.ts": "import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';\n\nexport interface Post {\n  id: number;\n  userId: number;\n  title: string;\n  body: string;\n}\n\nexport type NewPost = Pick<Post, 'title' | 'body' | 'userId'>;\n\nexport const jsonPlaceholderApi = createApi({\n  reducerPath: 'jsonPlaceholderApi',\n  baseQuery: fetchBaseQuery({ baseUrl: 'https://jsonplaceholder.typicode.com' }),\n  tagTypes: ['Post'],\n  endpoints: (builder) => ({\n    getPosts: builder.query<Post[], void>({\n      query: () => '/posts',\n      providesTags: ['Post'],\n    }),\n    getPost: builder.query<Post, number>({\n      query: (postId) => `/posts/${postId}`,\n      providesTags: ['Post'],\n    }),\n    addPost: builder.mutation<Post, NewPost>({\n      query: (body) => ({\n        url: '/posts',\n        method: 'POST',\n        body,\n        headers: { 'Content-type': 'application/json; charset=UTF-8' },\n      }),\n      invalidatesTags: ['Post'],\n    }),\n  }),\n});\n\nexport const {\n  useGetPostsQuery,\n  useGetPostQuery,\n  useAddPostMutation,\n} = jsonPlaceholderApi;\n"
+        },
+        "expectedOutcome": "Users see feedback while the request runs.",
+        "successCriteria": [
+          "isLoading",
+          "Loading"
+        ],
+        "feedbackCorrect": "✅ Loading UI added.",
+        "feedbackPartial": "Use isLoading in JSX.",
+        "feedbackWrong": "Conditionally render a loading message when isLoading is true.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "isLoading",
+            "Loading"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "s21",
+        "type": "question",
+        "phase": "Step 20 of 31",
+        "title": "Show error state",
+        "instruction": "If `error` is truthy, render a simple error message. RTK Query sets `error` when the HTTP request fails.",
+        "hint": "Keep the message user-friendly — no need to dump the whole object.",
+        "analogousExample": "{error && <p>Something went wrong loading posts.</p>}",
+        "seedCode": {
+          "App.tsx": "import React from 'react';\nimport { Provider } from 'react-redux';\nimport { store } from './store';\nimport { useGetPostsQuery } from './api';\n\nconst App = () => {\n  const { data, isLoading, error, refetch } = useGetPostsQuery();\n  return (\n    <div>\n      <h1>JSONPlaceholder posts</h1>\n      {isLoading && <p>Loading…</p>}\n      {error && <p>Something went wrong loading posts.</p>}\n      <button type=\"button\" onClick={() => refetch()}>Refetch</button>\n      <ul>\n        {data?.map((post) => (\n          <li key={post.id}>{post.title}</li>\n        ))}\n      </ul>\n    </div>\n  );\n};\n\nexport default function Root() {\n  return (\n    <Provider store={store}>\n      <App />\n    </Provider>\n  );\n}\n",
+          "store.ts": "import { configureStore } from '@reduxjs/toolkit';\nimport { jsonPlaceholderApi } from './api';\n\nexport const store = configureStore({\n  reducer: {\n    [jsonPlaceholderApi.reducerPath]: jsonPlaceholderApi.reducer,\n  },\n  middleware: (getDefaultMiddleware) =>\n    getDefaultMiddleware().concat(jsonPlaceholderApi.middleware),\n});\n",
+          "api.ts": "import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';\n\nexport interface Post {\n  id: number;\n  userId: number;\n  title: string;\n  body: string;\n}\n\nexport type NewPost = Pick<Post, 'title' | 'body' | 'userId'>;\n\nexport const jsonPlaceholderApi = createApi({\n  reducerPath: 'jsonPlaceholderApi',\n  baseQuery: fetchBaseQuery({ baseUrl: 'https://jsonplaceholder.typicode.com' }),\n  tagTypes: ['Post'],\n  endpoints: (builder) => ({\n    getPosts: builder.query<Post[], void>({\n      query: () => '/posts',\n      providesTags: ['Post'],\n    }),\n    getPost: builder.query<Post, number>({\n      query: (postId) => `/posts/${postId}`,\n      providesTags: ['Post'],\n    }),\n    addPost: builder.mutation<Post, NewPost>({\n      query: (body) => ({\n        url: '/posts',\n        method: 'POST',\n        body,\n        headers: { 'Content-type': 'application/json; charset=UTF-8' },\n      }),\n      invalidatesTags: ['Post'],\n    }),\n  }),\n});\n\nexport const {\n  useGetPostsQuery,\n  useGetPostQuery,\n  useAddPostMutation,\n} = jsonPlaceholderApi;\n"
+        },
+        "expectedOutcome": "Failures are visible in the UI.",
+        "successCriteria": [
+          "error",
+          "Something"
+        ],
+        "feedbackCorrect": "✅ Error UI added.",
+        "feedbackPartial": "Render a paragraph when error is set.",
+        "feedbackWrong": "Add conditional rendering for error in App.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "error",
+            "Something"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "s22",
+        "type": "question",
+        "phase": "Step 21 of 31",
+        "title": "Render the post titles in a list",
+        "instruction": "Map `data` to an unordered list: each `post` gets `<li key={post.id}>{post.title}</li>`. Use optional chaining on `data` if you like (`data?.map`).",
+        "hint": "Always set `key` to a stable id from the server.",
+        "analogousExample": "{data?.map((post) => (",
+        "seedCode": {
+          "App.tsx": "import React from 'react';\nimport { Provider } from 'react-redux';\nimport { store } from './store';\nimport { useGetPostsQuery } from './api';\n\nconst App = () => {\n  const { data, isLoading, error, refetch } = useGetPostsQuery();\n  return (\n    <div>\n      <h1>JSONPlaceholder posts</h1>\n      {isLoading && <p>Loading…</p>}\n      {error && <p>Something went wrong loading posts.</p>}\n      <button type=\"button\" onClick={() => refetch()}>Refetch</button>\n      <ul>\n        {data?.map((post) => (\n          <li key={post.id}>{post.title}</li>\n        ))}\n      </ul>\n    </div>\n  );\n};\n\nexport default function Root() {\n  return (\n    <Provider store={store}>\n      <App />\n    </Provider>\n  );\n}\n",
+          "store.ts": "import { configureStore } from '@reduxjs/toolkit';\nimport { jsonPlaceholderApi } from './api';\n\nexport const store = configureStore({\n  reducer: {\n    [jsonPlaceholderApi.reducerPath]: jsonPlaceholderApi.reducer,\n  },\n  middleware: (getDefaultMiddleware) =>\n    getDefaultMiddleware().concat(jsonPlaceholderApi.middleware),\n});\n",
+          "api.ts": "import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';\n\nexport interface Post {\n  id: number;\n  userId: number;\n  title: string;\n  body: string;\n}\n\nexport type NewPost = Pick<Post, 'title' | 'body' | 'userId'>;\n\nexport const jsonPlaceholderApi = createApi({\n  reducerPath: 'jsonPlaceholderApi',\n  baseQuery: fetchBaseQuery({ baseUrl: 'https://jsonplaceholder.typicode.com' }),\n  tagTypes: ['Post'],\n  endpoints: (builder) => ({\n    getPosts: builder.query<Post[], void>({\n      query: () => '/posts',\n      providesTags: ['Post'],\n    }),\n    getPost: builder.query<Post, number>({\n      query: (postId) => `/posts/${postId}`,\n      providesTags: ['Post'],\n    }),\n    addPost: builder.mutation<Post, NewPost>({\n      query: (body) => ({\n        url: '/posts',\n        method: 'POST',\n        body,\n        headers: { 'Content-type': 'application/json; charset=UTF-8' },\n      }),\n      invalidatesTags: ['Post'],\n    }),\n  }),\n});\n\nexport const {\n  useGetPostsQuery,\n  useGetPostQuery,\n  useAddPostMutation,\n} = jsonPlaceholderApi;\n"
+        },
+        "expectedOutcome": "Titles appear from the API response.",
+        "successCriteria": [
+          "data",
+          "map",
+          "key",
+          "title"
+        ],
+        "feedbackCorrect": "✅ List renders.",
+        "feedbackPartial": "Map over data and show post.title with key post.id.",
+        "feedbackWrong": "Use data.map (or data?.map) to render list items.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "map",
+            "key",
+            "title"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "s23",
+        "type": "question",
+        "phase": "Step 22 of 31",
+        "title": "Add a Refetch button",
+        "instruction": "Destructure already includes `refetch`. Add `<button type=\"button\" onClick={() => refetch()}>Refetch</button>` to manually reload posts (helps you see caching vs network).",
+        "hint": "refetch() returns a promise you can await in advanced cases.",
+        "analogousExample": "onClick={() => refetch()}",
+        "seedCode": {
+          "App.tsx": "import React from 'react';\nimport { Provider } from 'react-redux';\nimport { store } from './store';\nimport { useGetPostsQuery } from './api';\n\nconst App = () => {\n  const { data, isLoading, error, refetch } = useGetPostsQuery();\n  return (\n    <div>\n      <h1>JSONPlaceholder posts</h1>\n      {isLoading && <p>Loading…</p>}\n      {error && <p>Something went wrong loading posts.</p>}\n      <button type=\"button\" onClick={() => refetch()}>Refetch</button>\n      <ul>\n        {data?.map((post) => (\n          <li key={post.id}>{post.title}</li>\n        ))}\n      </ul>\n    </div>\n  );\n};\n\nexport default function Root() {\n  return (\n    <Provider store={store}>\n      <App />\n    </Provider>\n  );\n}\n",
+          "store.ts": "import { configureStore } from '@reduxjs/toolkit';\nimport { jsonPlaceholderApi } from './api';\n\nexport const store = configureStore({\n  reducer: {\n    [jsonPlaceholderApi.reducerPath]: jsonPlaceholderApi.reducer,\n  },\n  middleware: (getDefaultMiddleware) =>\n    getDefaultMiddleware().concat(jsonPlaceholderApi.middleware),\n});\n",
+          "api.ts": "import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';\n\nexport interface Post {\n  id: number;\n  userId: number;\n  title: string;\n  body: string;\n}\n\nexport type NewPost = Pick<Post, 'title' | 'body' | 'userId'>;\n\nexport const jsonPlaceholderApi = createApi({\n  reducerPath: 'jsonPlaceholderApi',\n  baseQuery: fetchBaseQuery({ baseUrl: 'https://jsonplaceholder.typicode.com' }),\n  tagTypes: ['Post'],\n  endpoints: (builder) => ({\n    getPosts: builder.query<Post[], void>({\n      query: () => '/posts',\n      providesTags: ['Post'],\n    }),\n    getPost: builder.query<Post, number>({\n      query: (postId) => `/posts/${postId}`,\n      providesTags: ['Post'],\n    }),\n    addPost: builder.mutation<Post, NewPost>({\n      query: (body) => ({\n        url: '/posts',\n        method: 'POST',\n        body,\n        headers: { 'Content-type': 'application/json; charset=UTF-8' },\n      }),\n      invalidatesTags: ['Post'],\n    }),\n  }),\n});\n\nexport const {\n  useGetPostsQuery,\n  useGetPostQuery,\n  useAddPostMutation,\n} = jsonPlaceholderApi;\n"
+        },
+        "expectedOutcome": "User can trigger a reload.",
+        "successCriteria": [
+          "refetch",
+          "onClick",
+          "button"
+        ],
+        "feedbackCorrect": "✅ Refetch wired.",
+        "feedbackPartial": "Add a button that calls refetch.",
+        "feedbackWrong": "Use onClick with refetch from useGetPostsQuery.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "refetch",
+            "button",
+            "onClick"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "s24",
+        "type": "question",
+        "phase": "Step 23 of 31",
+        "title": "Track selected post id with useState",
+        "instruction": "Import `useState` from React. Add `const [postId, setPostId] = useState<number | null>(null);` inside `App`. You will pass `postId` into the detail query next.",
+        "hint": "null means “no post selected yet”.",
+        "analogousExample": "useState<number | null>(null)",
+        "seedCode": {
+          "App.tsx": "import React from 'react';\nimport { Provider } from 'react-redux';\nimport { store } from './store';\nimport { useGetPostsQuery } from './api';\n\nconst App = () => {\n  const { data, isLoading, error, refetch } = useGetPostsQuery();\n  return (\n    <div>\n      <h1>JSONPlaceholder posts</h1>\n      {isLoading && <p>Loading…</p>}\n      {error && <p>Something went wrong loading posts.</p>}\n      <button type=\"button\" onClick={() => refetch()}>Refetch</button>\n      <ul>\n        {data?.map((post) => (\n          <li key={post.id}>{post.title}</li>\n        ))}\n      </ul>\n    </div>\n  );\n};\n\nexport default function Root() {\n  return (\n    <Provider store={store}>\n      <App />\n    </Provider>\n  );\n}\n",
+          "store.ts": "import { configureStore } from '@reduxjs/toolkit';\nimport { jsonPlaceholderApi } from './api';\n\nexport const store = configureStore({\n  reducer: {\n    [jsonPlaceholderApi.reducerPath]: jsonPlaceholderApi.reducer,\n  },\n  middleware: (getDefaultMiddleware) =>\n    getDefaultMiddleware().concat(jsonPlaceholderApi.middleware),\n});\n",
+          "api.ts": "import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';\n\nexport interface Post {\n  id: number;\n  userId: number;\n  title: string;\n  body: string;\n}\n\nexport type NewPost = Pick<Post, 'title' | 'body' | 'userId'>;\n\nexport const jsonPlaceholderApi = createApi({\n  reducerPath: 'jsonPlaceholderApi',\n  baseQuery: fetchBaseQuery({ baseUrl: 'https://jsonplaceholder.typicode.com' }),\n  tagTypes: ['Post'],\n  endpoints: (builder) => ({\n    getPosts: builder.query<Post[], void>({\n      query: () => '/posts',\n      providesTags: ['Post'],\n    }),\n    getPost: builder.query<Post, number>({\n      query: (postId) => `/posts/${postId}`,\n      providesTags: ['Post'],\n    }),\n    addPost: builder.mutation<Post, NewPost>({\n      query: (body) => ({\n        url: '/posts',\n        method: 'POST',\n        body,\n        headers: { 'Content-type': 'application/json; charset=UTF-8' },\n      }),\n      invalidatesTags: ['Post'],\n    }),\n  }),\n});\n\nexport const {\n  useGetPostsQuery,\n  useGetPostQuery,\n  useAddPostMutation,\n} = jsonPlaceholderApi;\n"
+        },
+        "expectedOutcome": "Component can remember which post is selected.",
+        "successCriteria": [
+          "useState",
+          "postId",
+          "null"
+        ],
+        "feedbackCorrect": "✅ Selection state added.",
+        "feedbackPartial": "Add useState for postId typed number | null.",
+        "feedbackWrong": "Declare postId state in App.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "useState",
+            "postId",
+            "null"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "s25",
+        "type": "question",
+        "phase": "Step 24 of 31",
+        "title": "Call useGetPostQuery with skip",
+        "instruction": "Import `useGetPostQuery`. Call `useGetPostQuery(postId!, { skip: postId == null })` so no request runs until a post is selected. Destructure `data` as `onePost` to avoid clashing with the list `data`.",
+        "hint": "skip prevents calling `/posts/undefined`.",
+        "analogousExample": "useGetPostQuery(postId!, { skip: postId == null })",
+        "seedCode": {
+          "App.tsx": "import React, { useState } from 'react';\nimport { Provider } from 'react-redux';\nimport { store } from './store';\nimport { useGetPostsQuery } from './api';\n\nconst App = () => {\n  const [postId, setPostId] = useState<number | null>(null);\n  const { data, isLoading, error, refetch } = useGetPostsQuery();\n  return (\n    <div>\n      <h1>JSONPlaceholder posts</h1>\n      {isLoading && <p>Loading…</p>}\n      {error && <p>Something went wrong loading posts.</p>}\n      <button type=\"button\" onClick={() => refetch()}>Refetch</button>\n      <ul>\n        {data?.map((post) => (\n          <li key={post.id}>{post.title}</li>\n        ))}\n      </ul>\n    </div>\n  );\n};\n\nexport default function Root() {\n  return (\n    <Provider store={store}>\n      <App />\n    </Provider>\n  );\n}\n",
+          "store.ts": "import { configureStore } from '@reduxjs/toolkit';\nimport { jsonPlaceholderApi } from './api';\n\nexport const store = configureStore({\n  reducer: {\n    [jsonPlaceholderApi.reducerPath]: jsonPlaceholderApi.reducer,\n  },\n  middleware: (getDefaultMiddleware) =>\n    getDefaultMiddleware().concat(jsonPlaceholderApi.middleware),\n});\n",
+          "api.ts": "import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';\n\nexport interface Post {\n  id: number;\n  userId: number;\n  title: string;\n  body: string;\n}\n\nexport type NewPost = Pick<Post, 'title' | 'body' | 'userId'>;\n\nexport const jsonPlaceholderApi = createApi({\n  reducerPath: 'jsonPlaceholderApi',\n  baseQuery: fetchBaseQuery({ baseUrl: 'https://jsonplaceholder.typicode.com' }),\n  tagTypes: ['Post'],\n  endpoints: (builder) => ({\n    getPosts: builder.query<Post[], void>({\n      query: () => '/posts',\n      providesTags: ['Post'],\n    }),\n    getPost: builder.query<Post, number>({\n      query: (postId) => `/posts/${postId}`,\n      providesTags: ['Post'],\n    }),\n    addPost: builder.mutation<Post, NewPost>({\n      query: (body) => ({\n        url: '/posts',\n        method: 'POST',\n        body,\n        headers: { 'Content-type': 'application/json; charset=UTF-8' },\n      }),\n      invalidatesTags: ['Post'],\n    }),\n  }),\n});\n\nexport const {\n  useGetPostsQuery,\n  useGetPostQuery,\n  useAddPostMutation,\n} = jsonPlaceholderApi;\n"
+        },
+        "expectedOutcome": "Detail query runs only when postId is set.",
+        "successCriteria": [
+          "useGetPostQuery",
+          "skip",
+          "postId"
+        ],
+        "feedbackCorrect": "✅ Detail hook wired.",
+        "feedbackPartial": "Use skip: postId == null with useGetPostQuery.",
+        "feedbackWrong": "Call useGetPostQuery with skip when postId is null.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "useGetPostQuery",
+            "skip",
+            "postId"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "s26",
+        "type": "question",
+        "phase": "Step 25 of 31",
+        "title": "Select a post from the list",
+        "instruction": "Next to each title, add a button `View #id` that calls `setPostId(post.id)`.",
+        "hint": "This updates state and triggers the detail query.",
+        "analogousExample": "setPostId(post.id)",
+        "seedCode": {
+          "App.tsx": "import React, { useState } from 'react';\nimport { Provider } from 'react-redux';\nimport { store } from './store';\nimport { useGetPostsQuery, useGetPostQuery } from './api';\n\nconst App = () => {\n  const [postId, setPostId] = useState<number | null>(null);\n  const { data, isLoading, error, refetch } = useGetPostsQuery();\n  const { data: onePost } = useGetPostQuery(postId!, { skip: postId == null });\n\n  return (\n    <div>\n      <h1>JSONPlaceholder posts</h1>\n      {isLoading && <p>Loading…</p>}\n      {error && <p>Something went wrong loading posts.</p>}\n      <button type=\"button\" onClick={() => refetch()}>Refetch</button>\n      <ul>\n        {data?.map((post) => (\n          <li key={post.id}>{post.title}</li>\n        ))}\n      </ul>\n    </div>\n  );\n};\n\nexport default function Root() {\n  return (\n    <Provider store={store}>\n      <App />\n    </Provider>\n  );\n}\n",
+          "store.ts": "import { configureStore } from '@reduxjs/toolkit';\nimport { jsonPlaceholderApi } from './api';\n\nexport const store = configureStore({\n  reducer: {\n    [jsonPlaceholderApi.reducerPath]: jsonPlaceholderApi.reducer,\n  },\n  middleware: (getDefaultMiddleware) =>\n    getDefaultMiddleware().concat(jsonPlaceholderApi.middleware),\n});\n",
+          "api.ts": "import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';\n\nexport interface Post {\n  id: number;\n  userId: number;\n  title: string;\n  body: string;\n}\n\nexport type NewPost = Pick<Post, 'title' | 'body' | 'userId'>;\n\nexport const jsonPlaceholderApi = createApi({\n  reducerPath: 'jsonPlaceholderApi',\n  baseQuery: fetchBaseQuery({ baseUrl: 'https://jsonplaceholder.typicode.com' }),\n  tagTypes: ['Post'],\n  endpoints: (builder) => ({\n    getPosts: builder.query<Post[], void>({\n      query: () => '/posts',\n      providesTags: ['Post'],\n    }),\n    getPost: builder.query<Post, number>({\n      query: (postId) => `/posts/${postId}`,\n      providesTags: ['Post'],\n    }),\n    addPost: builder.mutation<Post, NewPost>({\n      query: (body) => ({\n        url: '/posts',\n        method: 'POST',\n        body,\n        headers: { 'Content-type': 'application/json; charset=UTF-8' },\n      }),\n      invalidatesTags: ['Post'],\n    }),\n  }),\n});\n\nexport const {\n  useGetPostsQuery,\n  useGetPostQuery,\n  useAddPostMutation,\n} = jsonPlaceholderApi;\n"
+        },
+        "expectedOutcome": "User can open one post.",
+        "successCriteria": [
+          "setPostId",
+          "post.id",
+          "button"
+        ],
+        "feedbackCorrect": "✅ Selection buttons added.",
+        "feedbackPartial": "Wire onClick to setPostId with the post's id.",
+        "feedbackWrong": "Add buttons that set postId from each list item.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "setPostId",
+            "onClick"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "s27",
+        "type": "question",
+        "phase": "Step 26 of 31",
+        "title": "Render the selected post body",
+        "instruction": "When `onePost` exists, render a `<section>` with the post id as a heading and `onePost.body` in a paragraph.",
+        "hint": "Optional: add a “Clear” button that sets postId back to null.",
+        "analogousExample": "{onePost && (",
+        "seedCode": {
+          "App.tsx": "import React, { useState } from 'react';\nimport { Provider } from 'react-redux';\nimport { store } from './store';\nimport { useGetPostsQuery, useGetPostQuery } from './api';\n\nconst App = () => {\n  const [postId, setPostId] = useState<number | null>(null);\n  const { data, isLoading, error, refetch } = useGetPostsQuery();\n  const { data: onePost } = useGetPostQuery(postId!, { skip: postId == null });\n\n  return (\n    <div>\n      <h1>JSONPlaceholder posts</h1>\n      {isLoading && <p>Loading…</p>}\n      {error && <p>Something went wrong loading posts.</p>}\n      <button type=\"button\" onClick={() => refetch()}>Refetch</button>\n      <ul>\n        {data?.map((post) => (\n          <li key={post.id}>\n            <button type=\"button\" onClick={() => setPostId(post.id)}>View #{post.id}</button>{' '}\n            {post.title}\n          </li>\n        ))}\n      </ul>\n    </div>\n  );\n};\n\nexport default function Root() {\n  return (\n    <Provider store={store}>\n      <App />\n    </Provider>\n  );\n}\n",
+          "store.ts": "import { configureStore } from '@reduxjs/toolkit';\nimport { jsonPlaceholderApi } from './api';\n\nexport const store = configureStore({\n  reducer: {\n    [jsonPlaceholderApi.reducerPath]: jsonPlaceholderApi.reducer,\n  },\n  middleware: (getDefaultMiddleware) =>\n    getDefaultMiddleware().concat(jsonPlaceholderApi.middleware),\n});\n",
+          "api.ts": "import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';\n\nexport interface Post {\n  id: number;\n  userId: number;\n  title: string;\n  body: string;\n}\n\nexport type NewPost = Pick<Post, 'title' | 'body' | 'userId'>;\n\nexport const jsonPlaceholderApi = createApi({\n  reducerPath: 'jsonPlaceholderApi',\n  baseQuery: fetchBaseQuery({ baseUrl: 'https://jsonplaceholder.typicode.com' }),\n  tagTypes: ['Post'],\n  endpoints: (builder) => ({\n    getPosts: builder.query<Post[], void>({\n      query: () => '/posts',\n      providesTags: ['Post'],\n    }),\n    getPost: builder.query<Post, number>({\n      query: (postId) => `/posts/${postId}`,\n      providesTags: ['Post'],\n    }),\n    addPost: builder.mutation<Post, NewPost>({\n      query: (body) => ({\n        url: '/posts',\n        method: 'POST',\n        body,\n        headers: { 'Content-type': 'application/json; charset=UTF-8' },\n      }),\n      invalidatesTags: ['Post'],\n    }),\n  }),\n});\n\nexport const {\n  useGetPostsQuery,\n  useGetPostQuery,\n  useAddPostMutation,\n} = jsonPlaceholderApi;\n"
+        },
+        "expectedOutcome": "Detail text shows under the list.",
+        "successCriteria": [
+          "onePost",
+          "body",
+          "section"
+        ],
+        "feedbackCorrect": "✅ Detail section renders.",
+        "feedbackPartial": "Show onePost.body when onePost is defined.",
+        "feedbackWrong": "Conditionally render section with onePost.body.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "onePost",
+            "body"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "s28",
+        "type": "question",
+        "phase": "Step 27 of 31",
+        "title": "Import useAddPostMutation",
+        "instruction": "Import `useAddPostMutation` from `'./api'` and call it in `App`: `const [addPost, { isLoading: adding }] = useAddPostMutation();`.",
+        "hint": "Tuple pattern: first item is trigger function, second is meta (loading, error…).",
+        "analogousExample": "useAddPostMutation()",
+        "seedCode": {
+          "App.tsx": "import React, { useState } from 'react';\nimport { Provider } from 'react-redux';\nimport { store } from './store';\nimport { useGetPostsQuery, useGetPostQuery } from './api';\n\nconst App = () => {\n  const [postId, setPostId] = useState<number | null>(null);\n  const { data, isLoading, error, refetch } = useGetPostsQuery();\n  const { data: onePost } = useGetPostQuery(postId!, { skip: postId == null });\n\n  return (\n    <div>\n      <h1>JSONPlaceholder posts</h1>\n      {isLoading && <p>Loading…</p>}\n      {error && <p>Something went wrong loading posts.</p>}\n      <button type=\"button\" onClick={() => refetch()}>Refetch</button>\n      <ul>\n        {data?.map((post) => (\n          <li key={post.id}>\n            <button type=\"button\" onClick={() => setPostId(post.id)}>View #{post.id}</button>{' '}\n            {post.title}\n          </li>\n        ))}\n      </ul>\n      {onePost && (\n        <section>\n          <h2>Post {onePost.id}</h2>\n          <p>{onePost.body}</p>\n        </section>\n      )}\n    </div>\n  );\n};\n\nexport default function Root() {\n  return (\n    <Provider store={store}>\n      <App />\n    </Provider>\n  );\n}\n",
+          "store.ts": "import { configureStore } from '@reduxjs/toolkit';\nimport { jsonPlaceholderApi } from './api';\n\nexport const store = configureStore({\n  reducer: {\n    [jsonPlaceholderApi.reducerPath]: jsonPlaceholderApi.reducer,\n  },\n  middleware: (getDefaultMiddleware) =>\n    getDefaultMiddleware().concat(jsonPlaceholderApi.middleware),\n});\n",
+          "api.ts": "import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';\n\nexport interface Post {\n  id: number;\n  userId: number;\n  title: string;\n  body: string;\n}\n\nexport type NewPost = Pick<Post, 'title' | 'body' | 'userId'>;\n\nexport const jsonPlaceholderApi = createApi({\n  reducerPath: 'jsonPlaceholderApi',\n  baseQuery: fetchBaseQuery({ baseUrl: 'https://jsonplaceholder.typicode.com' }),\n  tagTypes: ['Post'],\n  endpoints: (builder) => ({\n    getPosts: builder.query<Post[], void>({\n      query: () => '/posts',\n      providesTags: ['Post'],\n    }),\n    getPost: builder.query<Post, number>({\n      query: (postId) => `/posts/${postId}`,\n      providesTags: ['Post'],\n    }),\n    addPost: builder.mutation<Post, NewPost>({\n      query: (body) => ({\n        url: '/posts',\n        method: 'POST',\n        body,\n        headers: { 'Content-type': 'application/json; charset=UTF-8' },\n      }),\n      invalidatesTags: ['Post'],\n    }),\n  }),\n});\n\nexport const {\n  useGetPostsQuery,\n  useGetPostQuery,\n  useAddPostMutation,\n} = jsonPlaceholderApi;\n"
+        },
+        "expectedOutcome": "Mutation hook is available.",
+        "successCriteria": [
+          "useAddPostMutation",
+          "addPost"
+        ],
+        "feedbackCorrect": "✅ Mutation hook imported.",
+        "feedbackPartial": "Destructure the mutation trigger from useAddPostMutation.",
+        "feedbackWrong": "Call useAddPostMutation inside App.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "useAddPostMutation",
+            "addPost"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "s29",
+        "type": "question",
+        "phase": "Step 28 of 31",
+        "title": "Controlled inputs for new post",
+        "instruction": "Add `title` and `body` string state with two `<input>` elements (controlled: `value` + `onChange`).",
+        "hint": "JSONPlaceholder expects title, body, and userId for new posts.",
+        "analogousExample": "value={title}",
+        "seedCode": {
+          "App.tsx": "import React, { useState } from 'react';\nimport { Provider } from 'react-redux';\nimport { store } from './store';\nimport { useGetPostsQuery, useGetPostQuery, useAddPostMutation } from './api';\n\nconst App = () => {\n  const [postId, setPostId] = useState<number | null>(null);\n  const { data, isLoading, error, refetch } = useGetPostsQuery();\n  const { data: onePost } = useGetPostQuery(postId!, { skip: postId == null });\n  const [addPost, { isLoading: adding }] = useAddPostMutation();\n\n  return (\n    <div>\n      <h1>JSONPlaceholder posts</h1>\n      {isLoading && <p>Loading…</p>}\n      {error && <p>Something went wrong loading posts.</p>}\n      <button type=\"button\" onClick={() => refetch()}>Refetch</button>\n      <ul>\n        {data?.map((post) => (\n          <li key={post.id}>\n            <button type=\"button\" onClick={() => setPostId(post.id)}>View #{post.id}</button>{' '}\n            {post.title}\n          </li>\n        ))}\n      </ul>\n      {onePost && (\n        <section>\n          <h2>Post {onePost.id}</h2>\n          <p>{onePost.body}</p>\n        </section>\n      )}\n    </div>\n  );\n};\n\nexport default function Root() {\n  return (\n    <Provider store={store}>\n      <App />\n    </Provider>\n  );\n}\n",
+          "store.ts": "import { configureStore } from '@reduxjs/toolkit';\nimport { jsonPlaceholderApi } from './api';\n\nexport const store = configureStore({\n  reducer: {\n    [jsonPlaceholderApi.reducerPath]: jsonPlaceholderApi.reducer,\n  },\n  middleware: (getDefaultMiddleware) =>\n    getDefaultMiddleware().concat(jsonPlaceholderApi.middleware),\n});\n",
+          "api.ts": "import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';\n\nexport interface Post {\n  id: number;\n  userId: number;\n  title: string;\n  body: string;\n}\n\nexport type NewPost = Pick<Post, 'title' | 'body' | 'userId'>;\n\nexport const jsonPlaceholderApi = createApi({\n  reducerPath: 'jsonPlaceholderApi',\n  baseQuery: fetchBaseQuery({ baseUrl: 'https://jsonplaceholder.typicode.com' }),\n  tagTypes: ['Post'],\n  endpoints: (builder) => ({\n    getPosts: builder.query<Post[], void>({\n      query: () => '/posts',\n      providesTags: ['Post'],\n    }),\n    getPost: builder.query<Post, number>({\n      query: (postId) => `/posts/${postId}`,\n      providesTags: ['Post'],\n    }),\n    addPost: builder.mutation<Post, NewPost>({\n      query: (body) => ({\n        url: '/posts',\n        method: 'POST',\n        body,\n        headers: { 'Content-type': 'application/json; charset=UTF-8' },\n      }),\n      invalidatesTags: ['Post'],\n    }),\n  }),\n});\n\nexport const {\n  useGetPostsQuery,\n  useGetPostQuery,\n  useAddPostMutation,\n} = jsonPlaceholderApi;\n"
+        },
+        "expectedOutcome": "User can type a fake new post.",
+        "successCriteria": [
+          "title",
+          "body",
+          "onChange",
+          "value"
+        ],
+        "feedbackCorrect": "✅ Inputs added.",
+        "feedbackPartial": "Use useState for title and body and wire inputs.",
+        "feedbackWrong": "Add controlled inputs for title and body.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "value",
+            "onChange",
+            "title",
+            "body"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "s30",
+        "type": "question",
+        "phase": "Step 29 of 31",
+        "title": "Submit addPost with demo userId",
+        "instruction": "On a button click, call `addPost({ title, body, userId: 1 })`, then clear the fields. Disable the button while `adding` is true.",
+        "hint": "userId 1 is a safe demo choice on JSONPlaceholder.",
+        "analogousExample": "addPost({ title, body, userId: 1 })",
+        "seedCode": {
+          "App.tsx": "import React, { useState } from 'react';\nimport { Provider } from 'react-redux';\nimport { store } from './store';\nimport { useGetPostsQuery, useGetPostQuery, useAddPostMutation } from './api';\n\nconst App = () => {\n  const [postId, setPostId] = useState<number | null>(null);\n  const [title, setTitle] = useState('');\n  const [body, setBody] = useState('');\n  const { data, isLoading, error, refetch } = useGetPostsQuery();\n  const { data: onePost } = useGetPostQuery(postId!, { skip: postId == null });\n  const [addPost, { isLoading: adding }] = useAddPostMutation();\n\n  return (\n    <div>\n      <h1>JSONPlaceholder posts</h1>\n      {isLoading && <p>Loading…</p>}\n      {error && <p>Something went wrong loading posts.</p>}\n      <button type=\"button\" onClick={() => refetch()}>Refetch</button>\n      <div>\n        <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder=\"Title\" />\n        <input value={body} onChange={(e) => setBody(e.target.value)} placeholder=\"Body\" />\n        <button\n          type=\"button\"\n          disabled={adding}\n          onClick={() => {\n            addPost({ title, body, userId: 1 });\n            setTitle('');\n            setBody('');\n          }}\n        >\n          Add post (demo)\n        </button>\n      </div>\n      <ul>\n        {data?.map((post) => (\n          <li key={post.id}>\n            <button type=\"button\" onClick={() => setPostId(post.id)}>View #{post.id}</button>{' '}\n            {post.title}\n          </li>\n        ))}\n      </ul>\n      {onePost && (\n        <section>\n          <h2>Post {onePost.id}</h2>\n          <p>{onePost.body}</p>\n        </section>\n      )}\n    </div>\n  );\n};\n\nexport default function Root() {\n  return (\n    <Provider store={store}>\n      <App />\n    </Provider>\n  );\n}\n",
+          "store.ts": "import { configureStore } from '@reduxjs/toolkit';\nimport { jsonPlaceholderApi } from './api';\n\nexport const store = configureStore({\n  reducer: {\n    [jsonPlaceholderApi.reducerPath]: jsonPlaceholderApi.reducer,\n  },\n  middleware: (getDefaultMiddleware) =>\n    getDefaultMiddleware().concat(jsonPlaceholderApi.middleware),\n});\n",
+          "api.ts": "import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';\n\nexport interface Post {\n  id: number;\n  userId: number;\n  title: string;\n  body: string;\n}\n\nexport type NewPost = Pick<Post, 'title' | 'body' | 'userId'>;\n\nexport const jsonPlaceholderApi = createApi({\n  reducerPath: 'jsonPlaceholderApi',\n  baseQuery: fetchBaseQuery({ baseUrl: 'https://jsonplaceholder.typicode.com' }),\n  tagTypes: ['Post'],\n  endpoints: (builder) => ({\n    getPosts: builder.query<Post[], void>({\n      query: () => '/posts',\n      providesTags: ['Post'],\n    }),\n    getPost: builder.query<Post, number>({\n      query: (postId) => `/posts/${postId}`,\n      providesTags: ['Post'],\n    }),\n    addPost: builder.mutation<Post, NewPost>({\n      query: (body) => ({\n        url: '/posts',\n        method: 'POST',\n        body,\n        headers: { 'Content-type': 'application/json; charset=UTF-8' },\n      }),\n      invalidatesTags: ['Post'],\n    }),\n  }),\n});\n\nexport const {\n  useGetPostsQuery,\n  useGetPostQuery,\n  useAddPostMutation,\n} = jsonPlaceholderApi;\n"
+        },
+        "expectedOutcome": "Mutation runs against the free API.",
+        "successCriteria": [
+          "addPost",
+          "userId",
+          "disabled"
+        ],
+        "feedbackCorrect": "✅ Create flow wired.",
+        "feedbackPartial": "Call addPost with an object and handle loading state.",
+        "feedbackWrong": "Wire button to addPost with title, body, userId.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "addPost",
+            "userId",
+            "title",
+            "body"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "s31",
+        "type": "question",
+        "phase": "Step 30 of 31",
+        "title": "Understand what you built",
+        "instruction": "Confirm your **api.ts** defines: typed queries (`getPosts`, `getPost`), a typed mutation (`addPost`), tags, and exported hooks. Confirm **store.ts** registers reducer + middleware. Confirm **App.tsx** uses hooks under `Provider`. No code change required — click CHECK if your files still contain these pieces.",
+        "hint": "RTK Query = endpoints + generated hooks + cache. JSONPlaceholder = reproducible practice data.",
+        "analogousExample": "// Endpoints → hooks → UI",
+        "seedCode": {
+          "App.tsx": "import React, { useState } from 'react';\nimport { Provider } from 'react-redux';\nimport { store } from './store';\nimport { useGetPostsQuery, useGetPostQuery, useAddPostMutation } from './api';\n\nconst App = () => {\n  const [postId, setPostId] = useState<number | null>(null);\n  const [title, setTitle] = useState('');\n  const [body, setBody] = useState('');\n  const { data, isLoading, error, refetch } = useGetPostsQuery();\n  const { data: onePost } = useGetPostQuery(postId!, { skip: postId == null });\n  const [addPost, { isLoading: adding }] = useAddPostMutation();\n\n  return (\n    <div>\n      <h1>JSONPlaceholder posts</h1>\n      {isLoading && <p>Loading…</p>}\n      {error && <p>Something went wrong loading posts.</p>}\n      <button type=\"button\" onClick={() => refetch()}>Refetch</button>\n      <div>\n        <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder=\"Title\" />\n        <input value={body} onChange={(e) => setBody(e.target.value)} placeholder=\"Body\" />\n        <button\n          type=\"button\"\n          disabled={adding}\n          onClick={() => {\n            addPost({ title, body, userId: 1 });\n            setTitle('');\n            setBody('');\n          }}\n        >\n          Add post (demo)\n        </button>\n      </div>\n      <ul>\n        {data?.map((post) => (\n          <li key={post.id}>\n            <button type=\"button\" onClick={() => setPostId(post.id)}>View #{post.id}</button>{' '}\n            {post.title}\n          </li>\n        ))}\n      </ul>\n      {onePost && (\n        <section>\n          <h2>Post {onePost.id}</h2>\n          <p>{onePost.body}</p>\n        </section>\n      )}\n    </div>\n  );\n};\n\nexport default function Root() {\n  return (\n    <Provider store={store}>\n      <App />\n    </Provider>\n  );\n}\n",
+          "store.ts": "import { configureStore } from '@reduxjs/toolkit';\nimport { jsonPlaceholderApi } from './api';\n\nexport const store = configureStore({\n  reducer: {\n    [jsonPlaceholderApi.reducerPath]: jsonPlaceholderApi.reducer,\n  },\n  middleware: (getDefaultMiddleware) =>\n    getDefaultMiddleware().concat(jsonPlaceholderApi.middleware),\n});\n",
+          "api.ts": "import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';\n\nexport interface Post {\n  id: number;\n  userId: number;\n  title: string;\n  body: string;\n}\n\nexport type NewPost = Pick<Post, 'title' | 'body' | 'userId'>;\n\nexport const jsonPlaceholderApi = createApi({\n  reducerPath: 'jsonPlaceholderApi',\n  baseQuery: fetchBaseQuery({ baseUrl: 'https://jsonplaceholder.typicode.com' }),\n  tagTypes: ['Post'],\n  endpoints: (builder) => ({\n    getPosts: builder.query<Post[], void>({\n      query: () => '/posts',\n      providesTags: ['Post'],\n    }),\n    getPost: builder.query<Post, number>({\n      query: (postId) => `/posts/${postId}`,\n      providesTags: ['Post'],\n    }),\n    addPost: builder.mutation<Post, NewPost>({\n      query: (body) => ({\n        url: '/posts',\n        method: 'POST',\n        body,\n        headers: { 'Content-type': 'application/json; charset=UTF-8' },\n      }),\n      invalidatesTags: ['Post'],\n    }),\n  }),\n});\n\nexport const {\n  useGetPostsQuery,\n  useGetPostQuery,\n  useAddPostMutation,\n} = jsonPlaceholderApi;\n"
+        },
+        "expectedOutcome": "You can explain the three-file split.",
+        "successCriteria": [
+          "You reviewed api.ts, store.ts, and App.tsx."
+        ],
+        "feedbackCorrect": "✅ Nice recap — one polish step left.",
+        "feedbackPartial": "Scroll through all three files and match them to the checklist.",
+        "feedbackWrong": "Ensure exports and Provider are still present.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "useGetPostsQuery",
+            "configureStore",
+            "Provider"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "s32",
+        "type": "question",
+        "phase": "Step 31 of 31",
+        "title": "Export default Root",
+        "instruction": "Ensure **App.tsx** default export is the `Root` component (or equivalent) that wraps `App` with `Provider` and `store`. This is the entry pattern for Vite/React.",
+        "hint": "`export default function Root`",
+        "analogousExample": "export default function Root()",
+        "seedCode": {
+          "App.tsx": "import React, { useState } from 'react';\nimport { Provider } from 'react-redux';\nimport { store } from './store';\nimport { useGetPostsQuery, useGetPostQuery, useAddPostMutation } from './api';\n\nconst App = () => {\n  const [postId, setPostId] = useState<number | null>(null);\n  const [title, setTitle] = useState('');\n  const [body, setBody] = useState('');\n  const { data, isLoading, error, refetch } = useGetPostsQuery();\n  const { data: onePost } = useGetPostQuery(postId!, { skip: postId == null });\n  const [addPost, { isLoading: adding }] = useAddPostMutation();\n\n  return (\n    <div>\n      <h1>JSONPlaceholder posts</h1>\n      {isLoading && <p>Loading…</p>}\n      {error && <p>Something went wrong loading posts.</p>}\n      <button type=\"button\" onClick={() => refetch()}>Refetch</button>\n      <div>\n        <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder=\"Title\" />\n        <input value={body} onChange={(e) => setBody(e.target.value)} placeholder=\"Body\" />\n        <button\n          type=\"button\"\n          disabled={adding}\n          onClick={() => {\n            addPost({ title, body, userId: 1 });\n            setTitle('');\n            setBody('');\n          }}\n        >\n          Add post (demo)\n        </button>\n      </div>\n      <ul>\n        {data?.map((post) => (\n          <li key={post.id}>\n            <button type=\"button\" onClick={() => setPostId(post.id)}>View #{post.id}</button>{' '}\n            {post.title}\n          </li>\n        ))}\n      </ul>\n      {onePost && (\n        <section>\n          <h2>Post {onePost.id}</h2>\n          <p>{onePost.body}</p>\n        </section>\n      )}\n    </div>\n  );\n};\n\nexport default function Root() {\n  return (\n    <Provider store={store}>\n      <App />\n    </Provider>\n  );\n}\n",
+          "store.ts": "import { configureStore } from '@reduxjs/toolkit';\nimport { jsonPlaceholderApi } from './api';\n\nexport const store = configureStore({\n  reducer: {\n    [jsonPlaceholderApi.reducerPath]: jsonPlaceholderApi.reducer,\n  },\n  middleware: (getDefaultMiddleware) =>\n    getDefaultMiddleware().concat(jsonPlaceholderApi.middleware),\n});\n",
+          "api.ts": "import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';\n\nexport interface Post {\n  id: number;\n  userId: number;\n  title: string;\n  body: string;\n}\n\nexport type NewPost = Pick<Post, 'title' | 'body' | 'userId'>;\n\nexport const jsonPlaceholderApi = createApi({\n  reducerPath: 'jsonPlaceholderApi',\n  baseQuery: fetchBaseQuery({ baseUrl: 'https://jsonplaceholder.typicode.com' }),\n  tagTypes: ['Post'],\n  endpoints: (builder) => ({\n    getPosts: builder.query<Post[], void>({\n      query: () => '/posts',\n      providesTags: ['Post'],\n    }),\n    getPost: builder.query<Post, number>({\n      query: (postId) => `/posts/${postId}`,\n      providesTags: ['Post'],\n    }),\n    addPost: builder.mutation<Post, NewPost>({\n      query: (body) => ({\n        url: '/posts',\n        method: 'POST',\n        body,\n        headers: { 'Content-type': 'application/json; charset=UTF-8' },\n      }),\n      invalidatesTags: ['Post'],\n    }),\n  }),\n});\n\nexport const {\n  useGetPostsQuery,\n  useGetPostQuery,\n  useAddPostMutation,\n} = jsonPlaceholderApi;\n"
+        },
+        "expectedOutcome": "Default export wraps Provider correctly.",
+        "successCriteria": [
+          "export",
+          "default",
+          "Root",
+          "Provider"
+        ],
+        "feedbackCorrect": "✅ Lesson complete!",
+        "feedbackPartial": "Default export should be the component that renders Provider.",
+        "feedbackWrong": "Export Root as default with Provider and store.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "export",
+            "default",
+            "Root",
+            "Provider"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import React in App.tsx",
+        "id": "s02"
+      },
+      {
+        "label": "Import createApi and fetchBaseQuery in api.ts",
+        "id": "s03"
+      },
+      {
+        "label": "Define the Post interface",
+        "id": "s04"
+      },
+      {
+        "label": "Create the API with createApi",
+        "id": "s05"
+      },
+      {
+        "label": "Set reducerPath",
+        "id": "s06"
+      },
+      {
+        "label": "Add baseQuery with JSONPlaceholder baseUrl",
+        "id": "s07"
+      },
+      {
+        "label": "Add an empty endpoints builder",
+        "id": "s08"
+      },
+      {
+        "label": "Add getPosts query (shape only)",
+        "id": "s09"
+      },
+      {
+        "label": "Type getPosts as Post[]",
+        "id": "s10"
+      },
+      {
+        "label": "Add getPost query (single post by id)",
+        "id": "s11"
+      },
+      {
+        "label": "Declare tagTypes for cache invalidation",
+        "id": "s12"
+      },
+      {
+        "label": "Add providesTags to list and detail queries",
+        "id": "s13"
+      },
+      {
+        "label": "Add NewPost type and addPost mutation",
+        "id": "s14"
+      },
+      {
+        "label": "Export generated hooks",
+        "id": "s15"
+      },
+      {
+        "label": "Import configureStore in store.ts",
+        "id": "s16"
+      },
+      {
+        "label": "Create the store with reducer and middleware",
+        "id": "s17"
+      },
+      {
+        "label": "Wrap UI with Provider in App.tsx",
+        "id": "s18"
+      },
+      {
+        "label": "Call useGetPostsQuery inside App",
+        "id": "s19"
+      },
+      {
+        "label": "Show loading state",
+        "id": "s20"
+      },
+      {
+        "label": "Show error state",
+        "id": "s21"
+      },
+      {
+        "label": "Render the post titles in a list",
+        "id": "s22"
+      },
+      {
+        "label": "Add a Refetch button",
+        "id": "s23"
+      },
+      {
+        "label": "Track selected post id with useState",
+        "id": "s24"
+      },
+      {
+        "label": "Call useGetPostQuery with skip",
+        "id": "s25"
+      },
+      {
+        "label": "Select a post from the list",
+        "id": "s26"
+      },
+      {
+        "label": "Render the selected post body",
+        "id": "s27"
+      },
+      {
+        "label": "Import useAddPostMutation",
+        "id": "s28"
+      },
+      {
+        "label": "Controlled inputs for new post",
+        "id": "s29"
+      },
+      {
+        "label": "Submit addPost with demo userId",
+        "id": "s30"
+      },
+      {
+        "label": "Understand what you built",
+        "id": "s31"
+      },
+      {
+        "label": "Export default Root",
+        "id": "s32"
+      }
+    ],
+    "answerShape": "multi-file"
+  },
+  "source": "content"
+}

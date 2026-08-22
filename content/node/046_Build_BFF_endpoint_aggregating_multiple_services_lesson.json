@@ -1,0 +1,356 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-node-46",
+    "track": "node",
+    "lessonNum": 46,
+    "title": "Build BFF endpoint aggregating multiple services",
+    "shortName": "P46",
+    "intro": {
+      "tag": "LESSON #46",
+      "title": "Build BFF endpoint aggregating multiple services",
+      "body": "In this lesson, you will build a Backend-for-Frontend (BFF) endpoint in Node.js that aggregates data from multiple mock services into a single response. You'll learn how to use the `async/await` syntax to handle asynchronous operations, making your code clean and readable. The main technologies involved are the built-in Node.js `https` module for making HTTP requests and Express.js for creating the server and routes. By the end, you'll have a working API endpoint that fetches and combines user and order data, demonstrating a common pattern for improving frontend performance.",
+      "usecase": "In modern web applications, the Backend-for-Frontend (BFF) pattern is essential for aggregating data from multiple microservices into a single optimized response. This is commonly seen in e-commerce product pages where a BFF endpoint combines product details, inventory status, pricing, and customer reviews from separate services. Similarly, dashboard applications use BFF endpoints to fetch and merge data from analytics, user management, and reporting services into a unified view. By implementing this pattern, developers reduce frontend complexity, minimize network requests, and improve application performance."
+    },
+    "objectives": [
+      "Construct a basic Node.js server with Express to serve as a BFF",
+      "Configure multiple HTTP client requests to external services within a single endpoint",
+      "Integrate data from disparate API responses into a unified JSON structure",
+      "Manipulate incoming service data to transform fields for client consumption",
+      "Implement error handling for failed service requests in the aggregation flow",
+      "Initialize and manage asynchronous operations using async/await for concurrent service calls",
+      "Apply middleware to parse incoming requests and format outgoing BFF responses"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 10",
+        "title": "Import required Node.js modules",
+        "instruction": "Import the http and https modules using the require() function.",
+        "hint": "Use require('module_name') to import Node.js built-in modules. You'll need both http and https.",
+        "analogousExample": "// Importing a built-in module\nconst fs = require('fs');",
+        "seedCode": "// Import http and https modules here",
+        "expectedOutcome": "The http module will be used to create a server, and the https module will be used to make external API calls.",
+        "successCriteria": [
+          "Both http and https modules are imported using require()."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're importing both http and https modules.",
+        "feedbackWrong": "That doesn't look right. Remember to import both http and https modules using require().",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "require('http')",
+            "require('https')"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 10",
+        "title": "Create the main server function",
+        "instruction": "Create a function named 'createServer' that initializes an HTTP server and sets up request handling. The function should take no parameters and return the server instance.",
+        "hint": "Define a function that creates an HTTP server using the http module and sets up a basic request listener.",
+        "analogousExample": "// Similar: a function that creates and returns a server\nfunction createServer() {\n  const server = http.createServer((req, res) => {\n    // Handle requests here\n  });\n  return server;\n}",
+        "seedCode": "// Import http and https modules here\n\n// Create the createServer function here",
+        "expectedOutcome": "You should have a function named createServer that creates an HTTP server and returns it.",
+        "successCriteria": [
+          "A function named createServer is defined, uses http.createServer, and returns the server instance."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure your function is named createServer, creates an HTTP server, and returns it.",
+        "feedbackWrong": "The function isn't quite right. Check that you're using http.createServer and returning the server instance.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "createServer",
+            "http.createServer",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 10",
+        "title": "Define the BFF endpoint route",
+        "instruction": "Inside the createServer function, add logic to check if the request URL is '/bff' and the method is 'GET'.",
+        "hint": "You can access the request URL with req.url and method with req.method. Use an if statement to check both conditions.",
+        "analogousExample": "// Checking request route and method\nif (req.url === '/api/data' && req.method === 'GET') {\n  // Handle the request\n}",
+        "seedCode": "// Import http and https modules here\nconst http = require('http');\nconst https = require('https');\n\n// Create the createServer function here\nconst createServer = () => {\n  const server = http.createServer((req, res) => {\n    // Add route checking logic here\n  });\n  \n  return server;\n};",
+        "expectedOutcome": "The server will now identify requests to the /bff endpoint with GET method.",
+        "successCriteria": [
+          "The createServer function contains an if statement that checks req.url === '/bff' && req.method === 'GET'"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're checking both the URL ('/bff') and the method ('GET').",
+        "feedbackWrong": "The route checking logic is missing or incorrect. Remember to check both req.url and req.method inside an if statement.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "req.url",
+            "'/bff'",
+            "req.method",
+            "'GET'",
+            "if"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 10",
+        "title": "Create helper function to call external service 1",
+        "instruction": "Create a function named 'fetchService1' that makes a GET request to 'https://jsonplaceholder.typicode.com/posts/1' using the https module and returns a promise.",
+        "hint": "Use the https.get method inside a new Promise constructor. Remember to handle the response data and errors appropriately.",
+        "analogousExample": "// Example: A function that fetches data from an external API\nfunction fetchData() {\n  return new Promise((resolve, reject) => {\n    https.get('https://api.example.com/data', (res) => {\n      let data = '';\n      res.on('data', chunk => data += chunk);\n      res.on('end', () => resolve(JSON.parse(data)));\n    }).on('error', reject);\n  });\n}",
+        "seedCode": "// Import http and https modules here\nconst http = require('http');\nconst https = require('https');\n\n// Create the createServer function here\nconst createServer = () => {\n  const server = http.createServer((req, res) => {\n    // Add route checking logic here\n  });\n  \n  return server;\n};\n\n// Create the fetchService1 function here",
+        "expectedOutcome": "A helper function that can be used to fetch data from the first external service in the BFF endpoint.",
+        "successCriteria": [
+          "The fetchService1 function is defined, uses https.get, returns a promise, and handles the response correctly."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure your function uses https.get, returns a promise, and properly handles the response data and errors.",
+        "feedbackWrong": "The function doesn't meet the requirements. It should make a GET request to the specified URL using the https module and return a promise.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "fetchService1",
+            "https.get",
+            "Promise",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 10",
+        "title": "Create helper function to call external service 2",
+        "instruction": "Create a function named fetchService2 that makes a GET request to the second mock service endpoint (https://jsonplaceholder.typicode.com/posts/2).",
+        "hint": "Follow the same pattern as fetchService1, but use a different URL. The function should return a promise that resolves with the parsed JSON response.",
+        "analogousExample": "// Similar: another service call function\nconst fetchService2 = () => {\n  return new Promise((resolve, reject) => {\n    https.get('https://jsonplaceholder.typicode.com/posts/2', (res) => {\n      let data = '';\n      res.on('data', chunk => data += chunk);\n      res.on('end', () => resolve(JSON.parse(data)));\n    }).on('error', reject);\n  });\n};",
+        "seedCode": "// Import http and https modules here\nconst http = require('http');\nconst https = require('https');\n\n// Create the createServer function here\nconst createServer = () => {\n  const server = http.createServer((req, res) => {\n    // Add route checking logic here\n  });\n  \n  return server;\n};\n\n// Create the fetchService1 function here\n\n// Create the fetchService2 function here",
+        "expectedOutcome": "A fetchService2 function is added that makes a GET request to the second service endpoint and returns a promise.",
+        "successCriteria": [
+          "The fetchService2 function is defined, uses https.get with the correct URL, and returns a promise that resolves with parsed JSON."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the fetchService2 function, but it needs to make the actual GET request and return a promise. Check the URL and promise structure.",
+        "feedbackWrong": "The fetchService2 function is missing or doesn't make a GET request to the correct endpoint. Review how to make HTTPS requests in Node.js.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "fetchService2",
+            "https.get",
+            "jsonplaceholder.typicode.com/posts/2",
+            "Promise",
+            "resolve"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 10",
+        "title": "Implement data aggregation logic",
+        "instruction": "Create a function named aggregateData that takes two parameters (service1Data and service2Data) and returns a single merged object containing both datasets.",
+        "hint": "The function should combine the two response objects into one object, for example using object spread syntax or Object.assign.",
+        "analogousExample": "// Example: merging two objects\nfunction combineUserData(userProfile, userActivity) {\n  return { ...userProfile, ...userActivity };\n}",
+        "seedCode": "// Import http and https modules here\nconst http = require('http');\nconst https = require('https');\n\n// Create the createServer function here\nconst createServer = () => {\n  const server = http.createServer((req, res) => {\n    // Add route checking logic here\n  });\n  \n  return server;\n};\n\n// Create the fetchService1 function here\n\n// Create the fetchService2 function here\n\n// Create the aggregateData function here",
+        "expectedOutcome": "A function that merges two data objects into one unified object.",
+        "successCriteria": [
+          "The aggregateData function is defined, takes two parameters, and returns a merged object."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the function, but make sure it takes two parameters and returns a merged object containing both datasets.",
+        "feedbackWrong": "The aggregation function is missing or doesn't properly merge the two data objects. Try creating a function that combines both parameters into one object.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "aggregateData",
+            "service1Data",
+            "service2Data",
+            "return",
+            "{"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 10",
+        "title": "Add error handling for API calls",
+        "instruction": "Add a try-catch block inside the fetchService1 function to handle potential errors from the external API call.",
+        "hint": "Wrap the existing API call logic in a try block, and add a catch block to handle errors by logging them and returning a fallback value.",
+        "analogousExample": "// Example: function with error handling\nfunction fetchData() {\n  try {\n    // API call logic here\n    return 'data';\n  } catch (error) {\n    console.error('Error fetching data:', error);\n    return null;\n  }\n}",
+        "seedCode": "// Import http and https modules here\nconst http = require('http');\nconst https = require('https');\n\n// Create the createServer function here\nconst createServer = () => {\n  const server = http.createServer((req, res) => {\n    // Add route checking logic here\n  });\n  \n  return server;\n};\n\n// Create the fetchService1 function here\nconst fetchService1 = () => {\n  // Add try-catch block here\n};\n\n// Create the fetchService2 function here\n\n// Create the aggregateData function here",
+        "expectedOutcome": "The fetchService1 function will have basic error handling to gracefully handle API failures.",
+        "successCriteria": [
+          "fetchService1 contains a try-catch block that catches errors and returns null or a fallback value."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added some error handling, but make sure to include both try and catch blocks, and return a fallback value in the catch block.",
+        "feedbackWrong": "The fetchService1 function doesn't have proper error handling. Add a try-catch block to handle potential API call errors.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "try",
+            "catch",
+            "fetchService1"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 10",
+        "title": "Implement parallel service calls in BFF endpoint",
+        "instruction": "Inside the createServer function, modify the route handler to call fetchService1 and fetchService2 simultaneously using Promise.all.",
+        "hint": "Use Promise.all to wait for both service calls to complete before proceeding with data aggregation.",
+        "analogousExample": "// Example of parallel API calls\nasync function fetchAllData() {\n  const [data1, data2] = await Promise.all([\n    fetchService1(),\n    fetchService2()\n  ]);\n  return { data1, data2 };\n}",
+        "seedCode": "const http = require('http');\nconst https = require('https');\n\nconst createServer = () => {\n  const server = http.createServer((req, res) => {\n    // Add route checking logic here\n  });\n  \n  return server;\n};\n\nconst fetchService1 = () => {\n  // Add try-catch block here\n};\n\nconst fetchService2 = () => {\n  // Add try-catch block here\n};\n\nconst aggregateData = () => {\n  // Add aggregation logic here\n};",
+        "expectedOutcome": "The BFF endpoint handler will be able to make concurrent API calls to both external services.",
+        "successCriteria": [
+          "The route handler uses Promise.all to call fetchService1 and fetchService2 simultaneously."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're using Promise.all correctly to call both fetchService1 and fetchService2 at the same time.",
+        "feedbackWrong": "The implementation doesn't properly use Promise.all for parallel service calls. Review how to make concurrent API calls.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "Promise.all",
+            "fetchService1",
+            "fetchService2"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 10",
+        "title": "Set response headers and format",
+        "instruction": "Inside the BFF endpoint route handler, add code to set the Content-Type header to 'application/json' and send the aggregated data as a JSON string.",
+        "hint": "Use res.setHeader() to set the Content-Type header and res.end() with JSON.stringify() to send the response.",
+        "analogousExample": "// Setting headers and sending JSON response\nres.setHeader('Content-Type', 'application/json');\nres.end(JSON.stringify({ data: 'example' }));",
+        "seedCode": "const http = require('http');\nconst https = require('https');\n\nconst createServer = () => {\n  const server = http.createServer((req, res) => {\n    // Add route checking logic here\n    // Set response headers and format here\n  });\n  \n  return server;\n};\n\nconst fetchService1 = () => {\n  // Add try-catch block here\n};\n\nconst fetchService2 = () => {\n  // Add try-catch block here\n};\n\nconst aggregateData = () => {\n  // Add aggregation logic here\n};",
+        "expectedOutcome": "The BFF endpoint will properly format responses as JSON with correct headers.",
+        "successCriteria": [
+          "Content-Type header is set to 'application/json' and response is sent using JSON.stringify."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're setting the Content-Type header and using JSON.stringify to send the response.",
+        "feedbackWrong": "The response headers and formatting aren't set up correctly. Review how to set headers and send JSON responses.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "setHeader",
+            "Content-Type",
+            "application/json",
+            "JSON.stringify",
+            "end"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 10",
+        "title": "Start the server and test the endpoint",
+        "instruction": "At the bottom of your file, call the createServer function to start the server listening on port 3000 and log a message to the console.",
+        "hint": "Use the .listen() method on the server instance returned by createServer, passing 3000 as the port and a callback function that logs a message.",
+        "analogousExample": "// Starting a server\nconst server = createServer();\nserver.listen(3000, () => {\n  console.log('Server running on port 3000');\n});",
+        "seedCode": "const http = require('http');\nconst https = require('https');\n\nconst createServer = () => {\n  const server = http.createServer((req, res) => {\n    // Add route checking logic here\n    // Set response headers and format here\n  });\n  \n  return server;\n};\n\nconst fetchService1 = () => {\n  // Add try-catch block here\n};\n\nconst fetchService2 = () => {\n  // Add try-catch block here\n};\n\nconst aggregateData = () => {\n  // Add aggregation logic here\n};\n\n// Start the server here",
+        "expectedOutcome": "The server will be ready to handle requests on port 3000, and you'll see a confirmation message in the console when you run the file.",
+        "successCriteria": [
+          "The createServer function is called, .listen(3000, callback) is used, and a console.log message confirms the server is running."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the server, but make sure to include a console.log message in the callback to confirm it's running.",
+        "feedbackWrong": "The server isn't starting correctly. Check that you're calling createServer() and using .listen() with port 3000 and a callback.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "createServer()",
+            ".listen(3000",
+            "console.log"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import required Node.js modules",
+        "id": "step1"
+      },
+      {
+        "label": "Create the main server function",
+        "id": "step2"
+      },
+      {
+        "label": "Define the BFF endpoint route",
+        "id": "step3"
+      },
+      {
+        "label": "Create helper function to call external service 1",
+        "id": "step4"
+      },
+      {
+        "label": "Create helper function to call external service 2",
+        "id": "step5"
+      },
+      {
+        "label": "Implement data aggregation logic",
+        "id": "step6"
+      },
+      {
+        "label": "Add error handling for API calls",
+        "id": "step7"
+      },
+      {
+        "label": "Implement parallel service calls in BFF endpoint",
+        "id": "step8"
+      },
+      {
+        "label": "Set response headers and format",
+        "id": "step9"
+      },
+      {
+        "label": "Start the server and test the endpoint",
+        "id": "step10"
+      }
+    ]
+  },
+  "source": "content"
+}

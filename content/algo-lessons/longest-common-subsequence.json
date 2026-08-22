@@ -1,0 +1,895 @@
+{
+  "id": "longest-common-subsequence",
+  "title": "Longest common subsequence",
+  "pattern": "dynamic-programming",
+  "difficulty": "medium",
+  "language": "javascript",
+  "status": "draft",
+  "flow": [
+    {
+      "stepId": "title",
+      "mentorSays": "At the end of this lesson, you will be able to:\n\n1. Understand what the Longest Common Subsequence (LCS) lesson asks for\n2. Use dynamic programming with a 2D table to solve it\n3. Build the solution bottom-up by comparing characters\n4. Implement the solution step by step in your chosen language",
+      "action": "continue",
+      "next": "lesson-illustration"
+    },
+    {
+      "stepId": "lesson-illustration",
+      "mentorSays": "Longest Common Subsequence (LCS) is a classic 2D DP lesson.\n\nPROBLEM:\ntext1 = \"abcde\"\ntext2 = \"ace\"\nFind the longest common subsequence.\n\nWHAT IS A SUBSEQUENCE?\nDelete some (or no) characters without changing order.\n\nExamples from \"abcde\":\n- \"ace\" ✓ (delete b, d)\n- \"bd\" ✓ (delete a, c, e)\n- \"bce\" ✓ (delete a, d)\n- \"eca\" ✗ (wrong order!)\n\n2D DP TABLE:\ndp[i][j] = LCS length of text1[0..i-1] and text2[0..j-1]\n\n       \"\"  a  c  e\n    \"\" 0   0  0  0\n    a  0   ?  ?  ?\n    b  0   ?  ?  ?\n    c  0   ?  ?  ?\n    d  0   ?  ?  ?\n    e  0   ?  ?  ?\n\nBASE CASES:\ndp[0][j] = 0  (empty text1)\ndp[i][0] = 0  (empty text2)\n\nFILL LOGIC:\nFor each cell dp[i][j]:\n  If text1[i-1] == text2[j-1]:\n    dp[i][j] = dp[i-1][j-1] + 1  // Characters match!\n  Else:\n    dp[i][j] = max(dp[i-1][j], dp[i][j-1])  // Take best from top or left\n\nSTEP-BY-STEP:\n\ndp[1][1]: text1[0]='a', text2[0]='a' → MATCH!\n  dp[1][1] = dp[0][0] + 1 = 1\n\ndp[1][2]: text1[0]='a', text2[1]='c' → NO MATCH\n  dp[1][2] = max(dp[0][2], dp[1][1]) = max(0, 1) = 1\n\ndp[1][3]: text1[0]='a', text2[2]='e' → NO MATCH\n  dp[1][3] = max(dp[0][3], dp[1][2]) = max(0, 1) = 1\n\n[Continue filling...]\n\nCOMPLETED TABLE:\n       \"\"  a  c  e\n    \"\" 0   0  0  0\n    a  0   1  1  1\n    b  0   1  1  1\n    c  0   1  2  2\n    d  0   1  2  2\n    e  0   1  2  3\n\nANSWER: dp[5][3] = 3\n\nThe LCS is \"ace\" (length 3)\n\nTRACE BACK THE LCS:\nStart at dp[5][3] = 3\n- text1[4]='e', text2[2]='e' → MATCH! Include 'e'\n- Move to dp[4][2] = 2\n- text1[3]='d', text2[1]='c' → NO MATCH\n- dp[3][2] > dp[4][1], move to dp[3][2] = 2\n- text1[2]='c', text2[1]='c' → MATCH! Include 'c'\n- Move to dp[2][1] = 1\n- text1[1]='b', text2[0]='a' → NO MATCH\n- dp[1][1] > dp[2][0], move to dp[1][1] = 1\n- text1[0]='a', text2[0]='a' → MATCH! Include 'a'\n\nLCS: \"ace\" ✓\n\nTIME: O(m × n) where m = len(text1), n = len(text2)\nSPACE: O(m × n) or O(n) with optimization",
+      "example": "text1 = \"abcde\"\ntext2 = \"ace\"\n\nFind LCS:\n- \"a\" (length 1)\n- \"ac\" (length 2)\n- \"ace\" (length 3) ✓\n\nAnswer: 3\n\nAnother example:\ntext1 = \"abc\"\ntext2 = \"abc\"\n\nAnswer: 3 (\"abc\")\n\nAnother example:\ntext1 = \"abc\"\ntext2 = \"def\"\n\nAnswer: 0 (no common subsequence)",
+      "action": "continue",
+      "next": "thinking-challenge"
+    },
+    {
+      "stepId": "thinking-challenge",
+      "mentorSays": "Now that you understand what the lesson wants, here's the real question:\n\nHow would YOU find the longest common subsequence?\n\nThink about it for a moment. What approach feels natural to you?",
+      "choices": [
+        {
+          "label": "Use dynamic programming with a 2D table",
+          "next": "explore-dp"
+        },
+        {
+          "label": "Try all possible subsequences and compare",
+          "next": "explore-brute-force"
+        },
+        {
+          "label": "Use recursion with memoization",
+          "next": "explore-recursion"
+        }
+      ]
+    },
+    {
+      "stepId": "explore-brute-force",
+      "mentorSays": "That's a straightforward approach! You're thinking: \"I'll generate all possible subsequences of both strings and find the longest common one.\"\n\nThis works! However, it's exponential time complexity (O(2^n × 2^m)).\n\nWould you like to learn the dynamic programming approach which is O(n × m) time?",
+      "action": "continue",
+      "next": "explore-dp"
+    },
+    {
+      "stepId": "explore-recursion",
+      "mentorSays": "Great thinking! Recursion with memoization works well and is intuitive. However, the iterative DP approach is often preferred for clarity and space optimization.\n\nLet's learn the bottom-up DP approach!",
+      "action": "continue",
+      "next": "explore-dp"
+    },
+    {
+      "stepId": "explore-dp",
+      "mentorSays": "Excellent choice! Dynamic programming is efficient and elegant. Here's the core idea:\n\n1. **2D DP Table**: dp[i][j] = LCS length of text1[0..i-1] and text2[0..j-1]\n2. **Base Case**: dp[0][j] = 0 and dp[i][0] = 0 (empty string has LCS length 0)\n3. **Recurrence**:\n   - If text1[i-1] == text2[j-1]: dp[i][j] = dp[i-1][j-1] + 1 (characters match!)\n   - Otherwise: dp[i][j] = max(dp[i-1][j], dp[i][j-1]) (take best from skipping one char)\n4. **Result**: dp[m][n] where m and n are lengths\n\nLet's trace with \"abcde\" and \"ace\":\n\n- **Initialize**: dp[0][j] = 0, dp[i][0] = 0\n- **i=1, j=1**: text1[0]='a', text2[0]='a' → match! dp[1][1] = dp[0][0] + 1 = 1\n- **i=1, j=2**: text1[0]='a', text2[1]='c' → no match, dp[1][2] = max(dp[0][2], dp[1][1]) = 1\n- **i=2, j=1**: text1[1]='b', text2[0]='a' → no match, dp[2][1] = max(dp[1][1], dp[2][0]) = 1\n- **i=2, j=2**: text1[1]='b', text2[1]='c' → no match, dp[2][2] = max(dp[1][2], dp[2][1]) = 1\n- **i=3, j=2**: text1[2]='c', text2[1]='c' → match! dp[3][2] = dp[2][1] + 1 = 2\n- Continue...\n- **i=5, j=3**: text1[4]='e', text2[2]='e' → match! dp[5][3] = dp[4][2] + 1 = 3 ✓\n\nThis is O(n × m) time and O(n × m) space! Now let's code it step by step.",
+      "action": "continue",
+      "next": "language-selection"
+    },
+    {
+      "stepId": "language-selection",
+      "mentorSays": "Great! Now let's code this solution. Which programming language would you like to use?",
+      "choices": [
+        {
+          "label": "JavaScript",
+          "next": "variable-check-js"
+        },
+        {
+          "label": "Python",
+          "next": "variable-check-python"
+        },
+        {
+          "label": "Java",
+          "next": "variable-check-java"
+        },
+        {
+          "label": "C++",
+          "next": "variable-check-cpp"
+        },
+        {
+          "label": "TypeScript",
+          "next": "variable-check-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-check-js",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-js"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-js",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'dp' or 'm') and put data inside it.\n\nFor example, 'let m = text1.length;' creates a variable that stores the length.",
+      "example": "let m = text1.length;\n\nNow the variable refers to the length",
+      "action": "continue",
+      "next": "function-check-js"
+    },
+    {
+      "stepId": "function-check-js",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "array-check-js"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-js",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "function add(a, b) {\n  return a + b;\n}\n\nadd(3, 5) returns 8",
+      "action": "continue",
+      "next": "array-check-js"
+    },
+    {
+      "stepId": "array-check-js",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a 2D array is in JavaScript?",
+      "choices": [
+        {
+          "label": "Yes, I know 2D arrays",
+          "next": "2d-dp-table-check-js"
+        },
+        {
+          "label": "No, explain 2D arrays",
+          "next": "array-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "2d-dp-table-check-js",
+      "mentorSays": "Do you understand 2D DP tables?",
+      "choices": [
+        {
+          "label": "Yes, I know 2d-dp-table",
+          "next": "subsequence-vs-substring-check-js"
+        },
+        {
+          "label": "No, explain 2d-dp-table",
+          "next": "2d-dp-table-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "subsequence-vs-substring-check-js",
+      "mentorSays": "Do you understand the difference between subsequence and substring?",
+      "choices": [
+        {
+          "label": "Yes, I know subsequence-vs-substring",
+          "next": "coding-start-js"
+        },
+        {
+          "label": "No, explain subsequence-vs-substring",
+          "next": "subsequence-vs-substring-explanation-js"
+        }
+      ]
+    },
+    {
+      "stepId": "subsequence-vs-substring-explanation-js",
+      "mentorSays": "SUBSTRING: Contiguous characters. \"abc\" from \"abcde\" ✓. \"ace\" from \"abcde\" ✗ (not contiguous). SUBSEQUENCE: Characters in order (can skip some). \"abc\" from \"abcde\" ✓. \"ace\" from \"abcde\" ✓ (delete b and d). \"aec\" from \"abcde\" ✗ (wrong order). For this lesson, we're finding SUBSEQUENCES!\n\n// SUBSTRING: Contiguous characters\n// 'abc' from 'abcde' ✓\n// 'ace' from 'abcde' ✗ (not contiguous)\n\n// SUBSEQUENCE: Characters in order (can skip some)\n// 'abc' from 'abcde' ✓\n// 'ace' from 'abcde' ✓ (delete b and d)\n// 'aec' from 'abcde' ✗ (wrong order - e comes before c)\n\n// For LCS, we're finding SUBSEQUENCES!\n\nGot it?",
+      "example": "// SUBSTRING: Contiguous characters\n// 'abc' from 'abcde' ✓\n// 'ace' from 'abcde' ✗ (not contiguous)\n\n// SUBSEQUENCE: Characters in order (can skip some)\n// 'abc' from 'abcde' ✓\n// 'ace' from 'abcde' ✓ (delete b and d)\n// 'aec' from 'abcde' ✗ (wrong order - e comes before c)\n\n// For LCS, we're finding SUBSEQUENCES!",
+      "action": "continue",
+      "next": "coding-start-js"
+    },
+    {
+      "stepId": "2d-dp-table-explanation-js",
+      "mentorSays": "A 2D DP table stores solutions for two-dimensional subproblems. For LCS, dp[i][j] stores the LCS length of text1[0..i-1] and text2[0..j-1]. We fill it row by row or column by column.\n\n// 2D DP table for LCS:\n// dp[i][j] = LCS length of text1[0..i-1] and text2[0..j-1]\n\nlet dp = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));\n\n// Base cases:\nfor (let i = 0; i <= m; i++) dp[i][0] = 0;\nfor (let j = 0; j <= n; j++) dp[0][j] = 0;\n\nGot it?",
+      "example": "// 2D DP table for LCS:\n// dp[i][j] = LCS length of text1[0..i-1] and text2[0..j-1]\n\nlet dp = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));\n\n// Base cases:\nfor (let i = 0; i <= m; i++) dp[i][0] = 0;\nfor (let j = 0; j <= n; j++) dp[0][j] = 0;",
+      "action": "continue",
+      "next": "coding-start-js"
+    },
+    {
+      "stepId": "array-explanation-js",
+      "mentorSays": "A 2D array is an array of arrays. Each element is itself an array. You can access elements using two indices: arr[i][j].",
+      "example": "let dp = [\n  [0, 0, 0],\n  [0, 0, 0]\n];\n\ndp[0][0] = 0\ndp[1][1] = 1",
+      "action": "continue",
+      "next": "coding-start-js"
+    },
+    {
+      "stepId": "coding-start-js",
+      "mentorSays": "Perfect! Let's implement longest common subsequence in JavaScript. We'll use a 2D DP table.",
+      "example": "function longestCommonSubsequence(text1, text2) {\n  // Your code here\n}",
+      "action": "continue",
+      "next": "coding-init-js"
+    },
+    {
+      "stepId": "coding-init-js",
+      "mentorSays": "First, get the lengths of both strings and create a 2D DP table. Initialize with zeros (base case: empty strings have LCS length 0).",
+      "example": "function longestCommonSubsequence(text1, text2) {\n  const m = text1.length;\n  const n = text2.length;\n  \n  // Create DP table: dp[i][j] = LCS of text1[0..i-1] and text2[0..j-1]\n  const dp = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));",
+      "action": "continue",
+      "next": "coding-loop-js"
+    },
+    {
+      "stepId": "coding-loop-js",
+      "mentorSays": "Now, fill the DP table using nested loops. For each position, check if characters match.",
+      "example": "function longestCommonSubsequence(text1, text2) {\n  const m = text1.length;\n  const n = text2.length;\n  \n  const dp = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));\n  \n  // Fill DP table\n  for (let i = 1; i <= m; i++) {\n    for (let j = 1; j <= n; j++) {\n      // Check if characters match\n    }\n  }",
+      "action": "continue",
+      "next": "coding-match-js"
+    },
+    {
+      "stepId": "coding-match-js",
+      "mentorSays": "If characters match, add 1 to the diagonal value. Otherwise, take the maximum of the top and left values.",
+      "example": "function longestCommonSubsequence(text1, text2) {\n  const m = text1.length;\n  const n = text2.length;\n  \n  const dp = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));\n  \n  for (let i = 1; i <= m; i++) {\n    for (let j = 1; j <= n; j++) {\n      if (text1[i - 1] === text2[j - 1]) {\n        // Characters match: extend LCS\n        dp[i][j] = dp[i - 1][j - 1] + 1;\n      } else {\n        // Characters don't match: take best from skipping one\n        dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);\n      }\n    }\n  }",
+      "action": "continue",
+      "next": "coding-2d-initialization-js"
+    },
+    {
+      "stepId": "coding-2d-initialization-js",
+      "mentorSays": "Let's initialize the 2D DP table with base cases.\n\nBase cases:\n- dp[0][j] = 0 (empty text1, LCS length is 0)\n- dp[i][0] = 0 (empty text2, LCS length is 0)\n\nThese form the first row and first column of our table!",
+      "example": "// Initialize 2D DP table\nlet dp = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));\n\n// Base cases:\nfor (let i = 0; i <= m; i++) dp[i][0] = 0;\nfor (let j = 0; j <= n; j++) dp[0][j] = 0;",
+      "action": "continue",
+      "next": "coding-match-vs-nomatch-js"
+    },
+    {
+      "stepId": "coding-match-vs-nomatch-js",
+      "mentorSays": "Now let's fill the table by handling match vs mismatch.\n\nFor each cell dp[i][j]:\n- If characters match: dp[i][j] = dp[i-1][j-1] + 1 (extend LCS)\n- Else: dp[i][j] = max(dp[i-1][j], dp[i][j-1]) (take best from skipping one character in either string)\n\nThis captures the LCS logic!",
+      "example": "for (let i = 1; i <= m; i++) {\n  for (let j = 1; j <= n; j++) {\n    if (text1[i-1] === text2[j-1]) {\n      dp[i][j] = dp[i-1][j-1] + 1;  // Match!\n    } else {\n      dp[i][j] = Math.max(dp[i-1][j], dp[i][j-1]);  // No match\n    }\n  }\n}",
+      "action": "continue",
+      "next": "coding-return-js"
+    },
+    {
+      "stepId": "coding-return-js",
+      "mentorSays": "Finally, return dp[m][n], which contains the LCS length of the entire strings.",
+      "example": "function longestCommonSubsequence(text1, text2) {\n  const m = text1.length;\n  const n = text2.length;\n  \n  const dp = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));\n  \n  for (let i = 1; i <= m; i++) {\n    for (let j = 1; j <= n; j++) {\n      if (text1[i - 1] === text2[j - 1]) {\n        dp[i][j] = dp[i - 1][j - 1] + 1;\n      } else {\n        dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);\n      }\n    }\n  }\n  \n  return dp[m][n];\n}",
+      "action": "continue",
+      "next": "test-code-js"
+    },
+    {
+      "stepId": "test-code-js",
+      "mentorSays": "Perfect! Now test your code with the example we used earlier:\n\ntext1 = \"abcde\"\ntext2 = \"ace\"\n\nAfter calling longestCommonSubsequence(text1, text2), it should return:\n3\n\nTry it in your IDE or code editor!",
+      "example": "Test input:\ntext1 = \"abcde\"\ntext2 = \"ace\"\n\nAfter longestCommonSubsequence(text1, text2):\n3",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-python",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-python"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-python",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'dp' or 'm') and put data inside it.\n\nFor example, 'm = len(text1)' creates a variable that stores the length.",
+      "example": "m = len(text1)\n\nNow the variable refers to the length",
+      "action": "continue",
+      "next": "function-check-python"
+    },
+    {
+      "stepId": "function-check-python",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "array-check-python"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-python",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "def add(a, b):\n    return a + b\n\nadd(3, 5) returns 8",
+      "action": "continue",
+      "next": "array-check-python"
+    },
+    {
+      "stepId": "array-check-python",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a 2D list is in Python?",
+      "choices": [
+        {
+          "label": "Yes, I know 2D lists",
+          "next": "2d-dp-table-check-python"
+        },
+        {
+          "label": "No, explain 2D lists",
+          "next": "array-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "2d-dp-table-check-python",
+      "mentorSays": "Do you understand 2D DP tables?",
+      "choices": [
+        {
+          "label": "Yes, I know 2d-dp-table",
+          "next": "subsequence-vs-substring-check-python"
+        },
+        {
+          "label": "No, explain 2d-dp-table",
+          "next": "2d-dp-table-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "subsequence-vs-substring-check-python",
+      "mentorSays": "Do you understand the difference between subsequence and substring?",
+      "choices": [
+        {
+          "label": "Yes, I know subsequence-vs-substring",
+          "next": "coding-start-python"
+        },
+        {
+          "label": "No, explain subsequence-vs-substring",
+          "next": "subsequence-vs-substring-explanation-python"
+        }
+      ]
+    },
+    {
+      "stepId": "subsequence-vs-substring-explanation-python",
+      "mentorSays": "SUBSTRING: Contiguous characters. \"abc\" from \"abcde\" ✓. \"ace\" from \"abcde\" ✗ (not contiguous). SUBSEQUENCE: Characters in order (can skip some). \"abc\" from \"abcde\" ✓. \"ace\" from \"abcde\" ✓ (delete b and d). \"aec\" from \"abcde\" ✗ (wrong order). For this lesson, we're finding SUBSEQUENCES!\n\n# SUBSTRING: Contiguous characters\n# 'abc' from 'abcde' ✓\n# 'ace' from 'abcde' ✗ (not contiguous)\n\n# SUBSEQUENCE: Characters in order (can skip some)\n# 'abc' from 'abcde' ✓\n# 'ace' from 'abcde' ✓ (delete b and d)\n# 'aec' from 'abcde' ✗ (wrong order - e comes before c)\n\n# For LCS, we're finding SUBSEQUENCES!\n\nGot it?",
+      "example": "# SUBSTRING: Contiguous characters\n# 'abc' from 'abcde' ✓\n# 'ace' from 'abcde' ✗ (not contiguous)\n\n# SUBSEQUENCE: Characters in order (can skip some)\n# 'abc' from 'abcde' ✓\n# 'ace' from 'abcde' ✓ (delete b and d)\n# 'aec' from 'abcde' ✗ (wrong order - e comes before c)\n\n# For LCS, we're finding SUBSEQUENCES!",
+      "action": "continue",
+      "next": "coding-start-python"
+    },
+    {
+      "stepId": "2d-dp-table-explanation-python",
+      "mentorSays": "A 2D DP table stores solutions for two-dimensional subproblems. For LCS, dp[i][j] stores the LCS length of text1[0..i-1] and text2[0..j-1]. We fill it row by row or column by column.\n\n# 2D DP table for LCS:\n# dp[i][j] = LCS length of text1[0..i-1] and text2[0..j-1]\n\ndp = [[0] * (n + 1) for _ in range(m + 1)]\n\n# Base cases:\nfor i in range(m + 1):\n    dp[i][0] = 0\nfor j in range(n + 1):\n    dp[0][j] = 0\n\nGot it?",
+      "example": "# 2D DP table for LCS:\n# dp[i][j] = LCS length of text1[0..i-1] and text2[0..j-1]\n\ndp = [[0] * (n + 1) for _ in range(m + 1)]\n\n# Base cases:\nfor i in range(m + 1):\n    dp[i][0] = 0\nfor j in range(n + 1):\n    dp[0][j] = 0",
+      "action": "continue",
+      "next": "coding-start-python"
+    },
+    {
+      "stepId": "array-explanation-python",
+      "mentorSays": "A 2D list is a list of lists. Each element is itself a list. You can access elements using two indices: arr[i][j].",
+      "example": "dp = [\n    [0, 0, 0],\n    [0, 0, 0]\n]\n\ndp[0][0] = 0\ndp[1][1] = 1",
+      "action": "continue",
+      "next": "coding-start-python"
+    },
+    {
+      "stepId": "coding-start-python",
+      "mentorSays": "Perfect! Let's implement longest common subsequence in Python. We'll use a 2D DP table.",
+      "example": "def longest_common_subsequence(text1, text2):\n    # Your code here\n    pass",
+      "action": "continue",
+      "next": "coding-init-python"
+    },
+    {
+      "stepId": "coding-init-python",
+      "mentorSays": "First, get the lengths of both strings and create a 2D DP table. Initialize with zeros (base case: empty strings have LCS length 0).",
+      "example": "def longest_common_subsequence(text1, text2):\n    m = len(text1)\n    n = len(text2)\n    \n    # Create DP table: dp[i][j] = LCS of text1[0..i-1] and text2[0..j-1]\n    dp = [[0] * (n + 1) for _ in range(m + 1)]",
+      "action": "continue",
+      "next": "coding-loop-python"
+    },
+    {
+      "stepId": "coding-loop-python",
+      "mentorSays": "Now, fill the DP table using nested loops. For each position, check if characters match.",
+      "example": "def longest_common_subsequence(text1, text2):\n    m = len(text1)\n    n = len(text2)\n    \n    dp = [[0] * (n + 1) for _ in range(m + 1)]\n    \n    # Fill DP table\n    for i in range(1, m + 1):\n        for j in range(1, n + 1):\n            # Check if characters match\n            pass",
+      "action": "continue",
+      "next": "coding-match-python"
+    },
+    {
+      "stepId": "coding-match-python",
+      "mentorSays": "If characters match, add 1 to the diagonal value. Otherwise, take the maximum of the top and left values.",
+      "example": "def longest_common_subsequence(text1, text2):\n    m = len(text1)\n    n = len(text2)\n    \n    dp = [[0] * (n + 1) for _ in range(m + 1)]\n    \n    for i in range(1, m + 1):\n        for j in range(1, n + 1):\n            if text1[i - 1] == text2[j - 1]:\n                # Characters match: extend LCS\n                dp[i][j] = dp[i - 1][j - 1] + 1\n            else:\n                # Characters don't match: take best from skipping one\n                dp[i][j] = max(dp[i - 1][j], dp[i][j - 1])",
+      "action": "continue",
+      "next": "coding-2d-initialization-python"
+    },
+    {
+      "stepId": "coding-2d-initialization-python",
+      "mentorSays": "Let's initialize the 2D DP table with base cases.\n\nBase cases:\n- dp[0][j] = 0 (empty text1, LCS length is 0)\n- dp[i][0] = 0 (empty text2, LCS length is 0)\n\nThese form the first row and first column of our table!",
+      "example": "// Initialize 2D DP table\nlet dp = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));\n\n// Base cases:\nfor (let i = 0; i <= m; i++) dp[i][0] = 0;\nfor (let j = 0; j <= n; j++) dp[0][j] = 0;",
+      "action": "continue",
+      "next": "coding-match-vs-nomatch-python"
+    },
+    {
+      "stepId": "coding-match-vs-nomatch-python",
+      "mentorSays": "Now let's fill the table by handling match vs mismatch.\n\nFor each cell dp[i][j]:\n- If characters match: dp[i][j] = dp[i-1][j-1] + 1 (extend LCS)\n- Else: dp[i][j] = max(dp[i-1][j], dp[i][j-1]) (take best from skipping one character in either string)\n\nThis captures the LCS logic!",
+      "example": "for (let i = 1; i <= m; i++) {\n  for (let j = 1; j <= n; j++) {\n    if (text1[i-1] === text2[j-1]) {\n      dp[i][j] = dp[i-1][j-1] + 1;  // Match!\n    } else {\n      dp[i][j] = Math.max(dp[i-1][j], dp[i][j-1]);  // No match\n    }\n  }\n}",
+      "action": "continue",
+      "next": "coding-return-python"
+    },
+    {
+      "stepId": "coding-return-python",
+      "mentorSays": "Finally, return dp[m][n], which contains the LCS length of the entire strings.",
+      "example": "def longest_common_subsequence(text1, text2):\n    m = len(text1)\n    n = len(text2)\n    \n    dp = [[0] * (n + 1) for _ in range(m + 1)]\n    \n    for i in range(1, m + 1):\n        for j in range(1, n + 1):\n            if text1[i - 1] == text2[j - 1]:\n                dp[i][j] = dp[i - 1][j - 1] + 1\n            else:\n                dp[i][j] = max(dp[i - 1][j], dp[i][j - 1])\n    \n    return dp[m][n]",
+      "action": "continue",
+      "next": "test-code-python"
+    },
+    {
+      "stepId": "test-code-python",
+      "mentorSays": "Perfect! Now test your code with the example we used earlier:\n\ntext1 = \"abcde\"\ntext2 = \"ace\"\n\nAfter calling longest_common_subsequence(text1, text2), it should return:\n3\n\nTry it in your IDE or code editor!",
+      "example": "Test input:\ntext1 = \"abcde\"\ntext2 = \"ace\"\n\nAfter longest_common_subsequence(text1, text2):\n3",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-java",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-java"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-java",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'dp' or 'm') and put data inside it.\n\nFor example, 'int m = text1.length();' creates a variable that stores the length.",
+      "example": "int m = text1.length();\n\nNow the variable refers to the length",
+      "action": "continue",
+      "next": "function-check-java"
+    },
+    {
+      "stepId": "function-check-java",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a method is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know methods",
+          "next": "array-check-java"
+        },
+        {
+          "label": "No, explain methods",
+          "next": "function-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-java",
+      "mentorSays": "A method is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "public int add(int a, int b) {\n    return a + b;\n}\n\nadd(3, 5) returns 8",
+      "action": "continue",
+      "next": "array-check-java"
+    },
+    {
+      "stepId": "array-check-java",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a 2D array is in Java?",
+      "choices": [
+        {
+          "label": "Yes, I know 2D arrays",
+          "next": "2d-dp-table-check-java"
+        },
+        {
+          "label": "No, explain 2D arrays",
+          "next": "array-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "2d-dp-table-check-java",
+      "mentorSays": "Do you understand 2D DP tables?",
+      "choices": [
+        {
+          "label": "Yes, I know 2d-dp-table",
+          "next": "subsequence-vs-substring-check-java"
+        },
+        {
+          "label": "No, explain 2d-dp-table",
+          "next": "2d-dp-table-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "subsequence-vs-substring-check-java",
+      "mentorSays": "Do you understand the difference between subsequence and substring?",
+      "choices": [
+        {
+          "label": "Yes, I know subsequence-vs-substring",
+          "next": "coding-start-java"
+        },
+        {
+          "label": "No, explain subsequence-vs-substring",
+          "next": "subsequence-vs-substring-explanation-java"
+        }
+      ]
+    },
+    {
+      "stepId": "subsequence-vs-substring-explanation-java",
+      "mentorSays": "SUBSTRING: Contiguous characters. \"abc\" from \"abcde\" ✓. \"ace\" from \"abcde\" ✗ (not contiguous). SUBSEQUENCE: Characters in order (can skip some). \"abc\" from \"abcde\" ✓. \"ace\" from \"abcde\" ✓ (delete b and d). \"aec\" from \"abcde\" ✗ (wrong order). For this lesson, we're finding SUBSEQUENCES!\n\n// SUBSTRING: Contiguous characters\n// 'abc' from 'abcde' ✓\n// 'ace' from 'abcde' ✗ (not contiguous)\n\n// SUBSEQUENCE: Characters in order (can skip some)\n// 'abc' from 'abcde' ✓\n// 'ace' from 'abcde' ✓ (delete b and d)\n// 'aec' from 'abcde' ✗ (wrong order - e comes before c)\n\n// For LCS, we're finding SUBSEQUENCES!\n\nGot it?",
+      "example": "// SUBSTRING: Contiguous characters\n// 'abc' from 'abcde' ✓\n// 'ace' from 'abcde' ✗ (not contiguous)\n\n// SUBSEQUENCE: Characters in order (can skip some)\n// 'abc' from 'abcde' ✓\n// 'ace' from 'abcde' ✓ (delete b and d)\n// 'aec' from 'abcde' ✗ (wrong order - e comes before c)\n\n// For LCS, we're finding SUBSEQUENCES!",
+      "action": "continue",
+      "next": "coding-start-java"
+    },
+    {
+      "stepId": "2d-dp-table-explanation-java",
+      "mentorSays": "A 2D DP table stores solutions for two-dimensional subproblems. For LCS, dp[i][j] stores the LCS length of text1[0..i-1] and text2[0..j-1]. We fill it row by row or column by column.\n\n// 2D DP table for LCS:\n// dp[i][j] = LCS length of text1[0..i-1] and text2[0..j-1]\n\nint[][] dp = new int[m + 1][n + 1];\n\n// Base cases:\nfor (int i = 0; i <= m; i++) dp[i][0] = 0;\nfor (int j = 0; j <= n; j++) dp[0][j] = 0;\n\nGot it?",
+      "example": "// 2D DP table for LCS:\n// dp[i][j] = LCS length of text1[0..i-1] and text2[0..j-1]\n\nint[][] dp = new int[m + 1][n + 1];\n\n// Base cases:\nfor (int i = 0; i <= m; i++) dp[i][0] = 0;\nfor (int j = 0; j <= n; j++) dp[0][j] = 0;",
+      "action": "continue",
+      "next": "coding-start-java"
+    },
+    {
+      "stepId": "array-explanation-java",
+      "mentorSays": "A 2D array is an array of arrays. Each element is itself an array. You can access elements using two indices: arr[i][j].",
+      "example": "int[][] dp = new int[2][3];\n\ndp[0][0] = 0;\ndp[1][1] = 1;",
+      "action": "continue",
+      "next": "coding-start-java"
+    },
+    {
+      "stepId": "coding-start-java",
+      "mentorSays": "Perfect! Let's implement longest common subsequence in Java. We'll use a 2D DP table.",
+      "example": "public int longestCommonSubsequence(String text1, String text2) {\n    // Your code here\n}",
+      "action": "continue",
+      "next": "coding-init-java"
+    },
+    {
+      "stepId": "coding-init-java",
+      "mentorSays": "First, get the lengths of both strings and create a 2D DP table. Initialize with zeros (base case: empty strings have LCS length 0).",
+      "example": "public int longestCommonSubsequence(String text1, String text2) {\n    int m = text1.length();\n    int n = text2.length();\n    \n    // Create DP table: dp[i][j] = LCS of text1[0..i-1] and text2[0..j-1]\n    int[][] dp = new int[m + 1][n + 1];",
+      "action": "continue",
+      "next": "coding-loop-java"
+    },
+    {
+      "stepId": "coding-loop-java",
+      "mentorSays": "Now, fill the DP table using nested loops. For each position, check if characters match.",
+      "example": "public int longestCommonSubsequence(String text1, String text2) {\n    int m = text1.length();\n    int n = text2.length();\n    \n    int[][] dp = new int[m + 1][n + 1];\n    \n    // Fill DP table\n    for (int i = 1; i <= m; i++) {\n        for (int j = 1; j <= n; j++) {\n            // Check if characters match\n        }\n    }",
+      "action": "continue",
+      "next": "coding-match-java"
+    },
+    {
+      "stepId": "coding-match-java",
+      "mentorSays": "If characters match, add 1 to the diagonal value. Otherwise, take the maximum of the top and left values.",
+      "example": "public int longestCommonSubsequence(String text1, String text2) {\n    int m = text1.length();\n    int n = text2.length();\n    \n    int[][] dp = new int[m + 1][n + 1];\n    \n    for (int i = 1; i <= m; i++) {\n        for (int j = 1; j <= n; j++) {\n            if (text1.charAt(i - 1) == text2.charAt(j - 1)) {\n                // Characters match: extend LCS\n                dp[i][j] = dp[i - 1][j - 1] + 1;\n            } else {\n                // Characters don't match: take best from skipping one\n                dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);\n            }\n        }\n    }",
+      "action": "continue",
+      "next": "coding-2d-initialization-java"
+    },
+    {
+      "stepId": "coding-2d-initialization-java",
+      "mentorSays": "Let's initialize the 2D DP table with base cases.\n\nBase cases:\n- dp[0][j] = 0 (empty text1, LCS length is 0)\n- dp[i][0] = 0 (empty text2, LCS length is 0)\n\nThese form the first row and first column of our table!",
+      "example": "// Initialize 2D DP table\nlet dp = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));\n\n// Base cases:\nfor (let i = 0; i <= m; i++) dp[i][0] = 0;\nfor (let j = 0; j <= n; j++) dp[0][j] = 0;",
+      "action": "continue",
+      "next": "coding-match-vs-nomatch-java"
+    },
+    {
+      "stepId": "coding-match-vs-nomatch-java",
+      "mentorSays": "Now let's fill the table by handling match vs mismatch.\n\nFor each cell dp[i][j]:\n- If characters match: dp[i][j] = dp[i-1][j-1] + 1 (extend LCS)\n- Else: dp[i][j] = max(dp[i-1][j], dp[i][j-1]) (take best from skipping one character in either string)\n\nThis captures the LCS logic!",
+      "example": "for (let i = 1; i <= m; i++) {\n  for (let j = 1; j <= n; j++) {\n    if (text1[i-1] === text2[j-1]) {\n      dp[i][j] = dp[i-1][j-1] + 1;  // Match!\n    } else {\n      dp[i][j] = Math.max(dp[i-1][j], dp[i][j-1]);  // No match\n    }\n  }\n}",
+      "action": "continue",
+      "next": "coding-return-java"
+    },
+    {
+      "stepId": "coding-return-java",
+      "mentorSays": "Finally, return dp[m][n], which contains the LCS length of the entire strings.",
+      "example": "public int longestCommonSubsequence(String text1, String text2) {\n    int m = text1.length();\n    int n = text2.length();\n    \n    int[][] dp = new int[m + 1][n + 1];\n    \n    for (int i = 1; i <= m; i++) {\n        for (int j = 1; j <= n; j++) {\n            if (text1.charAt(i - 1) == text2.charAt(j - 1)) {\n                dp[i][j] = dp[i - 1][j - 1] + 1;\n            } else {\n                dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);\n            }\n        }\n    }\n    \n    return dp[m][n];\n}",
+      "action": "continue",
+      "next": "test-code-java"
+    },
+    {
+      "stepId": "test-code-java",
+      "mentorSays": "Perfect! Now test your code with the example we used earlier:\n\ntext1 = \"abcde\"\ntext2 = \"ace\"\n\nAfter calling longestCommonSubsequence(text1, text2), it should return:\n3\n\nTry it in your IDE or code editor!",
+      "example": "Test input:\ntext1 = \"abcde\"\ntext2 = \"ace\"\n\nAfter longestCommonSubsequence(text1, text2):\n3",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-cpp",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-cpp"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-cpp",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'dp' or 'm') and put data inside it.\n\nFor example, 'int m = text1.length();' creates a variable that stores the length.",
+      "example": "int m = text1.length();\n\nNow the variable refers to the length",
+      "action": "continue",
+      "next": "function-check-cpp"
+    },
+    {
+      "stepId": "function-check-cpp",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "array-check-cpp"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-cpp",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "int add(int a, int b) {\n    return a + b;\n}\n\nadd(3, 5) returns 8",
+      "action": "continue",
+      "next": "array-check-cpp"
+    },
+    {
+      "stepId": "array-check-cpp",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a 2D vector is in C++?",
+      "choices": [
+        {
+          "label": "Yes, I know 2D vectors",
+          "next": "2d-dp-table-check-cpp"
+        },
+        {
+          "label": "No, explain 2D vectors",
+          "next": "array-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "2d-dp-table-check-cpp",
+      "mentorSays": "Do you understand 2D DP tables?",
+      "choices": [
+        {
+          "label": "Yes, I know 2d-dp-table",
+          "next": "subsequence-vs-substring-check-cpp"
+        },
+        {
+          "label": "No, explain 2d-dp-table",
+          "next": "2d-dp-table-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "subsequence-vs-substring-check-cpp",
+      "mentorSays": "Do you understand the difference between subsequence and substring?",
+      "choices": [
+        {
+          "label": "Yes, I know subsequence-vs-substring",
+          "next": "coding-start-cpp"
+        },
+        {
+          "label": "No, explain subsequence-vs-substring",
+          "next": "subsequence-vs-substring-explanation-cpp"
+        }
+      ]
+    },
+    {
+      "stepId": "subsequence-vs-substring-explanation-cpp",
+      "mentorSays": "SUBSTRING: Contiguous characters. \"abc\" from \"abcde\" ✓. \"ace\" from \"abcde\" ✗ (not contiguous). SUBSEQUENCE: Characters in order (can skip some). \"abc\" from \"abcde\" ✓. \"ace\" from \"abcde\" ✓ (delete b and d). \"aec\" from \"abcde\" ✗ (wrong order). For this lesson, we're finding SUBSEQUENCES!\n\n// SUBSTRING: Contiguous characters\n// 'abc' from 'abcde' ✓\n// 'ace' from 'abcde' ✗ (not contiguous)\n\n// SUBSEQUENCE: Characters in order (can skip some)\n// 'abc' from 'abcde' ✓\n// 'ace' from 'abcde' ✓ (delete b and d)\n// 'aec' from 'abcde' ✗ (wrong order - e comes before c)\n\n// For LCS, we're finding SUBSEQUENCES!\n\nGot it?",
+      "example": "// SUBSTRING: Contiguous characters\n// 'abc' from 'abcde' ✓\n// 'ace' from 'abcde' ✗ (not contiguous)\n\n// SUBSEQUENCE: Characters in order (can skip some)\n// 'abc' from 'abcde' ✓\n// 'ace' from 'abcde' ✓ (delete b and d)\n// 'aec' from 'abcde' ✗ (wrong order - e comes before c)\n\n// For LCS, we're finding SUBSEQUENCES!",
+      "action": "continue",
+      "next": "coding-start-cpp"
+    },
+    {
+      "stepId": "2d-dp-table-explanation-cpp",
+      "mentorSays": "A 2D DP table stores solutions for two-dimensional subproblems. For LCS, dp[i][j] stores the LCS length of text1[0..i-1] and text2[0..j-1]. We fill it row by row or column by column.\n\n// 2D DP table for LCS:\n// dp[i][j] = LCS length of text1[0..i-1] and text2[0..j-1]\n\nvector<vector<int>> dp(m + 1, vector<int>(n + 1, 0));\n\n// Base cases:\nfor (int i = 0; i <= m; i++) dp[i][0] = 0;\nfor (int j = 0; j <= n; j++) dp[0][j] = 0;\n\nGot it?",
+      "example": "// 2D DP table for LCS:\n// dp[i][j] = LCS length of text1[0..i-1] and text2[0..j-1]\n\nvector<vector<int>> dp(m + 1, vector<int>(n + 1, 0));\n\n// Base cases:\nfor (int i = 0; i <= m; i++) dp[i][0] = 0;\nfor (int j = 0; j <= n; j++) dp[0][j] = 0;",
+      "action": "continue",
+      "next": "coding-start-cpp"
+    },
+    {
+      "stepId": "array-explanation-cpp",
+      "mentorSays": "A 2D vector is a vector of vectors. Each element is itself a vector. You can access elements using two indices: arr[i][j].",
+      "example": "vector<vector<int>> dp(2, vector<int>(3, 0));\n\ndp[0][0] = 0;\ndp[1][1] = 1;",
+      "action": "continue",
+      "next": "coding-start-cpp"
+    },
+    {
+      "stepId": "coding-start-cpp",
+      "mentorSays": "Perfect! Let's implement longest common subsequence in C++. We'll use a 2D DP table.",
+      "example": "int longestCommonSubsequence(string text1, string text2) {\n    // Your code here\n}",
+      "action": "continue",
+      "next": "coding-init-cpp"
+    },
+    {
+      "stepId": "coding-init-cpp",
+      "mentorSays": "First, get the lengths of both strings and create a 2D DP table. Initialize with zeros (base case: empty strings have LCS length 0).",
+      "example": "int longestCommonSubsequence(string text1, string text2) {\n    int m = text1.length();\n    int n = text2.length();\n    \n    // Create DP table: dp[i][j] = LCS of text1[0..i-1] and text2[0..j-1]\n    vector<vector<int>> dp(m + 1, vector<int>(n + 1, 0));",
+      "action": "continue",
+      "next": "coding-loop-cpp"
+    },
+    {
+      "stepId": "coding-loop-cpp",
+      "mentorSays": "Now, fill the DP table using nested loops. For each position, check if characters match.",
+      "example": "int longestCommonSubsequence(string text1, string text2) {\n    int m = text1.length();\n    int n = text2.length();\n    \n    vector<vector<int>> dp(m + 1, vector<int>(n + 1, 0));\n    \n    // Fill DP table\n    for (int i = 1; i <= m; i++) {\n        for (int j = 1; j <= n; j++) {\n            // Check if characters match\n        }\n    }",
+      "action": "continue",
+      "next": "coding-match-cpp"
+    },
+    {
+      "stepId": "coding-match-cpp",
+      "mentorSays": "If characters match, add 1 to the diagonal value. Otherwise, take the maximum of the top and left values.",
+      "example": "int longestCommonSubsequence(string text1, string text2) {\n    int m = text1.length();\n    int n = text2.length();\n    \n    vector<vector<int>> dp(m + 1, vector<int>(n + 1, 0));\n    \n    for (int i = 1; i <= m; i++) {\n        for (int j = 1; j <= n; j++) {\n            if (text1[i - 1] == text2[j - 1]) {\n                // Characters match: extend LCS\n                dp[i][j] = dp[i - 1][j - 1] + 1;\n            } else {\n                // Characters don't match: take best from skipping one\n                dp[i][j] = max(dp[i - 1][j], dp[i][j - 1]);\n            }\n        }\n    }",
+      "action": "continue",
+      "next": "coding-2d-initialization-cpp"
+    },
+    {
+      "stepId": "coding-2d-initialization-cpp",
+      "mentorSays": "Let's initialize the 2D DP table with base cases.\n\nBase cases:\n- dp[0][j] = 0 (empty text1, LCS length is 0)\n- dp[i][0] = 0 (empty text2, LCS length is 0)\n\nThese form the first row and first column of our table!",
+      "example": "// Initialize 2D DP table\nlet dp = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));\n\n// Base cases:\nfor (let i = 0; i <= m; i++) dp[i][0] = 0;\nfor (let j = 0; j <= n; j++) dp[0][j] = 0;",
+      "action": "continue",
+      "next": "coding-match-vs-nomatch-cpp"
+    },
+    {
+      "stepId": "coding-match-vs-nomatch-cpp",
+      "mentorSays": "Now let's fill the table by handling match vs mismatch.\n\nFor each cell dp[i][j]:\n- If characters match: dp[i][j] = dp[i-1][j-1] + 1 (extend LCS)\n- Else: dp[i][j] = max(dp[i-1][j], dp[i][j-1]) (take best from skipping one character in either string)\n\nThis captures the LCS logic!",
+      "example": "for (let i = 1; i <= m; i++) {\n  for (let j = 1; j <= n; j++) {\n    if (text1[i-1] === text2[j-1]) {\n      dp[i][j] = dp[i-1][j-1] + 1;  // Match!\n    } else {\n      dp[i][j] = Math.max(dp[i-1][j], dp[i][j-1]);  // No match\n    }\n  }\n}",
+      "action": "continue",
+      "next": "coding-return-cpp"
+    },
+    {
+      "stepId": "coding-return-cpp",
+      "mentorSays": "Finally, return dp[m][n], which contains the LCS length of the entire strings.",
+      "example": "int longestCommonSubsequence(string text1, string text2) {\n    int m = text1.length();\n    int n = text2.length();\n    \n    vector<vector<int>> dp(m + 1, vector<int>(n + 1, 0));\n    \n    for (int i = 1; i <= m; i++) {\n        for (int j = 1; j <= n; j++) {\n            if (text1[i - 1] == text2[j - 1]) {\n                dp[i][j] = dp[i - 1][j - 1] + 1;\n            } else {\n                dp[i][j] = max(dp[i - 1][j], dp[i][j - 1]);\n            }\n        }\n    }\n    \n    return dp[m][n];\n}",
+      "action": "continue",
+      "next": "test-code-cpp"
+    },
+    {
+      "stepId": "test-code-cpp",
+      "mentorSays": "Perfect! Now test your code with the example we used earlier:\n\ntext1 = \"abcde\"\ntext2 = \"ace\"\n\nAfter calling longestCommonSubsequence(text1, text2), it should return:\n3\n\nTry it in your IDE or code editor!",
+      "example": "Test input:\ntext1 = \"abcde\"\ntext2 = \"ace\"\n\nAfter longestCommonSubsequence(text1, text2):\n3",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "variable-check-ts",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a variable is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know variables",
+          "next": "function-check-ts"
+        },
+        {
+          "label": "No, explain variables",
+          "next": "variable-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "variable-explanation-ts",
+      "mentorSays": "A variable is like a labeled box where you can store a value. You give it a name (like 'dp' or 'm') and put data inside it.\n\nFor example, 'let m: number = text1.length;' creates a variable that stores the length.",
+      "example": "let m: number = text1.length;\n\nNow the variable refers to the length",
+      "action": "continue",
+      "next": "function-check-ts"
+    },
+    {
+      "stepId": "function-check-ts",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a function is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know functions",
+          "next": "array-check-ts"
+        },
+        {
+          "label": "No, explain functions",
+          "next": "function-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "function-explanation-ts",
+      "mentorSays": "A function is a reusable block of code. You give it inputs (called parameters), and it can return an output.",
+      "example": "function add(a: number, b: number): number {\n  return a + b;\n}\n\nadd(3, 5) returns 8",
+      "action": "continue",
+      "next": "array-check-ts"
+    },
+    {
+      "stepId": "array-check-ts",
+      "mentorSays": "Before we start coding, let me ask: Do you know what a 2D array is in TypeScript?",
+      "choices": [
+        {
+          "label": "Yes, I know 2D arrays",
+          "next": "2d-dp-table-check-ts"
+        },
+        {
+          "label": "No, explain 2D arrays",
+          "next": "array-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "2d-dp-table-check-ts",
+      "mentorSays": "Do you understand 2D DP tables?",
+      "choices": [
+        {
+          "label": "Yes, I know 2d-dp-table",
+          "next": "subsequence-vs-substring-check-ts"
+        },
+        {
+          "label": "No, explain 2d-dp-table",
+          "next": "2d-dp-table-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "subsequence-vs-substring-check-ts",
+      "mentorSays": "Do you understand the difference between subsequence and substring?",
+      "choices": [
+        {
+          "label": "Yes, I know subsequence-vs-substring",
+          "next": "coding-start-ts"
+        },
+        {
+          "label": "No, explain subsequence-vs-substring",
+          "next": "subsequence-vs-substring-explanation-ts"
+        }
+      ]
+    },
+    {
+      "stepId": "subsequence-vs-substring-explanation-ts",
+      "mentorSays": "SUBSTRING: Contiguous characters. \"abc\" from \"abcde\" ✓. \"ace\" from \"abcde\" ✗ (not contiguous). SUBSEQUENCE: Characters in order (can skip some). \"abc\" from \"abcde\" ✓. \"ace\" from \"abcde\" ✓ (delete b and d). \"aec\" from \"abcde\" ✗ (wrong order). For this lesson, we're finding SUBSEQUENCES!\n\n// SUBSTRING: Contiguous characters\n// 'abc' from 'abcde' ✓\n// 'ace' from 'abcde' ✗ (not contiguous)\n\n// SUBSEQUENCE: Characters in order (can skip some)\n// 'abc' from 'abcde' ✓\n// 'ace' from 'abcde' ✓ (delete b and d)\n// 'aec' from 'abcde' ✗ (wrong order - e comes before c)\n\n// For LCS, we're finding SUBSEQUENCES!\n\nGot it?",
+      "example": "// SUBSTRING: Contiguous characters\n// 'abc' from 'abcde' ✓\n// 'ace' from 'abcde' ✗ (not contiguous)\n\n// SUBSEQUENCE: Characters in order (can skip some)\n// 'abc' from 'abcde' ✓\n// 'ace' from 'abcde' ✓ (delete b and d)\n// 'aec' from 'abcde' ✗ (wrong order - e comes before c)\n\n// For LCS, we're finding SUBSEQUENCES!",
+      "action": "continue",
+      "next": "coding-start-ts"
+    },
+    {
+      "stepId": "2d-dp-table-explanation-ts",
+      "mentorSays": "A 2D DP table stores solutions for two-dimensional subproblems. For LCS, dp[i][j] stores the LCS length of text1[0..i-1] and text2[0..j-1]. We fill it row by row or column by column.\n\n// 2D DP table for LCS:\n// dp[i][j] = LCS length of text1[0..i-1] and text2[0..j-1]\n\nlet dp: number[][] = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));\n\n// Base cases:\nfor (let i = 0; i <= m; i++) dp[i][0] = 0;\nfor (let j = 0; j <= n; j++) dp[0][j] = 0;\n\nGot it?",
+      "example": "// 2D DP table for LCS:\n// dp[i][j] = LCS length of text1[0..i-1] and text2[0..j-1]\n\nlet dp: number[][] = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));\n\n// Base cases:\nfor (let i = 0; i <= m; i++) dp[i][0] = 0;\nfor (let j = 0; j <= n; j++) dp[0][j] = 0;",
+      "action": "continue",
+      "next": "coding-start-ts"
+    },
+    {
+      "stepId": "array-explanation-ts",
+      "mentorSays": "A 2D array is an array of arrays. Each element is itself an array. You can access elements using two indices: arr[i][j].",
+      "example": "let dp: number[][] = [\n  [0, 0, 0],\n  [0, 0, 0]\n];\n\ndp[0][0] = 0\ndp[1][1] = 1",
+      "action": "continue",
+      "next": "coding-start-ts"
+    },
+    {
+      "stepId": "coding-start-ts",
+      "mentorSays": "Perfect! Let's implement longest common subsequence in TypeScript. We'll use a 2D DP table.",
+      "example": "function longestCommonSubsequence(text1: string, text2: string): number {\n  // Your code here\n}",
+      "action": "continue",
+      "next": "coding-init-ts"
+    },
+    {
+      "stepId": "coding-init-ts",
+      "mentorSays": "First, get the lengths of both strings and create a 2D DP table. Initialize with zeros (base case: empty strings have LCS length 0).",
+      "example": "function longestCommonSubsequence(text1: string, text2: string): number {\n  const m: number = text1.length;\n  const n: number = text2.length;\n  \n  // Create DP table: dp[i][j] = LCS of text1[0..i-1] and text2[0..j-1]\n  const dp: number[][] = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));",
+      "action": "continue",
+      "next": "coding-loop-ts"
+    },
+    {
+      "stepId": "coding-loop-ts",
+      "mentorSays": "Now, fill the DP table using nested loops. For each position, check if characters match.",
+      "example": "function longestCommonSubsequence(text1: string, text2: string): number {\n  const m: number = text1.length;\n  const n: number = text2.length;\n  \n  const dp: number[][] = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));\n  \n  // Fill DP table\n  for (let i = 1; i <= m; i++) {\n    for (let j = 1; j <= n; j++) {\n      // Check if characters match\n    }\n  }",
+      "action": "continue",
+      "next": "coding-match-ts"
+    },
+    {
+      "stepId": "coding-match-ts",
+      "mentorSays": "If characters match, add 1 to the diagonal value. Otherwise, take the maximum of the top and left values.",
+      "example": "function longestCommonSubsequence(text1: string, text2: string): number {\n  const m: number = text1.length;\n  const n: number = text2.length;\n  \n  const dp: number[][] = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));\n  \n  for (let i = 1; i <= m; i++) {\n    for (let j = 1; j <= n; j++) {\n      if (text1[i - 1] === text2[j - 1]) {\n        // Characters match: extend LCS\n        dp[i][j] = dp[i - 1][j - 1] + 1;\n      } else {\n        // Characters don't match: take best from skipping one\n        dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);\n      }\n    }\n  }",
+      "action": "continue",
+      "next": "coding-2d-initialization-ts"
+    },
+    {
+      "stepId": "coding-2d-initialization-ts",
+      "mentorSays": "Let's initialize the 2D DP table with base cases.\n\nBase cases:\n- dp[0][j] = 0 (empty text1, LCS length is 0)\n- dp[i][0] = 0 (empty text2, LCS length is 0)\n\nThese form the first row and first column of our table!",
+      "example": "// Initialize 2D DP table\nlet dp = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));\n\n// Base cases:\nfor (let i = 0; i <= m; i++) dp[i][0] = 0;\nfor (let j = 0; j <= n; j++) dp[0][j] = 0;",
+      "action": "continue",
+      "next": "coding-match-vs-nomatch-ts"
+    },
+    {
+      "stepId": "coding-match-vs-nomatch-ts",
+      "mentorSays": "Now let's fill the table by handling match vs mismatch.\n\nFor each cell dp[i][j]:\n- If characters match: dp[i][j] = dp[i-1][j-1] + 1 (extend LCS)\n- Else: dp[i][j] = max(dp[i-1][j], dp[i][j-1]) (take best from skipping one character in either string)\n\nThis captures the LCS logic!",
+      "example": "for (let i = 1; i <= m; i++) {\n  for (let j = 1; j <= n; j++) {\n    if (text1[i-1] === text2[j-1]) {\n      dp[i][j] = dp[i-1][j-1] + 1;  // Match!\n    } else {\n      dp[i][j] = Math.max(dp[i-1][j], dp[i][j-1]);  // No match\n    }\n  }\n}",
+      "action": "continue",
+      "next": "coding-return-ts"
+    },
+    {
+      "stepId": "coding-return-ts",
+      "mentorSays": "Finally, return dp[m][n], which contains the LCS length of the entire strings.",
+      "example": "function longestCommonSubsequence(text1: string, text2: string): number {\n  const m: number = text1.length;\n  const n: number = text2.length;\n  \n  const dp: number[][] = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));\n  \n  for (let i = 1; i <= m; i++) {\n    for (let j = 1; j <= n; j++) {\n      if (text1[i - 1] === text2[j - 1]) {\n        dp[i][j] = dp[i - 1][j - 1] + 1;\n      } else {\n        dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);\n      }\n    }\n  }\n  \n  return dp[m][n];\n}",
+      "action": "continue",
+      "next": "test-code-ts"
+    },
+    {
+      "stepId": "test-code-ts",
+      "mentorSays": "Perfect! Now test your code with the example we used earlier:\n\ntext1 = \"abcde\"\ntext2 = \"ace\"\n\nAfter calling longestCommonSubsequence(text1, text2), it should return:\n3\n\nTry it in your IDE or code editor!",
+      "example": "Test input:\ntext1 = \"abcde\"\ntext2 = \"ace\"\n\nAfter longestCommonSubsequence(text1, text2):\n3",
+      "action": "continue",
+      "next": "final"
+    },
+    {
+      "stepId": "final",
+      "mentorSays": "🎉 Well done! You've learned longest common subsequence. You understand how to use dynamic programming with a 2D table to find the LCS!\n\nThis is O(n × m) time and O(n × m) space - excellent for sequence comparison lessons! Keep practicing!",
+      "action": "continue"
+    }
+  ]
+}

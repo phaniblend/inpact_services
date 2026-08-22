@@ -1,0 +1,327 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-angular-55",
+    "track": "angular",
+    "lessonNum": 55,
+    "title": "useMemo for Expensive Computation",
+    "shortName": "P55",
+    "intro": {
+      "tag": "LESSON #55",
+      "title": "useMemo for Expensive Computation",
+      "body": "In this lesson, you will build a simple Angular component that calculates and displays the factorial of a number. You will learn how to use the `useMemo` hook to optimize expensive computations by memoizing the result, ensuring the calculation only re-runs when its dependencies change. The main technologies involved are Angular's component system, TypeScript, and the `useMemo` hook from React (adapted for Angular's context). This will help you improve performance in your applications by avoiding unnecessary recalculations.",
+      "usecase": "In Angular applications, expensive computations frequently appear in data-intensive dashboards where filtering or sorting large datasets triggers performance bottlenecks. For example, financial analytics platforms that recalculate portfolio metrics on every user interaction would benefit from memoizing these calculations. E-commerce product filters that process thousands of items or real-time data visualizations that transform streaming data are practical scenarios where useMemo prevents unnecessary re-renders. This pattern allows developers to optimize component performance while maintaining responsive user interfaces."
+    },
+    "objectives": [
+      "Implement a computed property in an Angular component to handle expensive calculations",
+      "Apply the useMemo pattern using Angular's computed signals for performance optimization",
+      "Construct a component that conditionally recomputes values based on dependency changes",
+      "Configure a computed signal with specific dependencies to prevent unnecessary recalculations",
+      "Update component templates to display memoized values from computed signals",
+      "Manipulate input data to observe how computed signals respond to dependency updates",
+      "Initialize a performance comparison between computed signals and method calls in templates"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 9",
+        "title": "Import Component and OnInit from @angular/core",
+        "instruction": "Import Component and OnInit from '@angular/core' to create the main component.",
+        "hint": "Use the import statement with curly braces to import both symbols from the Angular core module.",
+        "analogousExample": "// Importing Angular core symbols\nimport { Component, OnInit } from '@angular/core';",
+        "seedCode": "// Import Component and OnInit from '@angular/core'",
+        "expectedOutcome": "The imports are added, enabling component creation with lifecycle hooks.",
+        "successCriteria": [
+          "Component and OnInit are imported from '@angular/core'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure to import both Component and OnInit from '@angular/core'.",
+        "feedbackWrong": "Check the import statement. You need to import Component and OnInit from '@angular/core'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "Component",
+            "OnInit",
+            "'@angular/core'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 9",
+        "title": "Create the main AppComponent class with OnInit",
+        "instruction": "Create the AppComponent class that implements the OnInit interface. Add the @Component decorator above it with an empty template and selector 'app-root'.",
+        "hint": "Use the class keyword followed by the component name, then implements OnInit. Add the @Component decorator with template: '' and selector: 'app-root'.",
+        "analogousExample": "// Similar: a basic component class\n@Component({\n  selector: 'app-example',\n  template: ''\n})\nexport class ExampleComponent implements OnInit {\n  ngOnInit() {}\n}",
+        "seedCode": "import { Component, OnInit } from '@angular/core';\n\n// Create AppComponent class with @Component decorator and implements OnInit\n",
+        "expectedOutcome": "The AppComponent class is defined with the OnInit interface and a basic @Component decorator.",
+        "successCriteria": [
+          "AppComponent class exists, implements OnInit, has @Component decorator with selector 'app-root' and empty template."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure the class implements OnInit and has the @Component decorator with selector and template.",
+        "feedbackWrong": "The AppComponent class is not properly defined. Check that it implements OnInit and has the @Component decorator.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "@Component",
+            "AppComponent",
+            "implements OnInit",
+            "selector: 'app-root'",
+            "template: ''"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 9",
+        "title": "Define state properties for counter and expensive result",
+        "instruction": "Inside the AppComponent class, add two properties: 'counter' of type number initialized to 0, and 'expensiveResult' of type number initialized to 0.",
+        "hint": "Use TypeScript type annotations. For example: counter: number = 0;",
+        "analogousExample": "// Defining typed properties in a class\nclass ShoppingCart {\n  items: string[] = [];\n  total: number = 0;\n}",
+        "seedCode": "import { Component, OnInit } from '@angular/core';\n\n@Component({\n  selector: 'app-root',\n  template: '',\n  styleUrls: []\n})\nexport class AppComponent implements OnInit {\n  // Add counter and expensiveResult properties here\n  \n  ngOnInit() {\n  }\n}",
+        "expectedOutcome": "The AppComponent class will have typed state properties ready for use in the template and methods.",
+        "successCriteria": [
+          "AppComponent has 'counter: number = 0' and 'expensiveResult: number = 0' properties defined."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure both properties have type annotations and initial values.",
+        "feedbackWrong": "Check that you've added both properties inside the AppComponent class with correct syntax.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "counter:",
+            "expensiveResult:",
+            "number",
+            "=",
+            "0"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 9",
+        "title": "Create the expensive computation function",
+        "instruction": "Inside the AppComponent class, define a method named 'expensiveComputation' that returns a number. This method should simulate a heavy calculation by using a loop that runs many iterations.",
+        "hint": "You can create a method like 'expensiveComputation(): number { ... }' and inside it, use a for loop to perform many calculations.",
+        "analogousExample": "// Example of a computationally heavy method\ncomputeHeavyValue(): number {\n  let result = 0;\n  for (let i = 0; i < 1000000; i++) {\n    result += Math.sqrt(i);\n  }\n  return result;\n}",
+        "seedCode": "import { Component, OnInit } from '@angular/core';\n\n@Component({\n  selector: 'app-root',\n  template: '',\n  styleUrls: []\n})\nexport class AppComponent implements OnInit {\n  // Add counter and expensiveResult properties here\n  \n  ngOnInit() {\n  }\n  \n  // Define the expensiveComputation method here\n}",
+        "expectedOutcome": "A method named 'expensiveComputation' is added to the AppComponent class that performs a loop-based calculation and returns a number.",
+        "successCriteria": [
+          "The AppComponent class contains a method named 'expensiveComputation' that uses a loop to simulate heavy computation and returns a numeric value."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added a method, but make sure it's named 'expensiveComputation', returns a number, and includes a loop to simulate heavy computation.",
+        "feedbackWrong": "The method wasn't created correctly. Please add a method named 'expensiveComputation' to the AppComponent class that performs a loop-based calculation and returns a number.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "expensiveComputation",
+            "method",
+            "loop",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 9",
+        "title": "Implement ngOnInit lifecycle hook",
+        "instruction": "Inside the ngOnInit method, initialize the counter property to 0 and the expensiveResult property to the result of calling the expensiveComputation method with a starting value (e.g., 1000).",
+        "hint": "Remember that ngOnInit runs once when the component initializes. Set the initial state values here.",
+        "analogousExample": "// Similar: initializing component state in ngOnInit\nngOnInit() {\n  this.count = 0;\n  this.data = this.fetchData(100);\n}",
+        "seedCode": "import { Component, OnInit } from '@angular/core';\n\n@Component({\n  selector: 'app-root',\n  template: '',\n  styleUrls: []\n})\nexport class AppComponent implements OnInit {\n  // Add counter and expensiveResult properties here\n  \n  ngOnInit() {\n    // Initialize counter to 0 and expensiveResult by calling expensiveComputation\n  }\n  \n  // Define the expensiveComputation method here\n}",
+        "expectedOutcome": "The ngOnInit method will set initial values for the component's state properties when the component loads.",
+        "successCriteria": [
+          "The ngOnInit method contains initialization code that sets counter to 0 and expensiveResult to the result of expensiveComputation with a starting value."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added some initialization code, but make sure both counter and expensiveResult are properly initialized.",
+        "feedbackWrong": "The ngOnInit method should initialize both counter and expensiveResult properties with appropriate values.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "ngOnInit",
+            "counter",
+            "expensiveResult",
+            "expensiveComputation"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 9",
+        "title": "Set up component template with basic structure",
+        "instruction": "Add the template property to the @Component decorator with a basic HTML structure containing a heading and a paragraph placeholder.",
+        "hint": "Update the @Component decorator's template property with HTML content. The template should include at least an <h1> and a <p> element.",
+        "analogousExample": "// Example: Adding a template to a component\n@Component({\n  selector: 'app-example',\n  template: '<h1>Example Component</h1><p>This is a placeholder paragraph.</p>',\n  styleUrls: []\n})",
+        "seedCode": "import { Component, OnInit } from '@angular/core';\n\n@Component({\n  selector: 'app-root',\n  template: '',\n  styleUrls: []\n})\nexport class AppComponent implements OnInit {\n  // Add counter and expensiveResult properties here\n  \n  ngOnInit() {\n    // Initialize counter to 0 and expensiveResult by calling expensiveComputation\n  }\n  \n  // Define the expensiveComputation method here\n  \n  // Define the incrementCounter method here\n}",
+        "expectedOutcome": "The component will have a basic HTML template with a heading and paragraph, ready for later steps to populate with dynamic content.",
+        "successCriteria": [
+          "The @Component decorator's template property contains valid HTML with at least an <h1> element and a <p> element."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added some HTML to the template, but make sure it includes both an <h1> heading and a <p> paragraph element.",
+        "feedbackWrong": "The template property should contain HTML content. Try adding an <h1> element and a <p> element inside the template string.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "template:",
+            "<h1>",
+            "<p>"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 9",
+        "title": "Display counter value and expensive result",
+        "instruction": "Inside the component's template, add two paragraph elements: one to display the current counter value and another to display the expensive result. Use Angular interpolation with double curly braces to bind the component properties.",
+        "hint": "Use <p> tags with {{ counter }} and {{ expensiveResult }} inside the template string.",
+        "analogousExample": "// Displaying component data in template\n@Component({\n  template: '<p>Count: {{ count }}</p>'\n})\nexport class ExampleComponent {\n  count = 5;\n}",
+        "seedCode": "import { Component, OnInit } from '@angular/core';\n\n@Component({\n  selector: 'app-root',\n  template: '',\n  styleUrls: []\n})\nexport class AppComponent implements OnInit {\n  // Add counter and expensiveResult properties here\n  \n  ngOnInit() {\n    // Initialize counter to 0 and expensiveResult by calling expensiveComputation\n  }\n  \n  // Define the expensiveComputation method here\n  \n  // Define the incrementCounter method here\n}",
+        "expectedOutcome": "The template will show the counter and expensiveResult values when the component renders.",
+        "successCriteria": [
+          "Template contains two <p> elements with interpolation binding to counter and expensiveResult properties."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You added some template content, but make sure you have both paragraphs with proper interpolation syntax.",
+        "feedbackWrong": "The template doesn't yet display the counter and expensive result values. Add two <p> elements with {{ counter }} and {{ expensiveResult }}.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "template",
+            "<p>",
+            "{{",
+            "counter",
+            "expensiveResult"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 9",
+        "title": "Add increment button and wire click event",
+        "instruction": "In the component's template, add a button element with the text 'Increment Counter' and wire its click event to call the incrementCounter method.",
+        "hint": "Use Angular's event binding syntax (click)=\"incrementCounter()\" on a button element.",
+        "analogousExample": "// Adding a button with click event\n<button (click)=\"handleClick()\">Click Me</button>",
+        "seedCode": "import { Component, OnInit } from '@angular/core';\n\n@Component({\n  selector: 'app-root',\n  template: '',\n  styleUrls: []\n})\nexport class AppComponent implements OnInit {\n  counter: number = 0;\n  expensiveResult: number = 0;\n\n  ngOnInit() {\n    this.counter = 0;\n    this.expensiveResult = this.expensiveComputation(this.counter);\n  }\n\n  expensiveComputation(base: number): number {\n    // Simulate expensive computation\n    let result = 0;\n    for (let i = 0; i < 1000000000; i++) {\n      result += base + i;\n    }\n    return result;\n  }\n\n  incrementCounter() {\n    this.counter++;\n    this.expensiveResult = this.expensiveComputation(this.counter);\n  }\n}",
+        "expectedOutcome": "A button labeled 'Increment Counter' appears in the UI that, when clicked, triggers the incrementCounter method to update the counter and expensive result.",
+        "successCriteria": [
+          "The template contains a button element with text 'Increment Counter' and a (click) event binding that calls incrementCounter()."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added a button, but it might be missing the correct text or the click event binding. Make sure the button says 'Increment Counter' and uses (click)=\"incrementCounter()\".",
+        "feedbackWrong": "The button is missing or not properly configured. Add a button element with the text 'Increment Counter' and bind its click event to the incrementCounter method.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<button",
+            "(click)=\"incrementCounter()\"",
+            "Increment Counter"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 9",
+        "title": "Add performance monitoring to demonstrate the lesson",
+        "instruction": "Add console.log statements to the ngOnInit method and incrementCounter method to log when the expensive computation runs.",
+        "hint": "Add console.log('Running expensive computation...') before calling expensiveComputation in both methods.",
+        "analogousExample": "// Example: logging in a method\nngOnInit() {\n  console.log('Component initialized');\n  this.loadData();\n}",
+        "seedCode": "import { Component, OnInit } from '@angular/core';\n\n@Component({\n  selector: 'app-root',\n  template: '',\n  styleUrls: []\n})\nexport class AppComponent implements OnInit {\n  counter: number = 0;\n  expensiveResult: number = 0;\n\n  ngOnInit() {\n    this.counter = 0;\n    this.expensiveResult = this.expensiveComputation(this.counter);\n  }\n\n  expensiveComputation(base: number): number {\n    // Simulate expensive computation\n    let result = 0;\n    for (let i = 0; i < 1000000000; i++) {\n      result += base + i;\n    }\n    return result;\n  }\n\n  incrementCounter() {\n    this.counter++;\n    this.expensiveResult = this.expensiveComputation(this.counter);\n  }\n}",
+        "expectedOutcome": "The console will show logs each time the expensive computation runs, demonstrating the performance issue when the counter changes.",
+        "successCriteria": [
+          "console.log statements are added to both ngOnInit and incrementCounter methods before the expensiveComputation calls."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You added some logging, but make sure to add console.log statements in both ngOnInit and incrementCounter methods before calling expensiveComputation.",
+        "feedbackWrong": "The console.log statements are missing or not placed correctly. Add console.log('Running expensive computation...') before calling expensiveComputation in both ngOnInit and incrementCounter methods.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "console.log",
+            "ngOnInit",
+            "incrementCounter",
+            "expensiveComputation"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import Component and OnInit from @angular/core",
+        "id": "step1"
+      },
+      {
+        "label": "Create the main AppComponent class with OnInit",
+        "id": "step2"
+      },
+      {
+        "label": "Define state properties for counter and expensive result",
+        "id": "step3"
+      },
+      {
+        "label": "Create the expensive computation function",
+        "id": "step4"
+      },
+      {
+        "label": "Implement ngOnInit lifecycle hook",
+        "id": "step5"
+      },
+      {
+        "label": "Set up component template with basic structure",
+        "id": "step6"
+      },
+      {
+        "label": "Display counter value and expensive result",
+        "id": "step7"
+      },
+      {
+        "label": "Add increment button and wire click event",
+        "id": "step8"
+      },
+      {
+        "label": "Add performance monitoring to demonstrate the lesson",
+        "id": "step9"
+      }
+    ]
+  },
+  "source": "content"
+}

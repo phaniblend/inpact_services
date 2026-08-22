@@ -1,0 +1,432 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-vue-72",
+    "track": "vue",
+    "lessonNum": 72,
+    "title": "useLayoutEffect vs useEffect",
+    "shortName": "P72",
+    "intro": {
+      "tag": "LESSON #72",
+      "title": "useLayoutEffect vs useEffect",
+      "body": "In this lesson, you will build a simple Vue component that demonstrates the difference between `useLayoutEffect` and `useEffect`. You will learn how these hooks handle side effects and when to use each one based on their timing in the component lifecycle. The core concept involves understanding synchronous vs. asynchronous DOM updates and how they impact visual rendering. You will use Vue's Composition API with `onMounted` and `onUpdated` to simulate React-like effect behavior, focusing on JavaScript timing and DOM manipulation. By the end, you'll know how to choose the right effect for tasks like measurements or animations to avoid layout thrashing.",
+      "usecase": "In real Vue applications, understanding the timing difference between onMounted (similar to useEffect) and onUpdated (similar to useLayoutEffect) is crucial for smooth UI interactions. When building dynamic dashboards with charts that need immediate measurement after DOM updates, onUpdated ensures calculations happen before the browser paints, preventing visual flicker. This pattern is essential for form validation that requires checking input dimensions, responsive navigation menus that adjust based toggled content, or modal positioning that depends on sibling element sizes. Developers use these hooks to coordinate DOM-dependent operations with the browser's rendering cycle, creating polished user experiences without layout thrashing."
+    },
+    "objectives": [
+      "Implement a Vue component that uses the `onMounted` hook to execute side effects after DOM rendering",
+      "Configure a Vue component with the `onUpdated` hook to handle state changes and DOM updates",
+      "Construct a component that uses the `watchEffect` function to reactively run side effects based on reactive dependencies",
+      "Apply the `nextTick` utility to schedule code execution after the next DOM update cycle",
+      "Manipulate DOM elements directly within lifecycle hooks to observe rendering timing differences",
+      "Integrate multiple lifecycle hooks in a single component to demonstrate execution order and timing",
+      "Initialize reactive state variables and bind them to DOM elements to visualize rendering effects"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 12",
+        "title": "Import Vue and composition API functions",
+        "instruction": "Import Vue and the composition API functions: ref, onMounted, onUpdated, and nextTick from 'vue'.",
+        "hint": "Use the import statement to bring in Vue and the specific functions needed for this lesson.",
+        "analogousExample": "// Example of importing Vue functions\nimport { ref, computed } from 'vue'",
+        "seedCode": "// Import Vue and the composition API functions here",
+        "expectedOutcome": "The necessary Vue functions are imported and ready to use in the component.",
+        "successCriteria": [
+          "Vue, ref, onMounted, onUpdated, and nextTick are imported from 'vue'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've imported some functions, but make sure to include all: Vue, ref, onMounted, onUpdated, and nextTick.",
+        "feedbackWrong": "The imports are missing or incorrect. Please import Vue, ref, onMounted, onUpdated, and nextTick from 'vue'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "vue",
+            "ref",
+            "onMounted",
+            "onUpdated",
+            "nextTick"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 12",
+        "title": "Create the main Vue component",
+        "instruction": "Create and export a default Vue component named 'LayoutEffectDemo' with a setup function.",
+        "hint": "Use the Vue composition API to define a component with a setup function that returns an empty object for now.",
+        "analogousExample": "// Example: creating a Vue component\nexport default {\n  name: 'ExampleComponent',\n  setup() {\n    return {};\n  }\n};",
+        "seedCode": "// Import Vue and the composition API functions here\n\n// Create and export the default Vue component here",
+        "expectedOutcome": "A Vue component named 'LayoutEffectDemo' is created and exported as default with a setup function.",
+        "successCriteria": [
+          "The component is named 'LayoutEffectDemo', exported as default, and has a setup function that returns an empty object."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure the component is named 'LayoutEffectDemo', exported as default, and has a setup function that returns an object.",
+        "feedbackWrong": "The component isn't quite right. Check that you've named it 'LayoutEffectDemo', exported it as default, and included a setup function.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "LayoutEffectDemo",
+            "export default",
+            "setup()",
+            "return {}"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 12",
+        "title": "Initialize reactive state variables",
+        "instruction": "Inside your component, use the ref function to create two reactive state variables: one called count initialized to 0, and one called message initialized to an empty string.",
+        "hint": "Remember to call ref() with the initial value for each variable. For example: const count = ref(0);",
+        "analogousExample": "// Creating reactive state with ref\nconst count = ref(0);\nconst message = ref('');",
+        "seedCode": "import { ref } from 'vue';\n\nexport default {\n  name: 'EffectDemo',\n  setup() {\n    // Initialize reactive state variables here\n    \n    return {};\n  }\n};",
+        "expectedOutcome": "Your component will have two reactive state variables ready to track count and message values.",
+        "successCriteria": [
+          "Two reactive state variables are created using ref: count initialized to 0 and message initialized to an empty string."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you've created both state variables: count initialized to 0 and message initialized to an empty string, both using the ref function.",
+        "feedbackWrong": "Inside the setup function, use ref() to create two reactive variables: count starting at 0 and message starting as an empty string.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "count",
+            "ref(0)",
+            "message",
+            "ref('')"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 12",
+        "title": "Define the increment handler function",
+        "instruction": "Inside the setup function, define a function named incrementCount that increases the value of count by 1 when called.",
+        "hint": "You can define a regular JavaScript function using the function keyword or an arrow function. Inside the function, update the count variable using its .value property.",
+        "analogousExample": "// Example: a function that updates a ref\nfunction increment() {\n  count.value += 1;\n}",
+        "seedCode": "import { ref } from 'vue';\n\nexport default {\n  name: 'EffectDemo',\n  setup() {\n    // Initialize reactive state variables here\n    const count = ref(0);\n    \n    // Define the increment handler function here\n    \n    return {};\n  }\n};",
+        "expectedOutcome": "A function named incrementCount is defined that increments the count state value.",
+        "successCriteria": [
+          "The incrementCount function is defined in the setup function and correctly updates count.value by 1."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've defined a function, but make sure it's named incrementCount and it increments count.value by 1.",
+        "feedbackWrong": "The incrementCount function isn't defined correctly. Check that it's inside the setup function and updates count.value.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "incrementCount",
+            "count.value",
+            "+=",
+            "1"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 12",
+        "title": "Implement the useEffect equivalent with onMounted and onUpdated",
+        "instruction": "Inside the setup function, import onMounted and onUpdated from 'vue' and use them to log a message and update a message state after the component mounts and updates.",
+        "hint": "You'll need to import the lifecycle hooks, create a reactive message state, and call onMounted and onUpdated with functions that log and update the message.",
+        "analogousExample": "// Example of using lifecycle hooks\nimport { ref, onMounted, onUpdated } from 'vue';\n\nconst message = ref('Initial message');\n\nonMounted(() => {\n  console.log('Component mounted');\n  message.value = 'Mounted!';\n});\n\nonUpdated(() => {\n  console.log('Component updated');\n  message.value = 'Updated!';\n});",
+        "seedCode": "import { ref } from 'vue';\n\nexport default {\n  name: 'EffectDemo',\n  setup() {\n    // Initialize reactive state variables here\n    const count = ref(0);\n    \n    // Define the increment handler function here\n    \n    // Implement useEffect equivalent with onMounted and onUpdated\n    \n    return {};\n  }\n};",
+        "expectedOutcome": "The component will have lifecycle hooks that log messages and update a message state when mounted and updated.",
+        "successCriteria": [
+          "onMounted and onUpdated are imported and used with functions that log messages and update a reactive message state."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure you've imported both hooks and used them to log messages and update a message state.",
+        "feedbackWrong": "import onMounted and onUpdated, create a message state, and use both hooks with functions that log and update.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "onMounted",
+            "onUpdated",
+            "import",
+            "ref",
+            "message",
+            "log",
+            "value"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 12",
+        "title": "Implement the useLayoutEffect equivalent with nextTick",
+        "instruction": "Import nextTick from 'vue' and use it inside onMounted and onUpdated to log a message and update a message state synchronously after DOM mutations.",
+        "hint": "You'll need to import nextTick, create a message ref, and call nextTick inside both lifecycle hooks to perform synchronous side effects.",
+        "analogousExample": "// Using nextTick for synchronous side effects\nimport { nextTick, ref, onMounted } from 'vue';\n\nconst message = ref('');\n\nonMounted(() => {\n  // DOM mutations happen here\n  nextTick(() => {\n    console.log('DOM updated synchronously');\n    message.value = 'Mounted with nextTick';\n  });\n});",
+        "seedCode": "import { ref } from 'vue';\n\nexport default {\n  name: 'EffectDemo',\n  setup() {\n    // Initialize reactive state variables here\n    const count = ref(0);\n    \n    // Define the increment handler function here\n    \n    // Implement useEffect equivalent with onMounted and onUpdated\n    \n    // Implement useLayoutEffect equivalent with nextTick\n    \n    return {};\n  }\n};",
+        "expectedOutcome": "The component will have nextTick imported and used inside lifecycle hooks to demonstrate synchronous side effects before browser paint.",
+        "successCriteria": [
+          "nextTick is imported from 'vue' and used inside onMounted and onUpdated to update a message state and log synchronously."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure you've imported nextTick and used it inside both onMounted and onUpdated to update a message state.",
+        "feedbackWrong": "Check that you've imported nextTick from 'vue' and used it inside the lifecycle hooks to perform synchronous side effects after DOM mutations.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "nextTick",
+            "from",
+            "'vue'",
+            "onMounted",
+            "onUpdated",
+            "nextTick",
+            "message",
+            "ref"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 12",
+        "title": "Add the main template structure",
+        "instruction": "Return a template with a root div element from the setup function.",
+        "hint": "In Vue, the setup function should return an object containing the template structure. Add a return statement with a root div element.",
+        "analogousExample": "// Example: returning a root element from setup\nsetup() {\n  return {\n    template: '<div>Content here</div>'\n  };\n}",
+        "seedCode": "import { ref } from 'vue';\n\nexport default {\n  name: 'EffectDemo',\n  setup() {\n    // Initialize reactive state variables here\n    const count = ref(0);\n    \n    // Define the increment handler function here\n    \n    // Implement useEffect equivalent with onMounted and onUpdated\n    \n    // Implement useLayoutEffect equivalent with nextTick\n    \n    return {};\n  }\n};",
+        "expectedOutcome": "The setup function returns a template with a root div element.",
+        "successCriteria": [
+          "The setup function returns an object",
+          "The returned object contains a template property",
+          "The template has a root div element"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure the setup function returns an object with a template property containing a root div element.",
+        "feedbackWrong": "The setup function should return an object with a template property containing a root div element.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "return",
+            "template",
+            "<div>"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 12",
+        "title": "Display the current count value",
+        "instruction": "In the template section, add an <h1> element that displays the current count value using the reactive count variable.",
+        "hint": "Use double curly braces {{ }} to display reactive values in Vue templates.",
+        "analogousExample": "// Displaying a reactive value in template\n<h1>Count: {{ count }}</h1>",
+        "seedCode": "import { ref } from 'vue';\n\nexport default {\n  name: 'EffectDemo',\n  setup() {\n    // Initialize reactive state variables here\n    const count = ref(0);\n    \n    // Define the increment handler function here\n    \n    // Implement useEffect equivalent with onMounted and onUpdated\n    \n    // Implement useLayoutEffect equivalent with nextTick\n    \n    return {};\n  },\n  template: `\n    <div>\n      <!-- Add h1 element here to display count -->\n    </div>\n  `\n};",
+        "expectedOutcome": "The template will show the current count value inside an h1 element.",
+        "successCriteria": [
+          "An h1 element exists in the template",
+          "The h1 element displays the count value using {{ count }}"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You added an h1 element, but make sure it displays the count value using {{ count }}.",
+        "feedbackWrong": "The h1 element is missing or doesn't display the count value correctly.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<h1",
+            "{{ count }}"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 12",
+        "title": "Display the effect timing messages",
+        "instruction": "Add a paragraph element inside the template to display the effectMessage state variable.",
+        "hint": "Use the template syntax to output the reactive value. You can access it directly in the template.",
+        "analogousExample": "// Displaying a reactive value in template\n<p>{{ message }}</p>",
+        "seedCode": "import { ref } from 'vue';\n\nexport default {\n  name: 'EffectDemo',\n  setup() {\n    // Initialize reactive state variables here\n    const count = ref(0);\n    \n    // Define the increment handler function here\n    \n    // Implement useEffect equivalent with onMounted and onUpdated\n    \n    // Implement useLayoutEffect equivalent with nextTick\n    \n    return {};\n  },\n  template: `\n    <div>\n      <!-- Add h1 element here to display count -->\n      <p>{{ effectMessage }}</p>\n    </div>\n  `\n};",
+        "expectedOutcome": "The template now contains a paragraph that will display the effect timing message when the state variable is set.",
+        "successCriteria": [
+          "A paragraph element with {{ effectMessage }} is added to the template."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you've added a paragraph element with the correct template syntax to display the effectMessage variable.",
+        "feedbackWrong": "The paragraph element for displaying the effect timing message is missing or incorrect. Add a <p> element with {{ effectMessage }} inside the template.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<p>",
+            "{{",
+            "effectMessage",
+            "}}"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 12",
+        "title": "Add the increment button and wire its click event",
+        "instruction": "Inside the template, add a button element with the text 'Increment' that calls the increment function when clicked.",
+        "hint": "Use the @click directive to bind the click event to your increment function. The button should be placed after the existing paragraph.",
+        "analogousExample": "// Adding a button with click handler in Vue template\n<button @click=\"increment\">Click me</button>",
+        "seedCode": "import { ref } from 'vue';\n\nexport default {\n  name: 'EffectDemo',\n  setup() {\n    // Initialize reactive state variables here\n    const count = ref(0);\n    \n    // Define the increment handler function here\n    \n    // Implement useEffect equivalent with onMounted and onUpdated\n    \n    // Implement useLayoutEffect equivalent with nextTick\n    \n    return {};\n  },\n  template: `\n    <div>\n      <!-- Add h1 element here to display count -->\n      <p>{{ effectMessage }}</p>\n      <!-- Add increment button here -->\n    </div>\n  `\n};",
+        "expectedOutcome": "The template now includes a button that will trigger state updates when clicked.",
+        "successCriteria": [
+          "A button element with @click=\"increment\" is added to the template after the paragraph."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added a button, but make sure it has the @click directive calling the increment function and displays the text 'Increment'.",
+        "feedbackWrong": "The button element is missing or incorrectly implemented. Add a button with @click=\"increment\" and the text 'Increment' to the template.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "button",
+            "@click=\"increment\"",
+            "Increment"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 12",
+        "title": "Add visual feedback for effect timing",
+        "instruction": "Add a div element inside the template that changes its background color based on which effect ran last. Use a conditional class binding to set the background to 'blue' when the layout effect ran last, and 'green' when the regular effect ran last.",
+        "hint": "You can use Vue's class binding syntax: :class=\"{ 'bg-blue': layoutEffectRanLast, 'bg-green': !layoutEffectRanLast }\". Add this div after the existing paragraph that shows effect messages.",
+        "analogousExample": "// Example: conditional class binding in Vue\n<div :class=\"{ 'highlight': isActive, 'inactive': !isActive }\">Status indicator</div>",
+        "seedCode": "import { ref } from 'vue';\n\nexport default {\n  name: 'EffectDemo',\n  setup() {\n    const count = ref(0);\n    const effectMessage = ref('');\n    const layoutEffectRanLast = ref(false);\n    \n    const increment = () => {\n      count.value++;\n    };\n    \n    // useEffect equivalent\n    import { onMounted, onUpdated } from 'vue';\n    onMounted(() => {\n      effectMessage.value = 'useEffect: Component mounted';\n      layoutEffectRanLast.value = false;\n    });\n    onUpdated(() => {\n      effectMessage.value = 'useEffect: Component updated';\n      layoutEffectRanLast.value = false;\n    });\n    \n    // useLayoutEffect equivalent\n    import { nextTick } from 'vue';\n    nextTick(() => {\n      effectMessage.value = 'useLayoutEffect: DOM updated';\n      layoutEffectRanLast.value = true;\n    });\n    \n    return {\n      count,\n      effectMessage,\n      layoutEffectRanLast,\n      increment\n    };\n  },\n  template: `\n    <div>\n      <h1>Count: {{ count }}</h1>\n      <p>{{ effectMessage }}</p>\n      <button @click=\"increment\">Increment</button>\n      <!-- Add visual feedback div here -->\n    </div>\n  `\n};",
+        "expectedOutcome": "A colored div appears below the button that visually indicates which effect ran most recently - blue for layout effect, green for regular effect.",
+        "successCriteria": [
+          "The template contains a div element with conditional class binding that changes background color based on layoutEffectRanLast state"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You added a div, but make sure it has the conditional class binding that changes color based on layoutEffectRanLast.",
+        "feedbackWrong": "The visual feedback element is missing or doesn't properly indicate which effect ran last.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<div",
+            ":class",
+            "layoutEffectRanLast",
+            "bg-blue",
+            "bg-green"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step12",
+        "type": "question",
+        "phase": "Step 12 of 12",
+        "title": "Add explanatory comments in the template",
+        "instruction": "Add a comment in the template above the paragraph that displays effectMessage to explain it shows the effect timing messages.",
+        "hint": "You can add a single-line comment using <!-- comment --> in the template.",
+        "analogousExample": "<!-- This comment explains the following element -->\n<p>Some content</p>",
+        "seedCode": "import { ref } from 'vue';\n\nexport default {\n  name: 'EffectDemo',\n  setup() {\n    const count = ref(0);\n    const effectMessage = ref('');\n    const layoutEffectRanLast = ref(false);\n    \n    const increment = () => {\n      count.value++;\n    };\n    \n    // useEffect equivalent\n    import { onMounted, onUpdated } from 'vue';\n    onMounted(() => {\n      effectMessage.value = 'useEffect: Component mounted';\n      layoutEffectRanLast.value = false;\n    });\n    onUpdated(() => {\n      effectMessage.value = 'useEffect: Component updated';\n      layoutEffectRanLast.value = false;\n    });\n    \n    // useLayoutEffect equivalent\n    import { nextTick } from 'vue';\n    nextTick(() => {\n      effectMessage.value = 'useLayoutEffect: DOM updated';\n      layoutEffectRanLast.value = true;\n    });\n    \n    return {\n      count,\n      effectMessage,\n      layoutEffectRanLast,\n      increment\n    };\n  },\n  template: `\n    <div>\n      <h1>Count: {{ count }}</h1>\n      <!-- Add comment here -->\n      <p>{{ effectMessage }}</p>\n      <button @click=\"increment\">Increment</button>\n      <!-- Add visual feedback div here -->\n    </div>\n  `\n};",
+        "expectedOutcome": "The template will have a comment explaining the purpose of the effectMessage paragraph.",
+        "successCriteria": [
+          "A comment is added directly above the <p>{{ effectMessage }}</p> line in the template."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You added a comment, but make sure it's placed directly above the effectMessage paragraph.",
+        "feedbackWrong": "The comment should be added in the template above the paragraph that shows effectMessage.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<!--",
+            "effectMessage",
+            "-->",
+            "<p>{{ effectMessage }}</p>"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import Vue and composition API functions",
+        "id": "step1"
+      },
+      {
+        "label": "Create the main Vue component",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize reactive state variables",
+        "id": "step3"
+      },
+      {
+        "label": "Define the increment handler function",
+        "id": "step4"
+      },
+      {
+        "label": "Implement the useEffect equivalent with onMounted and onUpdated",
+        "id": "step5"
+      },
+      {
+        "label": "Implement the useLayoutEffect equivalent with nextTick",
+        "id": "step6"
+      },
+      {
+        "label": "Add the main template structure",
+        "id": "step7"
+      },
+      {
+        "label": "Display the current count value",
+        "id": "step8"
+      },
+      {
+        "label": "Display the effect timing messages",
+        "id": "step9"
+      },
+      {
+        "label": "Add the increment button and wire its click event",
+        "id": "step10"
+      },
+      {
+        "label": "Add visual feedback for effect timing",
+        "id": "step11"
+      },
+      {
+        "label": "Add explanatory comments in the template",
+        "id": "step12"
+      }
+    ]
+  },
+  "source": "content"
+}

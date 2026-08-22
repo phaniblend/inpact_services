@@ -1,0 +1,349 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-express-08",
+    "track": "express",
+    "lessonNum": 8,
+    "title": "Rate limiting & security headers",
+    "shortName": "P08",
+    "intro": {
+      "tag": "LESSON #8",
+      "title": "Rate limiting & security headers",
+      "body": "In this lesson, you will build a secure Express.js server that protects against excessive requests and common web vulnerabilities. You will learn to implement rate limiting to control how many requests a client can make in a given time period, preventing abuse. Additionally, you will set security headers to defend against attacks like cross-site scripting (XSS) and clickjacking. The main technologies used are the Express framework, the `express-rate-limit` middleware for rate limiting, and the `helmet` middleware for security headers. By the end, you'll have a server that is more resilient and safer for real-world use.",
+      "usecase": "Rate limiting and security headers are essential for protecting production APIs from abuse and attacks. You'll implement these in Express when building public-facing endpoints like user registration forms, payment processing APIs, or dashboard data feeds. For example, an e-commerce site uses rate limiting to prevent bots from brute-forcing login attempts, while security headers like Content-Security-Policy protect customer dashboards from XSS attacks. As a developer, you'll configure these safeguards to ensure your applications remain available and secure under real traffic conditions."
+    },
+    "objectives": [
+      "Configure an Express application to apply rate limiting to incoming requests.",
+      "Integrate a middleware to set essential security headers in an Express server.",
+      "Construct a custom rate limiter with configurable window and maximum request limits.",
+      "Apply security headers to mitigate common web vulnerabilities like XSS and clickjacking.",
+      "Manipulate response headers to enforce content security policies and control MIME types.",
+      "Initialize and bind a rate limiting middleware to specific routes or the entire application.",
+      "Update an existing Express server to include both rate limiting and security header protections."
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 10",
+        "title": "Import Express and required middleware packages",
+        "instruction": "Import Express, express-rate-limit, and helmet using require statements at the top of your file.",
+        "hint": "Use the require() function to import each package. Remember to assign them to variables with appropriate names.",
+        "analogousExample": "// Example: importing multiple packages\nconst express = require('express');\nconst helmet = require('helmet');\nconst rateLimit = require('express-rate-limit');",
+        "seedCode": "// Import Express, express-rate-limit, and helmet here\n\n// Your Express app will be created in the next steps",
+        "expectedOutcome": "You'll have three require statements that import the necessary packages for rate limiting and security headers.",
+        "successCriteria": [
+          "Express, express-rate-limit, and helmet are imported using require statements with appropriate variable names."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've imported some packages, but make sure you have all three: Express, express-rate-limit, and helmet. Check your require statements.",
+        "feedbackWrong": "The imports are missing or incorrect. You need to use require() to import Express, express-rate-limit, and helmet packages.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "require('express')",
+            "require('express-rate-limit')",
+            "require('helmet')"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 10",
+        "title": "Initialize the Express application",
+        "instruction": "Create an Express app instance by calling express() and assign it to a constant named 'app'.",
+        "hint": "Use the imported express function to create your application instance.",
+        "analogousExample": "// Creating an Express app instance\nconst app = express();",
+        "seedCode": "// Import Express, express-rate-limit, and helmet here\n\n// Your Express app will be created in the next steps\n\n// Create your Express app instance here",
+        "expectedOutcome": "You'll have a constant named 'app' that holds your Express application instance, ready for middleware configuration.",
+        "successCriteria": [
+          "The Express app instance is created and assigned to a constant named 'app'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're calling express() to create the instance and assigning it to a constant named 'app'.",
+        "feedbackWrong": "create the Express app instance by calling the imported express function and assigning it to a constant named 'app'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "app",
+            "express()"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 10",
+        "title": "Configure rate limiting middleware",
+        "instruction": "Create a rate limiter instance using express-rate-limit with a window of 15 minutes and a maximum of 100 requests per window.",
+        "hint": "Use the rateLimit function imported from 'express-rate-limit' to create a middleware instance with configuration options.",
+        "analogousExample": "// Creating a rate limiter with specific settings\nconst limiter = rateLimit({\n  windowMs: 15 * 60 * 1000, // 15 minutes\n  max: 100 // limit each IP to 100 requests per windowMs\n});",
+        "seedCode": "const express = require('express');\nconst rateLimit = require('express-rate-limit');\nconst helmet = require('helmet');\n\nconst app = express();\n\n// Create your rate limiter instance here\n",
+        "expectedOutcome": "A rate limiter instance is created with proper configuration for windowMs and max requests.",
+        "successCriteria": [
+          "The rate limiter instance is created with windowMs set to 15 minutes (900000 ms) and max set to 100 requests."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've created a rate limiter, but check the configuration values. The window should be 15 minutes (15 * 60 * 1000 ms) and max should be 100 requests.",
+        "feedbackWrong": "The rate limiter instance wasn't created correctly. Make sure to use the rateLimit function with the proper configuration object.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "rateLimit",
+            "windowMs",
+            "max",
+            "15",
+            "100"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 10",
+        "title": "Apply rate limiting to all routes",
+        "instruction": "Use app.use() to apply the rate limiter middleware to your entire Express application.",
+        "hint": "Call app.use() and pass your rate limiter instance as the argument. This will make the rate limiting apply to all incoming requests.",
+        "analogousExample": "// Applying middleware globally\nconst express = require('express');\nconst app = express();\nconst myMiddleware = require('./middleware');\n\napp.use(myMiddleware);",
+        "seedCode": "const express = require('express');\nconst rateLimit = require('express-rate-limit');\nconst helmet = require('helmet');\n\nconst app = express();\n\n// Create your rate limiter instance here\n\n// Apply the rate limiter to all routes\n",
+        "expectedOutcome": "The rate limiter middleware is now applied globally to protect all endpoints in your application.",
+        "successCriteria": [
+          "app.use() is called with the rate limiter instance as its argument"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're calling app.use() with the rate limiter instance as the argument.",
+        "feedbackWrong": "Try using app.use() to apply the rate limiter middleware to your entire application.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "app.use",
+            "rateLimiter"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 10",
+        "title": "Configure Helmet security headers",
+        "instruction": "Initialize the Helmet middleware with default security headers by calling helmet() and storing it in a variable named helmetMiddleware.",
+        "hint": "Remember that helmet() returns a middleware function. Assign the result to a const variable.",
+        "analogousExample": "// Similar: initializing middleware\nconst helmetMiddleware = helmet();",
+        "seedCode": "const express = require('express');\nconst rateLimit = require('express-rate-limit');\nconst helmet = require('helmet');\n\nconst app = express();\n\n// Create your rate limiter instance here\n\n// Apply the rate limiter to all routes\n\n// Initialize Helmet middleware here",
+        "expectedOutcome": "The Helmet middleware is initialized and ready to be applied to the Express app.",
+        "successCriteria": [
+          "A variable named helmetMiddleware is declared and assigned the result of calling helmet()."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're calling helmet() and storing the result in a variable named helmetMiddleware.",
+        "feedbackWrong": "The Helmet middleware wasn't initialized correctly. Check that you're calling helmet() and assigning it to helmetMiddleware.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "helmetMiddleware",
+            "helmet()"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 10",
+        "title": "Apply Helmet middleware",
+        "instruction": "Apply the Helmet middleware globally to your Express app using app.use().",
+        "hint": "Use app.use() with the helmet() function as the argument.",
+        "analogousExample": "// Applying middleware globally\napp.use(express.json());",
+        "seedCode": "const express = require('express');\nconst rateLimit = require('express-rate-limit');\nconst helmet = require('helmet');\n\nconst app = express();\n\n// Create your rate limiter instance here\n\n// Apply the rate limiter to all routes\n\n// Initialize Helmet middleware here\napp.use(helmet());",
+        "expectedOutcome": "The Helmet middleware is applied globally to add security headers to all responses.",
+        "successCriteria": [
+          "Helmet middleware is applied using app.use(helmet())."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're using app.use() with helmet() as the argument.",
+        "feedbackWrong": "Check the syntax for applying middleware. Use app.use(helmet()) to apply Helmet globally.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "app.use",
+            "helmet()"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 10",
+        "title": "Create a test route to verify rate limiting",
+        "instruction": "Add a GET route at path '/' that returns a JSON response with a message property set to 'Hello, rate-limited world!'.",
+        "hint": "Use app.get() to define the route. The callback should send a JSON response using res.json().",
+        "analogousExample": "// Example: simple GET route\napp.get('/test', (req, res) => {\n  res.json({ message: 'Test route works!' });\n});",
+        "seedCode": "const express = require('express');\nconst rateLimit = require('express-rate-limit');\nconst helmet = require('helmet');\n\nconst app = express();\n\n// Create your rate limiter instance here\n\n// Apply the rate limiter to all routes\n\n// Initialize Helmet middleware here\napp.use(helmet());\n\n// Add your test route here",
+        "expectedOutcome": "A GET route is defined at the root path that returns a JSON message, which will be used to test rate limiting.",
+        "successCriteria": [
+          "The route is defined with app.get('/', ...) and returns a JSON object with a message property."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're using app.get() with the correct path and returning JSON with a message.",
+        "feedbackWrong": "The route isn't defined correctly. Check the path and response format.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "app.get(\"/\"",
+            "res.json",
+            "message"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 10",
+        "title": "Add error handling for rate limit exceeded",
+        "instruction": "Add a custom error handler for when the rate limit is exceeded by setting the `handler` option in your rate limiter configuration.",
+        "hint": "The rate limiter instance accepts a `handler` function that receives the request, response, and next parameters. Use it to send a custom JSON error message.",
+        "analogousExample": "// Example: custom error handler for rate limiting\nconst limiter = rateLimit({\n  windowMs: 15 * 60 * 1000,\n  max: 100,\n  handler: (req, res, next) => {\n    res.status(429).json({ error: 'Too many requests, please try again later.' });\n  }\n});",
+        "seedCode": "const express = require('express');\nconst rateLimit = require('express-rate-limit');\nconst helmet = require('helmet');\n\nconst app = express();\n\n// Create your rate limiter instance here\nconst limiter = rateLimit({\n  windowMs: 15 * 60 * 1000,\n  max: 100\n});\n\n// Apply the rate limiter to all routes\napp.use(limiter);\n\n// Initialize Helmet middleware here\napp.use(helmet());\n\n// Add your test route here\napp.get('/', (req, res) => {\n  res.send('Hello, world!');\n});",
+        "expectedOutcome": "The rate limiter will now respond with a custom JSON error message when the limit is exceeded.",
+        "successCriteria": [
+          "The rate limiter configuration includes a `handler` function that sends a JSON response with status 429."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but the handler might be missing the status code or JSON response. Ensure it sends a 429 status with a JSON error message.",
+        "feedbackWrong": "The rate limiter configuration doesn't include a custom error handler. Add a `handler` function to the limiter configuration that responds with a 429 status and JSON error.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "handler",
+            "429",
+            "json"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 10",
+        "title": "Configure custom security headers",
+        "instruction": "Add custom middleware after the Helmet middleware to set specific security headers like X-Content-Type-Options and X-Frame-Options.",
+        "hint": "Use app.use() with a function that sets headers on the response object.",
+        "analogousExample": "// Example: custom middleware setting headers\napp.use((req, res, next) => {\n  res.setHeader('X-Content-Type-Options', 'nosniff');\n  res.setHeader('X-Frame-Options', 'DENY');\n  next();\n});",
+        "seedCode": "const express = require('express');\nconst rateLimit = require('express-rate-limit');\nconst helmet = require('helmet');\n\nconst app = express();\n\n// Create your rate limiter instance here\nconst limiter = rateLimit({\n  windowMs: 15 * 60 * 1000,\n  max: 100\n});\n\n// Apply the rate limiter to all routes\napp.use(limiter);\n\n// Initialize Helmet middleware here\napp.use(helmet());\n\n// Add custom security headers middleware here\n\n// Add your test route here\napp.get('/', (req, res) => {\n  res.send('Hello, world!');\n});",
+        "expectedOutcome": "The application now includes custom middleware that sets additional security headers on all responses.",
+        "successCriteria": [
+          "Custom middleware is added after Helmet and sets at least X-Content-Type-Options and X-Frame-Options headers."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added middleware, but make sure it sets both X-Content-Type-Options and X-Frame-Options headers and is placed after the Helmet middleware.",
+        "feedbackWrong": "The custom security headers middleware is missing or incomplete. Add middleware that sets X-Content-Type-Options and X-Frame-Options headers.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "app.use",
+            "res.setHeader",
+            "X-Content-Type-Options",
+            "X-Frame-Options",
+            "next()"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 10",
+        "title": "Start the Express server",
+        "instruction": "Start the Express server by calling app.listen() on port 3000 and add a console log message that says 'Server running on port 3000'.",
+        "hint": "Use app.listen() with the port number and a callback function that logs the message to the console.",
+        "analogousExample": "// Starting a server in Express\napp.listen(3000, () => {\n  console.log('Server running on port 3000');\n});",
+        "seedCode": "const express = require('express');\nconst rateLimit = require('express-rate-limit');\nconst helmet = require('helmet');\n\nconst app = express();\n\n// Create your rate limiter instance here\nconst limiter = rateLimit({\n  windowMs: 15 * 60 * 1000,\n  max: 100\n});\n\n// Apply the rate limiter to all routes\napp.use(limiter);\n\n// Initialize Helmet middleware here\napp.use(helmet());\n\n// Add custom security headers middleware here\n\n// Add your test route here\napp.get('/', (req, res) => {\n  res.send('Hello, world!');\n});\n\n// Start the server here",
+        "expectedOutcome": "The server will start on port 3000 and display a confirmation message in the console.",
+        "successCriteria": [
+          "The server is started with app.listen() on port 3000 and logs 'Server running on port 3000'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure you're calling app.listen() with port 3000 and a callback that logs the message.",
+        "feedbackWrong": "The server isn't starting correctly. Check that you're using app.listen() with the right port and console.log().",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "app.listen",
+            "3000",
+            "console.log",
+            "'Server running on port 3000'"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import Express and required middleware packages",
+        "id": "step1"
+      },
+      {
+        "label": "Initialize the Express application",
+        "id": "step2"
+      },
+      {
+        "label": "Configure rate limiting middleware",
+        "id": "step3"
+      },
+      {
+        "label": "Apply rate limiting to all routes",
+        "id": "step4"
+      },
+      {
+        "label": "Configure Helmet security headers",
+        "id": "step5"
+      },
+      {
+        "label": "Apply Helmet middleware",
+        "id": "step6"
+      },
+      {
+        "label": "Create a test route to verify rate limiting",
+        "id": "step7"
+      },
+      {
+        "label": "Add error handling for rate limit exceeded",
+        "id": "step8"
+      },
+      {
+        "label": "Configure custom security headers",
+        "id": "step9"
+      },
+      {
+        "label": "Start the Express server",
+        "id": "step10"
+      }
+    ]
+  },
+  "source": "content"
+}

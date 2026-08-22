@@ -1,0 +1,324 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-node-31",
+    "track": "node",
+    "lessonNum": 31,
+    "title": "Build file upload endpoint with validation",
+    "shortName": "P31",
+    "intro": {
+      "tag": "LESSON #31",
+      "title": "Build file upload endpoint with validation",
+      "body": "In this lesson, you will build a file upload endpoint using Node.js that accepts and validates user-uploaded files. You'll learn how to handle multipart form data, check file properties like size and type, and securely store the uploaded files on the server. The core programming concept involves processing HTTP requests, implementing validation logic, and managing file streams. You'll use Express.js for the web framework and the 'multer' middleware to handle file uploads, applying these tools to create a robust, beginner-friendly endpoint.",
+      "usecase": "File upload endpoints with validation are essential in virtually any application that handles user-generated content. You'll see this pattern in social media platforms like Instagram where users upload profile pictures with size and format restrictions, in document management systems like Google Drive that validate file types before storage, and in job application portals that accept resumes with specific file requirements. As a Node.js developer, you'll implement these endpoints to securely handle user uploads while preventing malicious files, ensuring data integrity, and providing clear feedback when uploads fail validation."
+    },
+    "objectives": [
+      "Construct an Express.js endpoint to handle file uploads using multer middleware",
+      "Configure multer storage settings to specify destination and filename patterns",
+      "Implement file type validation by checking MIME types or extensions",
+      "Apply file size limits to prevent oversized uploads",
+      "Initialize error handling for upload failures and validation errors",
+      "Integrate validation logic with the upload endpoint to reject invalid files",
+      "Manipulate file metadata to generate unique filenames and organize uploads"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 9",
+        "title": "Import required modules: express, multer, and path",
+        "instruction": "Import the express, multer, and path modules using require statements.",
+        "hint": "Use require('module-name') to import each module. You'll need three separate require statements.",
+        "analogousExample": "// Example: importing modules\nconst fs = require('fs');\nconst http = require('http');",
+        "seedCode": "// Import express, multer, and path modules here",
+        "expectedOutcome": "The express, multer, and path modules are imported and ready to use in your file upload endpoint.",
+        "successCriteria": [
+          "express, multer, and path are imported using require statements."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've imported some modules, but you need all three: express, multer, and path. Check your require statements.",
+        "feedbackWrong": "The required modules aren't imported correctly. Make sure to use require() for express, multer, and path.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "require('express')",
+            "require('multer')",
+            "require('path')"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 9",
+        "title": "Initialize the Express application",
+        "instruction": "Create an Express application instance by calling express() and assign it to a constant named 'app'.",
+        "hint": "Use the imported express module to create the app instance.",
+        "analogousExample": "// Creating an Express app instance\nconst app = express();",
+        "seedCode": "// Import express, multer, and path modules here\n\n// Create Express app instance here",
+        "expectedOutcome": "The Express application instance is created and ready to be configured.",
+        "successCriteria": [
+          "A constant named 'app' is declared and assigned the result of calling express()."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're creating a constant named 'app' and calling express() to initialize it.",
+        "feedbackWrong": "The Express app instance wasn't created correctly. Remember to call express() and assign it to a constant named 'app'.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "const",
+            "app",
+            "=",
+            "express()"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 9",
+        "title": "Configure multer storage for file uploads",
+        "instruction": "Create a multer disk storage configuration object that specifies where uploaded files should be stored and how they should be named.",
+        "hint": "Use multer.diskStorage() with an options object containing destination and filename functions. The destination function should use path.join() to create an 'uploads' directory, and filename should return the original file name.",
+        "analogousExample": "// Similar: storage configuration for file uploads\nconst storage = multer.diskStorage({\n  destination: function (req, file, cb) {\n    cb(null, 'uploads/')\n  },\n  filename: function (req, file, cb) {\n    cb(null, file.originalname)\n  }\n})",
+        "seedCode": "const express = require('express');\nconst multer = require('multer');\nconst path = require('path');\n\nconst app = express();\n\n// Configure multer disk storage here",
+        "expectedOutcome": "A storage configuration object is created that will handle where uploaded files are saved and what they're named.",
+        "successCriteria": [
+          "A multer.diskStorage() configuration is defined with destination and filename functions."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but check that you've included both destination and filename functions in your storage configuration.",
+        "feedbackWrong": "The storage configuration isn't quite right. Remember to use multer.diskStorage() with an object containing destination and filename functions.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "multer.diskStorage",
+            "destination",
+            "filename"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 9",
+        "title": "Create multer upload middleware with file filter",
+        "instruction": "Create a multer instance named 'upload' that uses the storage configuration and includes a file filter function to accept only image files (jpeg, png, gif).",
+        "hint": "Call multer() with an object containing 'storage' and 'fileFilter' properties. The fileFilter function should check the file's mimetype.",
+        "analogousExample": "// Similar: creating middleware with configuration\nconst upload = multer({\n  storage: diskStorage,\n  fileFilter: function(req, file, cb) {\n    if (file.mimetype === 'image/jpeg') {\n      cb(null, true);\n    } else {\n      cb(new Error('Invalid file type'), false);\n    }\n  }\n});",
+        "seedCode": "const express = require('express');\nconst multer = require('multer');\nconst path = require('path');\n\nconst app = express();\n\n// Configure multer disk storage here\n\n// Create multer upload middleware with file filter\n",
+        "expectedOutcome": "A multer instance named 'upload' is created with storage configuration and a file filter that validates image files.",
+        "successCriteria": [
+          "The 'upload' constant is defined using multer() with both storage and fileFilter properties. The fileFilter function checks mimetype for image formats."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but check that your fileFilter function properly validates image mimetypes (jpeg, png, gif) and calls the callback correctly.",
+        "feedbackWrong": "The upload middleware isn't configured correctly. Make sure to create a multer instance with both storage and fileFilter properties.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "upload",
+            "multer",
+            "storage",
+            "fileFilter",
+            "mimetype",
+            "image"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 9",
+        "title": "Define the upload endpoint route",
+        "instruction": "Create a POST route at '/upload' that uses the multer upload middleware you configured earlier.",
+        "hint": "Use app.post() with the route path and the upload middleware as the first argument in the callback chain.",
+        "analogousExample": "// Example: defining a POST route with middleware\napp.post('/submit', uploadMiddleware, (req, res) => {\n  // Handle the request here\n});",
+        "seedCode": "const express = require('express');\nconst multer = require('multer');\nconst path = require('path');\n\nconst app = express();\n\n// Configure multer disk storage here\n\n// Create multer upload middleware with file filter\n\n// Define the upload endpoint route here",
+        "expectedOutcome": "The Express app will have a POST route at '/upload' ready to handle file uploads.",
+        "successCriteria": [
+          "A POST route is defined at '/upload' and uses the multer upload middleware."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're using app.post() with '/upload' and the upload middleware.",
+        "feedbackWrong": "The route isn't defined correctly. Check the syntax for creating a POST route with middleware.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "app.post",
+            "'/upload'",
+            "upload"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 9",
+        "title": "Add validation for file existence in the route handler",
+        "instruction": "Inside the upload endpoint route handler, add a conditional check to verify if req.file exists. If it doesn't exist, return a 400 status with a JSON error message: 'No file uploaded'.",
+        "hint": "Use an if statement to check if req.file is falsy (undefined or null). If so, use res.status(400).json({ error: 'No file uploaded' }) and return to end the request.",
+        "analogousExample": "// Similar: checking for required data in a request\nif (!req.body.username) {\n  return res.status(400).json({ error: 'Username is required' });\n}",
+        "seedCode": "const express = require('express');\nconst multer = require('multer');\nconst path = require('path');\n\nconst app = express();\n\n// Configure multer disk storage here\n\n// Create multer upload middleware with file filter\n\n// Define the upload endpoint route here\napp.post('/upload', (req, res) => {\n  // Add file existence validation here\n});",
+        "expectedOutcome": "The route handler now validates that a file was uploaded before proceeding, returning an appropriate error response if not.",
+        "successCriteria": [
+          "The route handler includes an if statement checking if req.file exists, returns a 400 status with JSON error message when missing."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added some validation, but make sure to check if req.file exists and return the proper 400 status with JSON error message.",
+        "feedbackWrong": "The validation for file existence isn't implemented correctly. Add an if statement to check req.file and return an error response when it's missing.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "req.file",
+            "if",
+            "400",
+            "json",
+            "No file uploaded"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 9",
+        "title": "Add file size validation in the route handler",
+        "instruction": "Inside the /upload route handler, add validation to check if the uploaded file exceeds 5MB (5 * 1024 * 1024 bytes). If it does, return a 400 status with an error message.",
+        "hint": "Check req.file.size against the maximum size. Use res.status(400).json() to send the error response.",
+        "analogousExample": "// Similar: size validation in an upload handler\nif (file.size > 5 * 1024 * 1024) {\n  return res.status(400).json({ error: 'File too large' });\n}",
+        "seedCode": "const express = require('express');\nconst multer = require('multer');\nconst path = require('path');\n\nconst app = express();\n\n// Configure multer disk storage here\n\n// Create multer upload middleware with file filter\n\n// Define the upload endpoint route here\napp.post('/upload', (req, res) => {\n  // Add file existence validation here\n  // Add file size validation here\n});",
+        "expectedOutcome": "The route handler will now reject files larger than 5MB with a proper error response.",
+        "successCriteria": [
+          "File size validation is implemented with a 5MB limit and returns a 400 status with an error message when exceeded."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added some validation, but make sure to check the exact size limit (5MB) and return the proper error response.",
+        "feedbackWrong": "The size validation isn't implemented correctly. Check the file size and return a 400 status with an error message when it exceeds the limit.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "req.file.size",
+            "5 * 1024 * 1024",
+            "res.status(400)",
+            "json"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 9",
+        "title": "Handle successful upload response",
+        "instruction": "In the upload route handler, after all validation passes, return a JSON response with a success message and the uploaded file's details.",
+        "hint": "Use res.json() to send a JSON response. Include properties like 'message' and 'file' in the response object.",
+        "analogousExample": "// Example: returning a success response\napp.post('/submit', (req, res) => {\n  // After validation...\n  res.json({\n    message: 'Submission successful',\n    data: req.body\n  });\n});",
+        "seedCode": "const express = require('express');\nconst multer = require('multer');\nconst path = require('path');\n\nconst app = express();\n\n// Configure multer disk storage here\n\n// Create multer upload middleware with file filter\n\n// Define the upload endpoint route here\napp.post('/upload', (req, res) => {\n  // Add file existence validation here\n  // Add file size validation here\n  // Add file type validation here\n  // Return success response with file details\n});",
+        "expectedOutcome": "The route handler now returns a JSON response when validation passes, confirming the upload was successful and providing file information.",
+        "successCriteria": [
+          "The upload endpoint returns a JSON response with a success message and file details after all validation passes."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your response includes both a 'message' property and a 'file' property with the uploaded file's details.",
+        "feedbackWrong": "The upload endpoint doesn't yet return a proper success response. After validation, use res.json() to send a JSON object with success message and file details.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "res.json",
+            "message",
+            "file"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 9",
+        "title": "Start the Express server",
+        "instruction": "Make the Express application listen for incoming requests on port 3000 and log a startup message.",
+        "hint": "Use the app.listen() method with the port number and a callback function that logs a message.",
+        "analogousExample": "// Starting a server in Express\napp.listen(3000, () => {\n  console.log('Server running on port 3000');\n});",
+        "seedCode": "const express = require('express');\nconst multer = require('multer');\nconst path = require('path');\n\nconst app = express();\n\n// Configure multer disk storage here\n\n// Create multer upload middleware with file filter\n\n// Define the upload endpoint route here\napp.post('/upload', (req, res) => {\n  // Add file existence validation here\n  // Add file size validation here\n  // Add file type validation here\n  // Return success response with file details\n});\n\n// Start the server here",
+        "expectedOutcome": "The server will be running and ready to handle file upload requests at http://localhost:3000/upload.",
+        "successCriteria": [
+          "The app.listen() method is called with port 3000 and a callback that logs a startup message."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the server, but make sure to include a callback that logs a message when it's running.",
+        "feedbackWrong": "The server isn't started yet. Use app.listen() with port 3000 and a callback.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "app.listen",
+            "3000",
+            "console.log"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import required modules: express, multer, and path",
+        "id": "step1"
+      },
+      {
+        "label": "Initialize the Express application",
+        "id": "step2"
+      },
+      {
+        "label": "Configure multer storage for file uploads",
+        "id": "step3"
+      },
+      {
+        "label": "Create multer upload middleware with file filter",
+        "id": "step4"
+      },
+      {
+        "label": "Define the upload endpoint route",
+        "id": "step5"
+      },
+      {
+        "label": "Add validation for file existence in the route handler",
+        "id": "step6"
+      },
+      {
+        "label": "Add file size validation in the route handler",
+        "id": "step7"
+      },
+      {
+        "label": "Handle successful upload response",
+        "id": "step8"
+      },
+      {
+        "label": "Start the Express server",
+        "id": "step9"
+      }
+    ]
+  },
+  "source": "content"
+}

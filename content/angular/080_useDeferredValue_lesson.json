@@ -1,0 +1,330 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-angular-80",
+    "track": "angular",
+    "lessonNum": 80,
+    "title": "useDeferredValue",
+    "shortName": "P80",
+    "intro": {
+      "tag": "LESSON #80",
+      "title": "useDeferredValue",
+      "body": "In this lesson, you will build a simple search input component that filters a list of items in real-time. You will learn how to use Angular's `defer` block to optimize performance by deferring the rendering of computationally expensive updates until the browser is idle. The core concept involves delaying non-critical UI updates to keep the main thread responsive, preventing jank during user interactions. You will work with Angular templates, control flow, and the `@defer` syntax to implement this pattern. By the end, you'll understand how to improve user experience in data-heavy applications by prioritizing urgent updates over less critical ones.",
+      "usecase": "In real-world Angular applications, deferred values are crucial for optimizing performance in search interfaces and data-heavy dashboards. For example, when users type in a search box with live results, you can defer the expensive filtering operation while keeping the UI responsive to keystrokes. This pattern is commonly used in e-commerce product filters, admin panels with complex data visualizations, and analytics dashboards with real-time updates. By deferring non-critical updates, you prevent the UI from freezing during intensive computations, creating a smoother user experience."
+    },
+    "objectives": [
+      "Implement a deferred value to optimize rendering performance for slow-changing data",
+      "Apply the useDeferredValue hook to manage state updates in Angular components",
+      "Construct a search input component that uses deferred values to prevent UI blocking",
+      "Configure deferred value dependencies to control when re-renders occur",
+      "Integrate deferred values with template expressions to improve user experience",
+      "Manipulate component state to demonstrate the visual difference between immediate and deferred updates",
+      "Initialize deferred values with appropriate initial states for different data types"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 9",
+        "title": "Import Component, signal, computed, and ChangeDetectionStrategy",
+        "instruction": "Import Component, signal, computed, and ChangeDetectionStrategy from '@angular/core'.",
+        "hint": "Use the import statement with curly braces to bring in multiple symbols from the same module.",
+        "analogousExample": "// Importing multiple Angular core features\nimport { Component, OnInit, Input } from '@angular/core';",
+        "seedCode": "// Import Component, signal, computed, and ChangeDetectionStrategy from '@angular/core'\n",
+        "expectedOutcome": "The Angular core decorators and reactive primitives are imported and ready to use.",
+        "successCriteria": [
+          "Component, signal, computed, and ChangeDetectionStrategy are imported from '@angular/core'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You imported some symbols, but make sure to include all four: Component, signal, computed, and ChangeDetectionStrategy.",
+        "feedbackWrong": "The import statement is missing or incorrect. Check that you're importing from '@angular/core' with the correct symbols.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "import",
+            "Component",
+            "signal",
+            "computed",
+            "ChangeDetectionStrategy",
+            "@angular/core"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 9",
+        "title": "Create main component with ChangeDetectionStrategy.OnPush",
+        "instruction": "Create the main component class with @Component decorator and ChangeDetectionStrategy.OnPush. Name the component 'DeferredValueDemo'.",
+        "hint": "Use the @Component decorator with selector 'app-deferred-value-demo' and template set to an empty string for now. Set changeDetection to ChangeDetectionStrategy.OnPush.",
+        "analogousExample": "// Example component with OnPush\n@Component({\n  selector: 'app-example',\n  template: '',\n  changeDetection: ChangeDetectionStrategy.OnPush\n})\nexport class ExampleComponent {}",
+        "seedCode": "// Import Component, signal, computed, and ChangeDetectionStrategy from '@angular/core'\nimport { Component, signal, computed, ChangeDetectionStrategy } from '@angular/core';\n\n// Create the main component class with @Component decorator and ChangeDetectionStrategy.OnPush\n",
+        "expectedOutcome": "A component class named DeferredValueDemo is created with OnPush change detection strategy.",
+        "successCriteria": [
+          "Component class DeferredValueDemo is defined with @Component decorator, selector 'app-deferred-value-demo', empty template, and ChangeDetectionStrategy.OnPush."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you have the @Component decorator with selector 'app-deferred-value-demo', template set to empty string, and changeDetection set to ChangeDetectionStrategy.OnPush.",
+        "feedbackWrong": "The component isn't properly set up. Check that you're using the @Component decorator with the correct configuration.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "@Component",
+            "DeferredValueDemo",
+            "selector",
+            "template",
+            "ChangeDetectionStrategy.OnPush"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 9",
+        "title": "Initialize input signal for search term",
+        "instruction": "Inside your component class, define a searchTerm signal with an initial empty string value.",
+        "hint": "Use the signal function imported earlier to create a reactive state variable.",
+        "analogousExample": "// Example: creating a signal with initial value\nsearchTerm = signal('');",
+        "seedCode": "import { Component, signal, computed, ChangeDetectionStrategy } from '@angular/core';\n\n@Component({\n  selector: 'app-deferred-value-demo',\n  template: '',\n  changeDetection: ChangeDetectionStrategy.OnPush\n})\nexport class DeferredValueDemoComponent {\n  // Define searchTerm signal here\n}",
+        "expectedOutcome": "A searchTerm signal is created with an empty string as its initial value.",
+        "successCriteria": [
+          "The component contains a searchTerm signal initialized with an empty string."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're using the signal function with an empty string initial value inside the component class.",
+        "feedbackWrong": "The searchTerm signal isn't properly defined. Remember to use signal('') inside the component class.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "searchTerm",
+            "signal",
+            "''"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 9",
+        "title": "Create deferred search term using computed",
+        "instruction": "Inside the DeferredValueDemoComponent class, create a computed signal named deferredSearchTerm that returns the value of searchTerm.",
+        "hint": "Use the computed function imported earlier. Define it as a class property: deferredSearchTerm = computed(() => this.searchTerm()).",
+        "analogousExample": "// Example computed signal\nclass ExampleComponent {\n  count = signal(0);\n  doubledCount = computed(() => this.count() * 2);\n}",
+        "seedCode": "import { Component, signal, computed, ChangeDetectionStrategy } from '@angular/core';\n\n@Component({\n  selector: 'app-deferred-value-demo',\n  template: '',\n  changeDetection: ChangeDetectionStrategy.OnPush\n})\nexport class DeferredValueDemoComponent {\n  // Define searchTerm signal here\n  \n  // Create deferredSearchTerm computed signal here\n}",
+        "expectedOutcome": "The component will have a computed signal that derives its value from the searchTerm signal.",
+        "successCriteria": [
+          "A computed signal named deferredSearchTerm is defined and returns searchTerm()."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure deferredSearchTerm is a computed signal that returns searchTerm().",
+        "feedbackWrong": "The computed signal wasn't created correctly. Remember to use computed(() => this.searchTerm()).",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "deferredSearchTerm",
+            "computed",
+            "searchTerm()"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 9",
+        "title": "Add template structure with input and display",
+        "instruction": "Add the template content to your component's template property. Include an input element bound to the searchTerm signal and a paragraph to display the deferred search term value.",
+        "hint": "Use Angular's template syntax with parentheses for event binding and double curly braces for interpolation.",
+        "analogousExample": "// Example: basic template with input and display\n@Component({\n  selector: 'app-example',\n  template: `\n    <input (input)=\"onInputChange($event)\" />\n    <p>Deferred value: {{ deferredValue() }}</p>\n  `\n})",
+        "seedCode": "import { Component, signal, computed, ChangeDetectionStrategy } from '@angular/core';\n\n@Component({\n  selector: 'app-deferred-value-demo',\n  template: '',\n  changeDetection: ChangeDetectionStrategy.OnPush\n})\nexport class DeferredValueDemoComponent {\n  // Define searchTerm signal here\n  \n  // Create deferredSearchTerm computed signal here\n  \n  // Define onInputChange method here\n}",
+        "expectedOutcome": "The component will have a basic UI with an input field and a paragraph that will eventually display the deferred value.",
+        "successCriteria": [
+          "Template contains an input element with (input) event binding and a paragraph with interpolation for deferredSearchTerm."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added some template elements, but make sure you have both the input with event binding and the paragraph with interpolation.",
+        "feedbackWrong": "The template structure is missing or incorrect. Check that you've added both the input element and paragraph as specified.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<input",
+            "(input)",
+            "onInputChange",
+            "<p",
+            "{{",
+            "deferredSearchTerm",
+            "}}"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 9",
+        "title": "Wire input event to handler",
+        "instruction": "In the component's template, add an (input) event binding to the input element to call the onInputChange method with $event.target.value.",
+        "hint": "Use Angular's event binding syntax: (input)=\"onInputChange($event.target.value)\" on the input element.",
+        "analogousExample": "// Similar: binding input event to a method\n<input (input)=\"handleInput($event.target.value)\" />",
+        "seedCode": "import { Component, signal, computed, ChangeDetectionStrategy } from '@angular/core';\n\n@Component({\n  selector: 'app-deferred-value-demo',\n  template: '<input type=\"text\" placeholder=\"Search...\" />',\n  changeDetection: ChangeDetectionStrategy.OnPush\n})\nexport class DeferredValueDemoComponent {\n  searchTerm = signal('');\n  deferredSearchTerm = computed(() => this.searchTerm());\n  \n  onInputChange(value: string) {\n    this.searchTerm.set(value);\n  }\n}",
+        "expectedOutcome": "The input element will have an (input) event binding that triggers the onInputChange method when the user types.",
+        "successCriteria": [
+          "The input element includes (input)=\"onInputChange($event.target.value)\" event binding."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're using Angular's event binding syntax with parentheses and passing $event.target.value to the method.",
+        "feedbackWrong": "The input element doesn't have the correct event binding. Remember to use (input)=\"onInputChange($event.target.value)\".",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "(input)",
+            "onInputChange",
+            "$event.target.value"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 9",
+        "title": "Display original search term value",
+        "instruction": "Add a paragraph element below the input that displays the current search term value with a descriptive label.",
+        "hint": "Use the searchTerm signal's value in the template with interpolation. For example: <p>Current search: {{ searchTerm() }}</p>",
+        "analogousExample": "// Displaying a signal value in template\n<p>Current value: {{ mySignal() }}</p>",
+        "seedCode": "import { Component, signal, computed, ChangeDetectionStrategy } from '@angular/core';\n\n@Component({\n  selector: 'app-deferred-value-demo',\n  template: `\n    <input \n      type=\"text\" \n      placeholder=\"Search...\" \n      (input)=\"onInputChange($any($event.target).value)\" \n    />\n    <!-- Add paragraph here to display searchTerm value -->\n  `,\n  changeDetection: ChangeDetectionStrategy.OnPush\n})\nexport class DeferredValueDemoComponent {\n  searchTerm = signal('');\n  deferredSearchTerm = computed(() => this.searchTerm());\n  \n  onInputChange(value: string) {\n    this.searchTerm.set(value);\n  }\n}",
+        "expectedOutcome": "The template will show the immediate input value as you type, demonstrating the original search term before any deferred processing.",
+        "successCriteria": [
+          "A paragraph element displays the current searchTerm signal value with appropriate labeling"
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've added a paragraph, but make sure it displays the searchTerm() value with a clear label like 'Current search: {{ searchTerm() }}'.",
+        "feedbackWrong": "The paragraph element is missing or doesn't display the searchTerm signal value. Add a <p> element that shows the current search term.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "<p",
+            "searchTerm()",
+            "{{",
+            "}}"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 9",
+        "title": "Display deferred search term value",
+        "instruction": "Add a paragraph below the input to display the deferred search term value with a descriptive label.",
+        "hint": "Use the deferredSearchTerm signal in the template with parentheses to get its value.",
+        "analogousExample": "<!-- Displaying a signal value -->\n<p>Deferred value: {{ deferredValue() }}</p>",
+        "seedCode": "import { Component, signal, computed, ChangeDetectionStrategy } from '@angular/core';\n\n@Component({\n  selector: 'app-deferred-value-demo',\n  template: `\n    <input \n      type=\"text\" \n      placeholder=\"Search...\" \n      (input)=\"onInputChange($any($event.target).value)\" \n    />\n    <!-- Add paragraph here to display deferredSearchTerm value -->\n  `,\n  changeDetection: ChangeDetectionStrategy.OnPush\n})\nexport class DeferredValueDemoComponent {\n  searchTerm = signal('');\n  deferredSearchTerm = computed(() => this.searchTerm());\n  \n  onInputChange(value: string) {\n    this.searchTerm.set(value);\n  }\n}",
+        "expectedOutcome": "The template will show both the original search term and the deferred version, demonstrating they currently have the same value.",
+        "successCriteria": [
+          "A paragraph element displays the deferredSearchTerm() value with a descriptive label."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close! Make sure you're displaying the deferredSearchTerm() value (with parentheses) and not just referencing the signal without calling it.",
+        "feedbackWrong": "The paragraph isn't displaying the deferred search term value correctly. Remember to use the deferredSearchTerm signal with parentheses in the template to get its current value.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "deferredSearchTerm()",
+            "<p",
+            "{{",
+            "}}"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 9",
+        "title": "Add explanatory comments about deferred value behavior",
+        "instruction": "Add a comment above the deferredSearchTerm signal declaration explaining that it provides non-urgent updates to improve performance during rapid input changes.",
+        "hint": "Add a single-line comment using // or a multi-line comment using /* */ above the deferredSearchTerm line.",
+        "analogousExample": "// This computed value provides deferred updates for better performance\nconst deferredValue = computed(() => sourceSignal());",
+        "seedCode": "import { Component, signal, computed, ChangeDetectionStrategy } from '@angular/core';\n\n@Component({\n  selector: 'app-deferred-value-demo',\n  template: `\n    <input \n      type=\"text\" \n      placeholder=\"Search...\" \n      (input)=\"onInputChange($any($event.target).value)\" \n    />\n    <!-- Add paragraph here to display deferredSearchTerm value -->\n  `,\n  changeDetection: ChangeDetectionStrategy.OnPush\n})\nexport class DeferredValueDemoComponent {\n  searchTerm = signal('');\n  // Add comment here explaining deferred value behavior\n  deferredSearchTerm = computed(() => this.searchTerm());\n  \n  onInputChange(value: string) {\n    this.searchTerm.set(value);\n  }\n}",
+        "expectedOutcome": "The code will include a comment explaining the purpose of the deferred value signal.",
+        "successCriteria": [
+          "A comment is added above the deferredSearchTerm declaration explaining its deferred update behavior."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You added a comment, but make sure it specifically explains the deferred update behavior for performance optimization.",
+        "feedbackWrong": "The comment should explain that deferredSearchTerm provides non-urgent updates to improve performance during rapid input changes.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "deferred",
+            "update",
+            "performance",
+            "input",
+            "comment"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import Component, signal, computed, and ChangeDetectionStrategy",
+        "id": "step1"
+      },
+      {
+        "label": "Create main component with ChangeDetectionStrategy.OnPush",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize input signal for search term",
+        "id": "step3"
+      },
+      {
+        "label": "Create deferred search term using computed",
+        "id": "step4"
+      },
+      {
+        "label": "Add template structure with input and display",
+        "id": "step5"
+      },
+      {
+        "label": "Wire input event to handler",
+        "id": "step6"
+      },
+      {
+        "label": "Display original search term value",
+        "id": "step7"
+      },
+      {
+        "label": "Display deferred search term value",
+        "id": "step8"
+      },
+      {
+        "label": "Add explanatory comments about deferred value behavior",
+        "id": "step9"
+      }
+    ]
+  },
+  "source": "content"
+}

@@ -1,0 +1,365 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-sd-08",
+    "track": "sd",
+    "lessonNum": 8,
+    "title": "Load balancing",
+    "shortName": "P08",
+    "intro": {
+      "tag": "LESSON #8",
+      "title": "Load balancing",
+      "body": "In this lesson, you will build a simple load balancer simulation that distributes incoming requests across multiple servers. You will learn the core concept of distributing workload to improve system performance and reliability. The main technologies involved are basic algorithmic logic for request routing, such as round-robin or random selection. By the end, you will understand how load balancers prevent any single server from becoming overwhelmed and ensure efficient resource utilization.",
+      "usecase": "Load balancing is essential for any web service handling significant traffic, such as e-commerce platforms during sales events or streaming services during peak hours. It ensures that no single server becomes a bottleneck, distributing user requests across multiple servers to maintain fast response times and high availability. Developers implement load balancing in scenarios like API gateways, content delivery networks (CDNs), and microservices architectures to create scalable and resilient systems that can handle millions of concurrent users without downtime."
+    },
+    "objectives": [
+      "Implement a basic round-robin load balancing algorithm",
+      "Configure a load balancer to distribute requests across multiple servers",
+      "Construct a health check mechanism to monitor server availability",
+      "Apply session persistence techniques for stateful applications",
+      "Integrate a load balancer into a simple client-server architecture",
+      "Manipulate server weights to control traffic distribution",
+      "Initialize a load balancing configuration with multiple backend targets",
+      "Update routing rules dynamically based on server performance metrics"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 10",
+        "title": "Define the system components and their roles",
+        "instruction": "Create a conceptual diagram or list identifying the key components: clients, load balancer, and server instances.",
+        "hint": "Think about the basic flow: clients send requests, a load balancer distributes them, and multiple server instances handle the requests.",
+        "analogousExample": "// Example: Conceptual system components\n// Clients: Users sending requests\n// Load Balancer: Distributes requests evenly\n// Server Instances: Multiple servers handling requests",
+        "seedCode": "// Create your conceptual diagram or list here",
+        "expectedOutcome": "A clear identification of the three main components in a load-balanced system.",
+        "successCriteria": [
+          "The diagram or list includes clients, load balancer, and server instances."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure to include all three components: clients, load balancer, and server instances.",
+        "feedbackWrong": "Let's review the basic components. A load-balanced system needs clients (request senders), a load balancer (distributor), and multiple server instances (request handlers).",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "clients",
+            "load balancer",
+            "server instances"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 10",
+        "title": "Initialize server pool data structure",
+        "instruction": "Create an array of objects to represent your pool of backend servers. Each server object should have properties like id, name, and healthStatus.",
+        "hint": "Think of the array as your server inventory. Each object in the array represents one server with its characteristics.",
+        "analogousExample": "// Similar: creating a data structure for a team\nconst teamMembers = [\n  { id: 1, name: 'Alice', role: 'Developer' },\n  { id: 2, name: 'Bob', role: 'Designer' }\n];",
+        "seedCode": "// Create your conceptual diagram or list here\n\n// Create your server pool array here",
+        "expectedOutcome": "You'll have a data structure that represents multiple servers, each with identifiable properties.",
+        "successCriteria": [
+          "An array exists containing at least 2 server objects, each with id, name, and healthStatus properties."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you have an array with at least 2 server objects, each containing id, name, and healthStatus properties.",
+        "feedbackWrong": "Create an array of server objects where each object has properties like id, name, and healthStatus. This data structure is essential for representing your backend servers.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "[",
+            "{",
+            "id",
+            "name",
+            "healthStatus",
+            "}",
+            "]"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 10",
+        "title": "Initialize request queue data structure",
+        "instruction": "Create a function named 'initializeRequestQueue' that returns an empty array to represent a queue for incoming client requests.",
+        "hint": "Think of a queue as a simple list where requests are added to the end and processed from the front. You can create a function that returns an empty array.",
+        "analogousExample": "// Example: a function that initializes a task list\nfunction initializeTaskList() {\n  return [];\n}",
+        "seedCode": "// Create your conceptual diagram or list here\n\n// Create your server pool array here\n\n// Create your request queue function here",
+        "expectedOutcome": "A function named 'initializeRequestQueue' that returns an empty array.",
+        "successCriteria": [
+          "The 'initializeRequestQueue' function is defined and returns an empty array."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure your function is named exactly 'initializeRequestQueue' and returns an empty array.",
+        "feedbackWrong": "Create a function named 'initializeRequestQueue' that returns an empty array to represent the request queue.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "initializeRequestQueue",
+            "return",
+            "[]"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 10",
+        "title": "Define round-robin load balancing algorithm",
+        "instruction": "Create a function named 'roundRobinLoadBalancer' that takes no parameters and returns the next server from the server pool in sequential order, cycling back to the first server after the last one.",
+        "hint": "Think of a simple counter that increments each time the function is called, then uses modulo arithmetic to cycle through the server pool indices.",
+        "analogousExample": "// Similar: a function that cycles through items in an array\nfunction getNextItem(items) {\n    let currentIndex = 0;\n    return function() {\n        const item = items[currentIndex];\n        currentIndex = (currentIndex + 1) % items.length;\n        return item;\n    };\n}",
+        "seedCode": "// Create your conceptual diagram or list here\n\n// Create your server pool array here\n\n// Create your request queue function here\n\n// Create your roundRobinLoadBalancer function here",
+        "expectedOutcome": "A function that implements the round-robin algorithm to distribute requests sequentially across servers.",
+        "successCriteria": [
+          "The 'roundRobinLoadBalancer' function is defined and returns the next server in sequence each time it's called."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure your function maintains state to remember the current position and cycles through all servers using modulo arithmetic.",
+        "feedbackWrong": "The function doesn't implement round-robin correctly. Review how to cycle through an array sequentially and return to the beginning after reaching the end.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "roundRobinLoadBalancer",
+            "function",
+            "return",
+            "server",
+            "pool",
+            "index",
+            "modulo",
+            "%"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 10",
+        "title": "Define least-connections load balancing algorithm",
+        "instruction": "Create a function named leastConnectionsLoadBalancer that takes a server pool array and returns the server with the fewest active connections.",
+        "hint": "The function should iterate through the server pool, compare the activeConnections property of each server, and return the server object with the minimum value.",
+        "analogousExample": "// Similar: find the smallest number in an array\nfunction findMin(numbers) {\n  let min = numbers[0];\n  for (let i = 1; i < numbers.length; i++) {\n    if (numbers[i] < min) min = numbers[i];\n  }\n  return min;\n}",
+        "seedCode": "// Create your conceptual diagram or list here\n\n// Create your server pool array here\n\n// Create your request queue function here\n\n// Create your roundRobinLoadBalancer function here\n\n// Create your leastConnectionsLoadBalancer function here",
+        "expectedOutcome": "You'll have a function that implements the least-connections algorithm for load balancing.",
+        "successCriteria": [
+          "The leastConnectionsLoadBalancer function exists, takes a server pool array as a parameter, and returns the server with the minimum activeConnections value."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure your function iterates through all servers and correctly identifies the one with the smallest activeConnections value.",
+        "feedbackWrong": "The function doesn't seem to implement the least-connections algorithm correctly. Review how to find the minimum value in an array of objects.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "leastConnectionsLoadBalancer",
+            "server",
+            "activeConnections",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 10",
+        "title": "Create health check mechanism",
+        "instruction": "Create a function named 'healthCheck' that takes the server pool as a parameter and returns a new array with only healthy servers (those with 'isHealthy: true').",
+        "hint": "Define a function that filters the server pool array based on the health status property.",
+        "analogousExample": "// Filtering healthy servers\nfunction healthCheck(servers) {\n  return servers.filter(server => server.isHealthy);\n}",
+        "seedCode": "// Create your conceptual diagram or list here\n\n// Create your server pool array here\n\n// Create your request queue function here\n\n// Create your roundRobinLoadBalancer function here\n\n// Create your leastConnectionsLoadBalancer function here\n\n// Create your healthCheck function here",
+        "expectedOutcome": "A healthCheck function is defined that filters servers based on their health status.",
+        "successCriteria": [
+          "The healthCheck function is created, accepts a server pool parameter, and returns a filtered array of healthy servers."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've created a function, but make sure it filters servers based on the 'isHealthy' property and returns the filtered array.",
+        "feedbackWrong": "The healthCheck function isn't properly implemented. It should filter the server pool to return only healthy servers.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "healthCheck",
+            "filter",
+            "isHealthy"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 10",
+        "title": "Design load balancer main processing logic",
+        "instruction": "Create a function named 'loadBalancer' that receives a request and algorithm type, selects a server using the appropriate algorithm, and returns the selected server.",
+        "hint": "The function should take two parameters: the request object and the algorithm name. Use conditional logic to call either roundRobinLoadBalancer or leastConnectionsLoadBalancer based on the algorithm parameter.",
+        "analogousExample": "// Similar: a main processing function\nfunction processOrder(order, paymentMethod) {\n    if (paymentMethod === 'credit') {\n        return chargeCreditCard(order);\n    } else {\n        return processCash(order);\n    }\n}",
+        "seedCode": "// Create your conceptual diagram or list here\n\n// Create your server pool array here\n\n// Create your request queue function here\n\n// Create your roundRobinLoadBalancer function here\n\n// Create your leastConnectionsLoadBalancer function here\n\n// Create your healthCheck function here\n\n// Create your loadBalancer function here",
+        "expectedOutcome": "A main load balancer function that orchestrates request routing based on the selected algorithm.",
+        "successCriteria": [
+          "The loadBalancer function is created with proper parameters and algorithm selection logic."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure your function takes both request and algorithm parameters, and includes logic to select the appropriate algorithm function.",
+        "feedbackWrong": "The loadBalancer function needs to handle request routing. Try creating a function that accepts request and algorithm parameters, then uses conditional logic to call the right algorithm function.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "function loadBalancer",
+            "request",
+            "algorithm",
+            "roundRobinLoadBalancer",
+            "leastConnectionsLoadBalancer",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 10",
+        "title": "Implement request simulation",
+        "instruction": "Create a function named simulateRequests that generates simulated client requests at varying rates to test the load balancer.",
+        "hint": "Define a function that can simulate incoming requests by calling your load balancer function with different request rates.",
+        "analogousExample": "// Example: A function that simulates traffic\nfunction simulateTraffic() {\n  // Simulate different request patterns\n  console.log('Simulating traffic...');\n}",
+        "seedCode": "// Create your conceptual diagram or list here\n\n// Create your server pool array here\n\n// Create your request queue function here\n\n// Create your roundRobinLoadBalancer function here\n\n// Create your leastConnectionsLoadBalancer function here\n\n// Create your healthCheck function here\n\n// Create your loadBalancer function here\n\n// Create your simulateRequests function here",
+        "expectedOutcome": "A function named simulateRequests is defined that can generate simulated client requests for load balancer testing.",
+        "successCriteria": [
+          "The simulateRequests function is created and can be called to generate simulated traffic."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the function, but make sure it's named simulateRequests and can generate simulated requests for testing.",
+        "feedbackWrong": "The simulateRequests function isn't properly defined. Create a function that can simulate client requests at varying rates.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "simulateRequests",
+            "function"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 10",
+        "title": "Add load balancing strategy selector",
+        "instruction": "Create a function named selectLoadBalancerStrategy that takes a strategy parameter and returns the appropriate load balancing function based on the strategy string.",
+        "hint": "The function should check if the strategy is 'round-robin' or 'least-connections' and return the corresponding function you already created. You can use an if-else statement or a switch.",
+        "analogousExample": "// Similar: a function that selects a tool based on input\nfunction selectTool(toolName) {\n  if (toolName === 'hammer') {\n    return hammer;\n  } else if (toolName === 'screwdriver') {\n    return screwdriver;\n  }\n  return null;\n}",
+        "seedCode": "// Create your conceptual diagram or list here\n\n// Create your server pool array here\n\n// Create your request queue function here\n\n// Create your roundRobinLoadBalancer function here\n\n// Create your leastConnectionsLoadBalancer function here\n\n// Create your healthCheck function here\n\n// Create your loadBalancer function here\n\n// Create your simulateRequests function here\n\n// Create your selectLoadBalancerStrategy function here",
+        "expectedOutcome": "You will have a selector function that can return either the round-robin or least-connections load balancing function based on the input strategy.",
+        "successCriteria": [
+          "The selectLoadBalancerStrategy function is defined, takes a strategy parameter, and returns the appropriate load balancing function when called with 'round-robin' or 'least-connections'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your function handles both strategy cases and returns the correct functions.",
+        "feedbackWrong": "The function doesn't properly select between load balancing strategies. Check that it takes a parameter and returns either roundRobinLoadBalancer or leastConnectionsLoadBalancer.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "selectLoadBalancerStrategy",
+            "strategy",
+            "roundRobinLoadBalancer",
+            "leastConnectionsLoadBalancer",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 10",
+        "title": "Create monitoring dashboard structure",
+        "instruction": "Create a function named monitoringDashboard that returns a simple dashboard structure displaying server status, request distribution, and system metrics.",
+        "hint": "Define a function that returns a conceptual dashboard layout. You can use plain text descriptions or simple data structures to represent the dashboard elements.",
+        "analogousExample": "// Example: a simple dashboard function\nfunction systemDashboard() {\n    return {\n        status: 'operational',\n        metrics: { uptime: '99.9%', requests: 1500 }\n    };\n}",
+        "seedCode": "// Create your conceptual diagram or list here\n\n// Create your server pool array here\n\n// Create your request queue function here\n\n// Create your roundRobinLoadBalancer function here\n\n// Create your leastConnectionsLoadBalancer function here\n\n// Create your healthCheck function here\n\n// Create your loadBalancer function here\n\n// Create your simulateRequests function here\n\n// Create your selectLoadBalancerStrategy function here\n\n// Create your monitoringDashboard function here",
+        "expectedOutcome": "A monitoringDashboard function is defined that returns a dashboard structure with server status, request distribution, and system metrics.",
+        "successCriteria": [
+          "The monitoringDashboard function exists and returns a structure containing server status, request distribution, and system metrics."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've created a dashboard function, but make sure it returns a structure that includes server status, request distribution, and system metrics.",
+        "feedbackWrong": "The monitoring dashboard structure wasn't created correctly. Create a function named monitoringDashboard that returns a dashboard with server status, request distribution, and system metrics.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "monitoringDashboard",
+            "return",
+            "server",
+            "request",
+            "metrics"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Define the system components and their roles",
+        "id": "step1"
+      },
+      {
+        "label": "Initialize server pool data structure",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize request queue data structure",
+        "id": "step3"
+      },
+      {
+        "label": "Define round-robin load balancing algorithm",
+        "id": "step4"
+      },
+      {
+        "label": "Define least-connections load balancing algorithm",
+        "id": "step5"
+      },
+      {
+        "label": "Create health check mechanism",
+        "id": "step6"
+      },
+      {
+        "label": "Design load balancer main processing logic",
+        "id": "step7"
+      },
+      {
+        "label": "Implement request simulation",
+        "id": "step8"
+      },
+      {
+        "label": "Add load balancing strategy selector",
+        "id": "step9"
+      },
+      {
+        "label": "Create monitoring dashboard structure",
+        "id": "step10"
+      }
+    ]
+  },
+  "source": "content"
+}

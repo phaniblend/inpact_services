@@ -1,0 +1,427 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-node-55",
+    "track": "node",
+    "lessonNum": 55,
+    "title": "Build CSV export endpoint with streaming",
+    "shortName": "P55",
+    "intro": {
+      "tag": "LESSON #55",
+      "title": "Build CSV export endpoint with streaming",
+      "body": "In this lesson, you will build a Node.js API endpoint that exports data as a CSV file using streaming. You will learn how to use Node.js streams to efficiently generate and send large CSV files without consuming excessive memory. The core concept involves creating a readable stream for the CSV data and piping it directly to the HTTP response. You will work with the built-in `stream` module and the `csv-writer` library to structure the data. By the end, you will have a functional endpoint that streams CSV data to the client on demand.",
+      "usecase": "Streaming CSV export endpoints are essential for handling large datasets in production applications, such as financial reporting dashboards or e-commerce analytics platforms. For example, when a user clicks 'Export to CSV' on an admin panel displaying thousands of sales records, this pattern allows the server to send data incrementally, preventing memory overload and enabling immediate download initiation. Developers implement this to support features like real-time data exports from user-filtered tables or scheduled report generation in background jobs, ensuring efficient resource usage and a responsive user experience even with massive data volumes."
+    },
+    "objectives": [
+      "Construct a Node.js HTTP server endpoint that handles CSV export requests",
+      "Configure response headers to specify CSV content type and enable streaming",
+      "Initialize a writable stream to pipe data directly to the HTTP response",
+      "Manipulate data structures to format rows into CSV-compatible strings",
+      "Integrate a data source with the streaming pipeline to generate CSV content",
+      "Control the streaming flow to handle backpressure and memory efficiently",
+      "Implement error handling for both stream creation and data processing stages"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 12",
+        "title": "Import required Node.js modules",
+        "instruction": "Import the http, fs, and path modules using Node.js's built-in require() syntax.",
+        "hint": "Use require('module_name') for each module you need to import.",
+        "analogousExample": "// Example: importing core modules\nconst http = require('http');\nconst fs = require('fs');\nconst path = require('path');",
+        "seedCode": "// Import the required modules here",
+        "expectedOutcome": "The http, fs, and path modules are imported and ready to use in your server code.",
+        "successCriteria": [
+          "The http, fs, and path modules are imported using require()."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've imported some modules, but make sure to import all three: http, fs, and path.",
+        "feedbackWrong": "The required modules aren't imported correctly. Check that you're using require() for http, fs, and path.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "require('http')",
+            "require('fs')",
+            "require('path')"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 12",
+        "title": "Create a basic HTTP server",
+        "instruction": "Create an HTTP server using the http.createServer() method and assign it to a constant named 'server'.",
+        "hint": "Use the imported 'http' module to call createServer(). Store the result in a const variable.",
+        "analogousExample": "// Example: creating a basic server\nconst http = require('http');\nconst server = http.createServer();",
+        "seedCode": "// Import the required modules here\nconst http = require('http');\n\n// Create the HTTP server here",
+        "expectedOutcome": "The server constant will be created and ready to handle incoming HTTP requests.",
+        "successCriteria": [
+          "A constant named 'server' is declared and assigned the result of http.createServer()."
+        ],
+        "feedbackCorrect": "Great! You've successfully created the HTTP server instance.",
+        "feedbackPartial": "You're close. Make sure you're using http.createServer() and storing it in a const named 'server'.",
+        "feedbackWrong": "The server wasn't created correctly. Check that you're using the http module's createServer method.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "server",
+            "createServer"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 12",
+        "title": "Define sample data for CSV export",
+        "instruction": "Create an array of objects representing sample data to be exported as CSV, with consistent property names like 'id', 'name', and 'value'.",
+        "hint": "Define a variable (e.g., 'sampleData') and assign it an array of objects. Each object should have the same keys.",
+        "analogousExample": "// Example: array of objects with consistent properties\nconst sampleData = [\n  { id: 1, name: 'Alice', value: 100 },\n  { id: 2, name: 'Bob', value: 200 }\n];",
+        "seedCode": "// Import the required modules here\nconst http = require('http');\n\n// Create the HTTP server here\n\n// Define sample data for CSV export here",
+        "expectedOutcome": "An array variable containing objects with consistent properties is created, ready to be converted to CSV.",
+        "successCriteria": [
+          "An array named 'sampleData' (or similar) is defined with at least two objects, each having properties like 'id', 'name', and 'value'."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started defining data, but ensure it's an array of objects with the same property names (e.g., 'id', 'name', 'value').",
+        "feedbackWrong": "The data structure isn't quite right. Define an array variable containing objects with consistent properties.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "sampleData",
+            "[",
+            "{",
+            "}",
+            "]",
+            "id",
+            "name",
+            "value"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 12",
+        "title": "Create CSV header generation function",
+        "instruction": "Create a function named generateCSVHeader that takes a data object as a parameter and returns a CSV header row string.",
+        "hint": "The function should extract the keys from the object, join them with commas, and return the resulting string.",
+        "analogousExample": "// Example: function that creates a header from object keys\nfunction generateCSVHeader(data) {\n  const keys = Object.keys(data);\n  return keys.join(',');\n}",
+        "seedCode": "// Import the required modules here\nconst http = require('http');\n\n// Create the HTTP server here\n\n// Define sample data for CSV export here\n\n// Create CSV header generation function here",
+        "expectedOutcome": "A function named generateCSVHeader that accepts a data object and returns a CSV header string.",
+        "successCriteria": [
+          "The generateCSVHeader function is defined, takes a data parameter, extracts object keys, and returns them as a comma-separated string."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure the function extracts keys from the data object and returns them as a comma-separated string.",
+        "feedbackWrong": "The function is missing or doesn't correctly generate the CSV header. Check the function name, parameter, and return value.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "generateCSVHeader",
+            "Object.keys",
+            "join(',')",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 12",
+        "title": "Create CSV row generation function",
+        "instruction": "Create a function named 'generateRow' that takes a data object as a parameter and returns a CSV-formatted row string with proper escaping of special characters.",
+        "hint": "Remember to handle commas and quotes in your data values by wrapping them in double quotes.",
+        "analogousExample": "// Example: function that formats a data object into a CSV row\nfunction formatRow(data) {\n  const values = Object.values(data).map(value => {\n    const stringValue = String(value);\n    if (stringValue.includes(',') || stringValue.includes('\"')) {\n      return `\"${stringValue.replace(/\"/g, '\"\"')}\"`;\n    }\n    return stringValue;\n  });\n  return values.join(',');\n}",
+        "seedCode": "// Import the required modules here\nconst http = require('http');\n\n// Create the HTTP server here\n\n// Define sample data for CSV export here\n\n// Create CSV header generation function here\n\n// Create CSV row generation function here\n\n// Insert your generateRow function here",
+        "expectedOutcome": "A function that converts a data object into a properly escaped CSV row string.",
+        "successCriteria": [
+          "The 'generateRow' function is defined, accepts a data object parameter, and returns a CSV-formatted string with proper escaping of commas and quotes."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure your function properly escapes commas and quotes in the data values.",
+        "feedbackWrong": "The function doesn't seem to be correctly formatted. Remember to create a function named 'generateRow' that converts data objects to CSV rows.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "function generateRow",
+            "generateRow(data)",
+            "Object.values",
+            "map",
+            "join(',')",
+            "replace",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 12",
+        "title": "Set up route handling for CSV endpoint",
+        "instruction": "Inside your server's request handler, add a conditional check to identify requests to the '/export' endpoint.",
+        "hint": "Check if the request URL equals '/export' and set up a basic response for now.",
+        "analogousExample": "// Example: Basic route handling\nif (req.url === '/api/data') {\n  res.writeHead(200, { 'Content-Type': 'application/json' });\n  res.end(JSON.stringify({ data: 'sample' }));\n}",
+        "seedCode": "// Import the required modules here\nconst http = require('http');\n\n// Create the HTTP server here\nconst server = http.createServer((req, res) => {\n  // Add route handling for CSV endpoint here\n});\n\n// Define sample data for CSV export here\nconst sampleData = [\n  { id: 1, name: 'Alice', age: 30 },\n  { id: 2, name: 'Bob', age: 25 },\n  { id: 3, name: 'Charlie', age: 35 }\n];\n\n// Create CSV header generation function here\nfunction generateHeader() {\n  return 'id,name,age\\n';\n}\n\n// Create CSV row generation function here\nfunction generateRow(item) {\n  return `${item.id},${item.name},${item.age}\\n`;\n}\n\n// Start the server\nserver.listen(3000, () => {\n  console.log('Server running at http://localhost:3000');\n});",
+        "expectedOutcome": "The server will now recognize requests to '/export' and respond with a placeholder message.",
+        "successCriteria": [
+          "The request handler includes a conditional check for req.url === '/export' and sends a basic response."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're checking the exact URL '/export' and sending a response.",
+        "feedbackWrong": "The route handling isn't set up correctly. Check if you're comparing req.url to '/export' and sending a response.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "req.url",
+            "'/export'",
+            "res.writeHead",
+            "res.end"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 12",
+        "title": "Configure response headers for CSV download",
+        "instruction": "Inside the server's request handler, set the response headers to indicate a CSV file download. Use res.setHeader() to set 'Content-Type' to 'text/csv' and 'Content-Disposition' to 'attachment; filename=\"data.csv\"'.",
+        "hint": "The Content-Type header tells the browser the data format. The Content-Disposition header with 'attachment' prompts a file download with the specified filename.",
+        "analogousExample": "// Setting headers for a file download\nres.setHeader('Content-Type', 'text/csv');\nres.setHeader('Content-Disposition', 'attachment; filename=\"report.csv\"');",
+        "seedCode": "// Import the required modules here\nconst http = require('http');\n\n// Create the HTTP server here\nconst server = http.createServer((req, res) => {\n  // Add route handling for CSV endpoint here\n  // Set CSV response headers here\n});\n\n// Define sample data for CSV export here\nconst sampleData = [\n  { id: 1, name: 'Alice', age: 30 },\n  { id: 2, name: 'Bob', age: 25 },\n  { id: 3, name: 'Charlie', age: 35 }\n];\n\n// Create CSV header generation function here\nfunction generateHeader() {\n  return 'id,name,age\\n';\n}\n\n// Create CSV row generation function here\nfunction generateRow(item) {\n  return `${item.id},${item.name},${item.age}\\n`;\n}\n\n// Start the server\nserver.listen(3000, () => {\n  console.log('Server running at http://localhost:3000');\n});",
+        "expectedOutcome": "The server will be configured to send proper headers for CSV file downloads when the endpoint is accessed.",
+        "successCriteria": [
+          "The request handler includes res.setHeader() calls for 'Content-Type' and 'Content-Disposition' with correct values."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've set some headers, but make sure both 'Content-Type' and 'Content-Disposition' are properly configured.",
+        "feedbackWrong": "The headers aren't set correctly. Check the syntax for res.setHeader() and the required values.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "setHeader",
+            "Content-Type",
+            "text/csv",
+            "Content-Disposition",
+            "attachment",
+            "filename"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 12",
+        "title": "Implement streaming CSV data writing",
+        "instruction": "Inside the server's request handler, write the CSV header to the response using res.write(),",
+        "hint": "Call res.write(generateHeader()) first, then use a for...of loop or forEach on sampleData to write each row with res.write(generateRow(item)).",
+        "analogousExample": "// Writing data to a response stream\nfunction sendData(res, data) {\n  res.write('Header\\n');\n  for (let item of data) {\n    res.write(`${item}\\n`);\n  }\n}",
+        "seedCode": "// Import the required modules here\nconst http = require('http');\n\n// Create the HTTP server here\nconst server = http.createServer((req, res) => {\n  // Add route handling for CSV endpoint here\n  // Set CSV response headers here\n  // Write CSV header and rows to the response stream here\n});\n\n// Define sample data for CSV export here\nconst sampleData = [\n  { id: 1, name: 'Alice', age: 30 },\n  { id: 2, name: 'Bob', age: 25 },\n  { id: 3, name: 'Charlie', age: 35 }\n];\n\n// Create CSV header generation function here\nfunction generateHeader() {\n  return 'id,name,age\\n';\n}\n\n// Create CSV row generation function here\nfunction generateRow(item) {\n  return `${item.id},${item.name},${item.age}\\n`;\n}\n\n// Start the server\nserver.listen(3000, () => {\n  console.log('Server running at http://localhost:3000');\n});",
+        "expectedOutcome": "The server will write the CSV header and all data rows to the response stream when a request is made.",
+        "successCriteria": [
+          "The request handler writes the CSV header using res.write(generateHeader()) and iterates through sampleData to write each row with res.write(generateRow(item))."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you write both the header and all rows to the response stream using res.write().",
+        "feedbackWrong": "The CSV data isn't being written to the response stream. Check that you're calling res.write() with the header and each row inside the request handler.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "res.write",
+            "generateHeader",
+            "sampleData",
+            "generateRow"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 12",
+        "title": "iterate through the sampleData array and writ",
+        "instruction": "iterate through the sampleData array and write each row to the response stream.",
+        "hint": "Call res.write(generateHeader()) first, then use a for...of loop or forEach on sampleData to write each row with res.write(generateRow(item)).",
+        "analogousExample": "// Writing data to a response stream\nfunction sendData(res, data) {\n  res.write('Header\\n');\n  for (let item of data) {\n    res.write(`${item}\\n`);\n  }\n}",
+        "seedCode": "// Import the required modules here\nconst http = require('http');\n\n// Create the HTTP server here\nconst server = http.createServer((req, res) => {\n  // Add route handling for CSV endpoint here\n  // Set CSV response headers here\n  // Write CSV header and rows to the response stream here\n});\n\n// Define sample data for CSV export here\nconst sampleData = [\n  { id: 1, name: 'Alice', age: 30 },\n  { id: 2, name: 'Bob', age: 25 },\n  { id: 3, name: 'Charlie', age: 35 }\n];\n\n// Create CSV header generation function here\nfunction generateHeader() {\n  return 'id,name,age\\n';\n}\n\n// Create CSV row generation function here\nfunction generateRow(item) {\n  return `${item.id},${item.name},${item.age}\\n`;\n}\n\n// Start the server\nserver.listen(3000, () => {\n  console.log('Server running at http://localhost:3000');\n});",
+        "expectedOutcome": "",
+        "successCriteria": [
+          "Complete the step as instructed."
+        ],
+        "feedbackCorrect": "Great! Step completed.",
+        "feedbackPartial": "Review the instruction and try again.",
+        "feedbackWrong": "Check the instruction and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "res.write",
+            "generateHeader",
+            "sampleData",
+            "generateRow"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step10",
+        "type": "question",
+        "phase": "Step 10 of 12",
+        "title": "Handle response completion and errors",
+        "instruction": "Inside the server's request handler, add error handling for the response stream and ensure it ends properly after all data is written.",
+        "hint": "Use try-catch blocks around your CSV writing logic and call res.end() in the finally block to close the stream.",
+        "analogousExample": "// Example: error handling for a write stream\nfunction writeData(res) {\n  try {\n    // Write data to response\n    res.write('data');\n  } catch (error) {\n    console.error('Write error:', error);\n    res.statusCode = 500;\n    res.end('Internal server error');\n  } finally {\n    res.end();\n  }\n}",
+        "seedCode": "const http = require('http');\n\nconst server = http.createServer((req, res) => {\n  // Add route handling for CSV endpoint here\n  // Set CSV response headers here\n  // Write CSV header and rows to the response stream here\n  // Add error handling and ensure response ends properly here\n});\n\nconst sampleData = [\n  { id: 1, name: 'Alice', age: 30 },\n  { id: 2, name: 'Bob', age: 25 },\n  { id: 3, name: 'Charlie', age: 35 }\n];\n\nfunction generateHeader() {\n  return 'id,name,age\\n';\n}\n\nfunction generateRow(item) {\n  return `${item.id},${item.name},${item.age}\\n`;\n}\n\nserver.listen(3000, () => {\n  console.log('Server running at http://localhost:3000');\n});",
+        "expectedOutcome": "The server will properly handle errors during CSV streaming and ensure the response stream is closed after all data is written.",
+        "successCriteria": [
+          "Error handling is implemented with try-catch blocks, and res.end() is called to close the response stream."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure to include both error handling and calling res.end() to close the stream.",
+        "feedbackWrong": "Check the instruction: you need to add error handling and ensure the response stream ends properly.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "try",
+            "catch",
+            "res.end()"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step11",
+        "type": "question",
+        "phase": "Step 11 of 12",
+        "title": "Test the CSV export endpoint",
+        "instruction": "Run the server by executing the file with Node.js,",
+        "hint": "Start the server with 'node your-filename.js' in your terminal, then open a browser and navigate to http://localhost:3000/csv to trigger the CSV download.",
+        "analogousExample": "// Starting a server and testing an endpoint\n// After running 'node server.js', you can test by visiting http://localhost:3000 in your browser.",
+        "seedCode": "const http = require('http');\n\nconst server = http.createServer((req, res) => {\n  // Add route handling for CSV endpoint here\n  // Set CSV response headers here\n  // Write CSV header and rows to the response stream here\n  // Add error handling and ensure response ends properly here\n});\n\nconst sampleData = [\n  { id: 1, name: 'Alice', age: 30 },\n  { id: 2, name: 'Bob', age: 25 },\n  { id: 3, name: 'Charlie', age: 35 }\n];\n\nfunction generateHeader() {\n  return 'id,name,age\\n';\n}\n\nfunction generateRow(item) {\n  return `${item.id},${item.name},${item.age}\\n`;\n}\n\nserver.listen(3000, () => {\n  console.log('Server running at http://localhost:3000');\n});",
+        "expectedOutcome": "The server starts successfully and the CSV endpoint responds with a downloadable CSV file containing the sample data.",
+        "successCriteria": [
+          "The server is running and the CSV endpoint at http://localhost:3000/csv returns a CSV file with the correct data."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You've started the server, but the CSV endpoint might not be fully implemented yet. Ensure the route handling, headers, and data writing are correctly set up in the server callback.",
+        "feedbackWrong": "The server may not be running or the CSV endpoint is not responding correctly. Check that you executed the file with Node.js and that the route handling logic is properly implemented.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "node",
+            "localhost:3000/csv",
+            "browser",
+            "curl"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step12",
+        "type": "question",
+        "phase": "Step 12 of 12",
+        "title": "test the CSV endpoint by making a request to ",
+        "instruction": "test the CSV endpoint by making a request to http://localhost:3000/csv in your browser or using a tool like curl.",
+        "hint": "Start the server with 'node your-filename.js' in your terminal, then open a browser and navigate to http://localhost:3000/csv to trigger the CSV download.",
+        "analogousExample": "// Starting a server and testing an endpoint\n// After running 'node server.js', you can test by visiting http://localhost:3000 in your browser.",
+        "seedCode": "const http = require('http');\n\nconst server = http.createServer((req, res) => {\n  // Add route handling for CSV endpoint here\n  // Set CSV response headers here\n  // Write CSV header and rows to the response stream here\n  // Add error handling and ensure response ends properly here\n});\n\nconst sampleData = [\n  { id: 1, name: 'Alice', age: 30 },\n  { id: 2, name: 'Bob', age: 25 },\n  { id: 3, name: 'Charlie', age: 35 }\n];\n\nfunction generateHeader() {\n  return 'id,name,age\\n';\n}\n\nfunction generateRow(item) {\n  return `${item.id},${item.name},${item.age}\\n`;\n}\n\nserver.listen(3000, () => {\n  console.log('Server running at http://localhost:3000');\n});",
+        "expectedOutcome": "",
+        "successCriteria": [
+          "Complete the step as instructed."
+        ],
+        "feedbackCorrect": "Great! Step completed.",
+        "feedbackPartial": "Review the instruction and try again.",
+        "feedbackWrong": "Check the instruction and try again.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "node",
+            "localhost:3000/csv",
+            "browser",
+            "curl"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import required Node.js modules",
+        "id": "step1"
+      },
+      {
+        "label": "Create a basic HTTP server",
+        "id": "step2"
+      },
+      {
+        "label": "Define sample data for CSV export",
+        "id": "step3"
+      },
+      {
+        "label": "Create CSV header generation function",
+        "id": "step4"
+      },
+      {
+        "label": "Create CSV row generation function",
+        "id": "step5"
+      },
+      {
+        "label": "Set up route handling for CSV endpoint",
+        "id": "step6"
+      },
+      {
+        "label": "Configure response headers for CSV download",
+        "id": "step7"
+      },
+      {
+        "label": "Implement streaming CSV data writing",
+        "id": "step8"
+      },
+      {
+        "label": "iterate through the sampleData array and writ",
+        "id": "step9"
+      },
+      {
+        "label": "Handle response completion and errors",
+        "id": "step10"
+      },
+      {
+        "label": "Test the CSV export endpoint",
+        "id": "step11"
+      },
+      {
+        "label": "test the CSV endpoint by making a request to ",
+        "id": "step12"
+      }
+    ]
+  },
+  "source": "content"
+}

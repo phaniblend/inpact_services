@@ -1,0 +1,321 @@
+{
+  "success": true,
+  "config": {
+    "lessonId": "ai-node-58",
+    "track": "node",
+    "lessonNum": 58,
+    "title": "Build websocket auth handshake",
+    "shortName": "P58",
+    "intro": {
+      "tag": "LESSON #58",
+      "title": "Build websocket auth handshake",
+      "body": "In this lesson, you will build a secure WebSocket authentication handshake for a Node.js server. You will learn how to verify a user's identity before allowing a WebSocket connection to be established. The core programming concept involves using HTTP headers to pass authentication tokens and validating them in a WebSocket upgrade request. You will work with the 'ws' library for WebSocket connections and Node.js HTTP modules to handle the handshake process. By the end, you'll have a server that only accepts connections from authenticated clients.",
+      "usecase": "WebSocket authentication handshakes are essential for securing real-time applications like collaborative document editors (Google Docs), live chat systems (Slack), and multiplayer gaming dashboards. When a user opens a trading platform dashboard or joins a video conferencing UI, this handshake validates their credentials before establishing the persistent connection. Developers implement this pattern to ensure only authorized users can access real-time data streams and interactive features, preventing unauthorized data exposure in financial, healthcare, or enterprise applications."
+    },
+    "objectives": [
+      "Implement a WebSocket server using the ws library in Node.js",
+      "Configure the server to handle connection upgrade requests",
+      "Initialize authentication token validation during the handshake phase",
+      "Construct proper HTTP response headers for successful and failed authentication",
+      "Manipulate WebSocket connections based on authentication status",
+      "Integrate token parsing logic with the connection upgrade handler",
+      "Control connection flow by rejecting unauthenticated clients"
+    ],
+    "steps": [
+      {
+        "id": "step1",
+        "type": "question",
+        "phase": "Step 1 of 9",
+        "title": "Import required Node.js modules",
+        "instruction": "Import the http, WebSocket, and url modules from Node.js using the require() function.",
+        "hint": "Use require('module_name') for each module. These are built-in Node.js modules, so no npm installation is needed.",
+        "analogousExample": "// Example: importing built-in modules\nconst fs = require('fs');\nconst path = require('path');",
+        "seedCode": "// Import the required modules here",
+        "expectedOutcome": "The http, WebSocket, and url modules are imported and ready to use.",
+        "successCriteria": [
+          "The code imports http, WebSocket, and url modules using require()."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure to import all three modules: http, WebSocket, and url.",
+        "feedbackWrong": "Use require() to import the http, WebSocket, and url modules from Node.js.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "require('http')",
+            "require('ws')",
+            "require('url')"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step2",
+        "type": "question",
+        "phase": "Step 2 of 9",
+        "title": "Create HTTP server and WebSocket server",
+        "instruction": "Create an HTTP server using the http module and attach a WebSocket server to it using the ws module.",
+        "hint": "Use http.createServer() to create the HTTP server, then pass it to new WebSocket.Server({ server }) to attach the WebSocket server.",
+        "analogousExample": "// Similar: creating an HTTP server with WebSocket\nconst http = require('http');\nconst WebSocket = require('ws');\n\nconst server = http.createServer();\nconst wss = new WebSocket.Server({ server });",
+        "seedCode": "// Import the required modules here\nconst http = require('http');\nconst WebSocket = require('ws');\n\n// Create HTTP server and WebSocket server here",
+        "expectedOutcome": "You'll have an HTTP server and WebSocket server set up, ready to handle connections.",
+        "successCriteria": [
+          "An HTTP server is created with http.createServer() and a WebSocket server is attached to it with new WebSocket.Server({ server })."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure both the HTTP server and WebSocket server are properly created and connected.",
+        "feedbackWrong": "create an HTTP server first, then attach a WebSocket server to it.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "http.createServer()",
+            "new WebSocket.Server({",
+            "server })"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step3",
+        "type": "question",
+        "phase": "Step 3 of 9",
+        "title": "Initialize authentication data storage",
+        "instruction": "Create an object to store valid authentication tokens in memory. Name it 'validTokens' and initialize it as an empty object.",
+        "hint": "You can create a simple JavaScript object using const validTokens = {};",
+        "analogousExample": "// Example: creating an in-memory store\nconst userSessions = {};",
+        "seedCode": "// Import the required modules here\nconst http = require('http');\nconst WebSocket = require('ws');\n\n// Create HTTP server and WebSocket server here\n\n// Create authentication token storage here\n",
+        "expectedOutcome": "An empty object named 'validTokens' is created to store authentication tokens.",
+        "successCriteria": [
+          "The code contains a 'validTokens' variable initialized as an empty object."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you've created a variable named 'validTokens' and initialized it as an empty object.",
+        "feedbackWrong": "The authentication token storage wasn't created correctly. Please create an object named 'validTokens' to store tokens.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "validTokens",
+            "=",
+            "{}"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step4",
+        "type": "question",
+        "phase": "Step 4 of 9",
+        "title": "Define authentication token validation function",
+        "instruction": "Create a function named `validateToken` that takes a token parameter and returns true if the token exists in the `validTokens` store, otherwise returns false.",
+        "hint": "You can use the `has` method on the `validTokens` Set to check if a token exists.",
+        "analogousExample": "// Example: a validation function\nfunction isValidUser(username) {\n    const validUsers = new Set(['alice', 'bob']);\n    return validUsers.has(username);\n}",
+        "seedCode": "// Import the required modules here\nconst http = require('http');\nconst WebSocket = require('ws');\n\n// Create HTTP server and WebSocket server here\n\n// Create authentication token storage here\nconst validTokens = new Set();\n\n// Define authentication token validation function here\n",
+        "expectedOutcome": "A function named `validateToken` is defined that checks if a provided token exists in the `validTokens` Set.",
+        "successCriteria": [
+          "The `validateToken` function is defined, takes a token parameter, and returns a boolean based on whether the token exists in the `validTokens` Set."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure your function is named `validateToken`, takes a token parameter, and returns true/false based on whether the token exists in `validTokens`.",
+        "feedbackWrong": "The validation function isn't quite right. You need to create a function named `validateToken` that checks if a token exists in the `validTokens` Set and returns a boolean value.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "validateToken",
+            "token",
+            "validTokens",
+            "has",
+            "return"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step5",
+        "type": "question",
+        "phase": "Step 5 of 9",
+        "title": "Set up WebSocket connection handler",
+        "instruction": "Add an event listener to the WebSocket server to handle new connections. Use the 'connection' event and provide a callback function that takes a WebSocket client object as its parameter.",
+        "hint": "Use the wsServer.on('connection', ...) method. The callback function should accept one parameter (often named 'ws' or 'client') representing the new WebSocket connection.",
+        "analogousExample": "// Similar: event listener for new connections\nserver.on('connection', (socket) => {\n  // Handle new connection here\n});",
+        "seedCode": "// Import the required modules here\nconst http = require('http');\nconst WebSocket = require('ws');\n\n// Create HTTP server and WebSocket server here\n\n// Create authentication token storage here\nconst validTokens = new Set();\n\n// Define authentication token validation function here\n\n// Add WebSocket connection event listener here",
+        "expectedOutcome": "The WebSocket server will now detect when clients connect, but won't authenticate them yet.",
+        "successCriteria": [
+          "The WebSocket server has a 'connection' event listener with a callback function that accepts a WebSocket client parameter."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you've added the 'connection' event listener to the WebSocket server with a proper callback function that accepts the client parameter.",
+        "feedbackWrong": "The connection handler isn't set up correctly. Remember to use wsServer.on('connection', callback) where the callback accepts the WebSocket client as a parameter.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "wsServer",
+            "on",
+            "connection",
+            "ws",
+            "client"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step6",
+        "type": "question",
+        "phase": "Step 6 of 9",
+        "title": "Parse URL query parameters",
+        "instruction": "Inside the WebSocket connection event listener, parse the incoming request URL to extract query parameters.",
+        "hint": "Use the URL module to parse the request URL and access its query parameters.",
+        "analogousExample": "// Example: parsing URL query parameters\nconst url = require('url');\nfunction parseQuery(reqUrl) {\n  const parsed = url.parse(reqUrl, true);\n  return parsed.query;\n}",
+        "seedCode": "// Import the required modules here\nconst http = require('http');\nconst WebSocket = require('ws');\n\n// Create HTTP server and WebSocket server here\n\n// Create authentication token storage here\nconst validTokens = new Set();\n\n// Define authentication token validation function here\n\n// Add WebSocket connection event listener here\nwss.on('connection', (ws, req) => {\n  // Parse URL query parameters here\n});",
+        "expectedOutcome": "The WebSocket connection handler will be able to access authentication tokens from the URL query string.",
+        "successCriteria": [
+          "The connection handler includes code to parse the request URL and extract query parameters."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track, but make sure you're using the URL module to parse the request URL and access the query object.",
+        "feedbackWrong": "The code doesn't yet parse the URL query parameters. Try using the URL module to parse the request URL.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "url.parse",
+            "req.url",
+            "query"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step7",
+        "type": "question",
+        "phase": "Step 7 of 9",
+        "title": "Extract authentication token from query",
+        "instruction": "Inside the WebSocket connection handler, extract the 'token' parameter from the parsed URL query object and store it in a variable.",
+        "hint": "Use the query object's properties to access the token value. For example, if the query object is stored in a variable called 'query', you can get the token with query.token.",
+        "analogousExample": "// Example: extracting a query parameter\nconst url = require('url');\nconst parsedUrl = url.parse(req.url, true);\nconst query = parsedUrl.query;\nconst userId = query.userId;",
+        "seedCode": "// Import the required modules here\nconst http = require('http');\nconst WebSocket = require('ws');\n\n// Create HTTP server and WebSocket server here\n\n// Create authentication token storage here\nconst validTokens = new Set();\n\n// Define authentication token validation function here\n\n// Add WebSocket connection event listener here\nwss.on('connection', (ws, req) => {\n  // Parse URL query parameters here\n  const url = require('url');\n  const parsedUrl = url.parse(req.url, true);\n  const query = parsedUrl.query;\n  // Extract authentication token from query here\n});",
+        "expectedOutcome": "The token value from the URL query parameters will be accessible in a variable for validation.",
+        "successCriteria": [
+          "A variable is declared that contains the 'token' value from the query object."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're accessing the 'token' property from the query object.",
+        "feedbackWrong": "The token extraction isn't quite right. Check that you're getting the token value from the query object.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "query.token",
+            "token"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step8",
+        "type": "question",
+        "phase": "Step 8 of 9",
+        "title": "Handle successful authentication",
+        "instruction": "Inside the connection handler, after validating the token, add logic to handle incoming messages from authenticated clients.",
+        "hint": "Use ws.on('message', ...) to listen for messages from the authenticated WebSocket connection.",
+        "analogousExample": "// Example: handling WebSocket messages\nws.on('message', (message) => {\n  console.log('Received message:', message);\n});",
+        "seedCode": "// Import the required modules here\nconst http = require('http');\nconst WebSocket = require('ws');\n\n// Create HTTP server and WebSocket server here\n\n// Create authentication token storage here\nconst validTokens = new Set();\n\n// Define authentication token validation function here\nfunction isValidToken(token) {\n  return validTokens.has(token);\n}\n\n// Add WebSocket connection event listener here\nwss.on('connection', (ws, req) => {\n  // Parse URL query parameters here\n  const url = require('url');\n  const parsedUrl = url.parse(req.url, true);\n  const query = parsedUrl.query;\n  // Extract authentication token from query here\n  const token = query.token;\n  // Validate token and handle authentication here\n  if (isValidToken(token)) {\n    // Handle successful authentication\n    // Add message handling logic here\n  } else {\n    ws.close();\n  }\n});",
+        "expectedOutcome": "The WebSocket server will now process messages from authenticated clients.",
+        "successCriteria": [
+          "The connection handler includes ws.on('message', ...) inside the successful authentication block."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're on the right track. Make sure to add ws.on('message', ...) inside the successful authentication block.",
+        "feedbackWrong": "The message handling logic should be added inside the successful authentication block.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "ws.on",
+            "'message'",
+            "function",
+            "message"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      },
+      {
+        "id": "step9",
+        "type": "question",
+        "phase": "Step 9 of 9",
+        "title": "Start the server and test",
+        "instruction": "Make the HTTP server listen on port 8080 and log a startup message to the console.",
+        "hint": "Use the server.listen() method with the port number and a callback function that logs a message.",
+        "analogousExample": "// Starting a basic HTTP server\nconst server = http.createServer();\nserver.listen(3000, () => {\n  console.log('Server listening on port 3000');\n});",
+        "seedCode": "// Import the required modules here\nconst http = require('http');\nconst WebSocket = require('ws');\n\n// Create HTTP server and WebSocket server here\nconst server = http.createServer();\nconst wss = new WebSocket.Server({ server });\n\n// Create authentication token storage here\nconst validTokens = new Set();\n\n// Define authentication token validation function here\nfunction isValidToken(token) {\n  return validTokens.has(token);\n}\n\n// Add WebSocket connection event listener here\nwss.on('connection', (ws, req) => {\n  // Parse URL query parameters here\n  const url = require('url');\n  const parsedUrl = url.parse(req.url, true);\n  const query = parsedUrl.query;\n  // Extract authentication token from query here\n  const token = query.token;\n  // Validate token and handle authentication here\n  if (isValidToken(token)) {\n    // Handle successful authentication\n    // Add message handling logic here\n  } else {\n    ws.close();\n  }\n});\n\n// Start the server here",
+        "expectedOutcome": "The server will start and be ready to accept WebSocket connections with authentication.",
+        "successCriteria": [
+          "The server is configured to listen on port 8080 with a console log message indicating it's running."
+        ],
+        "feedbackCorrect": "Nice! Proceed to the next step.",
+        "feedbackPartial": "You're close. Make sure you're calling server.listen() with port 8080 and a callback that logs a message.",
+        "feedbackWrong": "The server isn't properly started. Check that you're using server.listen() with the correct port and logging a startup message.",
+        "evaluation": {
+          "mode": "keyword_match",
+          "required": [
+            "server.listen",
+            "8080",
+            "console.log"
+          ],
+          "partialThreshold": 0.5,
+          "correctThreshold": 0.8
+        }
+      }
+    ],
+    "sideItems": [
+      {
+        "label": "Intro",
+        "id": "intro"
+      },
+      {
+        "label": "Objectives",
+        "id": "objectives"
+      },
+      {
+        "label": "Import required Node.js modules",
+        "id": "step1"
+      },
+      {
+        "label": "Create HTTP server and WebSocket server",
+        "id": "step2"
+      },
+      {
+        "label": "Initialize authentication data storage",
+        "id": "step3"
+      },
+      {
+        "label": "Define authentication token validation function",
+        "id": "step4"
+      },
+      {
+        "label": "Set up WebSocket connection handler",
+        "id": "step5"
+      },
+      {
+        "label": "Parse URL query parameters",
+        "id": "step6"
+      },
+      {
+        "label": "Extract authentication token from query",
+        "id": "step7"
+      },
+      {
+        "label": "Handle successful authentication",
+        "id": "step8"
+      },
+      {
+        "label": "Start the server and test",
+        "id": "step9"
+      }
+    ]
+  },
+  "source": "content"
+}
