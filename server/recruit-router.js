@@ -87,6 +87,29 @@ async function checkLowSupplyAndNotify(trade, issues) {
   );
 }
 
+/**
+ * GET /open-trades — public, no session required (the Apply form needs this before anyone has
+ * signed in). Returns just the distinct trade names open tasks currently need — never the raw
+ * OneDev issue list (titles/descriptions can carry applicant names, emails, role-grant data;
+ * that's exactly what the old unauthenticated /onedev-api passthrough over-exposed). Same
+ * filtering src/cohort-matching/Apply.jsx used to do client-side against the raw proxy.
+ */
+router.get("/open-trades", async (_req, res) => {
+  try {
+    const issues = await listIssues({ count: 200 });
+    const seen = new Map(); // lowercase -> original casing, first-seen wins
+    for (const issue of issues) {
+      if (RESERVED_PROJECT_IDS.has(issue.projectId) || issue.state !== "Open") continue;
+      const trade = taskMeta(issue.description).trade;
+      if (trade && !isCoreOnlyTrade(trade) && !seen.has(trade.toLowerCase())) seen.set(trade.toLowerCase(), trade);
+    }
+    res.json({ trades: [...seen.values()] });
+  } catch (err) {
+    console.error("[recruit] open-trades failed:", err.message);
+    res.status(502).json({ error: "Could not load open trades" });
+  }
+});
+
 router.post("/apply", requireSession, async (req, res) => {
   try {
     const email = req.session.email;
