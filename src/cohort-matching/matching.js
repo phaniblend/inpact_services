@@ -26,7 +26,17 @@ export function extractApplicationId(description) {
   return m ? Number(m[1]) : null;
 }
 
+// "Match:"/"Matched:" is the reserved title prefix every match-tracking record in this codebase
+// uses (recruit-router.js, HumanCapitalReports.jsx, ...) — those records live in COHORT_PROJECT_ID
+// and should never be assignable, but tasksForApplicant's `if (!meta.trade) return true` fallback
+// (for genuine hand-made tasks with no Trade: line) would wave one through as a real task if it
+// ever ended up filed in a real delivery project by mistake. Found live: an applicant was handed
+// "#26 Match: Senaga on #42" as their task — an internal record, not real work. Guard here so the
+// fallback can't be tricked by anything using that prefix, regardless of which project it's in.
+const RESERVED_TITLE_PREFIX = /^Match(ed)?:/i;
+
 export function isAssignable(task) {
+  if (RESERVED_TITLE_PREFIX.test(task.title || "")) return false;
   return !/^NeedsTutorial:\s*true/m.test(task.description || "");
 }
 

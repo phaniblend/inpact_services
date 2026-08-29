@@ -36,8 +36,6 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ASSIST_DIR = path.resolve(__dirname, "../src/engines/assist");
 const MODULE_LIBRARY_PROJECT_ID = 4;
 const TEAM_OPS_PROJECT_ID = 3;
-const JS_EMAIL = "senagasetty@gmail.com";
-const JS_NAME = "Senaga";
 
 /** Coding assist tags — must match write-smb-assist-engines.mjs */
 const CODING_ASSISTS = {
@@ -570,12 +568,16 @@ function pushInitialMain(projectName, readmeBody) {
     console.warn("  skip git seed — ONEDEV_API_USER/PASS missing");
     return false;
   }
+  // Local dev: OneDev's Docker container on localhost. Point ONEDEV_INTERNAL_URL at a real
+  // instance (e.g. its Railway public domain, when running this script against a remote
+  // instance) to seed git history there instead.
+  const base = new URL(process.env.ONEDEV_INTERNAL_URL || "http://localhost:6610");
   const remote =
-    "http://" +
+    `${base.protocol}//` +
     encodeURIComponent(user) +
     ":" +
     encodeURIComponent(pass) +
-    `@localhost:6610/${projectName}.git`;
+    `@${base.host}/${projectName}.git`;
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), `${projectName}-`));
   gitIn(dir, "init");
   gitIn(dir, "config", "user.email", "seed@inpact.live");
@@ -689,38 +691,19 @@ for (const product of PRODUCTS) {
   created.push({ projectId, name: product.name, tasks: taskIds });
 }
 
-const booking = created.find((p) => p.name === "BookingDepositDesk");
-const feTask = booking?.tasks.find((t) => t.trade === "Coding" && t.focus === "frontend" && t.assist?.includes("appointment-list"));
-if (!feTask) throw new Error("Booking FE task missing");
-
-await createIssue({
-  projectId: TEAM_OPS_PROJECT_ID,
-  title: `Application: ${JS_NAME} → ${feTask.title}`,
-  description: [
-    `ApplicantEmail: ${JS_EMAIL}`,
-    `ApplicantName: ${JS_NAME}`,
-    `Stated trade: Coding`,
-    `TargetIssue: #${feTask.id}`,
-    `Product: BookingDepositDesk`,
-    `Status: Matched`,
-    `Seed: scripts/seed-smb-pipeline.mjs`,
-  ].join("\n"),
-});
-
-await createIssue({
-  projectId: booking.projectId,
-  title: `Match: ${JS_NAME} on #${feTask.id}`,
-  description: [
-    `AssigneeEmail: ${JS_EMAIL}`,
-    `IssueId: ${feTask.id}`,
-    `Trade: Coding`,
-    `Status: Active`,
-  ].join("\n"),
-});
+// Previously seeded a fake "Application"/"Match" pair here for a hardcoded smoke-test identity
+// (senagasetty@gmail.com) to have something to look at post-seed. Removed: the "Match: <name> on
+// #<id>" issue got written straight into the real delivery project (BookingDepositDesk) with its
+// own Trade: Coding line, which is indistinguishable from a real task to tasksForApplicant's
+// matching filter (matching.js) — found live, a real applicant (bsit.setty@gmail.com) got matched
+// to this smoke-test record instead of an actual task. matching.js's isAssignable() now also
+// rejects any "Match:"/"Matched:" titled issue defensively, but don't reintroduce the source: use
+// the real Apply flow (or MatchingQueue's manual placement) to verify a fresh seed, not fixture
+// data planted directly in a delivery project.
 
 try {
   await notifyTeamServer(
-    `🌱 Seeded **8 SMB products** (~40 tasks/trade, ${MODULES.length} Assist modules). Assigned **${JS_NAME}** (<${JS_EMAIL}>) to Booking FE. Journal: docs/SMB_PRODUCT_SELECTION_JOURNAL.md`,
+    `🌱 Seeded **8 SMB products** (~40 tasks/trade, ${MODULES.length} Assist modules). Journal: docs/SMB_PRODUCT_SELECTION_JOURNAL.md`,
   );
 } catch {
   /* optional */
