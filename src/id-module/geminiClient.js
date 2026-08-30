@@ -20,9 +20,12 @@ export function getGeminiApiKey() {
 //
 // 100s was too tight: a full lesson generation (maxOutputTokens: 65535, ~60 pedagogy rules to
 // satisfy) legitimately takes longer than that on a non-streaming call — the client waits for the
-// whole response, not just first-byte. Raised after watching two genuine in-progress generations
-// both get cut off at the old limit. Tune again if real generations still time out at this one.
-const REQUEST_TIMEOUT_MS = 240_000;
+// whole response, not just first-byte. Raised once to 240s after watching two genuine in-progress
+// generations both get cut off at the old limit. Raised again here: running the real pipeline
+// end-to-end for the first product built after the designMock requirement was added (more required
+// output per module, on top of the existing ~60 rules), two more real generations in a row hit
+// this exact 240s wall. Tune again if real generations still time out at this one.
+const REQUEST_TIMEOUT_MS = 360_000;
 
 export async function callGemini(prompt) {
   const apiKey = getGeminiApiKey();

@@ -56,6 +56,14 @@ COUNT RULE (non-negotiable):
 Each FE task covers the whole surface (all pages + user_jobs + wiring to APIs).
 Each BE task covers the whole API (persistence + operations + validation).
 
+TRADE FIELD — set literally, do not substitute:
+- Every task from the COUNT RULE above (both FE and BE) gets trade: "Coding" — exactly that string,
+  capitalized, never "frontend" or "backend". Frontend vs backend is coding_focus, a SEPARATE field —
+  it does not replace or get written into trade.
+- Only the one optional non-code task (if you add it) gets a different trade, e.g. "PM" or "Product design".
+- trade is what the matching system filters real applicants by (Trade: Coding on the task record) —
+  a wrong value here means no applicant of any trade can ever see or be matched to this task.
+
 FORBIDDEN:
 - Separate schema / validation / audit / conversion / unit-test / component-test tasks
 - Tasks for out_of_scope items
@@ -151,8 +159,22 @@ export async function runTaskBreakdown(stage1, stage2, apiKey) {
   return tasks;
 }
 
-const TUTORIAL_DRAFT_SYSTEM = `You are SpecForge Tutorial Drafting. Group unmatched engineering tasks into the fewest
+const TUTORIAL_DRAFT_SYSTEM = `You are SpecForge Tutorial Drafting. Group unmatched engineering tasks into
 generic, product-agnostic teaching modules (e.g. resource-list-and-form-ui, resource-crud-api).
+
+SIZE LIMIT — non-negotiable, found live:
+- At most 3 task indexes per group. More than 3 tasks sharing a pattern → split into multiple
+  smaller groups, never one large one. "Fewest modules" is NOT the goal; a module that's too big to
+  reliably generate is worse than two small ones that actually work.
+- "build" must describe ONE focused capability the module teaches (e.g. "list + form + submit" OR
+  "one CRUD endpoint with a derived-status rule"), never an exhaustive list of every operation a
+  resource needs. A build field reading like a full spec ("full CRUD + validation + status +
+  duplicate handling + persistence") is a sign the group itself is too broad — split it.
+- Concretely: a real API resource needing list/create/update/delete/mark-status is 2-3 modules
+  (e.g. one for read+create, one for update+status), not one "full CRUD API" module. A UI surface
+  with a list, a form, and a filtered view is 2 modules (list+form, filtered view), not one.
+Every extra module here costs one more Gemini generation call, which is cheap; a module so large it
+fails validation after 3 retries costs the whole task staying blocked indefinitely.
 
 For each group also list suggestedFundas: short titles of fundamental coding lessons an apprentice should
 have before attempting this assistance module (e.g. "HTTP methods and status codes", "Controlled form inputs").
@@ -172,6 +194,18 @@ export async function runTutorialDrafting(unmatchedTasks, productName, apiKey) {
     schema: TutorialDraftOutputSchema,
     apiKey,
   });
+  // Not auto-split — a good split needs real understanding of which tasks actually separate
+  // cleanly, which this cheap check can't do. Just make a violation visible in logs instead of
+  // silently reproducing the exact failure the SIZE LIMIT rule above exists to prevent (found
+  // live: a 7-task group and a 10-step single-task group both failed generation after 3 retries).
+  for (const g of result.groups) {
+    if (g.taskIndexes.length > 3) {
+      console.warn(
+        `[specforge] Tutorial group "${g.moduleTag}" has ${g.taskIndexes.length} task indexes — over the 3-task guidance in TUTORIAL_DRAFT_SYSTEM. Large modules have failed Gemini generation repeatedly; consider re-running or manually splitting in ID Studio.`,
+      );
+    }
+  }
+
   if (result.groups.length > MAX_TUTORIAL_GROUPS) {
     return [...result.groups].sort((a, b) => b.taskIndexes.length - a.taskIndexes.length).slice(0, MAX_TUTORIAL_GROUPS);
   }

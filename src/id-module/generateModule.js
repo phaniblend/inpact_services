@@ -20,6 +20,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, "..", "..");
 const PROMPT_PATH = path.join(rootDir, "scripts", "prompts", "assist-module-gemini-prompt.txt");
 const TARGET_DIR = path.join(rootDir, "src", "engines", "assist");
+// Deliberately outside TARGET_DIR and not .tsx/.jsx — see the comment where this is used.
+const REJECTED_DIR = path.join(rootDir, "src", "engines", "assist-rejected");
 
 function slugify(tag) {
   return String(tag)
@@ -181,11 +183,16 @@ export async function generateAssistModule(spec) {
 
   let code;
   let lastError;
-  for (let attempt = 0; attempt < 2; attempt++) {
+  let lastCandidate;
+  // 3, not 2: running the real pipeline for the first time after the escaping-discipline rule was
+  // added, two attempts in a row still wasn't enough headroom for the retry's sharper feedback to
+  // land — a third try costs one more Gemini call, which is cheap next to a whole module failing
+  // to generate at all.
+  for (let attempt = 0; attempt < 3; attempt++) {
     const prompt =
       attempt === 0
         ? filled
-        : `${filled}\n\n---\n\nYour previous attempt was not valid JavaScript/JSX — it failed to parse with: ${lastError}\nReturn the corrected module as a single fenced code block, following every rule above exactly.`;
+        : `${filled}\n\n---\n\nYour previous attempt was not valid JavaScript/JSX — it failed to parse with: ${lastError}\n\nThis is very likely one unescaped backtick or double-quote inside a field's own content — see the STRING ESCAPING section above. Re-check every field's content for a delimiter character matching that field's own quote type, escape it, and return the corrected module as a single fenced code block, following every rule above exactly.`;
 
     const raw = await callGemini(prompt);
     const candidate = extractSingleTypescriptBlock(raw);
@@ -193,6 +200,7 @@ export async function generateAssistModule(spec) {
       lastError = "No parseable code block returned by draft generation.";
       continue;
     }
+    lastCandidate = candidate;
     try {
       assertValidModule(candidate);
       code = candidate;
@@ -202,6 +210,23 @@ export async function generateAssistModule(spec) {
     }
   }
   if (!code) {
+    // Was silently discarded before — with nothing but the parser's error message, there was no
+    // way to tell an unescaped backtick inside a nested code-sample string (a known risk class,
+    // see assertValidModule's own comment above) apart from any other cause. Save the last rejected
+    // candidate for a human to actually look at. REJECTED_DIR is deliberately *not*
+    // src/engines/assist/ and *not* a .tsx/.jsx extension — Assist Me's import.meta.glob there is
+    // eager, so a second broken file next to the real ones would revive the exact blast-radius
+    // failure this whole validation step exists to prevent.
+    if (lastCandidate) {
+      try {
+        fs.mkdirSync(REJECTED_DIR, { recursive: true });
+        const rejectedPath = path.join(REJECTED_DIR, `${slugify(spec.moduleTag)}-${Date.now()}.rejected.txt`);
+        fs.writeFileSync(rejectedPath, `Error: ${lastError}\n\n---\n\n${lastCandidate}`, "utf8");
+        lastError += ` (rejected candidate saved to ${rejectedPath})`;
+      } catch {
+        /* best-effort — don't let a logging failure mask the real error */
+      }
+    }
     throw new Error(`Generated module failed to produce valid code after retry — not written to disk. Last error: ${lastError}`);
   }
 
