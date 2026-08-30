@@ -3,6 +3,8 @@ import { useSearchParams } from "react-router-dom";
 import { useAuth, hasRole } from "../auth/useAuth.js";
 import { RESERVED_PROJECT_IDS } from "../cohort-matching/matching.js";
 import { AssistMeEmbedded } from "../assist-me/AssistMeWorkspace.jsx";
+import DesignMockPreview from "../id-module/DesignMockPreview.jsx";
+import { DESIGN_MOCKS } from "../id-module/designMocks.generated.js";
 import "./Workbench.css";
 
 const MODULE_LIBRARY_PROJECT_ID = 4;
@@ -337,6 +339,20 @@ function OpenTaskView({ task, publishedModules, onBack, isJS, projects = [] }) {
   const waitingOnLesson = assist.status === "blocked";
   const [tab, setTab] = useState("story"); // story | assistance
   const [assistOpen, setAssistOpen] = useState(false);
+  // The same interactive preview Assist Me shows mid-lesson (DesignMockPreview, driven by
+  // designMocks.generated.js — a byproduct of write-smb-assist-engines.mjs) surfaced right on the
+  // task itself, so a dev can see the target screen before ever opening Assist Me. Only exists for
+  // wired Coding tasks; other trades/unwired tasks just don't get a button.
+  const [mockOpen, setMockOpen] = useState(false);
+  const designMock = assist.tag ? DESIGN_MOCKS[assist.tag] : null;
+  useEffect(() => {
+    if (!mockOpen) return;
+    const onKey = (e) => {
+      if (e.key === "Escape") setMockOpen(false);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [mockOpen]);
   const project = projects.find((p) => p.id === task.projectId);
   const projectPath = project?.path || project?.name || null;
   const cloneUrl = projectPath ? `http://localhost:6610/${projectPath}.git` : null;
@@ -446,6 +462,12 @@ function OpenTaskView({ task, publishedModules, onBack, isJS, projects = [] }) {
           </div>
         )}
 
+        {designMock && (
+          <button type="button" className="workbench-try-mock-btn" onClick={() => setMockOpen(true)}>
+            ▶ Try the mock
+          </button>
+        )}
+
         {!prose && fields.acceptance.length === 0 && task.description && (
           <pre className="workbench-task-raw">{task.description}</pre>
         )}
@@ -505,6 +527,28 @@ function OpenTaskView({ task, publishedModules, onBack, isJS, projects = [] }) {
             onCloseLesson={closeAssistance}
           />
         </section>
+      )}
+
+      {mockOpen && designMock && (
+        <div
+          className="workbench-mock-overlay"
+          role="presentation"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setMockOpen(false);
+          }}
+        >
+          <div className="workbench-mock-modal" role="dialog" aria-modal="true" aria-label="Design mock preview">
+            <div className="workbench-mock-modal-head">
+              <span>What you're building</span>
+              <button type="button" className="workbench-mock-close" onClick={() => setMockOpen(false)} aria-label="Close">
+                ✕
+              </button>
+            </div>
+            <div className="workbench-mock-modal-body">
+              <DesignMockPreview mock={designMock} />
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
