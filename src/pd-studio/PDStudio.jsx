@@ -1,5 +1,6 @@
 import { useState, useLayoutEffect, useRef } from "react";
 import { inferCodingTechLevel } from "../cohort-matching/skillLevels.js";
+import ProductProposer from "./ProductProposer.jsx";
 import "./PDStudio.css";
 
 const EMPTY_FORM = {
@@ -130,6 +131,20 @@ export default function PDStudio() {
   const [similarMatch, setSimilarMatch] = useState(null);
   /** Append-only publish onto an existing product (cohort + delivery project). */
   const [extendTarget, setExtendTarget] = useState(null);
+
+  const formRef = useRef(null);
+  /** An "Add"-ed Product Forge proposal pre-fills the Stage 1 form below instead of PD retyping
+   * the name/description SpecForge already generated — same "generate once, reuse" spirit as
+   * every other stage in this pipeline. */
+  function useProposal(proposal) {
+    resetPipelineState();
+    setForm((f) => ({
+      ...f,
+      product_name: proposal.name,
+      description: [proposal.description, `Narrow slice for this release: ${proposal.narrowSlice}`].join(" "),
+    }));
+    formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
 
   function update(field) {
     return (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
@@ -478,7 +493,9 @@ export default function PDStudio() {
         </p>
       </header>
 
-      <form className="pdstudio-form" onSubmit={handleSubmit}>
+      <ProductProposer onUseProposal={useProposal} />
+
+      <form ref={formRef} className="pdstudio-form" onSubmit={handleSubmit}>
         <label>
           Product name
           <input

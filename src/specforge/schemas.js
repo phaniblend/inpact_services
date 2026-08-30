@@ -120,3 +120,32 @@ export const TutorialDraftGroupSchema = z.object({
 export const TutorialDraftOutputSchema = z.object({
   groups: z.array(TutorialDraftGroupSchema),
 });
+
+/** One candidate SMB product for the Product Forge's "Propose New Products" button — see
+ * server/product-forge-router.js. Sourced from the "free/open alternative to a paid product's
+ * paywalled feature" strategy: the paid product's existing customer base already proves demand
+ * (pain + look/inquire), so what's left to state is the specific paywall and the narrow slice. */
+export const ProductProposalSchema = z.object({
+  name: z.string().min(1).describe('Short product name in the existing CamelCase style, e.g. "VendorBillTracker"'),
+  tagline: z.string().min(1).describe("One sentence: who it's for and what it replaces buying"),
+  description: z
+    .string()
+    .min(1)
+    .describe(
+      'Complete description, e.g. an eBay-style entry: "A marketplace for reselling and auctioning secondhand goods between individuals." 2-4 sentences — what it is, who uses it, what it replaces.',
+    ),
+  inspiredBy: z
+    .array(z.string())
+    .min(1)
+    .describe('The real paid/freemium product(s) this is functionally inspired by, e.g. ["DocuSign", "HelloSign"] — never copy their name, brand, or UI, only the category and the paywalled capability.'),
+  painPoint: z.string().min(1).describe("What breaks for a solo/micro business without this capability"),
+  costBarrier: z.string().min(1).describe("The specific pricing/seat/usage wall in the real paid product(s) that locks this out for a solo/micro operator"),
+  narrowSlice: z
+    .string()
+    .min(1)
+    .describe("The one narrow, teachable slice to actually build — list+form+API+filtered-board grain, not the whole paid product"),
+});
+
+export const ProductProposalOutputSchema = z.object({
+  proposals: z.array(ProductProposalSchema).min(1),
+});

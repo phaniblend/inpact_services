@@ -13,7 +13,16 @@ import {
 export const COHORT_PROJECT_ID = 2;
 export const TEAM_OPS_PROJECT_ID = 3;
 export const MODULE_LIBRARY_PROJECT_ID = 4;
-export const RESERVED_PROJECT_IDS = new Set([COHORT_PROJECT_ID, TEAM_OPS_PROJECT_ID, MODULE_LIBRARY_PROJECT_ID]);
+// Product Forge's proposal history (server/product-forge-router.js) — one "Proposal: <name>" issue
+// per candidate, Status: proposed/added/deferred. Needs provisioning in live OneDev the same way
+// projects 2-4 were (a spacer project run so this lands on id 5) before the feature can write to it.
+export const PRODUCT_PROPOSALS_PROJECT_ID = 5;
+export const RESERVED_PROJECT_IDS = new Set([
+  COHORT_PROJECT_ID,
+  TEAM_OPS_PROJECT_ID,
+  MODULE_LIBRARY_PROJECT_ID,
+  PRODUCT_PROPOSALS_PROJECT_ID,
+]);
 
 export const CORE_ONLY_TRADES = new Set(["product design"]);
 

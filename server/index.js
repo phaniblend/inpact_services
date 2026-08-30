@@ -27,6 +27,7 @@ import { buildMentorSystemPrompt, OFF_TOPIC_PREFIX, OFF_TOPIC_FALLBACK } from ".
 import cookieParser from "cookie-parser";
 import mentorRouter from "./mentor/mentor-router.js";
 import specforgeRouter from "./specforge-router.js";
+import productForgeRouter from "./product-forge-router.js";
 import idRouter from "./id-router.js";
 import assistMeRouter from "./assist-me-router.js";
 import authRouter from "./auth-router.js";
@@ -131,6 +132,7 @@ app.options("/api/lessons/feedback-annotate", (_req, res) => res.sendStatus(204)
 
 app.use("/api/mentor", mentorSessionMiddleware, mentorRouter);
 app.use("/api/specforge", specforgeRouter);
+app.use("/api/product-forge", productForgeRouter);
 app.use("/api/id", idRouter);
 app.use("/api/assist-me", assistMeRouter);
 app.use("/api/auth", authRouter);

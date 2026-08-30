@@ -11,6 +11,7 @@ import {
   Stage2OutputSchema,
   Stage3OutputSchema,
   TutorialDraftOutputSchema,
+  ProductProposalOutputSchema,
 } from "./schemas.js";
 
 const STAGE1_SYSTEM = `You are the Requirement Normalizer stage of SpecForge for a software apprenticeship platform.
@@ -210,4 +211,54 @@ export async function runTutorialDrafting(unmatchedTasks, productName, apiKey) {
     return [...result.groups].sort((a, b) => b.taskIndexes.length - a.taskIndexes.length).slice(0, MAX_TUTORIAL_GROUPS);
   }
   return result.groups;
+}
+
+const PRODUCT_PROPOSER_SYSTEM = `You are SpecForge's Product Proposer. Propose new candidate SMB products for a
+platform that inducts job-seeking apprentices onto real product teams shipping live software for small/medium
+businesses. Every product must be a narrow, teachable slice — not a full clone.
+
+SOURCING STRATEGY (this is the whole method — follow it, don't invent a different one):
+Every candidate must be a free/open alternative to ONE specific capability that a real, well-known paid or
+freemium SaaS product locks behind a pricing wall (per-seat fees, usage caps, feature gates on top of a paid
+plan). The paid product's own existing customer base IS the demand evidence — you do not need a survey citation,
+you need to correctly identify a real, well-known product and its real pricing wall.
+
+HARD RULES:
+- inspiredBy must name REAL, well-known products (e.g. "DocuSign", "HubSpot", "Typeform") — never invented ones.
+- Never propose copying a product's name, brand, logo, or literal UI. The candidate is an independent product
+  in its own category, not a reskin — describe it the way "Cal.com" describes itself relative to Calendly:
+  same job-to-be-done, entirely its own product.
+- costBarrier must name a REAL, plausible pricing mechanism (per-seat, per-transaction, usage cap, feature
+  gated to a higher tier) — not a vague "it's expensive."
+- narrowSlice must be scoped to the same grain as this platform's existing seed products: a list + a form +
+  one API with a derived-status or conflict rule, and (if a UI screen) a filtered view. Never propose building
+  the whole paid product — one commonly-paywalled workflow slice of it.
+- Never propose something already in ALREADY DECIDED below, or a close variant of it (same underlying capability
+  under a different name counts as a duplicate).
+- Vary the category across your batch — do not propose three variations on the same kind of tool.
+
+For each proposal, name/tagline/description/inspiredBy/painPoint/costBarrier/narrowSlice are all required —
+every field populated, no placeholders.`;
+
+/**
+ * PD Studio's "Propose New Products" button. `alreadyDecided` is every existing proposal's
+ * {name, status} this session/instance already knows about (added or deferred) — passed in so the
+ * model doesn't waste a batch re-proposing something PD already ruled on. Caller (product-forge-
+ * router.js) is responsible for persisting the result; this function is pure generation, same
+ * division of labor as every other stage in this file.
+ */
+export async function runProductProposals(alreadyDecided, apiKey, count = 6) {
+  const decidedList =
+    alreadyDecided && alreadyDecided.length
+      ? alreadyDecided.map((p) => `- ${p.name} (${p.status}): ${p.tagline || ""}`).join("\n")
+      : "(none yet)";
+  const user = `ALREADY DECIDED (do not repropose these or close variants):\n${decidedList}\n\nPropose ${count} new candidate products.`;
+  const result = await generateStructured({
+    system: PRODUCT_PROPOSER_SYSTEM,
+    user,
+    schema: ProductProposalOutputSchema,
+    apiKey,
+    maxTokens: 6000,
+  });
+  return result.proposals;
 }
