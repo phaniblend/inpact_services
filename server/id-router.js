@@ -16,7 +16,7 @@ import express from "express";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import { generateAssistModule, assertValidModule } from "../src/id-module/generateModule.js";
+import { generateAssistModule, assertValidModule, extractDesignMock } from "../src/id-module/generateModule.js";
 import { spliceNodesArray } from "../src/id-module/spliceNodesArray.js";
 import { fundaGenerationSpec, fundaModuleTag } from "../src/id-module/fundaPrereqs.js";
 import { notifyTeamServer } from "./notify-server.js";
@@ -469,6 +469,39 @@ router.get("/draft", (req, res) => {
     res.json({ code: fs.readFileSync(resolved, "utf8"), filePath: resolved });
   } catch (err) {
     res.status(500).json({ error: err?.message ?? "Could not read draft" });
+  }
+});
+
+/** GET /design-mock?tag=<AssistModule tag> — a published module's designMock, read live from its
+ * .tsx file on disk. Covers modules Gemini generated at runtime (PD Studio -> SpecForge -> ID
+ * Studio), which have no entry in write-smb-assist-engines.mjs's build-time
+ * designMocks.generated.js — that file only knows the 40 hand-authored seed modules. Workbench
+ * tries the static map first and only calls this as a fallback, so the common case stays a plain
+ * import with no network round trip. */
+router.get("/design-mock", async (req, res) => {
+  try {
+    const tag = String(req.query.tag || "").trim();
+    if (!tag) return res.status(400).json({ error: "tag is required" });
+
+    const issues = await listIssues({ count: 200 });
+    const moduleIssue = issues.find(
+      (i) => i.projectId === MODULE_LIBRARY_PROJECT_ID && i.title.trim().toLowerCase() === `module: ${tag}`.toLowerCase()
+    );
+    if (!moduleIssue) return res.status(404).json({ error: `No published module found for tag "${tag}"` });
+
+    const filePath = parseKV(moduleIssue.description).FilePath;
+    const resolved = filePath
+      ? path.resolve(filePath)
+      : path.join(ASSIST_DIR, `inpact_assist_${tag}_engine.tsx`);
+    if (!resolved.startsWith(ASSIST_DIR + path.sep) || !fs.existsSync(resolved)) {
+      return res.status(404).json({ error: "Module file not found on disk." });
+    }
+
+    const mock = extractDesignMock(fs.readFileSync(resolved, "utf8"));
+    if (!mock) return res.status(404).json({ error: `Module "${tag}" has no designMock yet.` });
+    res.json({ mock });
+  } catch (err) {
+    res.status(500).json({ error: err?.message ?? "Could not load design mock" });
   }
 });
 

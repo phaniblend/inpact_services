@@ -92,17 +92,74 @@ function sandboxRequire(specifier) {
  * top-level body in a sandboxed context with `react`/`inpact_engine_shared` stubbed out — cheap
  * because nothing in a real generated module does meaningful work outside a component's render,
  * so nothing legitimate should throw when only the top-level body executes. */
-export function assertValidModule(code) {
-  transformSync(code, { loader: "tsx", jsx: "automatic" }); // (1) syntax
+/** Throws a specific, actionable message when the intro node's designMock is missing or the
+ * wrong shape for its declared `kind` — the same class of check as the syntax/runtime checks
+ * above, just for content completeness instead of validity. Without this, "every module gets a
+ * mock" is only ever a prompt request Gemini can quietly skip — found live, the master prompt had
+ * no designMock rule at all until this fix, so every module generated before it has none. */
+function assertHasDesignMock(exports) {
+  const nodes = exports?.NODES;
+  if (!Array.isArray(nodes) || !nodes.length) {
+    throw new Error("Module has no exported NODES array — cannot check for intro.content.designMock.");
+  }
+  const mock = nodes[0]?.content?.designMock;
+  if (!mock || typeof mock !== "object") {
+    throw new Error(
+      "intro.content.designMock is missing. Every module must include it — see the designMock rules and both example shapes in the prompt.",
+    );
+  }
+  const kind = String(mock.kind || "");
+  if (kind.includes("api")) {
+    if (!mock.getSample || !mock.postSample) {
+      throw new Error("designMock kind is api-style but getSample/postSample are missing — both are required.");
+    }
+  } else if (kind === "list-and-form") {
+    if (!Array.isArray(mock.rows) || mock.rows.length < 1) {
+      throw new Error("designMock kind is list-and-form but rows is missing or empty — needs sample rows.");
+    }
+    if (!Array.isArray(mock.fields) || mock.fields.length < 1) {
+      throw new Error("designMock kind is list-and-form but fields is missing or empty — needs the form's fields.");
+    }
+  } else {
+    throw new Error(`designMock.kind "${mock.kind}" isn't recognized — use "list-and-form" or "api-request-response".`);
+  }
+}
 
+/** Transpiles + runs a module's top-level body in the same sandbox assertValidModule uses, and
+ * returns whatever it exported (NODES, default). Shared by the validity check below and by
+ * id-router.js's /design-mock, which needs a published module's NODES[0].content.designMock at
+ * request time without re-deriving the whole validity-check plumbing. */
+export function evalModuleExports(code) {
   const { code: cjs } = transformSync(code, { loader: "tsx", jsx: "automatic", format: "cjs" });
   const moduleObj = { exports: {} };
   const context = vm.createContext({ module: moduleObj, exports: moduleObj.exports, require: sandboxRequire, console });
+  new vm.Script(cjs, { filename: "module-eval.js" }).runInContext(context, { timeout: 2000 });
+  return moduleObj.exports;
+}
+
+/** A published module's intro.content.designMock, or null if it has none (e.g. it predates the
+ * designMock prompt rule). Used by id-router.js's GET /design-mock — the runtime counterpart to
+ * write-smb-assist-engines.mjs's build-time designMocks.generated.js, for modules Gemini generated
+ * at request time rather than the 40 hand-authored seed modules. */
+export function extractDesignMock(code) {
   try {
-    new vm.Script(cjs, { filename: "generated-module-check.js" }).runInContext(context, { timeout: 2000 });
+    return evalModuleExports(code)?.NODES?.[0]?.content?.designMock || null;
+  } catch {
+    return null;
+  }
+}
+
+export function assertValidModule(code) {
+  transformSync(code, { loader: "tsx", jsx: "automatic" }); // (1) syntax
+
+  let exportsObj;
+  try {
+    exportsObj = evalModuleExports(code);
   } catch (err) {
     throw new Error(`Module throws at load time (not just a syntax issue): ${err?.message ?? err}`);
   }
+
+  assertHasDesignMock(exportsObj); // (3) content completeness — see comment above
 }
 
 /**

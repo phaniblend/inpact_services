@@ -31,6 +31,13 @@ async function api(path, opts) {
 
 const EMPTY_ISSUE = { title: "", description: "" };
 
+// Task titles read as their own imperative sentence ("Build the..."), so folding one into "The
+// task title asks you to ___" needs its leading verb lowercased to read as one continuous
+// sentence rather than a mid-sentence capital.
+function lowerFirst(s) {
+  return s ? s.charAt(0).toLowerCase() + s.slice(1) : s;
+}
+
 function parseAssistInfo(description) {
   const wired = /^AssistModule:\s*(.+)$/m.exec(description || "");
   if (wired) return { status: "wired", tag: wired[1].trim() };
@@ -339,12 +346,32 @@ function OpenTaskView({ task, publishedModules, onBack, isJS, projects = [] }) {
   const waitingOnLesson = assist.status === "blocked";
   const [tab, setTab] = useState("story"); // story | assistance
   const [assistOpen, setAssistOpen] = useState(false);
-  // The same interactive preview Assist Me shows mid-lesson (DesignMockPreview, driven by
-  // designMocks.generated.js — a byproduct of write-smb-assist-engines.mjs) surfaced right on the
-  // task itself, so a dev can see the target screen before ever opening Assist Me. Only exists for
-  // wired Coding tasks; other trades/unwired tasks just don't get a button.
+  // The same interactive preview Assist Me shows mid-lesson (DesignMockPreview), surfaced right on
+  // the task itself so a dev can see the target screen before ever opening Assist Me. Only exists
+  // for wired Coding tasks; other trades/unwired tasks just don't get a button.
+  //
+  // Two sources, tried in order: the static map (designMocks.generated.js, a byproduct of
+  // write-smb-assist-engines.mjs — the 40 hand-authored seed modules, no network needed) first,
+  // then GET /api/id/design-mock as a fallback for modules Gemini generated at runtime (PD Studio
+  // -> SpecForge -> ID Studio), which have no entry in that build-time file.
   const [mockOpen, setMockOpen] = useState(false);
-  const designMock = assist.tag ? DESIGN_MOCKS[assist.tag] : null;
+  const [dynamicMock, setDynamicMock] = useState(null);
+  const staticMock = assist.tag ? DESIGN_MOCKS[assist.tag] : null;
+  const designMock = staticMock || dynamicMock;
+  useEffect(() => {
+    setDynamicMock(null);
+    if (staticMock || !assist.tag) return;
+    let cancelled = false;
+    fetch(`/api/id/design-mock?tag=${encodeURIComponent(assist.tag)}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (!cancelled) setDynamicMock(data?.mock || null);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [assist.tag, staticMock]);
   useEffect(() => {
     if (!mockOpen) return;
     const onKey = (e) => {
@@ -545,6 +572,9 @@ function OpenTaskView({ task, publishedModules, onBack, isJS, projects = [] }) {
               </button>
             </div>
             <div className="workbench-mock-modal-body">
+              <p className="workbench-mock-bridge">
+                The task title asks you to <strong>{lowerFirst(task.title)}</strong> — here's how that looks in the app:
+              </p>
               <DesignMockPreview mock={designMock} />
             </div>
           </div>
