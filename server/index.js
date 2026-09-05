@@ -32,6 +32,7 @@ import idRouter from "./id-router.js";
 import assistMeRouter from "./assist-me-router.js";
 import authRouter from "./auth-router.js";
 import recruitRouter from "./recruit-router.js";
+import gitProxyRouter from "./git-proxy-router.js";
 import { requireSession } from "./auth-session.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -176,6 +177,14 @@ app.use("/api/onedev", requireSession, async (req, res) => {
     res.status(502).json({ error: "OneDev upstream error" });
   }
 });
+
+// Git-smart-HTTP proxy for the in-browser dev workspace (isomorphic-git in the browser talking to
+// real OneDev) — same ONEDEV_INTERNAL_URL/ONEDEV_API_USER/ONEDEV_API_PASS env vars the /api/onedev
+// proxy above already uses successfully in this environment, so no new configuration is needed.
+// This route existed in the frontend's own git-proxy-router.js but was never mounted here, so
+// every clone/commit/push attempt against this deployment 404'd — see git-proxy-router.js's own
+// header comment for the full request-shape rationale.
+app.use("/api/git", requireSession, gitProxyRouter);
 
 /**
  * Mattermost incoming-webhook pass-through — replaces the old `/mattermost-api` Vite-dev-only
