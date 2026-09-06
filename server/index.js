@@ -8,6 +8,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import crypto from "crypto";
+import { execFile } from "child_process";
 import dotenv from "dotenv";
 import express from "express";
 import { cacheGet, cacheSet, getCacheDir } from "./cache.js";
@@ -33,6 +34,7 @@ import assistMeRouter from "./assist-me-router.js";
 import authRouter from "./auth-router.js";
 import recruitRouter from "./recruit-router.js";
 import gitProxyRouter from "./git-proxy-router.js";
+import smbDeskRouter from "./smb-desk-router.js";
 import { requireSession } from "./auth-session.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -131,6 +133,37 @@ app.options("/api/lessons/mentor", (_req, res) => res.sendStatus(204));
 app.options("/api/lessons/step-example", (_req, res) => res.sendStatus(204));
 app.options("/api/lessons/feedback-annotate", (_req, res) => res.sendStatus(204));
 
+app.get("/health", (_req, res) => res.json({ ok: true }));
+
+// Real repo activity for the "You're in!" team screen — replaces a fabricated teammate/PR count
+// with a genuine number so nothing shown there needs explaining away if a partner asks about it.
+// Reads a dedicated bare mirror (D:\IPAAL\.repo-stats\<project>.git) kept separate from any
+// project's live working clone (e.g. mini-erp/apps/api) so a stats request can never race or
+// interfere with that clone's own git state. Allowlisted project names only — this shells out to
+// git, so the project param must never reach the shell unvalidated.
+const REPO_STATS_ALLOWLIST = new Set(["MiniERP"]);
+const repoStatsRoot = path.join(rootDir, ".repo-stats");
+
+function execFileP(cmd, args, opts) {
+  return new Promise((resolve, reject) => {
+    execFile(cmd, args, opts, (err, stdout) => (err ? reject(err) : resolve(stdout)));
+  });
+}
+
+app.get("/api/repo-stats/:project", requireSession, async (req, res) => {
+  const { project } = req.params;
+  if (!REPO_STATS_ALLOWLIST.has(project)) return res.status(404).json({ error: "unknown project" });
+  const gitDir = path.join(repoStatsRoot, `${project}.git`);
+  try {
+    await execFileP("git", ["--git-dir", gitDir, "fetch", "-q", "origin", "main"], { timeout: 10000 });
+    const out = await execFileP("git", ["--git-dir", gitDir, "rev-list", "--count", "origin/main"], { timeout: 10000 });
+    res.json({ commits: parseInt(out.trim(), 10) || 0 });
+  } catch (err) {
+    console.error("[repo-stats] failed:", err.message);
+    res.status(502).json({ error: "could not read repo stats" });
+  }
+});
+
 app.use("/api/mentor", mentorSessionMiddleware, mentorRouter);
 app.use("/api/specforge", specforgeRouter);
 app.use("/api/product-forge", productForgeRouter);
@@ -138,6 +171,13 @@ app.use("/api/id", idRouter);
 app.use("/api/assist-me", assistMeRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/recruit", recruitRouter);
+app.use("/api/git", requireSession, gitProxyRouter);
+// Real, in-memory backend for the SMB product APIs (Booking/Package/Invoice/Lead/Shift/Quote/
+// Review/Reminder desks) — generated from the same MODULES config the FE task lesson content
+// comes from (scripts/generate-smb-backend-routes.mjs), then hand-fixed against each product's
+// real acceptance criteria (see server/smb-desk-router.js's own comments). Mounted at bare /api
+// since each resource already owns a distinct top-level path (/api/packages, /api/punches, etc.)
+app.use("/api", smbDeskRouter);
 
 /**
  * Authenticated pass-through to OneDev's REST API — replaces the old `/onedev-api` path, which
@@ -177,14 +217,6 @@ app.use("/api/onedev", requireSession, async (req, res) => {
     res.status(502).json({ error: "OneDev upstream error" });
   }
 });
-
-// Git-smart-HTTP proxy for the in-browser dev workspace (isomorphic-git in the browser talking to
-// real OneDev) — same ONEDEV_INTERNAL_URL/ONEDEV_API_USER/ONEDEV_API_PASS env vars the /api/onedev
-// proxy above already uses successfully in this environment, so no new configuration is needed.
-// This route existed in the frontend's own git-proxy-router.js but was never mounted here, so
-// every clone/commit/push attempt against this deployment 404'd — see git-proxy-router.js's own
-// header comment for the full request-shape rationale.
-app.use("/api/git", requireSession, gitProxyRouter);
 
 /**
  * Mattermost incoming-webhook pass-through — replaces the old `/mattermost-api` Vite-dev-only
