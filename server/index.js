@@ -35,6 +35,7 @@ import authRouter from "./auth-router.js";
 import recruitRouter from "./recruit-router.js";
 import gitProxyRouter from "./git-proxy-router.js";
 import smbDeskRouter from "./smb-desk-router.js";
+import minierpRouter from "./minierp-router.js";
 import { requireSession } from "./auth-session.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -178,6 +179,11 @@ app.use("/api/git", requireSession, gitProxyRouter);
 // real acceptance criteria (see server/smb-desk-router.js's own comments). Mounted at bare /api
 // since each resource already owns a distinct top-level path (/api/packages, /api/punches, etc.)
 app.use("/api", smbDeskRouter);
+// Real MiniERP backend (Tasks 1-5 of that product's spec) — double-entry GL, item/MAC valuation,
+// P2P and O2C transactional flows, reports, and the reorder sweep. See minierp-router.js's own
+// header for why this is Express + in-memory rather than the spec's literal Prisma/Postgres/
+// Fastify/BullMQ stack. No path here collides with smbDeskRouter's resources above.
+app.use("/api", minierpRouter);
 
 /**
  * Authenticated pass-through to OneDev's REST API — replaces the old `/onedev-api` path, which
