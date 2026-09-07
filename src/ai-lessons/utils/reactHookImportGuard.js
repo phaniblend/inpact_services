@@ -79,9 +79,23 @@ export function checkReactHookImports(userCode) {
     if (!usesBareHook(clean, hook)) continue;
     if (named.has(hook)) continue;
     if (ns && usesNamespacedHook(clean, hook)) continue;
+    // Structured for TaskStepsPanel's formatFeedbackText: backtick spans become inline <code>,
+    // and a paragraph that's a fenced ``` block becomes its own code block — a real action
+    // ("add this import line") shouldn't sit buried inside one dense sentence (user report,
+    // 2026-09-07: "his action... is lost in the bulk of alert").
     return {
       ok: false,
-      feedback: `This step uses ${hook}(), but it is not imported from 'react'. Add it to your import line (e.g. import { ${hook} } from 'react') or call it as React.${hook} with import * as React from 'react'.`,
+      feedback: `This step uses \`${hook}()\`, but it is not imported from \`react\`. Add it to your import line:
+
+\`\`\`
+import { ${hook} } from "react";
+\`\`\`
+
+Or call it as \`React.${hook}\` with:
+
+\`\`\`
+import * as React from "react";
+\`\`\``,
       errors: [`Hook ${hook} is used before being imported from 'react'.`],
       hint: `Import ${hook} from 'react' in the same file before using it.`,
     };
