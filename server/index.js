@@ -604,7 +604,15 @@ app.post("/api/lessons/validate", async (req, res) => {
   // useState<Financials>(...), the actual pattern nearly all TypeScript React code in this platform
   // uses. Verified live: v12 was still serving "correct" for useState<Financials>(...) with zero
   // react imports. Fixed the regex to allow an optional generic clause; must invalidate again.
-  const VALIDATION_CACHE_VERSION = 13;
+  // v14 (2026-09-07): user report — "why am i getting different results every time i check my
+  // code" — the SAME unchanged broken code (a typo'd generic type argument) failed one check and
+  // passed the next with zero edits between them. Root cause: no temperature was set on the
+  // DeepSeek call, so it used the provider's own non-zero default — classic sampling variance on a
+  // borderline judgment. Set temperature: 0 on the validation (and feedback-annotate) calls, and
+  // added a new deterministic guard (checkGenericTypeTypos) catching the specific pattern that
+  // exposed this. A "correct" that only sometimes cached under the old flaky behavior must not
+  // keep being served now that both fixes are in.
+  const VALIDATION_CACHE_VERSION = 14;
   const sc = step.successCriteria;
   const criteriaKey = Array.isArray(sc) ? sc.join("|") : String(sc || "");
   const kw = step.answer_keywords;

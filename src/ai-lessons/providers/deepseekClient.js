@@ -17,16 +17,32 @@ const REQUEST_TIMEOUT_MS = 100_000;
 
 /**
  * Call DeepSeek chat completions API; return assistant message text.
- * @param {{ system: string, user: string, maxTokens?: number, model?: string, apiKey: string }} opts
+ * @param {{ system: string, user: string, maxTokens?: number, model?: string, apiKey: string, temperature?: number }} opts
  * @returns {Promise<string>}
  */
-export async function completeWithDeepSeek({ system, user, maxTokens = 2048, model = DEFAULT_MODEL, apiKey }) {
+export async function completeWithDeepSeek({
+  system,
+  user,
+  maxTokens = 2048,
+  model = DEFAULT_MODEL,
+  apiKey,
+  temperature,
+}) {
   if (!apiKey) throw new Error("DeepSeek API key not configured");
 
   const url = `${DEEPSEEK_BASE}/v1/chat/completions`;
   const body = {
     model,
     max_tokens: maxTokens,
+    // Omitted entirely (not defaulted here) for callers that don't specify it — DeepSeek's own
+    // default (~1.0) is fine for open-ended generation (mentor chat, content authoring). Grading
+    // calls (code validation, feedback-annotate) explicitly pass temperature: 0 — DeepSeek's own
+    // docs recommend 0.0 for "Coding / Math" use cases. Found live 2026-09-07: the SAME unchanged
+    // broken code (a typo'd generic type argument) failed one "Check my code" click and passed the
+    // very next one with no edits in between — classic sampling variance on a borderline judgment,
+    // not a logic bug in the guards. A false "correct" is worse than a false "wrong": it tells the
+    // learner they're done when they are not.
+    ...(temperature != null ? { temperature } : {}),
     messages: [
       ...(system ? [{ role: "system", content: system }] : []),
       { role: "user", content: user },

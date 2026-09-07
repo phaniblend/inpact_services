@@ -8,6 +8,7 @@ import { checkReactJsxEventArity, isReactTrack } from "./reactJsxEventArity.js";
 import { checkVueTemplateCallArity, isVueTrack } from "./vueTemplateCallArity.js";
 import { checkPythonCallArity, isPythonTrack } from "./pythonCallArity.js";
 import { checkReactHookImports } from "./reactHookImportGuard.js";
+import { checkGenericTypeTypos } from "./typeGenericTypoGuard.js";
 
 /**
  * @param {{ result: string, feedback?: string, hint?: string, errors?: string[] }} aiResult
@@ -52,6 +53,10 @@ export function applyExecutionCorrectnessGuards(track, userCode, aiResult) {
         hooks,
         "Define imports from 'react' before using hooks in this file."
       );
+    }
+    const typos = checkGenericTypeTypos(code);
+    if (!typos.ok) {
+      return downgradeToWrong(aiResult, typos, "Match the generic type argument to the type you actually defined.");
     }
     const r = checkReactJsxEventArity(code);
     if (!r.ok) {

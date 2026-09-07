@@ -39,6 +39,13 @@ export async function validateCodeWithAI(step, userCode, options = {}) {
     maxTokens: 1024,
     apiKey,
     provider,
+    // 0, not omitted: this is a grading call — the same code checked twice must get the same
+    // verdict. Found live 2026-09-07 (user report): identical, unchanged, genuinely broken code
+    // ("i am getting different results every time i check my code") failed then passed across two
+    // back-to-back checks with no edits between them — sampling variance on a borderline judgment,
+    // not a bug in the deterministic guards layered on top. DeepSeek's own docs recommend 0.0 for
+    // Coding/Math use cases.
+    temperature: 0,
   });
   const parsed = parseAndValidate(raw, validationResponseSchema);
   if (!parsed.success) {

@@ -50,6 +50,9 @@ export async function annotateFeedbackOnCode(params, options = {}) {
       maxTokens: 4096,
       apiKey,
       provider,
+      // Same rationale as codeValidationService — mapping the same feedback onto the same code
+      // should place the same comments in the same place every time.
+      temperature: 0,
     });
 
   let parsed = parseAndValidate(await run(user), annotateResponseSchema);
