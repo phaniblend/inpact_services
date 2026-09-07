@@ -26,12 +26,20 @@ function stripComments(code) {
     .replace(/\/\*[\s\S]*?\*\//g, "");
 }
 
+// Real TypeScript hook calls almost always carry a generic type argument between the hook name
+// and its opening paren — useState<Financials>(...), useState<DriverEarnings>(...), etc. The
+// original regex required the hook name to sit immediately against '(' and never matched these,
+// so the guard silently thought useState/useEffect weren't being called at all (found live
+// 2026-09-07: this is why the guard kept passing code with useState<Financials>(...) and no
+// import, even after isReactTrack itself was fixed). `(<[^()]*>)?` optionally allows one
+// non-nested generic clause — doesn't handle deeply nested generics like useState<Array<T>>, but
+// that's a reasonable bound and strictly better than matching nothing at all.
 function usesBareHook(clean, hook) {
-  return new RegExp(`(^|[^\\w.])${hook}\\s*\\(`).test(clean);
+  return new RegExp(`(^|[^\\w.])${hook}\\s*(<[^()]*>)?\\s*\\(`).test(clean);
 }
 
 function usesNamespacedHook(clean, hook) {
-  return new RegExp(`(^|[^\\w.])React\\.${hook}\\s*\\(`).test(clean);
+  return new RegExp(`(^|[^\\w.])React\\.${hook}\\s*(<[^()]*>)?\\s*\\(`).test(clean);
 }
 
 /** Collect identifiers inside `{ a, b as c }` from all `import … from 'react'` lines. */

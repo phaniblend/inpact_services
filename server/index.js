@@ -599,7 +599,12 @@ app.post("/api/lessons/validate", async (req, res) => {
   // previously every idt-*/funda-* step silently skipped checkReactHookImports and got the generic
   // "General" framework validation prompt. Old cache entries for those tracks were validated under
   // the broken behavior (e.g. missing-import code marked "correct") and must not be served anymore.
-  const VALIDATION_CACHE_VERSION = 12;
+  // v13 (2026-09-07): the v12 fix alone wasn't enough — checkReactHookImports's own hook-detection
+  // regex required the hook name to sit immediately against '(' (useState() ) and never matched
+  // useState<Financials>(...), the actual pattern nearly all TypeScript React code in this platform
+  // uses. Verified live: v12 was still serving "correct" for useState<Financials>(...) with zero
+  // react imports. Fixed the regex to allow an optional generic clause; must invalidate again.
+  const VALIDATION_CACHE_VERSION = 13;
   const sc = step.successCriteria;
   const criteriaKey = Array.isArray(sc) ? sc.join("|") : String(sc || "");
   const kw = step.answer_keywords;
