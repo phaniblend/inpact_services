@@ -595,7 +595,11 @@ app.post("/api/lessons/validate", async (req, res) => {
   }
   const lang = language || "javascript";
   // Bump v when validation prompt/rules change so old cache entries are bypassed (e.g. interface placement rules)
-  const VALIDATION_CACHE_VERSION = 11;
+  // v12 (2026-09-07): isReactTrack/getTrackContext now recognize idt-*/funda-* task tags as React —
+  // previously every idt-*/funda-* step silently skipped checkReactHookImports and got the generic
+  // "General" framework validation prompt. Old cache entries for those tracks were validated under
+  // the broken behavior (e.g. missing-import code marked "correct") and must not be served anymore.
+  const VALIDATION_CACHE_VERSION = 12;
   const sc = step.successCriteria;
   const criteriaKey = Array.isArray(sc) ? sc.join("|") : String(sc || "");
   const kw = step.answer_keywords;
