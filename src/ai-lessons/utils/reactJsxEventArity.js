@@ -14,7 +14,12 @@ import { collectCallableAritiesFromBlock } from "./collectCallableArities.js";
 export function isReactTrack(track) {
   if (!track || typeof track !== "string") return false;
   const t = track.toLowerCase().trim();
-  return t === "react-js" || t === "react-ts" || t === "react";
+  // "idt-*"/"funda-*" are real workbench task tags (moduleTag), not the old fixed lesson-track ids
+  // this function was written for — every one of those .tsx engine files is React/TypeScript
+  // (verified live 2026-09-07: 51/51 idt-*/funda-* engines are .tsx, no exceptions), so without this
+  // they silently skip every React-specific guard below, including checkReactHookImports — the bug
+  // behind "Check my code" not flagging a missing useState import.
+  return t === "react-js" || t === "react-ts" || t === "react" || t.startsWith("idt-") || t.startsWith("funda-");
 }
 
 /**

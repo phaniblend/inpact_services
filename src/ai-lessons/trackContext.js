@@ -203,6 +203,20 @@ export function getTrackContext(track) {
   if (ctx) {
     return { track: t, ...ctx };
   }
+  // "idt-*"/"funda-*" are real workbench task tags (moduleTag), not one of the fixed lesson-track
+  // ids this map was built for — every one of those .tsx engine files is React/TypeScript (verified
+  // live 2026-09-07: 51/51, no exceptions). Without this they fell into the generic TS/JS fallback
+  // below, which is missing REACT_VALIDATION_EXTRA (JSX event-handler-arity rules) entirely.
+  if (t.startsWith("idt-") || t.startsWith("funda-")) {
+    return {
+      track: t,
+      framework: "React",
+      language: "TypeScript",
+      fileMode: "TSX",
+      syntaxRules: DEFAULT_SYNTAX_TS,
+      validationRules: `${DEFAULT_VALIDATION_TS}\n${REACT_VALIDATION_EXTRA}`,
+    };
+  }
   if (t.includes("ts") || t.includes("typescript")) {
     return {
       track: t,
