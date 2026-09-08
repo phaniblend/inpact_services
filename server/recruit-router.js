@@ -26,6 +26,7 @@ import {
   COHORT_PROJECT_ID,
   TEAM_OPS_PROJECT_ID,
   RESERVED_PROJECT_IDS,
+  LAUNCH_SCOPED_PROJECT_ID,
   isAssignable,
   isCoreOnlyTrade,
   bestTaskMatch,
@@ -174,8 +175,9 @@ router.post("/apply", requireSession, async (req, res) => {
 
     const matches = issues.filter((i) => i.projectId === COHORT_PROJECT_ID && i.title.startsWith("Matched:"));
     const aspirationIssues = issues.filter((i) => i.projectId === TEAM_OPS_PROJECT_ID && i.title.startsWith("Aspiration:"));
+    // Pre-launch scoping (see LAUNCH_SCOPED_PROJECT_ID) — only MiniERP is assignable right now.
     const openAssignableTasks = issues.filter(
-      (i) => !RESERVED_PROJECT_IDS.has(i.projectId) && i.state === "Open" && isAssignable(i)
+      (i) => i.projectId === LAUNCH_SCOPED_PROJECT_ID && !RESERVED_PROJECT_IDS.has(i.projectId) && i.state === "Open" && isAssignable(i)
     );
 
     const info = {
@@ -225,6 +227,7 @@ router.post("/apply", requireSession, async (req, res) => {
         title: task.title,
         project: projectNameOf(projects, task.projectId),
         projectId: task.projectId,
+        story: /^Story:\s*(.+)$/m.exec(task.description || "")?.[1]?.trim() || "",
       },
     });
   } catch (err) {
@@ -281,7 +284,11 @@ router.get("/my-tasks", requireSession, async (req, res) => {
           project: projectNameOf(projects, task.projectId),
         };
       })
-      .filter(Boolean);
+      .filter(Boolean)
+      // Pre-launch scoping (user direction: "our goal is only 1 product MiniERP until we go live")
+      // — hides any already-matched non-MiniERP task from view (a stray match made before this rule
+      // existed, e.g.). Doesn't touch the underlying Matched: issue in OneDev, just this display.
+      .filter((t) => t.projectId === LAUNCH_SCOPED_PROJECT_ID);
 
     res.json({ tasks });
   } catch (err) {
@@ -314,8 +321,9 @@ export async function tryRematchQueuedApplicants() {
   const aspirationIssues = issues.filter(
     (i) => i.projectId === TEAM_OPS_PROJECT_ID && i.title.startsWith("Aspiration:")
   );
+  // Pre-launch scoping (see LAUNCH_SCOPED_PROJECT_ID) — only MiniERP is assignable right now.
   const openAssignableTasks = issues.filter(
-    (i) => !RESERVED_PROJECT_IDS.has(i.projectId) && i.state === "Open" && isAssignable(i)
+    (i) => i.projectId === LAUNCH_SCOPED_PROJECT_ID && !RESERVED_PROJECT_IDS.has(i.projectId) && i.state === "Open" && isAssignable(i)
   );
 
   // Mutable copy — each successful place is appended so subsequent bestTaskMatch calls see the
@@ -503,6 +511,7 @@ router.post("/assign-by-email", requireRole("PD", "PMGT", "ID", "CD"), async (re
         title: task.title,
         project: projectNameOf(projects, task.projectId),
         projectId: task.projectId,
+        story: /^Story:\s*(.+)$/m.exec(task.description || "")?.[1]?.trim() || "",
       },
     });
   } catch (err) {
