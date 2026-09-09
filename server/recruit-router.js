@@ -26,7 +26,7 @@ import {
   COHORT_PROJECT_ID,
   TEAM_OPS_PROJECT_ID,
   RESERVED_PROJECT_IDS,
-  LAUNCH_SCOPED_PROJECT_ID,
+  ACTIVE_PRODUCT_ID,
   isAssignable,
   isCoreOnlyTrade,
   bestTaskMatch,
@@ -175,9 +175,9 @@ router.post("/apply", requireSession, async (req, res) => {
 
     const matches = issues.filter((i) => i.projectId === COHORT_PROJECT_ID && i.title.startsWith("Matched:"));
     const aspirationIssues = issues.filter((i) => i.projectId === TEAM_OPS_PROJECT_ID && i.title.startsWith("Aspiration:"));
-    // Pre-launch scoping (see LAUNCH_SCOPED_PROJECT_ID) — only MiniERP is assignable right now.
+    // MiniERP is the one product IPF runs on (see ACTIVE_PRODUCT_ID) — a permanent scope, not a launch gate.
     const openAssignableTasks = issues.filter(
-      (i) => i.projectId === LAUNCH_SCOPED_PROJECT_ID && !RESERVED_PROJECT_IDS.has(i.projectId) && i.state === "Open" && isAssignable(i)
+      (i) => i.projectId === ACTIVE_PRODUCT_ID && !RESERVED_PROJECT_IDS.has(i.projectId) && i.state === "Open" && isAssignable(i)
     );
 
     const info = {
@@ -285,10 +285,11 @@ router.get("/my-tasks", requireSession, async (req, res) => {
         };
       })
       .filter(Boolean)
-      // Pre-launch scoping (user direction: "our goal is only 1 product MiniERP until we go live")
-      // — hides any already-matched non-MiniERP task from view (a stray match made before this rule
-      // existed, e.g.). Doesn't touch the underlying Matched: issue in OneDev, just this display.
-      .filter((t) => t.projectId === LAUNCH_SCOPED_PROJECT_ID);
+      // MiniERP is the one product IPF runs on (user direction, 2026-09-09: "lets keep only
+      // MiniERP") — hides any already-matched non-MiniERP task from view (a stray match made
+      // before this became the permanent scope). Doesn't touch the underlying Matched: issue in
+      // OneDev, just this display.
+      .filter((t) => t.projectId === ACTIVE_PRODUCT_ID);
 
     res.json({ tasks });
   } catch (err) {
@@ -321,9 +322,9 @@ export async function tryRematchQueuedApplicants() {
   const aspirationIssues = issues.filter(
     (i) => i.projectId === TEAM_OPS_PROJECT_ID && i.title.startsWith("Aspiration:")
   );
-  // Pre-launch scoping (see LAUNCH_SCOPED_PROJECT_ID) — only MiniERP is assignable right now.
+  // MiniERP is the one product IPF runs on (see ACTIVE_PRODUCT_ID) — a permanent scope, not a launch gate.
   const openAssignableTasks = issues.filter(
-    (i) => i.projectId === LAUNCH_SCOPED_PROJECT_ID && !RESERVED_PROJECT_IDS.has(i.projectId) && i.state === "Open" && isAssignable(i)
+    (i) => i.projectId === ACTIVE_PRODUCT_ID && !RESERVED_PROJECT_IDS.has(i.projectId) && i.state === "Open" && isAssignable(i)
   );
 
   // Mutable copy — each successful place is appended so subsequent bestTaskMatch calls see the

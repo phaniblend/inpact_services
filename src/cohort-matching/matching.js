@@ -24,13 +24,13 @@ export const RESERVED_PROJECT_IDS = new Set([
   PRODUCT_PROPOSALS_PROJECT_ID,
 ]);
 
-// Pre-launch scoping (user direction, 2026-09-08: "our goal is only 1 product MiniERP until we go
-// live") — every other real product (ReviewReplyInbox, InvoiceFollowUpTracker, etc.) still exists
-// in OneDev and stays untouched, just not assignable to new/rematched applicants while this is set.
+// The one product IPF runs on (user direction, 2026-09-09: "i dont think our product collection is
+// good.. lets keep only MiniERP" — a real strategy call, not a "for now" placeholder; the earlier
+// framing of this as pre-launch scoping to remove later is gone). Every other product project
+// (ReviewReplyInbox, InvoiceFollowUpTracker, BookingDepositDesk, etc.) still exists in OneDev and
+// stays untouched — not deleted — but is permanently out of the assignable pool, not paused.
 // Verified live against the real OneDev project list (GET /~api/projects): id 13 is "MiniERP".
-// Remove this gate (and its one use in recruit-router.js's two openAssignableTasks filters) once
-// more products are ready to go live alongside it.
-export const LAUNCH_SCOPED_PROJECT_ID = 13;
+export const ACTIVE_PRODUCT_ID = 13;
 
 export const CORE_ONLY_TRADES = new Set(["product design"]);
 
