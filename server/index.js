@@ -36,6 +36,9 @@ import recruitRouter from "./recruit-router.js";
 import gitProxyRouter from "./git-proxy-router.js";
 import smbDeskRouter from "./smb-desk-router.js";
 import minierpRouter from "./minierp-router.js";
+import kioskguardRouter from "./kioskguard-router.js";
+import routematrixRouter from "./routematrix-router.js";
+import batchcraftRouter from "./batchcraft-router.js";
 import { requireSession } from "./auth-session.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -184,6 +187,14 @@ app.use("/api", smbDeskRouter);
 // header for why this is Express + in-memory rather than the spec's literal Prisma/Postgres/
 // Fastify/BullMQ stack. No path here collides with smbDeskRouter's resources above.
 app.use("/api", minierpRouter);
+// Real backends for the three newest catalog products (2026-09-10) — each mounted under its own
+// /api/v1 prefix (KioskGuard/RouteMatrix/BatchCraft's own FE tasks were written against /api/v1/...
+// paths, unlike the bare /api/... convention above) so none collide with smbDeskRouter/minierpRouter
+// or each other. See each router's own header for exactly which of that product's spec tasks are
+// real here vs. deliberately not built (nothing an FE task doesn't actually call).
+app.use("/api", kioskguardRouter);
+app.use("/api", routematrixRouter);
+app.use("/api", batchcraftRouter);
 
 /**
  * Authenticated pass-through to OneDev's REST API — replaces the old `/onedev-api` path, which

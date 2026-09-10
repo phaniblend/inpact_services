@@ -180,14 +180,44 @@ router.get("/po", (_req, res) => {
   res.status(200).json(purchaseOrders);
 });
 
+// A manually created PO (POST /po above) starts DRAFT and needs sign-off before it's receivable —
+// this is that sign-off. Auto-generated reorder POs (runReorderSweep, Task 5 below) skip this and
+// are created APPROVED directly, since a system-triggered reorder within policy needs no separate
+// human approval; this endpoint exists for the manual-creation path.
+router.post("/po/:id/approve", (req, res) => {
+  const po = purchaseOrders.find((p) => p.id === req.params.id);
+  if (!po) return res.status(404).json({ error: "Purchase order not found" });
+  if (po.status !== "DRAFT") {
+    return res.status(409).json({ error: `NOT_DRAFT: cannot approve a ${po.status} order` });
+  }
+  po.status = "APPROVED";
+  res.status(200).json(po);
+});
+
+router.post("/po/:id/cancel", (req, res) => {
+  const po = purchaseOrders.find((p) => p.id === req.params.id);
+  if (!po) return res.status(404).json({ error: "Purchase order not found" });
+  if (po.status === "RECEIVED" || po.status === "CANCELLED") {
+    return res.status(409).json({ error: `CANNOT_CANCEL: order is already ${po.status}` });
+  }
+  po.status = "CANCELLED";
+  res.status(200).json(po);
+});
+
 /** Step 3.2: the real transaction — stock, cost, audit log, and ledger all move together. Node is
  * single-threaded and this handler never awaits mid-mutation, so it's atomic in the same sense the
- * spec's Prisma $transaction is: nothing else can interleave with it. */
+ * spec's Prisma $transaction is: nothing else can interleave with it. Only an APPROVED order may be
+ * received (matches the FE lesson's own gating — ProcurementPanel only ever shows "Receive Goods" on
+ * an APPROVED row); a DRAFT one hasn't been signed off yet, a CANCELLED one never will be, and an
+ * already-RECEIVED one can't be received twice. */
 router.post("/po/:id/receive", (req, res) => {
   const po = purchaseOrders.find((p) => p.id === req.params.id);
   if (!po) return res.status(404).json({ error: "Purchase order not found" });
   if (po.status === "RECEIVED") {
     return res.status(409).json({ error: "ALREADY_RECEIVED" });
+  }
+  if (po.status !== "APPROVED") {
+    return res.status(409).json({ error: `NOT_APPROVED: order is ${po.status}` });
   }
 
   for (const line of po.items) {
@@ -308,6 +338,30 @@ router.post("/so/:id/fulfill", (req, res) => {
   res.status(200).json(so);
 });
 
+// Neither endpoint is called by the current FE lesson (ProcurementPanel/SalesFulfillmentBoard only
+// ever teach CONFIRMED -> SHIPPED) — added so the real SalesOrder lifecycle from the spec
+// (DRAFT/CONFIRMED/SHIPPED/PAID/CANCELLED) is actually reachable end to end, for whatever calls it
+// next (a future FE task, an admin tool, or manual testing) rather than being schema-only.
+router.post("/so/:id/mark-paid", (req, res) => {
+  const so = salesOrders.find((s) => s.id === req.params.id);
+  if (!so) return res.status(404).json({ error: "Sales order not found" });
+  if (so.status !== "SHIPPED") {
+    return res.status(409).json({ error: `NOT_SHIPPED: order is ${so.status}` });
+  }
+  so.status = "PAID";
+  res.status(200).json(so);
+});
+
+router.post("/so/:id/cancel", (req, res) => {
+  const so = salesOrders.find((s) => s.id === req.params.id);
+  if (!so) return res.status(404).json({ error: "Sales order not found" });
+  if (so.status === "SHIPPED" || so.status === "PAID" || so.status === "CANCELLED") {
+    return res.status(409).json({ error: `CANNOT_CANCEL: order is already ${so.status}` });
+  }
+  so.status = "CANCELLED";
+  res.status(200).json(so);
+});
+
 // ---------------------------------------------------------------------------
 // TASK 5: Financial Reporting + Automated Reordering
 // ---------------------------------------------------------------------------
@@ -346,21 +400,25 @@ router.get("/reports/income-statement", (_req, res) => {
 });
 
 /** Step 5.2: the reorder worker, adapted from a BullMQ repeatable job to a plain setInterval —
- * same behavior (scan low stock, skip SKUs that already have a draft, create one draft PO per
- * low SKU) without needing a Redis queue for what is, underneath, just a periodic scan. */
+ * same behavior (scan low stock, skip SKUs that already have a draft or approved order in flight,
+ * create one auto-reorder PO per low SKU) without needing a Redis queue for what is, underneath,
+ * just a periodic scan. Created APPROVED, not DRAFT: this is a system-triggered reorder within
+ * policy (stock <= reorderPoint, quantity capped at reorderQuantity) — no FE step ever exists to
+ * manually approve a PO (ProcurementPanel only ever renders a Receive Goods button, gated on
+ * APPROVED), so a DRAFT auto-PO would sit forever with no way to ever become receivable. */
 function runReorderSweep() {
   const lowItems = items.filter((i) => i.stockOnHand <= i.reorderPoint);
   for (const item of lowItems) {
-    const existingDraft = purchaseOrders.find(
-      (po) => po.status === "DRAFT" && po.items.some((line) => line.itemId === item.id)
+    const existingOpenOrder = purchaseOrders.find(
+      (po) => (po.status === "DRAFT" || po.status === "APPROVED") && po.items.some((line) => line.itemId === item.id)
     );
-    if (existingDraft) continue;
+    if (existingOpenOrder) continue;
     const po = {
       id: purchaseOrdersNextId(),
       poNumber: `AUTO-PO-${item.sku}-${Date.now()}`,
       vendorId: DEFAULT_VENDOR.id,
       totalAmount: Math.round(item.costPrice * item.reorderQuantity * 100) / 100,
-      status: "DRAFT",
+      status: "APPROVED",
       items: [{ itemId: item.id, quantity: item.reorderQuantity, unitPrice: item.costPrice }],
     };
     purchaseOrders.push(po);
