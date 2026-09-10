@@ -31,7 +31,8 @@ export const RESERVED_PROJECT_IDS = new Set([
 // project (ReviewReplyInbox, InvoiceFollowUpTracker, BookingDepositDesk, etc.) still exists in
 // OneDev, untouched — not deleted — just not live yet, waiting its turn. MiniERP is the first;
 // verified live against the real OneDev project list (GET /~api/projects): id 13 is "MiniERP".
-// 2026-09-10: KioskGuard (14), RouteMatrix (15), BatchCraft (16) joined once their real FE tasks +
+// 2026-09-10: SentinelPOS (14, renamed from KioskGuard), RouteMatrix (15), BatchCraft (16) joined
+// once their real FE tasks +
 // Assist Me content were built (same standard as MiniERP) — user directed all four be freshly
 // tasked and left unmatched at once (multi-account collaboration test), rather than staged one at a
 // time; any stale test matches on their tasks were cleared in OneDev before flipping this on.

@@ -1,5 +1,5 @@
 /**
- * KioskGuard backend — the one FE task that exists (IncidentTriage.tsx, `idt-kioskguard-triage`)
+ * SentinelPOS backend — the one FE task that exists (IncidentTriage.tsx, `idt-sentinelpos-triage`)
  * calls exactly two real endpoints below, adapted to this project's real Express + in-memory stack
  * rather than the spec's literal Prisma+PostgreSQL+Redis+S3 (same trade-off minierp-router.js and
  * smb-desk-router.js already make — no real database, no real Redis buffer).
