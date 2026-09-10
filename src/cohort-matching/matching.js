@@ -24,13 +24,16 @@ export const RESERVED_PROJECT_IDS = new Set([
   PRODUCT_PROPOSALS_PROJECT_ID,
 ]);
 
-// The one product IPF runs on (user direction, 2026-09-09: "i dont think our product collection is
-// good.. lets keep only MiniERP" — a real strategy call, not a "for now" placeholder; the earlier
-// framing of this as pre-launch scoping to remove later is gone). Every other product project
-// (ReviewReplyInbox, InvoiceFollowUpTracker, BookingDepositDesk, etc.) still exists in OneDev and
-// stays untouched — not deleted — but is permanently out of the assignable pool, not paused.
-// Verified live against the real OneDev project list (GET /~api/projects): id 13 is "MiniERP".
-export const ACTIVE_PRODUCT_ID = 13;
+// Products fully built, tested (task effectiveness, steps, Assist modules — the whole thing), and
+// taken live — the real rollout model (user correction, 2026-09-09: not "one product, period," but
+// "one product at a time," fully vetted, before starting the next; as many as get done well over
+// the next 6 months, each added here once it's actually live, not before). Every other product
+// project (ReviewReplyInbox, InvoiceFollowUpTracker, BookingDepositDesk, etc.) still exists in
+// OneDev, untouched — not deleted — just not live yet, waiting its turn. MiniERP is the first;
+// verified live against the real OneDev project list (GET /~api/projects): id 13 is "MiniERP".
+// Add a product's id here — nothing else — once it's actually vetted and live, in the order it
+// gets built.
+export const LIVE_PRODUCT_IDS = new Set([13]);
 
 export const CORE_ONLY_TRADES = new Set(["product design"]);
 
