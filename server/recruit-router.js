@@ -521,4 +521,44 @@ router.post("/assign-by-email", requireRole("PD", "PMGT", "ID", "CD"), async (re
   }
 });
 
+/**
+ * POST /unassign — core/admin frees a previously-matched task (e.g. to reassign it, or clear out
+ * test placements). Never deletes the Matched: issue — same "don't destroy real history" instinct
+ * as everything else this router writes. Instead renames its title so it stops matching the
+ * `title.startsWith("Matched:")` check every read path (matching.js, MatchingQueue.jsx,
+ * ProductOverview's alreadyAssigned check) already uses to decide a task is taken — the same
+ * updateIssueTitle call createIssue's siblings already use, confirmed working, rather than guessing
+ * at a delete/close endpoint OneDev may or may not actually expose the way we'd assume. Renaming
+ * keeps the full record (who had it, when, why) readable; only its "counts as active" bit changes.
+ */
+router.post("/unassign", requireRole("PD", "PMGT", "ID", "CD"), async (req, res) => {
+  try {
+    const matchId = Number(req.body?.matchId);
+    if (!Number.isFinite(matchId) || matchId <= 0) {
+      return res.status(400).json({ error: "matchId is required." });
+    }
+
+    const issues = await listIssues({ offset: 0, count: 300 });
+    const match = issues.find((i) => i.id === matchId);
+    if (!match) return res.status(404).json({ error: "Match not found." });
+    if (match.projectId !== COHORT_PROJECT_ID || !match.title.startsWith("Matched:")) {
+      return res.status(400).json({ error: "That id is not an active match." });
+    }
+
+    const newTitle = match.title.replace(/^Matched:/, "Unassigned:");
+    await updateIssueTitle(match.id, newTitle);
+    await updateIssueDescription(
+      match.id,
+      [match.description || "", `UnassignedBy: ${req.session?.email || "unknown"}`, `UnassignedAt: ${new Date().toISOString()}`].join("\n")
+    );
+
+    await notifyTeamServer(`🧹 Unassigned "${match.title.replace(/^Matched:\s*/, "")}" by core (${req.session?.email || "ops"})`);
+
+    res.json({ ok: true, matchId: match.id, newTitle });
+  } catch (err) {
+    console.error("[recruit] /unassign failed:", err.message);
+    res.status(500).json({ error: "Couldn't unassign — please try again." });
+  }
+});
+
 export default router;
