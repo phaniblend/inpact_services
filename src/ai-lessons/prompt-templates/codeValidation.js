@@ -93,10 +93,14 @@ Pinpointing feedback (critical for wrong/partial):
 - Never give vague feedback like "The placement is wrong" without saying where the code is and where it should be.
 
 Feedback requirements (critical):
-- feedback: For "partial" or "wrong": 1–3 clear, specific sentences. Never use vague or single-word feedback like "Not found", "Incorrect", "Wrong", or "Missing" without explanation. For "correct": keep it very brief (see below).
+- feedback: For "partial" or "wrong" with **more than one distinct issue** (e.g. two missing fields plus a syntax error), you MUST format it as a real numbered list, not a run-on paragraph: one line per issue, each starting "1. ", "2. ", "3. " (a digit, a period, one space — exactly that, nothing fancier), each line a complete, standalone, actionable sentence a total beginner could follow without re-reading the others. Never chain multiple issues together with "Also," or "," into one sentence or paragraph — a learner scanning feedback should be able to fix issue 1, come back, and immediately find issue 2 rather than re-parsing a wall of text (user report, 2026-09-13, screenshot of exactly this: three missing fields and a syntax fix all merged into one dense paragraph).
+- For exactly **one** issue, a single clear, specific sentence is fine — do not force a list of one.
+- Every issue/line must name both what's wrong or missing AND the exact fix (the specific field name, the exact location, the exact character to add) — never vague ("Not found", "Incorrect", "Wrong", "Missing" without explanation).
+- Wrap any literal code term you reference — a field name, a type name, a symbol, a brace/semicolon — in backticks (e.g. \`severity\`, \`zScore\`) so it renders as real inline code, not plain text.
+- For "correct": keep it very brief (see below).
 - For "correct": Do NOT repeat what they did in detail. Use a short appreciation and nudge to proceed, e.g. "Nice! Proceed to the next step." or "Good. Move on to the next step." One short sentence only. Never say things like "You correctly imported X and Y using named imports. This satisfies the step's requirement."
-- For "partial": Say exactly what is good, what is missing or wrong, and what to change. Pinpoint location and fix. Use syntax and conventions appropriate to the step's language/track (provided in the user message).
-- For "wrong": Explain what the step asked for, pinpoint where the lesson is in their code, and give a concrete next step or snippet (e.g. "Move the FormState interface outside the Form component, directly under the imports.").
+- For "partial": Say exactly what is good, what is missing or wrong, and what to change, using the numbered-list format above when there's more than one such point. Pinpoint location and fix. Use syntax and conventions appropriate to the step's language/track (provided in the user message).
+- For "wrong": Explain what the step asked for, pinpoint where the lesson is in their code, and give a concrete next step or snippet (e.g. "Move the FormState interface outside the Form component, directly under the imports."), using the numbered-list format above when there's more than one such point.
 - Never include optional/nice-to-have advice in feedback (for example: "you may add...", "optional", "not required"). Mention only required criteria for this step and the minimum fix needed to pass.
 - hint: optional; add a short nudge (syntax or next step) when useful. Omit if feedback is enough. For "correct" result, omit hint.
 - errors: optional array of 1–3 short, specific items; when placement is wrong, include e.g. "FormState is defined inside the component; it must be at module level." Omit if none. For "correct" result, omit errors.`;
@@ -178,7 +182,7 @@ Angular: If the merged code has template: \`...\` with an event binding that cal
 
 {
   "result": "correct" | "partial" | "wrong",
-  "feedback": "string (required; for correct: one short sentence e.g. 'Nice! Proceed to the next step.'; for partial/wrong: 1-3 clear sentences on what to fix and how)",
+  "feedback": "string (required; for correct: one short sentence e.g. 'Nice! Proceed to the next step.'; for partial/wrong with ONE issue: one clear sentence on what to fix and how; for partial/wrong with MULTIPLE issues: a real numbered list, one issue per line, formatted exactly '1. ...\\n2. ...\\n3. ...' — never a run-on paragraph merging them)",
   "hint": "string (optional)",
   "errors": ["string"]
 }`;
