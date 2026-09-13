@@ -39,6 +39,12 @@ import gitProxyRouter from "./git-proxy-router.js";
 import smbDeskRouter from "./smb-desk-router.js";
 import minierpRouter from "./minierp-router.js";
 import sentinelposRouter from "./sentinelpos-router.js";
+// Starting this import runs the BullMQ Worker constructor (workers/sentinelpos-ingest.worker.js),
+// which begins polling Redis for jobs immediately — this app has no separate worker dyno, so the
+// one Node process that serves HTTP also runs every product's ingestion worker. Side-effect import,
+// not used directly here; kept even though no binding is referenced so it isn't tree-shaken/pruned
+// by an editor's "unused import" instinct — its entire job is the side effect.
+import "./workers/sentinelpos-ingest.worker.js";
 import routematrixRouter from "./routematrix-router.js";
 import batchcraftRouter from "./batchcraft-router.js";
 import { requireSession } from "./auth-session.js";
