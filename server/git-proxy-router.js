@@ -3,9 +3,14 @@
  * endpoint, injecting the same shared service-account credential already used for REST calls at
  * `/api/onedev` (see `onedev-client.js`'s `authHeader()` — same pattern, duplicated here rather
  * than imported since this proxy deals in raw bytes, not JSON, and has no other overlap with that
- * module). Mounted at /api/git behind `requireSession` in server/index.js — any signed-in learner
- * may push to their own assigned project; OneDev's own per-project permissions (none enforced today
- * since every call uses the one shared admin account) are a finer boundary this doesn't add.
+ * module). Mounted at /api/git behind `requireSession` in server/index.js.
+ *
+ * Project-scoped as of 2026-09-11 (server/authz.js): a core session is unrestricted, same as
+ * before. A JS session is checked against the project(s) they're actually Matched to (resolved
+ * from their verified session email, never trusted from the URL) before every single request —
+ * previously *any* signed-in learner could push to *any* project via this route using the shared
+ * admin credential, not just their own assigned one, which is exactly the gap this fixes. See
+ * authz.js's own top comment for the full reasoning.
  *
  * Verified live against real OneDev (2026-09-02) before writing this: `curl -u user:pass
  * http://localhost:6610/OneInbox.git/info/refs?service=git-upload-pack` returns a real, valid
@@ -21,6 +26,7 @@
  * All three are handled by the single catch-all below.
  */
 import express from "express";
+import { isCoreSession, authorizedProjectIdsForJsSession, resolveProjectIdByGitPath } from "./authz.js";
 
 const router = express.Router();
 
@@ -53,6 +59,23 @@ router.use(async (req, res) => {
   }
   const projectPath = decodeURIComponent(req.url.slice(1, idx)); // strip leading "/"
   const suffix = req.url.slice(idx + marker.length); // "info/refs?service=..." or "git-upload-pack" etc.
+
+  if (!isCoreSession(req.session)) {
+    try {
+      const [authorized, projectId] = await Promise.all([
+        authorizedProjectIdsForJsSession(req.session),
+        resolveProjectIdByGitPath(projectPath),
+      ]);
+      if (!projectId || !authorized.has(projectId)) {
+        return res.status(403).json({
+          error: "You don't have access to this project's repository — it isn't a task you're currently matched to.",
+        });
+      }
+    } catch (err) {
+      console.error("[git-proxy] authorization check failed:", err.message);
+      return res.status(502).json({ error: "Could not verify project access — please try again." });
+    }
+  }
 
   const base = (process.env.ONEDEV_INTERNAL_URL || "http://localhost:6610").replace(/\/+$/, "");
   const target = `${base}/${projectPath}.git/${suffix}`;

@@ -10,6 +10,10 @@
  *   POST /issues/{id}/title          -> replace an issue's title, body = raw JSON string
  *   POST /projects                   -> create project, body ProjectData {name, description, ...}, returns project id
  *   GET  /projects?offset=&count=    -> list projects
+ *   DELETE /projects/{id}            -> permanently delete a project and everything in it (verified
+ *                                        2026-09-13 against OneDev's real server source —
+ *                                        ProjectResource.deleteProject — requires the API user to
+ *                                        have "manage project" permission on it; no undo)
  */
 // Local dev: OneDev's Docker container on localhost. Production (Railway): set ONEDEV_INTERNAL_URL
 // to the private-network address of the OneDev service (e.g. http://onedev.railway.internal:6610) —
@@ -112,6 +116,13 @@ export async function createProject({ name, description }) {
   return typeof result === "number" ? result : result?.id;
 }
 
+/** Permanently deletes a project and everything in it (issues, branches, history) — no undo.
+ * OneDev's DELETE /projects/{id} returns an empty 200 body on success; onedevFetch's `text ?
+ * JSON.parse(text) : null` already tolerates that, so no special-casing needed here. */
+export async function deleteProject(projectId) {
+  await onedevFetch(`/projects/${projectId}`, { method: "DELETE" });
+}
+
 /** Returns the new issue's id as a plain number. Confirmed via a direct curl to the real API:
  * POST /issues' response body is the bare id (e.g. `111`), not `{"id":111,...}` like most other
  * endpoints here — despite @Consumes/@Produces both being application/json. Normalized once, here:
@@ -142,6 +153,24 @@ export async function updateIssueDescription(issueId, description) {
 
 export async function updateIssueTitle(issueId, title) {
   return onedevFetch(`/issues/${issueId}/title`, { method: "POST", body: title });
+}
+
+// Unlike the issue endpoints above, OneDev has no dedicated `/projects/{id}/description` route —
+// confirmed live 2026-09-03 (404). The actual update endpoint is `POST /projects/{id}` (same path
+// `updateProject` uses), taking the full ProjectData shape createProject above already sends,
+// with `gitPackConfig`/`codeAnalysisSetting` rejected as "must not be null" if omitted — verified
+// against the real running instance, not guessed. `name` must be re-sent (a 400 on empty name),
+// even though only the description is actually changing.
+export async function updateProjectDescription(projectId, name, description) {
+  return onedevFetch(`/projects/${projectId}`, {
+    method: "POST",
+    body: JSON.stringify({
+      name,
+      description: description || "",
+      gitPackConfig: { windowMemory: null, packSizeLimit: null, threads: null, window: null },
+      codeAnalysisSetting: { analysisFiles: null },
+    }),
+  });
 }
 
 /** Parses the simple "Key: value" per-line convention every IPF module uses for issue descriptions

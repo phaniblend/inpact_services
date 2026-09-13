@@ -32,7 +32,9 @@ import productForgeRouter from "./product-forge-router.js";
 import idRouter from "./id-router.js";
 import assistMeRouter from "./assist-me-router.js";
 import authRouter from "./auth-router.js";
+import { isCoreSession } from "./authz.js";
 import recruitRouter from "./recruit-router.js";
+import adminRouter from "./admin-router.js";
 import gitProxyRouter from "./git-proxy-router.js";
 import smbDeskRouter from "./smb-desk-router.js";
 import minierpRouter from "./minierp-router.js";
@@ -175,6 +177,7 @@ app.use("/api/id", idRouter);
 app.use("/api/assist-me", assistMeRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/recruit", recruitRouter);
+app.use("/api/admin", adminRouter);
 app.use("/api/git", requireSession, gitProxyRouter);
 // Real, in-memory backend for the SMB product APIs (Booking/Package/Invoice/Lead/Shift/Quote/
 // Review/Reminder desks) — generated from the same MODULES config the FE task lesson content
@@ -200,16 +203,29 @@ app.use("/api", batchcraftRouter);
  * Authenticated pass-through to OneDev's REST API — replaces the old `/onedev-api` path, which
  * only ever existed as a Vite **dev-server** proxy (vite.config.js `server.proxy`) that forwarded
  * to OneDev with zero session check and injected the OneDev admin credentials on every request.
- * That's fine on localhost; it's a wide-open OneDev-admin hole the moment this is public. Any
- * signed-in user (any account type/role) may use this — OneDev's own per-project permissions are
- * the finer-grained boundary beyond "is this an internal, logged-in user at all." Credentials are
- * injected here, server-side, and never reach the browser.
+ * That's fine on localhost; it's a wide-open OneDev-admin hole the moment this is public. Credentials
+ * are injected here, server-side, and never reach the browser.
  * Ops pages (PD Studio, Workbench, Cohorts, ModuleLibrary, ContributionMonitor, HuddleCalendar,
  * CD Review, HumanCapitalReports, MatchingQueue, Apply) call this the same generic way the old
  * `/onedev-api` path worked: `fetch(\`/api/onedev${onedevApiPath}\`, opts)`.
+ *
+ * Write access requires a core (`-core`) session, added 2026-09-11 (server/authz.js): this used to
+ * let *any* signed-in session — JS applicants included — issue arbitrary writes (create/edit/delete
+ * any issue or project) through the shared OneDev admin credential, with nothing checking who was
+ * asking. Confirmed by reading every caller that every JS-facing screen (Workbench, TeamIntro) only
+ * ever GETs through this proxy — the one write call in Workbench.jsx (`handleCreate`, the new-issue
+ * form) is only rendered in that file's non-JS branch — so this is a complete fix for the write path
+ * with no real workflow broken. Reads are NOT yet scoped down to a JS's own project(s) here — this
+ * proxy takes an arbitrary OneDev query string, and safely restricting that per-caller is a bigger
+ * job than this pass; see authz.js's top comment.
  */
 app.use("/api/onedev", requireSession, async (req, res) => {
   try {
+    if (!isCoreSession(req.session) && !["GET", "HEAD"].includes(req.method)) {
+      return res.status(403).json({
+        error: "Only core accounts may write through this endpoint — use the dedicated task/application routes instead.",
+      });
+    }
     const base = (process.env.ONEDEV_INTERNAL_URL || "http://localhost:6610").replace(/\/+$/, "");
     const target = `${base}/~api${req.url}`;
     const user = process.env.ONEDEV_API_USER || "";
