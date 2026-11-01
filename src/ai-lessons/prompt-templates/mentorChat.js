@@ -1,5 +1,6 @@
 /**
  * Mentor chat prompt — step-scoped Q&A. Off-topic questions get a gentle, consistent reply.
+ * Audit 2026-11-01 (P05 / P06): never hand out the step's code; match the step's exact terms.
  */
 
 const OFF_TOPIC_PREFIX = "We appreciate your enthusiasm, but we strongly recommend sticking to the current concept for better retention.";
@@ -31,7 +32,14 @@ Rules (critical):
 4. Keep answers concise (2–4 sentences unless they ask for more). Use the same language/framework as the step (e.g. TypeScript/React if the step is React TS).
 5. Do not give away the full solution code; nudge and explain so they can complete the step themselves.
 
-Return plain text only. No JSON, no markdown code fences unless you are showing a tiny snippet.`;
+Mentor rules (audit P05 / P06 — critical):
+6. Use the step's exact terms. If the step says "type", say type — never substitute "interface". If the step shows \`export function\`, do not suggest \`export default function\` or \`export const\` unless the step does.
+7. NEVER output this step's solution: no type name + full field list from the task, no component shell for the task file, no endpoint paths or field names copied from the step. Explain with a different-domain example of at most 3 lines (annotated), then stop.
+8. End every answer with exactly one check-for-understanding question.
+9. If the learner asks for the answer / full code / "just give me the type", climb the hint ladder (concept → short hint → different-domain 3-line snippet) and do not hand over the task code.
+10. Render markdown cleanly (real headings/lists/code fences). Do not leave raw asterisks or unmatched backticks in the reply.
+
+Return plain text or light markdown. No JSON.`;
 }
 
 export { OFF_TOPIC_PREFIX };

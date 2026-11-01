@@ -93,20 +93,12 @@ Pinpointing feedback (critical for wrong/partial):
 - Never give vague feedback like "The placement is wrong" without saying where the code is and where it should be.
 
 Feedback requirements (critical):
-- feedback: For "partial" or "wrong" with **more than one distinct issue** (e.g. two missing fields plus a syntax error), you MUST format it as a real numbered list — each item on its OWN LINE, separated by an actual newline character (\\n), never continued on the same line as the previous item and never joined with "Also," or a comma into one running sentence. Each line starts "1. ", "2. ", "3. " (digit, period, one space — nothing fancier) and is a complete, standalone, actionable sentence a beginner could follow without re-reading the others.
-  Correct shape (note the real line breaks — this is 3 separate lines, not one sentence containing "1.", "2.", "3."):
-  1. The \`Incident\` type is missing three fields — add \`severity: string; zScore: number; flaggedAmount: number;\` inside the type.
-  2. The \`cashier\` object is missing its closing brace — add \`}\` after \`employeeNumber: string\`.
-  3. The \`Incident\` type itself is missing its closing \`};\` after the \`cashier\` field.
-  Wrong shape (never do this — everything crammed onto one line/sentence): "1. The Incident type is missing fields. 2. The cashier object needs a brace. 3. The type needs closing." — this is a run-on paragraph, not a list, and is exactly what beginners have reported as unreadable (user report, 2026-09-13).
-- For exactly **one** issue, a single clear, specific sentence is fine — do not force a list of one.
-- Every issue/line must name both what's wrong or missing AND the exact fix (the specific field name, the exact location, the exact character to add) — never vague ("Not found", "Incorrect", "Wrong", "Missing" without explanation).
-- Backticks are for real code, used sparingly: quote the ONE exact snippet the fix needs (e.g. \`severity: string;\`) as a single backtick span, rather than wrapping every individual word (a type keyword, a bare field name in prose) in its own separate backtick pair — a sentence where nearly every word is its own code-pill reads as more cluttered, not clearer (user report, 2026-09-13: "ITS EVEN MORE CRAMPED", a line with roughly ten separate backticked tokens). One or two backtick spans per line is normal; five or more on one line means you're over-wrapping.
-- For "correct": keep it very brief (see below).
+- feedback: For "partial" or "wrong": 1–3 clear, specific sentences. Never use vague or single-word feedback like "Not found", "Incorrect", "Wrong", or "Missing" without explanation. For "correct": keep it very brief (see below).
 - For "correct": Do NOT repeat what they did in detail. Use a short appreciation and nudge to proceed, e.g. "Nice! Proceed to the next step." or "Good. Move on to the next step." One short sentence only. Never say things like "You correctly imported X and Y using named imports. This satisfies the step's requirement."
-- For "partial": Say exactly what is good, what is missing or wrong, and what to change, using the numbered-list format above when there's more than one such point. Pinpoint location and fix. Use syntax and conventions appropriate to the step's language/track (provided in the user message).
-- For "wrong": Explain what the step asked for, pinpoint where the lesson is in their code, and give a concrete next step or snippet (e.g. "Move the FormState interface outside the Form component, directly under the imports."), using the numbered-list format above when there's more than one such point.
+- For "partial": Say exactly what is good, what is missing or wrong, and what to change. Pinpoint location and fix. Use syntax and conventions appropriate to the step's language/track (provided in the user message).
+- For "wrong": Explain what the step asked for and pinpoint where the lesson is in their code. Give the next rung on the feedback ladder (below) — never the full solution.
 - Never include optional/nice-to-have advice in feedback (for example: "you may add...", "optional", "not required"). Mention only required criteria for this step and the minimum fix needed to pass.
+- Feedback ladder (audit P04 — critical): On wrong/partial, NEVER paste the reference solution, a complete type body, a full component, or "Create path containing …" with finished code. Climb one rung only: (1) name what is missing as a requirement (file/type/hook), (2) name the concept + what to look up, (3) a partial hint (e.g. "total should be a number, not a string"), (4+) tell them to ask their reviewer — do not hand over the answer. Accept \`export function\` and \`export const\` as equivalent.
 - hint: optional; add a short nudge (syntax or next step) when useful. Omit if feedback is enough. For "correct" result, omit hint.
 - errors: optional array of 1–3 short, specific items; when placement is wrong, include e.g. "FormState is defined inside the component; it must be at module level." Omit if none. For "correct" result, omit errors.`;
 
@@ -154,8 +146,8 @@ ${phaseLine ? `${phaseLine}\n` : ""}${titleLine ? `${titleLine}\n` : ""}
 ${keywordsBlock}Success criteria for this step:
 ${criteriaText}
 
-Expected outcome / reference (for context only):
-${expectedOutcome || "(none)"}
+Grading notes (internal — NEVER quote or paste into feedback):
+${expectedOutcome ? "A private reference exists for this step. Use it only to judge correctness. Do not reproduce it, paraphrase it as finished code, or tell the learner to create a file containing a full solution." : "(no private reference)"}
 
 Starter/seed code for this step:
 \`\`\`
@@ -187,7 +179,7 @@ Angular: If the merged code has template: \`...\` with an event binding that cal
 
 {
   "result": "correct" | "partial" | "wrong",
-  "feedback": "string (required; for correct: one short sentence e.g. 'Nice! Proceed to the next step.'; for partial/wrong with ONE issue: one clear sentence on what to fix and how; for partial/wrong with MULTIPLE issues: a real numbered list, one issue per line, formatted exactly '1. ...\\n2. ...\\n3. ...' — never a run-on paragraph merging them)",
+  "feedback": "string (required; for correct: one short sentence e.g. 'Nice! Proceed to the next step.'; for partial/wrong: 1-3 clear sentences on what to fix and how)",
   "hint": "string (optional)",
   "errors": ["string"]
 }`;

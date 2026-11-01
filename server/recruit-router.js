@@ -23,6 +23,7 @@ import { listIssues, listAllIssues, listProjects, createIssue, updateIssueDescri
 import { notifyTeamServer } from "./notify-server.js";
 import { requireSession, requireRole } from "./auth-session.js";
 import { ensureFeBoard } from "./ensure-fe-board.js";
+import { isCoreSession, authorizedProjectIdsForJsSession } from "./authz.js";
 import {
   COHORT_PROJECT_ID,
   TEAM_OPS_PROJECT_ID,
@@ -298,6 +299,56 @@ router.get("/my-tasks", requireSession, async (req, res) => {
   } catch (err) {
     console.error("[recruit] /my-tasks failed:", err.message);
     res.status(500).json({ error: "Couldn't load your tasks — please try again." });
+  }
+});
+
+/**
+ * GET /project-overview?projectId= — description of a product the signed-in JS is matched into.
+ * Audit P02: Workbench used to call /api/onedev/projects/:id (now blocked for juniors).
+ */
+router.get("/project-overview", requireSession, async (req, res) => {
+  try {
+    const projectId = Number(req.query.projectId);
+    if (!Number.isFinite(projectId)) {
+      return res.status(400).json({ error: "projectId required" });
+    }
+    if (!isCoreSession(req.session)) {
+      const authorized = await authorizedProjectIdsForJsSession(req.session);
+      if (!authorized.has(projectId)) {
+        return res.status(403).json({ error: "Not matched to that project." });
+      }
+    }
+    const projects = await listProjects({ offset: 0, count: 200 });
+    const project = projects.find((p) => p.id === projectId);
+    if (!project) return res.status(404).json({ error: "Project not found." });
+    res.json({ id: project.id, name: project.name, description: project.description || "" });
+  } catch (err) {
+    console.error("[recruit] /project-overview failed:", err.message);
+    res.status(500).json({ error: "Couldn't load project overview." });
+  }
+});
+
+/**
+ * GET /team-roster?project=Name — teammates on the same product (names + task titles only).
+ * Audit P02: Team chat used to list all issues via /api/onedev (exposed Application emails).
+ */
+router.get("/team-roster", requireSession, async (req, res) => {
+  try {
+    const projectName = String(req.query.project || "").trim();
+    if (!projectName) return res.status(400).json({ error: "project required" });
+    const issues = await listAllIssues();
+    const roster = issues
+      .filter((i) => i.projectId === COHORT_PROJECT_ID && i.title.startsWith("Matched:"))
+      .filter((m) => (m.description || "").includes(`in ${projectName}`))
+      .map((m) => {
+        const nameMatch = /Matched: (.+?) →/.exec(m.title);
+        const taskMatch = /Task: #\d+ "(.+?)"/.exec(m.description || "");
+        return { name: nameMatch?.[1] ?? "Teammate", taskTitle: taskMatch?.[1] ?? "" };
+      });
+    res.json({ roster });
+  } catch (err) {
+    console.error("[recruit] /team-roster failed:", err.message);
+    res.status(500).json({ error: "Couldn't load team roster." });
   }
 });
 
