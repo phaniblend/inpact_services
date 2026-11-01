@@ -19,9 +19,10 @@
  *   4. Responds { ok, matched, task? } either way — the application is always created, matched or not.
  */
 import express from "express";
-import { listIssues, listProjects, createIssue, updateIssueDescription, updateIssueTitle } from "./onedev-client.js";
+import { listIssues, listAllIssues, listProjects, createIssue, updateIssueDescription, updateIssueTitle } from "./onedev-client.js";
 import { notifyTeamServer } from "./notify-server.js";
 import { requireSession, requireRole } from "./auth-session.js";
+import { ensureFeBoard } from "./ensure-fe-board.js";
 import {
   COHORT_PROJECT_ID,
   TEAM_OPS_PROJECT_ID,
@@ -246,10 +247,10 @@ router.post("/apply", requireSession, async (req, res) => {
  * filtered down to one person's slice of it instead of showing everything to everyone. */
 router.get("/my-tasks", requireSession, async (req, res) => {
   try {
-    const email = req.session.email;
+    const email = String(req.session.email || "").trim().toLowerCase();
     const [projects, issues] = await Promise.all([
       listProjects({ offset: 0, count: 100 }),
-      listIssues({ offset: 0, count: 200 }),
+      listAllIssues(),
     ]);
 
     const myApplicationIds = new Set(
@@ -258,7 +259,9 @@ router.get("/my-tasks", requireSession, async (req, res) => {
           (i) =>
             i.projectId === COHORT_PROJECT_ID &&
             i.title.startsWith("Application:") &&
-            (i.description || "").split("\n").some((line) => line.trim() === `Email: ${email}`)
+            (i.description || "")
+              .split("\n")
+              .some((line) => line.trim().toLowerCase() === `email: ${email}`)
         )
         .map((i) => i.id)
     );
@@ -558,6 +561,37 @@ router.post("/unassign", requireRole("PD", "PMGT", "ID", "CD"), async (req, res)
   } catch (err) {
     console.error("[recruit] /unassign failed:", err.message);
     res.status(500).json({ error: "Couldn't unassign — please try again." });
+  }
+});
+
+function bootstrapTokenOk(req) {
+  const expected = process.env.RECRUIT_BOOTSTRAP_TOKEN || "IPAAL-FE-BOOTSTRAP-20261031";
+  const got = String(req.get("X-Bootstrap-Token") || req.body?.token || req.query?.token || "");
+  return Boolean(got && got === expected);
+}
+
+/**
+ * POST /bootstrap-fe-board — match every open LIVE-product FE Coding task to the test aspirant.
+ * Auth: X-Bootstrap-Token / RECRUIT_BOOTSTRAP_TOKEN.
+ */
+router.post("/bootstrap-fe-board", async (req, res) => {
+  if (!bootstrapTokenOk(req)) {
+    return res.status(401).json({ error: "Invalid bootstrap token." });
+  }
+  try {
+    const result = await ensureFeBoard({
+      email: req.body?.email,
+      name: req.body?.name,
+      minMatches: req.body?.minMatches,
+      force: Boolean(req.body?.force),
+    });
+    res.json(result);
+  } catch (err) {
+    console.error("[recruit] /bootstrap-fe-board failed:", err.message, err.cause || "");
+    res.status(500).json({
+      error: err.message,
+      cause: err.cause?.message || err.cause?.code || null,
+    });
   }
 });
 

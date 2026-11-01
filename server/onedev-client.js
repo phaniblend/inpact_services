@@ -98,6 +98,19 @@ export async function listIssues({ query = "", offset = 0, count = 200 } = {}) {
   return onedevFetch(`/issues?query=${encodeURIComponent(query)}&offset=${offset}&count=${count}`);
 }
 
+/** Page through every issue (OneDev caps ~200 per call). Needed once Matched:/Application:
+ * rows grow past a single page — otherwise My tasks silently under-counts. */
+export async function listAllIssues({ query = "", pageSize = 200, max = 5000 } = {}) {
+  const all = [];
+  for (let offset = 0; offset < max; offset += pageSize) {
+    const batch = await listIssues({ query, offset, count: pageSize });
+    if (!Array.isArray(batch) || batch.length === 0) break;
+    all.push(...batch);
+    if (batch.length < pageSize) break;
+  }
+  return all;
+}
+
 /** Returns the new project's id as a plain number — same bare-id response shape as createIssue
  * below (POST /projects, same OneDev creation-endpoint family), normalized the same way. */
 export async function createProject({ name, description }) {
