@@ -61,13 +61,23 @@ export async function authorizedProjectIdsForJsSession(session) {
 }
 
 /** Resolves a git URL path segment (e.g. "OneInbox" from "/OneInbox.git/...") to OneDev's numeric
- * project id, matching on either `path` or `name`. */
+ * project id, matching on either `path` or `name`. Pages the full project list — a single page of
+ * 200 misses the oldest desks, and git then 403s even when the aspirant is matched (audit P01). */
 export async function resolveProjectIdByGitPath(projectPath) {
-  const projects = await listProjects({ offset: 0, count: 200 });
   const want = String(projectPath || "").trim().toLowerCase();
   if (!want) return null;
-  const hit = projects.find(
-    (p) => String(p?.path || "").toLowerCase() === want || String(p?.name || "").toLowerCase() === want,
-  );
-  return hit?.id ?? null;
+  const alias = /^project-(\d+)$/.exec(want);
+  if (alias) return Number(alias[1]);
+  let offset = 0;
+  const count = 100;
+  for (;;) {
+    const projects = (await listProjects({ offset, count })) || [];
+    const hit = projects.find(
+      (p) => String(p?.path || "").toLowerCase() === want || String(p?.name || "").toLowerCase() === want,
+    );
+    if (hit) return hit.id ?? null;
+    if (projects.length < count) return null;
+    offset += count;
+    if (offset > 2000) return null;
+  }
 }
